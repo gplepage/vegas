@@ -12,8 +12,8 @@ import numpy
 import math
 import exceptions
 
-TINY = 1e-308                            # smallest and biggest
-HUGE = 1e308
+cdef double TINY = 1e-308                            # smallest and biggest
+cdef double HUGE = 1e308
 
 # Wrapper for python functions
 cdef object _python_integrand = None
@@ -216,6 +216,7 @@ cdef class AdaptiveMap:
                 else:
                     x[d, i] = self.grid[d, ninc]
                     jac[i] *= self.inc[d, ninc - 1] * ninc
+        return
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -241,6 +242,7 @@ cdef class AdaptiveMap:
                 iy = <int> floor(y[d, i] * ninc)
                 self.sum_f[d, iy] += abs(f[i])
                 self.n_f[d, iy] += 1
+        return
         
     def adapt(self, ninc=None, alpha=None):
         cdef double[:, ::1] new_grid
@@ -265,8 +267,7 @@ cdef class AdaptiveMap:
             for d in range(dim):
                 new_grid[d, 0] = self.grid[d, 0]
                 new_grid[d, 1] = self.grid[d, -1]
-            self.grid = new_grid
-            self._make_inc()
+            self._init_grid(new_grid)
             return
         #
         # smoothing
@@ -321,6 +322,7 @@ cdef class AdaptiveMap:
         self._init_grid(new_grid)
         self.sum_f = None
         self.n_f = None
+        return
    
 
 cdef class Integrator(object):
@@ -331,9 +333,9 @@ cdef class Integrator(object):
         maxvec=10000,
         cstrat=10,
         nitn=5,
-        alpha=1.5,
+        alpha=0.5,
         mode='automatic',
-        beta=0.5,
+        beta=0.75,
         analyzer=None,
         rtol=0,
         atol=0,
@@ -500,8 +502,8 @@ cdef class Integrator(object):
         self.vec_integrand = fcn
         return self._integrate(kargs)
 
-    def test_cython_integrate(self, **kargs):
-        return self.cython_integrate(& vec_example, kargs)
+    # def test_cython_integrate(self, **kargs):
+    #     return self.cython_integrate(& vec_example, kargs)
 
     cdef _integrate(self, kargs):
         if kargs:
@@ -604,14 +606,9 @@ cdef class Integrator(object):
             mean = sum_fdv / neval_hcube
             sigf2 = abs(sum_fdv2 / neval_hcube - mean * mean)
             if redistribute:
-                if True:
-                    self.sigf_list[hcube] = (
-                        # self.sigf_list[hcube] ** (1 - self.beta) *
-                        sqrt(sigf2) ** self.beta
-                        ) 
-                else:
-                    sigf = sqrt(sigf2)
-                    self.sigf_list[hcube] = (-(1 - sigf) / log(sigf)) ** self.beta
+                self.sigf_list[hcube] = sigf2 ** (self.beta / 2.)
+                #     sigf = sqrt(sigf2)
+                #     self.sigf_list[hcube] = (-(1 - sigf) / log(sigf)) ** self.beta
             var = sigf2 / (neval_hcube - 1.)
             ans_mean += mean
             ans_var += var  
@@ -643,11 +640,13 @@ class reporter:
     def end(self, itn_ans, ans):
         print "    itn %2d: %s\n all itn's: %s"%(self.itn+1, itn_ans, ans)
         print(
-            '    chi2/dof = %.2f  neval = %d  neval/h-cube = %s' 
+            '    neval = %d  neval/h-cube = %s\n    chi2/dof = (%.1f/%d)  Q = %.1f' 
             % (
-                ans.chi2/ans.dof if ans.dof > 0 else 0, 
                 self.integrator.last_neval, 
                 self.integrator.neval_hcube_range,
+                ans.chi2, 
+                ans.dof,
+                ans.Q if ans.dof > 0 else 1.,
                 )
             )
         if self.n_prn > 0:
@@ -677,7 +676,19 @@ class reporter:
 # Testing code:
 ###############
 
-cdef class test_integrand:
+cdef class VegasTest:
+    """ Test vegas.
+
+    This code creates integrands with any number of exponentials along
+    the diagonal of the integration volume, and then evalues the integral
+    using different levels of cythonizing in the code.
+
+    Using 3 exponentials in 8 dimensions, with order 10**6, get fastest
+    result from cython_integrate, followed by vec_integrate_cython which
+    was only 10-20% slower. The later is probably the easiest interface
+    to use for cythonized integrands. 20-30x slower are integrate_python
+    and vec_integrate_python, with the former slightly faster(!).
+    """
     # cdef readonly double[:] sig
     # cdef readonly double[:] x0
     # cdef readonly double[:] ampl
@@ -685,31 +696,25 @@ cdef class test_integrand:
 
     def __init__(
         self, 
-        region,
+        integrator,
         x0=None, 
         ampl=None,
         sig=None,
         ):
+        self.I = integrator
         self.exact = 0.0
-        self.x0 = numpy.zeros(len(region), float) if x0 is None else numpy.asarray(x0)
-        self.ampl = numpy.ones(len(region), float) if ampl is None else numpy.asarray(ampl)
-        self.sig = (0.1 + numpy.zeros(len(region), float)) if sig is None else numpy.asarray(sig)
+        self.x0 = numpy.zeros(1, float) if x0 is None else numpy.asarray(x0)
+        self.ampl = numpy.ones(len(x0), float) if ampl is None else numpy.asarray(ampl)
+        self.sig = (0.1 + numpy.zeros(len(x0), float)) if sig is None else numpy.asarray(sig)
         for x0, sig, ampl in zip(self.x0, self.sig, self.ampl):
             tmp = 1.
-            for r in region:
-                tmp *= self.exact_gaussian(x0, sig, ampl, r)
+            for d in range(self.I.map.dim):
+                tmp *= self.exact_gaussian(x0, sig, ampl, self.I.map.region(d))
             self.exact += tmp
-
-    def exact_gaussian(self, x0, sig, ampl, interval):
-        """ int dx exp(-(x-x0)**2 / sig**2) over range """
-        ans = 0.0
-        for x in [interval[0], interval[-1]]:
-            ans += erf(abs(x0 - x) / sig)
-        return ans * ampl * math.pi ** 0.5 / 2. * sig
 
     # @cython.boundscheck(False)
     # @cython.wraparound(False)
-    cdef void fcn(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
+    cdef void cython_vec_fcn(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
         cdef double ans
         cdef double dx2, dx
         cdef INT_TYPE i, d, j
@@ -725,6 +730,42 @@ cdef class test_integrand:
                 ans += self.ampl[j] * exp(- dx2 / self.sig[j] ** 2) 
             f[i] = ans / self.exact
         return
+
+    def python_vec_fcn(self, x, f, nx):
+        for i in range(nx):
+            ans = 0.0
+            for j in range(len(self.x0)):
+                dx2 = 0.0
+                for d in range(x.shape[0]):
+                    dx = x[d, i] - self.x0[j]
+                    dx2 += dx * dx
+                ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
+            f[i] = ans / self.exact
+        return
+    # def python_vec_fcn(self, double[:, ::1] xx, double[::1] ff, nx):
+    #     " This is slower than the version just above (surprisingly?) "
+    #     x = numpy.asarray(xx)
+    #     f = numpy.asarray(ff)
+    #     ans = 0.0
+    #     for j in range(len(self.x0)):
+    #         dx2 = 0.0
+    #         for d in range(x.shape[0]):
+    #             dx = x[d, :nx] - self.x0[j]
+    #             dx2 += dx * dx
+    #         ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
+    #     f[:nx] = ans / self.exact
+    #     return
+
+    def python_fcn(self, x):
+        ans = 0.0
+        for j in range(len(self.x0)):
+            dx2 = 0.0
+            for d in range(x.shape[0]):
+                dx = x[d] - self.x0[j]
+                dx2 += dx * dx
+            ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
+        return ans / self.exact
+
 
     # @cython.boundscheck(False)
     # @cython.wraparound(False)
@@ -745,28 +786,37 @@ cdef class test_integrand:
             f[i] = ans / self.exact
         return
 
-# @cython.boundscheck(False)
-# @cython.wraparound(False)
-dim = 8
-nexp = 3
-region = dim * [[0., 1.]]
-sig = nexp * [0.1]
-x0 = numpy.linspace(0., 1., nexp + 2)[1:-1] 
-cdef test_integrand tester_fcn = test_integrand(region=region, x0=x0, sig=sig)
+    def exact_gaussian(self, x0, sig, ampl, interval):
+        """ int dx exp(-(x-x0)**2 / sig**2) over range """
+        ans = 0.0
+        for x in [interval[0], interval[-1]]:
+            ans += erf(abs(x0 - x) / sig)
+        return ans * ampl * math.pi ** 0.5 / 2. * sig
 
-cdef void vec_example(double[:, ::1] x, double[::1] f, INT_TYPE nx):
-    tester_fcn.fcn(x, f, nx)
-    # cdef INT_TYPE i
-    # for i in range(nx):
-    #     f[i] = exp(-100. * (x[0, i] * x[0, i] + x[1, i] * x[1, i])) * 100. / 3.14159654
+    def cython_integrate(VegasTest self, **kargs):
+        " Integrate using I.cython_integrate "
+        global vegastest_instance 
+        vegastest_instance = self
+        return self.I.cython_integrate(& vegastest_fcn, kargs)
 
-cdef double example(double[:] x):
-        return exp(-100. * (x[0] * x[0] + x[1] * x[1])) * 100. / 3.14159654
+    def vec_integrate_cython(VegasTest self, **kargs):
+        " Integrate using I.vec_integrate with cython optimized python fcn "
+        return self.I.vec_integrate(self, **kargs)
+
+    def vec_integrate_python(self, **kargs):
+        " Integrate using I.vec_integrate with pure python vector fcn "
+        return self.I.vec_integrate(self.python_vec_fcn, **kargs)
 
 
+    def integrate_python(self, **kargs):
+        " Integrate using I(fcn) with pure python (non-vector) fcn "
+        return self.I(self.python_fcn, **kargs)
 
-                
 
+cdef VegasTest vegastest_instance
+
+cdef void vegastest_fcn(double[:, ::1] x, double[::1] f, INT_TYPE nx):
+    vegastest_instance.cython_vec_fcn(x, f, nx)
 
 
 

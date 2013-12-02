@@ -43,9 +43,10 @@ cdef class Integrator:
 	cdef cython_integrate(self, cython_vec_integrand fcn, kargs)
 	cdef _integrate(self, kargs)
 	
-cdef class test_integrand:
+cdef class VegasTest:
 	cdef readonly double[::1] sig
 	cdef readonly double[::1] x0
 	cdef readonly double[::1] ampl
 	cdef readonly double exact
-	cdef void fcn(self, double[:, ::1] x, double[::1] f, INT_TYPE nx)
+	cdef public Integrator I
+	cdef void cython_vec_fcn(self, double[:, ::1] x, double[::1] f, INT_TYPE nx)
