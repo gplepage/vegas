@@ -140,7 +140,7 @@ cdef class AdaptiveMap:
 
     Finally the map is adapted to the data::
 
-        m.adapt()
+        m.adapt(alpha=1.5)
 
     The process of computing training data and then adapting the map
     typically has to be repeated several times before the map converges,
@@ -161,23 +161,19 @@ cdef class AdaptiveMap:
         as the original grid. The default value, ``ninc=None``,  leaves 
         the grid unchanged.
     :type ninc: ``int`` or ``None``
-    :param alpha: Determines the speed with which the grid adapts to 
-        training data. Large (postive) values imply rapid evolution; 
-        small values (much less than one) imply slow evolution. Typical 
-        values are of order one. Choosing ``alpha<0`` causes adaptation
-        to the unmodified training data (usually not a good idea).
-    :type alpha: int
     """
-    def __init__(self, grid, alpha=1.0, ninc=None):
+    def __init__(self, grid, ninc=None):
         cdef INT_TYPE i, d
-        grid = numpy.array(grid, float)
-        if grid.ndim != 2:
-            raise ValueError('grid must be 2-d array not %d-d' % grid.ndim)
-        grid.sort(axis=1)
-        if grid.shape[1] < 2: 
-            raise ValueError("grid.shape[1] smaller than 2: " % grid.shape[1])
-        self._init_grid(grid, initinc=True)
-        self.alpha = alpha
+        if isinstance(grid, AdaptiveMap):
+            self._init_grid(grid.grid, initinc=True)
+        else:
+            grid = numpy.array(grid, float)
+            if grid.ndim != 2:
+                raise ValueError('grid must be 2-d array not %d-d' % grid.ndim)
+            grid.sort(axis=1)
+            if grid.shape[1] < 2: 
+                raise ValueError("grid.shape[1] smaller than 2: " % grid.shape[1])
+            self._init_grid(grid, initinc=True)
         self.sum_f = None
         self.n_f = None
         if ninc is not None and ninc != self.inc.shape[1]:
@@ -208,7 +204,7 @@ cdef class AdaptiveMap:
 
     def __reduce__(self):
         """ Capture state for pickling. """
-        return (AdaptiveMap, (numpy.asarray(self.grid), self.alpha))
+        return (AdaptiveMap, (numpy.asarray(self.grid),))
 
 
     def make_uniform(self, ninc=None):
@@ -373,24 +369,29 @@ cdef class AdaptiveMap:
                 self.n_f[d, iy] += 1
         return
         
-    def adapt(self, ninc=None, alpha=None):
+    def adapt(self, double alpha=0.0, ninc=None):
         """ Adapt grid to accumulated training data.
 
         The new grid is designed to make the training function constant
         in ``y[d]`` when the ``y``\s in the other directions  are integrated out.
-        The number of increments along a direction and the damping 
-        parameter can be overridden temporarily by setting parameters 
-        ``ninc`` and ``alpha``.
-        :parameter ninc: Number of increments along each direction in the 
-            new grid. The number is unchanged from the old grid if ``ninc``
-            is omitted (or equals ``None``).
-        :type ninc: int or None
+        The number of increments along a direction can be changed 
+        by setting parameter ``ninc``. 
+
+        The grid does not change if no training data has been accumulated,
+        unless ``ninc`` is specified, in which case the number of 
+        increments is adjusted while preserving the relative density
+        of increments at different values of ``x``.
+
         :parameter alpha: Determines the speed with which the grid adapts to 
             training data. Large (postive) values imply rapid evolution; 
             small values (much less than one) imply slow evolution. Typical 
             values are of order one. Choosing ``alpha<0`` causes adaptation
             to the unmodified training data (usually not a good idea).
         :type alpha: double or None
+        :parameter ninc: Number of increments along each direction in the 
+            new grid. The number is unchanged from the old grid if ``ninc``
+            is omitted (or equals ``None``).
+        :type ninc: int or None
         """
         cdef double[:, ::1] new_grid
         cdef double[::1] avg_f, tmp_f
@@ -401,8 +402,6 @@ cdef class AdaptiveMap:
         cdef double smth = 3.   # was 3.
         #
         # initialization
-        if alpha is None:
-            alpha = self.alpha
         if ninc is None:
             new_ninc = old_ninc
         else:
@@ -475,6 +474,7 @@ cdef class AdaptiveMap:
 cdef class Integrator(object):
 
     defaults = dict(
+        map=None,
         fcntype='scalar', # default integrand type
         neval=1000,       # number of evaluations per iteration
         maxinc_axis=100,  # number of adaptive-map increments per axis
@@ -489,11 +489,12 @@ cdef class Integrator(object):
         analyzer=None,
         )
 
-    def __init__(self, region, **kargs):
+    def __init__(self, map, **kargs):
         args = dict(Integrator.defaults)
+        del args['map']
         args.update(kargs)
         self.set(args)
-        self.map = AdaptiveMap(region)
+        self.map = AdaptiveMap(map)
         self.sigf_list = numpy.array([], float) # dummy
         self.neval_hcube_range = None
         self.last_neval = 0
@@ -502,10 +503,10 @@ cdef class Integrator(object):
         """ Capture state for pickling. """
         odict = dict()
         for k in Integrator.defaults:
-            if k in ['analyzer']:
+            if k in ['map']:
                 continue
             odict[k] = getattr(self, k)
-        return (Integrator, (numpy.asarray(self.map.grid),), odict)
+        return (Integrator, (self.map,), odict)
 
     def __setstate__(self, odict):
         """ Set state for unpickling. """
@@ -519,7 +520,10 @@ cdef class Integrator(object):
             kargs = ka
         old_val = dict() 
         for k in kargs:
-            if k == 'fcntype':
+            if k == 'map':
+                old_val[k] = self.map
+                self.map = AdaptiveMap(kargs[k])
+            elif k == 'fcntype':
                 old_val[k] = self.fcntype
                 self.fcntype = kargs[k]
             elif k == 'neval':
@@ -576,10 +580,7 @@ cdef class Integrator(object):
                 "    %d integrand evaluations in each of %d iterations\n"
                 % (neval, self.nitn)
                 )
-        mode = self._mode
-        if self.mode=="automatic":
-            mode = self._mode + "  (automatic)"
-        ans = ans + ("    integrator mode = %s\n" % mode)
+        ans = ans + ("    integrator mode = %s\n" % self.mode)
         if self.beta > 0:
             ans +=   "                      redistribute points across h-cubes\n"
         ans = ans + (
@@ -610,15 +611,22 @@ cdef class Integrator(object):
         return ans
 
     def _prepare_integration(self):
-        """ called by __call__ before integrating """
+        """ called by __call__ before integrating 
+
+        Main job is to determine the number of stratifications,
+        the integration mode (if automatic), and the actual number 
+        of integrand evaluations to use. The decisions here 
+        are mostly heuristic.
+        """
         dim = self.map.dim
+        # 1.5 in the following is a guess --- try 2 sometime.
         neval_eff = self.neval / 1.5 if self.beta > 0 else self.neval
         ns = int((neval_eff / 2.) ** (1. / dim))# stratifications/axis
         ni = int(self.neval / 10.)              # increments/axis
         if ni > self.maxinc_axis:
             ni = self.maxinc_axis
         if ns > self.nstrat_crit or ns > ni:     
-            self._mode = "adapt_to_errors"
+            new_mode = "adapt_to_errors"
             if ns > ni:
                 if ns < self.maxinc_axis:
                     ni = ns
@@ -627,7 +635,7 @@ cdef class Integrator(object):
             else:
                 ni = int(ni // ns) * ns
         else:                            
-            self._mode = "adapt_to_integrand"
+            new_mode = "adapt_to_integrand"
             if ns < 1:
                 ns = 1
             if ni < 1:
@@ -636,19 +644,20 @@ cdef class Integrator(object):
                 ni = self.maxinc_axis
             ni = int(ni // ns) * ns
 
-        if self.mode != "automatic":
-            
+        if self.mode == "automatic":
             if self.beta > 0:
-                self._mode = "adapt_to_integrand"
+                self.mode = "adapt_to_integrand"
             else:
-                self._mode = self.mode
+                self.mode = new_mode
 
-        if self._mode == "adapt_to_errors" and ni > ns:
-            ni = ns
+        if self.mode == "adapt_to_errors":
+            # no point in having ni > ns in this mode
+            # self.beta > 0 incompatible with this mode
+            if ni > ns:
+                ni = ns
             self.beta = 0.0
 
         self.map.adapt(ninc=ni)    
-        self.map.alpha = self.alpha
 
         self.nstrat = ns
         nhcube = self.nstrat ** dim
@@ -708,7 +717,7 @@ cdef class Integrator(object):
             ans = lsqfit.wavg(self.results)
             if self.analyzer != None:
                 self.analyzer.end(itn_ans, ans)
-            self.map.adapt()
+            self.map.adapt(alpha=self.alpha)
             if (self.rtol * abs(ans.mean) + self.atol) > ans.sdev:
                 break
         if old_kargs:
@@ -722,7 +731,7 @@ cdef class Integrator(object):
         cdef INT_TYPE nhcube = self.nstrat ** self.dim 
         cdef INT_TYPE nhcube_vec = self.nhcube_vec
         cdef INT_TYPE adapt_to_integrand = (
-            1 if self._mode == 'adapt_to_integrand' else 0
+            1 if self.mode == 'adapt_to_integrand' else 0
             )
         cdef INT_TYPE redistribute = (
             1 if self.beta > 0 else 0

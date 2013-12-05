@@ -39,7 +39,6 @@ cdef class Integrator:
     cdef public double rtol
     cdef public double atol
     cdef public object mode
-    cdef public bint redistribute  
     cdef public double beta 
     cdef public object analyzer
     # generated
@@ -49,7 +48,6 @@ cdef class Integrator:
     cdef INT_TYPE nstrat 
     cdef INT_TYPE neval_hcube 
     cdef INT_TYPE dim 
-    cdef object _mode
     cdef readonly INT_TYPE last_neval
     cdef cython_vec_integrand vec_integrand
     
