@@ -6,7 +6,7 @@ import math
 import lsqfit
 import gvar as gvar
 
-dim = 8
+dim = 2
 nexp = 3
 region = dim * [[0., 1.]]
 sig = nexp * [0.1]
@@ -24,7 +24,7 @@ def slow_python_vec_fcn(x, f, nx):
                 dx2 += dx * dx
             ans += ampl[j] * numpy.exp(- dx2 / sig[j] ** 2) 
         f[i] = ans # / exact
-    return ans
+    return
 
 def fast_python_vec_fcn(xx, ff, nx):
     # vector loop implicit

@@ -1,4 +1,4 @@
-import pyximport; pyximport.install()    
+# import pyximport; pyximport.install()    
 
 from vegas import * 
 import numpy as np
@@ -17,16 +17,17 @@ def main():
     dim = 8
     nexp = 3
     region = dim * [[0., 1.]]
-    sig = nexp * [0.05]
+    sig = nexp * [0.1]
     x0 = np.linspace(0., 1., nexp + 2)[1:-1] 
     I = Integrator(
         region, 
-        neval=100000, 
+        neval=1000000, 
         nitn=10, 
-        beta=0.99, 
-        alpha=0.1, 
+        beta=0., 
+        alpha=0.5, 
         analyzer=reporter(0),
-        maxinc = 400,
+        # maxinc = 400,
+        # nhcube_vec = 30,
         )
     tester = VegasTest(I, x0=x0, sig=sig)
     I_integrate = [                 # select integration options
@@ -34,8 +35,8 @@ def main():
         tester.vec_integrate_cython,
         tester.integrate_python,
         tester.vec_integrate_python,
-        ][0]
-    warmup = I_integrate(nitn=10)
+        ][1]
+    # warmup = I_integrate(nitn=10)
     ans = I_integrate()
     print ans
 

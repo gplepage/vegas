@@ -2,44 +2,98 @@
 
 cimport cython
 cimport numpy
-cimport cpython.array as cparray
 from libc.math cimport floor, log, abs, tanh, erf, exp, sqrt
 
 import sys
-import gvar
-import lsqfit
 import numpy
 import math
 import exceptions
 
+try:
+    import gvar
+    import lsqfit
+    if not hasattr(lsqfit, 'WAvg'):
+        # check to make sure recent version of lsqfit
+        raise ImportError
+except ImportError:
+    # fake versions of gvar.gvar and lsqfit.wavg
+    # for use if lsqfit module not available
+    class _gvar_standin:
+        def __init__(self):
+            pass
+        def gvar(self, mean, sdev):
+            class GVar:
+                def __init__(self, mean, sdev):
+                    self.mean = float(mean)
+                    self.sdev = float(sdev)
+                def __str__(self):
+                    return "%g +- %g" % (self.mean, self.sdev)
+            return GVar(mean, sdev)
+
+    gvar = _gvar_standin()
+
+    class _lsqfit_standin:
+        def __init__(self):
+            pass
+        def wavg(self, glist):
+            class WAvg:
+                def __init__(self, glist):
+                    xmean = numpy.array([x.mean for x in glist])
+                    xvar = numpy.array([x.sdev ** 2 for x in glist])
+                    self.mean = numpy.sum(xmean/xvar) / numpy.sum(1./xvar)
+                    self.sdev = numpy.sqrt(1. / numpy.sum(1/xvar))
+                    self.chi2 = ( 
+                        sum(xmean ** 2 / xvar) 
+                        - self.mean ** 2 * sum(1./xvar)
+                        )
+                    self.dof = len(glist)
+                    self.Q = -1
+                def __str__(self):
+                    return "%g +- %g" % (self.mean, self.sdev)
+            return WAvg(glist)
+
+    lsqfit = _lsqfit_standin()
+
 cdef double TINY = 1e-308                            # smallest and biggest
 cdef double HUGE = 1e308
 
-# Wrapper for python functions
+# Wrapper for python functions used by Integrator
 cdef object _python_integrand = None
 
-cdef void _compute_python_integrand(double[:,::1] x, double[::1] f, INT_TYPE nx):
+cdef void _python_integrand_wrapper(double[:,::1] x, double[::1] f, INT_TYPE nx):
     cdef INT_TYPE i
     for i in range(nx):
         f[i] = _python_integrand(x[:, i])
 
-cdef void _compute_python_vec_integrand(double[:,::1] x, double[::1] f, INT_TYPE nx):
+cdef void _vec_python_integrand_wrapper(double[:,::1] x, double[::1] f, INT_TYPE nx):
     _python_integrand(x, f, nx)
- 
+
+
+# AdaptiveMap is used by Integrator 
 cdef class AdaptiveMap:
-    """ Adaptive map ``y->x(y)``, where ``y`` in ``(0,1)``.
+    """ Adaptive map ``y->x(y)`` for multidimensional ``y`` and ``x``.
 
-    An :class:`AdaptiveMap` defines a map ``y -> x(y)`` that is adaptive. The
-    map is specified by an N-increment grid in x-space where::
+    An :class:`AdaptiveMap` defines a multidimensional map ``y -> x(y)`` 
+    from the unit hypercube, with ``0 <= y[d] <= 1``, to an arbitrary
+    hypercube in ``x`` space. Each direction is mapped independently 
+    with a jacobian that is tunable (i.e., "adaptive").
 
-        x(y) = x[i(y)] + delta_x[i(y)] * delta(y)
+    The map is specified by a grid in ``x``-space that, by definition, 
+    maps into a uniformly space grid in ``y``-space. The nodes of 
+    the grid are specified by ``grid[d, i]`` where d is the 
+    direction (``d=0,1...dim-1``) and ``i`` labels the grid point
+    (``i=0,1...N-1``). The mapping for specific point ``y`` into
+    ``x`` space is:: 
 
-    with ``i(y)=floor(y*N``), ``delta(y)=y*N-i(y)``, and
-    ``delta_x[i]=x[i+1]-x[i]``. The jacobian for this map is::
+        y[d] -> x[d] = grid[d, i(y[d])] + inc[d, i(y[d])] * delta(y[d])
 
-        dx(y)/dy = delta_x[i(y)] * N
+    where ``i(y)=floor(y*N``), ``delta(y)=y*N-i(y)``, and
+    ``inc[d, i] = grid[d, i+1] - grid[d, i]``. The jacobian for this map, :: 
 
-    Each increment in the ``x``-space grid maps into an increment of 
+        dx[d]/dy[d] = inc[d, i(y[d])] * N,
+
+    is piece-wise constant and proportional to the ``x``-space grid 
+    spacing. Each increment in the ``x``-space grid maps into an increment of 
     size ``1/N`` in the corresponding ``y`` space. So increments with 
     small ``delta_x[i]`` are stretched out in ``y`` space, while larger
     increments are shrunk.
@@ -47,65 +101,74 @@ cdef class AdaptiveMap:
     The ``x`` grid for an :class:`AdaptiveMap` can be specified explicitly
     when it is created: for example, ::
 
-        map = AdaptiveMap([0., 0.1, 2.0])
+        map = AdaptiveMap([[0, 0.1, 1], [-1, 0, 1]])
 
-    creates a map where the ``x`` interval ``(0,0.1)`` maps into the
-    ``y`` interval ``(0,0.5)``, while ``(0.1,2.0)`` maps into ``(0.5,1)``
-    in ``y`` space.
+    creates a two-dimensional map where the ``x[0]`` interval ``(0,0.1)``
+    and ``(0.1,1)`` map into the ``y[0]`` intervals ``(0,0.5)`` and 
+    ``(0.5,1)`` respectively, while ``x[1]`` intervals ``(-1.,0)`` 
+    and ``(0,1)`` map into ``y[1]`` intervals ``(0,0.5)`` and  ``(0.5,1)``.
 
     More typically an initially uniform map is trained so that 
-    ``F(x(y),dx(y)/dy)``, for some training function ``F``, 
-    is (approximately) constant across ``y`` space. This is done 
-    iteratively, beginning with a uniform map::
+    ``F(x(y), dx(y)/dy)``, for some training function ``F``, 
+    is (approximately) constant across ``y`` space. The training function
+    is assumed to grow monotonically with the jacobian ``dx(y)/dy`` at
+    fixed ``x``. The adaptation is done iteratively, beginning 
+    with a uniform map::
 
-        m = AdaptiveMap([xl, xu], ninc=N)
+        map = AdaptiveMap([[xl[0], xu[0]], [xl[1], xu[1]]...], ninc=N)
 
     which creates an ``x`` grid with ``N`` equal-sized increments 
-    between ``x=xl`` and ``x=xu``. Then training data is accumulated
-    by the map by creating a list of ``y`` values spread over ``(0,1)``
-    and evaluating the training function at the corresponding ``x``
-    values::
+    between ``x[d]=xl[d]`` and ``x[d]=xu[d]``. The training function 
+    is then evaluated for the ``x`` values corresponding to 
+    a list of ``y`` values ``y[d, i]`` spread over ``(0,1)`` for 
+    each direction ``d``::
 
-        y = numpy.array([....])                # y values on (0,1)
-        x = numpy.empty(len(y), float)        # container for correspondings x's 
-        jac = numpy.empty(len(y), float)    # container for corresponding dx/dy's
-        m.map(y=y, x=x, jac=jac)            # fill x and jac
-        f = F(x, jac)                        # returns array of F values
+        ...
+        for i in range(ny):
+            for d in range(dim):
+                y[d, i] = ....
+        x = numpy.empty(y.shape, float)     # container for corresponding x's
+        jac = numpy.empty(y.shape, float)   # container for corresponding dx/dy's
+        map.map(y, x, jac)                  # fill x and jac
+        f = F(x, jac)                       # compute training function
 
-    The training data is given to the map using::
+    The number of ``y`` points is arbitrary, but typically large. Training 
+    data is often generated in batches that are accumulated by the 
+    map through multiple calls to::
 
-        m.accumulate_training_data(y, f)
+        map.add_training_data(y, f)
 
-    This can be done all at once or in batches, with multiple calls 
-    to ``m.accumulate_training_data``; the training data accumulates 
-    inside the map. Finally the map is adapted to the data::
+    Finally the map is adapted to the data::
 
         m.adapt()
 
     The process of computing training data and then adapting the map
     typically has to be repeated several times before the map converges,
-    at which point the ``x`` grid's nodes, ``m.x[i]``, stop changing.
+    at which point the ``x``-grid's nodes, ``map.grid[d, i]``, stop changing.
 
-    The speed with which the grid adapts is determined by 
-    parameter ``alpha``. Large (positive) values imply rapid adaptation,
-    while small values (much less than one) imply slow adaptation. As in
-    any iterative process, it is sometimes useful to slow adaptation down
-    in order to avoid instabilities.
+    The speed with which the grid adapts is determined by parameter ``alpha``.
+    Large (positive) values imply rapid adaptation, while small values (much
+    less than one) imply slow adaptation. As in any iterative process, it is
+    usually a good idea to slow adaptation down in order to avoid
+    instabilities.
 
-    :param x: Initial ``x`` grid.
-    :type x: 1-d sequence of floats
-    :param ninc: Number of increments in ``x`` grid. New ``x`` values
-        are generated if the ``ninc`` differs from ``len(x)`` for 
-        parameter ``x``. These are chosen to maintain the Jacobian,
-        ``dx(y)/dy``, as much as possible. Ignored if ``None`` (default).
+    :param grid: Initial ``x`` grid, where ``grid[d, i]`` is the ``i``-th 
+        node in direction ``d``.
+    :type x: 2-d array of floats
+    :param ninc: Number of increments along each axis of the ``x`` grid. 
+        A new grid is generated if ``ninc`` differs from ``grid.shape[1]``.
+        The new grid is designed to give the same jacobian ``dx(y)/dy``
+        as the original grid. The default value, ``ninc=None``,  leaves 
+        the grid unchanged.
     :type ninc: ``int`` or ``None``
     :param alpha: Determines the speed with which the grid adapts to 
         training data. Large (postive) values imply rapid evolution; 
         small values (much less than one) imply slow evolution. Typical 
         values are of order one. Choosing ``alpha<0`` causes adaptation
         to the unmodified training data (usually not a good idea).
+    :type alpha: int
     """
-    def __cinit__(self, grid, alpha=3.0, ninc=None):
+    def __init__(self, grid, alpha=1.0, ninc=None):
         cdef INT_TYPE i, d
         grid = numpy.array(grid, float)
         if grid.ndim != 2:
@@ -124,18 +187,37 @@ cdef class AdaptiveMap:
                 self.adapt(ninc=ninc)
 
     property ninc:
+        " Number of increments along each grid axis."
         def __get__(self):
-            return self.inc.shape[1]
+            return self.inc.shape[1] 
     property  dim:
+        " Number of dimensions."
         def __get__(self):
             return self.grid.shape[0]
     def region(self, INT_TYPE d=-1):
+        """ x-space region.
+
+        ``region(d)`` returns a tuple ``(xl,xu)`` specifying the ``x``-space
+        interval covered by the map in direction ``d``. A list containing
+        the intervals for each direction is returned if ``d`` is omitted.
+        """
         if d < 0:
             return [self.region(d) for d in range(self.dim)]
         else:
             return (self.grid[d, 0], self.grid[d, -1])
 
+    def __reduce__(self):
+        """ Capture state for pickling. """
+        return (AdaptiveMap, (numpy.asarray(self.grid), self.alpha))
+
+
     def make_uniform(self, ninc=None):
+        """ Replace the grid with a uniform grid.
+
+        The new grid has ``ninc`` increments along each direction if 
+        ``ninc`` is specified. Otherwise it has the same number of 
+        increments as the old grid.
+        """
         cdef INT_TYPE i, d
         cdef INT_TYPE dim = self.grid.shape[0]
         cdef double[:] tmp
@@ -156,6 +238,7 @@ cdef class AdaptiveMap:
         self._init_grid(new_grid)
 
     def _init_grid(self, new_grid, initinc=False):
+        " Set the grid equal to new_grid. "
         cdef INT_TYPE dim = new_grid.shape[0]
         cdef INT_TYPE ninc = new_grid.shape[1] - 1 
         cdef INT_TYPE d, i
@@ -167,7 +250,12 @@ cdef class AdaptiveMap:
                 self.inc[d, i] = self.grid[d, i + 1] - self.grid[d, i]
 
     def __call__(self, y):
-        y = numpy.asarray(y)
+        """ Return ``x`` values corresponding to ``y``. 
+
+        ``y`` can be a single ``dim``-dimensional point, or it 
+        can be an array ``y[d,i,j,...]`` of such points (``d=0..dim-1``).
+        """
+        y = numpy.asarray(y, float)
         y_shape = y.shape
         y.shape = y.shape[0], -1
         x = 0 * y
@@ -177,6 +265,11 @@ cdef class AdaptiveMap:
         return x
 
     def jac(self, y):
+        """ Return the map's jacobian at ``y``. 
+
+        ``y`` can be a single ``dim``-dimensional point, or it 
+        can be an array ``y[d,i,j,...]`` of such points (``d=0..dim-1``).
+        """
         y = numpy.asarray(y)
         y_shape = y.shape
         y.shape = y.shape[0], -1
@@ -194,8 +287,28 @@ cdef class AdaptiveMap:
         double[::1] jac, 
         INT_TYPE ny=-1
         ):
-        """ array y -> x,J where x and J are arrays
-        where x = x(y) and J = dx/dy (jac.) """
+        """ Map y to x, where jac is the jacobian.
+
+        ``y[d, i]`` is an array of ``ny`` ``y``-values for direction ``d``.
+        ``x[d, i]`` is filled with the corresponding ``x`` values,
+        and ``jac[i]`` is filled with the corresponding jacobian 
+        values. ``x`` and ``jac`` must be preallocated: for example, ::
+
+            x = numpy.empty(y.shape, float)
+            jac = numpy.empty(y.shape[1], float)
+
+        :param y: ``y`` values to be mapped. ``y`` is a contiguous 2-d array,
+            where ``y[d, i]`` contains values for points along direction ``d``.
+        :type y: contiguous 2-d array of floats
+        :param x: Container for ``x`` values corresponding to ``y``.
+        :type x: contiguous 2-d array of floats
+        :param jac: Container for jacobian values corresponding to ``y``.
+        :type jac: contiguous 1-d array of floats
+        :param ny: Number of ``y`` points: ``y[d, i]`` for ``d=0...dim-1``
+            and ``i=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
+            omitted (or negative).
+        :type ny: int
+        """
         cdef INT_TYPE ninc = self.inc.shape[1]
         cdef INT_TYPE dim = self.inc.shape[0]
         cdef INT_TYPE i, iy, d
@@ -220,12 +333,28 @@ cdef class AdaptiveMap:
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    cpdef accumulate_training_data(
+    cpdef add_training_data(
         self, 
         double[:, ::1] y, 
         double[::1] f, 
         INT_TYPE ny=-1,
         ):
+        """ Add training data ``f`` for ``y``-space points ``y``.
+
+        Accumulates training data for later use by ``self.adapt()``.
+
+        :param y: ``y`` values corresponding to the training data. 
+            ``y`` is a contiguous 2-d array, where ``y[d, i]`` 
+            is for points along direction ``d``.
+        :type y: contiguous 2-d array of floats
+        :param f: Training function values. ``f[i]`` corresponds to 
+            point ``y[d, i]`` in ``y``-space.
+        :type f: contiguous 2-d array of floats
+        :param ny: Number of ``y`` points: ``y[d, i]`` for ``d=0...dim-1``
+            and ``i=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
+            omitted (or negative).
+        :type ny: int
+        """
         cdef INT_TYPE ninc = self.inc.shape[1]
         cdef INT_TYPE dim = self.inc.shape[0]
         cdef INT_TYPE iy 
@@ -245,6 +374,24 @@ cdef class AdaptiveMap:
         return
         
     def adapt(self, ninc=None, alpha=None):
+        """ Adapt grid to accumulated training data.
+
+        The new grid is designed to make the training function constant
+        in ``y[d]`` when the ``y``\s in the other directions  are integrated out.
+        The number of increments along a direction and the damping 
+        parameter can be overridden temporarily by setting parameters 
+        ``ninc`` and ``alpha``.
+        :parameter ninc: Number of increments along each direction in the 
+            new grid. The number is unchanged from the old grid if ``ninc``
+            is omitted (or equals ``None``).
+        :type ninc: int or None
+        :parameter alpha: Determines the speed with which the grid adapts to 
+            training data. Large (postive) values imply rapid evolution; 
+            small values (much less than one) imply slow evolution. Typical 
+            values are of order one. Choosing ``alpha<0`` causes adaptation
+            to the unmodified training data (usually not a good idea).
+        :type alpha: double or None
+        """
         cdef double[:, ::1] new_grid
         cdef double[::1] avg_f, tmp_f
         cdef double sum_f, acc_f, f_inc
@@ -328,20 +475,21 @@ cdef class AdaptiveMap:
 cdef class Integrator(object):
 
     defaults = dict(
-        neval=1000,
-        maxinc=10000,
-        maxvec=10000,
-        cstrat=10,
-        nitn=5,
+        fcntype='scalar', # default integrand type
+        neval=1000,       # number of evaluations per iteration
+        maxinc_axis=100,  # number of adaptive-map increments per axis
+        nhcube_vec=30,    # number of h-cubes per vector
+        nstrat_crit=15,   # critical number of strata
+        nitn=5,           # number of iterations
         alpha=0.5,
-        mode='automatic',
         beta=0.75,
-        analyzer=None,
+        mode='automatic',
         rtol=0,
         atol=0,
+        analyzer=None,
         )
 
-    def __cinit__(self, region, **kargs):
+    def __init__(self, region, **kargs):
         args = dict(Integrator.defaults)
         args.update(kargs)
         self.set(args)
@@ -350,25 +498,42 @@ cdef class Integrator(object):
         self.neval_hcube_range = None
         self.last_neval = 0
 
+    def __reduce__(self):
+        """ Capture state for pickling. """
+        odict = dict()
+        for k in Integrator.defaults:
+            if k in ['analyzer']:
+                continue
+            odict[k] = getattr(self, k)
+        return (Integrator, (numpy.asarray(self.map.grid),), odict)
+
+    def __setstate__(self, odict):
+        """ Set state for unpickling. """
+        for k in odict:
+            setattr(self, k, odict[k])
+
     def set(self, ka={}, **kargs):
         if kargs:
             kargs.update(ka)
         else:
             kargs = ka
-        old_val = dict()
+        old_val = dict() 
         for k in kargs:
-            if k == 'neval':
+            if k == 'fcntype':
+                old_val[k] = self.fcntype
+                self.fcntype = kargs[k]
+            elif k == 'neval':
                 old_val[k] = self.neval
                 self.neval = kargs[k]
-            elif k == 'maxinc':
-                old_val[k] = self.maxinc
-                self.maxinc = kargs[k]
-            elif k == 'maxvec':
-                old_val[k] = self.maxvec
-                self.maxvec = kargs[k]
-            elif k == 'cstrat':
-                old_val[k] = self.cstrat
-                self.cstrat = kargs[k]
+            elif k == 'maxinc_axis':
+                old_val[k] = self.maxinc_axis
+                self.maxinc_axis = kargs[k]
+            elif k == 'nhcube_vec':
+                old_val[k] = self.nhcube_vec
+                self.nhcube_vec = kargs[k]
+            elif k == 'nstrat_crit':
+                old_val[k] = self.nstrat_crit
+                self.nstrat_crit = kargs[k]
             elif k == 'nitn':
                 old_val[k] = self.nitn
                 self.nitn = kargs[k]
@@ -396,9 +561,9 @@ cdef class Integrator(object):
 
     def status(self):
         cdef INT_TYPE d
-        self._prep_integration()
+        self._prepare_integration()
         nhcube = self.nstrat ** self.dim
-        neval = nhcube * self.neval_hcube
+        neval = nhcube * self.neval_hcube if self.beta <= 0 else self.neval
         ans = ""
         ans = "Integrator Status:\n"
         if self.beta > 0:
@@ -431,7 +596,7 @@ cdef class Integrator(object):
                     "                h-cubes = %d  evaluations/h-cube = %d\n"
                     % (nhcube, self.neval_hcube)
                     )
-        n_vec = min(max(nhcube, self.neval_hcube), self.maxvec)
+        ans += "                h-cubes/vector = %d\n" % self.nhcube_vec
         ans = ans + (
             "    damping parameters: alpha = %g  beta= %g\n" 
             % (self.alpha, self.beta)
@@ -444,33 +609,44 @@ cdef class Integrator(object):
                 )
         return ans
 
-    def _prep_integration(self):
+    def _prepare_integration(self):
         """ called by __call__ before integrating """
         dim = self.map.dim
         neval_eff = self.neval / 1.5 if self.beta > 0 else self.neval
-        ns = int((neval_eff / 2.) ** (1. / dim))     # stratifications/axis
-        if ns > self.maxvec:
-            ns = self.maxvec
-        ni = int(self.neval / 10.)                    # increments/axis
-        if ns > self.cstrat or ns > ni:     
+        ns = int((neval_eff / 2.) ** (1. / dim))# stratifications/axis
+        ni = int(self.neval / 10.)              # increments/axis
+        if ni > self.maxinc_axis:
+            ni = self.maxinc_axis
+        if ns > self.nstrat_crit or ns > ni:     
             self._mode = "adapt_to_errors"
-            ni = ns
-            if ni * dim > self.maxinc:
-                ni = int(self.maxinc / dim)
-                ns = int(ns / ni) * ni
+            if ns > ni:
+                if ns < self.maxinc_axis:
+                    ni = ns
+                else:
+                    ns = int(ns // ni) * ni
+            else:
+                ni = int(ni // ns) * ns
         else:                            
             self._mode = "adapt_to_integrand"
             if ns < 1:
                 ns = 1
             if ni < 1:
                 ni = 1
-            elif ni * dim > self.maxinc:
-                ni = int(self.maxinc / dim)
+            elif ni  > self.maxinc_axis:
+                ni = self.maxinc_axis
             ni = int(ni // ns) * ns
 
         if self.mode != "automatic":
-            self._mode = self.mode
-        
+            
+            if self.beta > 0:
+                self._mode = "adapt_to_integrand"
+            else:
+                self._mode = self.mode
+
+        if self._mode == "adapt_to_errors" and ni > ns:
+            ni = ns
+            self.beta = 0.0
+
         self.map.adapt(ninc=ni)    
         self.map.alpha = self.alpha
 
@@ -483,41 +659,53 @@ cdef class Integrator(object):
         if self.beta > 0 and len(self.sigf_list) != nhcube:
             self.sigf_list = numpy.ones(nhcube, float)
 
-    def integrate(self, fcn, **kargs):
-        global _python_integrand    
-        self.vec_integrand = _compute_python_integrand
-        _python_integrand = fcn
-        return self._integrate(kargs)
+    def _prepare_integrand(self, fcn, fcntype=None):
+        if fcntype is None:
+            fcntype = self.fcntype
+        if hasattr(fcn, 'fcntype'):
+            fcntype = fcn.fcntype
+        if fcntype == 'scalar':
+            return VecPythonIntegrand(fcn)
+        else:
+            return fcn
 
     def __call__(self, fcn, **kargs):
-        return self.integrate(fcn, **kargs)
+        """ Integrate ``fcn``, possibly overriding default parameters. """
+        global _python_integrand 
+        # determine fcntype from fcn, self or kargs 
+        if 'fcntype' in kargs:
+            fcntype = kargs['fcntype']
+            del kargs['fcntype']
+        else:
+            fcntype = self.fcntype
+        fcn = self._prepare_integrand(fcn, fcntype=fcntype)
+        return self._integrate(fcn, kargs)
 
-    def vec_integrate(self, fcn, **kargs):
-        global _python_integrand    
-        self.vec_integrand = _compute_python_vec_integrand
-        _python_integrand = fcn
-        return self._integrate(kargs)
+    def debug(self, fcn, INT_TYPE neval=10):
+        """ Evaluate fcn at ``neval`` random points. """
+        cdef INT_TYPE i
+        cdef double[:, ::1] y = numpy.random.uniform(
+            0., 1., (self.map.dim, neval)
+            )
+        cdef double[:, ::1] x = self.map(y)
+        cdef double[::1] f = numpy.empty(neval, float)
+        fcn = self._prepare_integrand(fcn)
+        fcn(x, f, neval)
 
-    cdef cython_integrate(self, cython_vec_integrand fcn, kargs):
-        self.vec_integrand = fcn
-        return self._integrate(kargs)
 
-    # def test_cython_integrate(self, **kargs):
-    #     return self.cython_integrate(& vec_example, kargs)
-
-    cdef _integrate(self, kargs):
+    cdef _integrate(self, fcn, kargs):
         if kargs:
             old_kargs = self.set(kargs)
         else:
             old_kargs = {}
-        self._prep_integration()
-        anslist = [] 
+        self._prepare_integration()
+        self.results = [] 
         for itn in range(self.nitn):    # iterate
             if self.analyzer != None:
                 self.analyzer.begin(itn, self)
-            itn_ans = self._integrator() 
-            anslist.append(itn_ans)
-            ans = lsqfit.wavg(anslist)
+            itn_ans = self._integrator(fcn) 
+            self.results.append(itn_ans)
+            ans = lsqfit.wavg(self.results)
             if self.analyzer != None:
                 self.analyzer.end(itn_ans, ans)
             self.map.adapt()
@@ -530,8 +718,9 @@ cdef class Integrator(object):
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def _integrator(self):
+    def _integrator(self, fcn):
         cdef INT_TYPE nhcube = self.nstrat ** self.dim 
+        cdef INT_TYPE nhcube_vec = self.nhcube_vec
         cdef INT_TYPE adapt_to_integrand = (
             1 if self._mode == 'adapt_to_integrand' else 0
             )
@@ -547,88 +736,111 @@ cdef class Integrator(object):
         cdef double dv = (1./self.nstrat) ** self.dim
         cdef double ans_mean = 0.
         cdef double ans_var = 0.
-        cdef double[:, ::1] y = numpy.empty((0,0), float)
-        cdef double[:, ::1] x = numpy.empty((0,0), float)
-        cdef double[::1] jac = numpy.empty((0,), float)
+        cdef INT_TYPE sum_neval_hcube = self.nhcube_vec * self.neval_hcube
+        cdef double[:, ::1] y = numpy.empty((self.dim, sum_neval_hcube), float)
+        cdef double[:, ::1] x = numpy.empty((self.dim, sum_neval_hcube), float)
+        cdef double[::1] jac = numpy.empty(sum_neval_hcube, float)
         cdef INT_TYPE min_neval_hcube = self.neval_hcube
         cdef INT_TYPE max_neval_hcube = self.neval_hcube
-        cdef INT_TYPE neval_hcube
-        cdef INT_TYPE hcube, i, j, d
+        # cdef INT_TYPE neval_hcube
+        cdef INT_TYPE hcube, i, j, d, hcube_base, ihcube, i_start
+        cdef INT_TYPE[:] neval_hcube = (
+            numpy.zeros(self.nhcube_vec, int) + self.neval_hcube 
+            )
         cdef double sum_fdv
         cdef double sum_fdv2
-        cdef double[::1] fdv = numpy.empty((0,), float)
-        cdef double[::1] fdv2 = numpy.empty((0,), float)
+        cdef double[::1] fdv = numpy.empty(sum_neval_hcube, float)
+        cdef double[::1] fdv2 = numpy.empty(sum_neval_hcube, float)
         cdef double sigf2, sigf
         cdef double[:, ::1] yran
-        cdef INT_TYPE tmp_hcube
+        cdef INT_TYPE tmp_hcube, counter = 0 ########
 
+        # iterate over h-cubes in batches of self.nstrat h-cubes
+        # this allows for vectorization, to reduce python overhead
         self.last_neval = 0
-        for hcube in range(nhcube):
-            tmp_hcube = hcube
-            for d in range(self.dim):
-                y0[d] = tmp_hcube % self.nstrat
-                tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
+        nhcube_vec = self.nhcube_vec
+        for hcube_base in range(0, nhcube, nhcube_vec):
+            if (hcube_base + nhcube_vec) > nhcube:
+                nhcube_vec = nhcube - hcube_base 
+
+            # compute neval_hcube for each h-cube
+            # reinitialize work areas if necessary
             if redistribute:
-                neval_hcube = <int> (
-                    tanh(self.sigf_list[hcube] / max_sigf) * neval_factor
+                sum_neval_hcube = 0
+                for ihcube in range(nhcube_vec):
+                    neval_hcube[ihcube] = <int> (
+                    tanh(self.sigf_list[hcube_base + ihcube] / max_sigf) 
+                    * neval_factor
                     )
-                if neval_hcube < self.neval_hcube:
-                    neval_hcube = self.neval_hcube
-                if neval_hcube < min_neval_hcube:
-                    min_neval_hcube = neval_hcube
-                if neval_hcube > max_neval_hcube:
-                    max_neval_hcube = neval_hcube
-            else:
-                neval_hcube = self.neval_hcube
-            self.last_neval += neval_hcube
-            if neval_hcube > y.shape[1]:
-                # memory allocation for temps if needed
-                y = numpy.empty((self.dim, neval_hcube), float)  
-                x = numpy.empty((self.dim, neval_hcube), float)
-                jac = numpy.empty(neval_hcube, float)            
-                fdv = numpy.empty(neval_hcube, float)     
-                fdv2 = numpy.empty(neval_hcube, float) 
-            yran = numpy.random.uniform(0., 1., (self.dim, neval_hcube))
-            for d in range(self.dim):
-                for i in range(neval_hcube):
-                    y[d, i] = (y0[d] + yran[d, i]) / self.nstrat
-            self.map.map(y, x, jac, neval_hcube)
-            sum_fdv = 0.0
-            sum_fdv2 = 0.0
-            self.vec_integrand(x, fdv, neval_hcube)
-            for i in range(neval_hcube):
-                # fdv[i] = (<double> fcn(x[:, i])) * jac[i] * dv     ##
-                # fdv[i] = example(x[:, i]) * jac[i] * dv     ##
-                fdv[i] *= jac[i] * dv
-                fdv2[i] = fdv[i] ** 2
-                sum_fdv += fdv[i]
-                sum_fdv2 += fdv2[i]
-            mean = sum_fdv / neval_hcube
-            sigf2 = abs(sum_fdv2 / neval_hcube - mean * mean)
-            if redistribute:
-                self.sigf_list[hcube] = sigf2 ** (self.beta / 2.)
-                #     sigf = sqrt(sigf2)
-                #     self.sigf_list[hcube] = (-(1 - sigf) / log(sigf)) ** self.beta
-            var = sigf2 / (neval_hcube - 1.)
-            ans_mean += mean
-            ans_var += var  
-            if adapt_to_integrand:
-                self.map.accumulate_training_data(y, fdv2, neval_hcube)
-            else:
+                    if neval_hcube[ihcube] < self.neval_hcube:
+                        neval_hcube[ihcube] = self.neval_hcube
+                    if neval_hcube[ihcube] < min_neval_hcube:
+                        min_neval_hcube = neval_hcube[ihcube]
+                    if neval_hcube[ihcube] > max_neval_hcube:
+                        max_neval_hcube = neval_hcube[ihcube]
+                    sum_neval_hcube += neval_hcube[ihcube]
+                if sum_neval_hcube > y.shape[1]:
+                    # memory allocation for temps if needed
+                    y = numpy.empty((self.dim, sum_neval_hcube), float)  
+                    x = numpy.empty((self.dim, sum_neval_hcube), float)
+                    jac = numpy.empty(sum_neval_hcube, float)            
+                    fdv = numpy.empty(sum_neval_hcube, float)     
+                    fdv2 = numpy.empty(sum_neval_hcube, float) 
+            self.last_neval += sum_neval_hcube
+           
+            # generate integration points and integrate
+            i_start = 0
+            yran = numpy.random.uniform(0., 1., (self.dim, sum_neval_hcube))
+            for ihcube in range(nhcube_vec):
+                hcube = hcube_base + ihcube
+                tmp_hcube = hcube
                 for d in range(self.dim):
-                    y[d, 0] = (y0[d] + 0.5) / self.nstrat
-                fdv2[0] = var
-                self.map.accumulate_training_data( y, fdv2, 1)
+                    y0[d] = tmp_hcube % self.nstrat
+                    tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
+                for d in range(self.dim):
+                    for i in range(i_start, i_start + neval_hcube[ihcube]):
+                        y[d, i] = (y0[d] + yran[d, i]) / self.nstrat
+                i_start += neval_hcube[ihcube]
+            self.map.map(y, x, jac, sum_neval_hcube)
+            fcn(x, fdv, sum_neval_hcube)
+            
+            # compute integral h-cube by h-cube
+            i_start = 0
+            for ihcube in range(nhcube_vec):
+                hcube = hcube_base + ihcube
+                sum_fdv = 0.0
+                sum_fdv2 = 0.0
+                for i in range(i_start, i_start + neval_hcube[ihcube]):
+                    fdv[i] *= jac[i] * dv
+                    fdv2[i] = fdv[i] ** 2
+                    sum_fdv += fdv[i]
+                    sum_fdv2 += fdv2[i]
+                mean = sum_fdv / neval_hcube[ihcube]
+                sigf2 = abs(sum_fdv2 / neval_hcube[ihcube] - mean * mean)
+                if redistribute:
+                    self.sigf_list[hcube] = sigf2 ** (self.beta / 2.)
+                var = sigf2 / (neval_hcube[ihcube] - 1.)
+                ans_mean += mean
+                ans_var += var
+                if not adapt_to_integrand:
+                    for d in range(self.dim):
+                        y[d, 0] = (y0[d] + 0.5) / self.nstrat
+                    fdv2[0] = var
+                    self.map.add_training_data( y, fdv2, 1)
+                i_start += neval_hcube[ihcube]
+            if adapt_to_integrand:
+                self.map.add_training_data(y, fdv2, sum_neval_hcube)
+
+        # record final results
         self.neval_hcube_range = (min_neval_hcube, max_neval_hcube)
         return gvar.gvar(ans_mean, sqrt(ans_var))
-
 
 class reporter:
     """ analyzer class that prints out a report, iteration
     by interation, on how vegas is doing. Parameter n_prn
     specifies how many x[i]'s to print out from the maps
     for each axis """
-    def __init__(self, n_prn=5):
+    def __init__(self, n_prn=0):
         self.n_prn = n_prn
 
     def begin(self, itn, integrator):
@@ -640,12 +852,11 @@ class reporter:
     def end(self, itn_ans, ans):
         print "    itn %2d: %s\n all itn's: %s"%(self.itn+1, itn_ans, ans)
         print(
-            '    neval = %d  neval/h-cube = %s\n    chi2/dof = (%.1f/%d)  Q = %.1f' 
+            '    neval = %d  neval/h-cube = %s\n    chi2/dof = %.2f  Q = %.1f' 
             % (
                 self.integrator.last_neval, 
                 self.integrator.neval_hcube_range,
-                ans.chi2, 
-                ans.dof,
+                ans.chi2 / ans.dof if ans.dof > 0 else 0,
                 ans.Q if ans.dof > 0 else 1.,
                 )
             )
@@ -669,154 +880,179 @@ class reporter:
                     )
         print('')
 
+cdef class VecCythonIntegrand:
+    """ Vector integrand from scalar Cython integrand. """
+    # cdef cython_integrand fcn
+    def __init__(self): 
+        self.fcntype = 'vector'
 
+    def __call__(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
+        cdef INT_TYPE i
+        for i in range(nx):
+            f[i] = self.fcn(x[:, i])
 
+cdef object python_wrapper(cython_integrand fcn):
+    ans = VecCythonIntegrand()
+    ans.fcn = fcn
+    return ans
+
+cdef class VecPythonIntegrand:
+    # cdef object fcn
+    """ Vector integrand from scalar Python integrand. """
+    def __init__(self, fcn):
+        self.fcn = fcn
+        self.fcntype = 'vector'
+
+    def __call__(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
+        cdef INT_TYPE i 
+        for i in range(nx):
+            f[i] = self.fcn(x[:, i])
 
 #
 # Testing code:
 ###############
 
-cdef class VegasTest:
-    """ Test vegas.
+# cdef class VegasTest:
+#     """ Test vegas.
 
-    This code creates integrands with any number of exponentials along
-    the diagonal of the integration volume, and then evalues the integral
-    using different levels of cythonizing in the code.
+#     This code creates integrands with any number of exponentials along
+#     the diagonal of the integration volume, and then evalues the integral
+#     using different levels of cythonizing in the code.
 
-    Using 3 exponentials in 8 dimensions, with order 10**6, get fastest
-    result from cython_integrate, followed by vec_integrate_cython which
-    was only 10-20% slower. The later is probably the easiest interface
-    to use for cythonized integrands. 20-30x slower are integrate_python
-    and vec_integrate_python, with the former slightly faster(!).
-    """
-    # cdef readonly double[:] sig
-    # cdef readonly double[:] x0
-    # cdef readonly double[:] ampl
-    # cdef readonly double exact
+#     Using 3 exponentials in 8 dimensions, with order 10**6, get fastest
+#     result from cython_integrate, followed by vec_integrate_cython which
+#     was only 10-20% slower. The later is probably the easiest interface
+#     to use for cythonized integrands. 20-30x slower are integrate_python
+#     and vec_integrate_python, with the former slightly faster(!).
+#     """
+#     # cdef readonly double[:] sig
+#     # cdef readonly double[:] x0
+#     # cdef readonly double[:] ampl
+#     # cdef readonly double exact
 
-    def __init__(
-        self, 
-        integrator,
-        x0=None, 
-        ampl=None,
-        sig=None,
-        ):
-        self.I = integrator
-        self.exact = 0.0
-        self.x0 = numpy.zeros(1, float) if x0 is None else numpy.asarray(x0)
-        self.ampl = numpy.ones(len(x0), float) if ampl is None else numpy.asarray(ampl)
-        self.sig = (0.1 + numpy.zeros(len(x0), float)) if sig is None else numpy.asarray(sig)
-        for x0, sig, ampl in zip(self.x0, self.sig, self.ampl):
-            tmp = 1.
-            for d in range(self.I.map.dim):
-                tmp *= self.exact_gaussian(x0, sig, ampl, self.I.map.region(d))
-            self.exact += tmp
+#     def __init__(
+#         self, 
+#         integrator,
+#         x0=None, 
+#         ampl=None,
+#         sig=None,
+#         ):
+#         self.I = integrator
+#         self.exact = 0.0
+#         self.x0 = numpy.zeros(1, float) if x0 is None else numpy.asarray(x0)
+#         self.ampl = numpy.ones(len(x0), float) if ampl is None else numpy.asarray(ampl)
+#         self.sig = (0.1 + numpy.zeros(len(x0), float)) if sig is None else numpy.asarray(sig)
+#         for x0, sig, ampl in zip(self.x0, self.sig, self.ampl):
+#             tmp = 1.
+#             for d in range(self.I.map.dim):
+#                 tmp *= self.exact_gaussian(x0, sig, ampl, self.I.map.region(d))
+#             self.exact += tmp
 
-    # @cython.boundscheck(False)
-    # @cython.wraparound(False)
-    cdef void cython_vec_fcn(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
-        cdef double ans
-        cdef double dx2, dx
-        cdef INT_TYPE i, d, j
-        cdef INT_TYPE dim = x.shape[0]
-        cdef INT_TYPE nx0 = len(self.x0)
-        for i in range(nx):
-            ans = 0.0
-            for j in range(nx0):
-                dx2 = 0.0
-                for d in range(dim):
-                    dx = x[d, i] - self.x0[j]
-                    dx2 += dx * dx
-                ans += self.ampl[j] * exp(- dx2 / self.sig[j] ** 2) 
-            f[i] = ans / self.exact
-        return
+#     # @cython.boundscheck(False)
+#     # @cython.wraparound(False)
+#     cdef void cython_vec_fcn(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
+#         cdef double ans
+#         cdef double dx2, dx
+#         cdef INT_TYPE i, d, j
+#         cdef INT_TYPE dim = x.shape[0]
+#         cdef INT_TYPE nx0 = len(self.x0)
+#         for i in range(nx):
+#             ans = 0.0
+#             for j in range(nx0):
+#                 dx2 = 0.0
+#                 for d in range(dim):
+#                     dx = x[d, i] - self.x0[j]
+#                     dx2 += dx * dx
+#                 ans += self.ampl[j] * exp(- dx2 / self.sig[j] ** 2) 
+#             f[i] = ans / self.exact
+#         return
 
-    def python_vec_fcn(self, x, f, nx):
-        for i in range(nx):
-            ans = 0.0
-            for j in range(len(self.x0)):
-                dx2 = 0.0
-                for d in range(x.shape[0]):
-                    dx = x[d, i] - self.x0[j]
-                    dx2 += dx * dx
-                ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
-            f[i] = ans / self.exact
-        return
-    # def python_vec_fcn(self, double[:, ::1] xx, double[::1] ff, nx):
-    #     " This is slower than the version just above (surprisingly?) "
-    #     x = numpy.asarray(xx)
-    #     f = numpy.asarray(ff)
-    #     ans = 0.0
-    #     for j in range(len(self.x0)):
-    #         dx2 = 0.0
-    #         for d in range(x.shape[0]):
-    #             dx = x[d, :nx] - self.x0[j]
-    #             dx2 += dx * dx
-    #         ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
-    #     f[:nx] = ans / self.exact
-    #     return
+#     # def python_vec_fcn(self, x, f, nx):
+#     #     for i in range(nx):
+#     #         ans = 0.0
+#     #         for j in range(len(self.x0)):
+#     #             dx2 = 0.0
+#     #             for d in range(x.shape[0]):
+#     #                 dx = x[d, i] - self.x0[j]
+#     #                 dx2 += dx * dx
+#     #             ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
+#     #         f[i] = ans / self.exact
+#     #     return
+#     def python_vec_fcn(self, double[:, ::1] xx, double[::1] ff, nx):
+#         " This is 6x faster than the version just above for one example "
+#         x = numpy.asarray(xx)
+#         f = numpy.asarray(ff)
+#         ans = 0.0
+#         for j in range(len(self.x0)):
+#             dx2 = 0.0
+#             for d in range(x.shape[0]):
+#                 dx = x[d, :nx] - self.x0[j]
+#                 dx2 += dx * dx
+#             ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
+#         f[:nx] = ans / self.exact
+#         return
 
-    def python_fcn(self, x):
-        ans = 0.0
-        for j in range(len(self.x0)):
-            dx2 = 0.0
-            for d in range(x.shape[0]):
-                dx = x[d] - self.x0[j]
-                dx2 += dx * dx
-            ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
-        return ans / self.exact
-
-
-    # @cython.boundscheck(False)
-    # @cython.wraparound(False)
-    def __call__(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
-        cdef double ans
-        cdef double dx2, dx
-        cdef INT_TYPE i, d, j
-        cdef INT_TYPE dim = x.shape[0]
-        cdef INT_TYPE nx0 = len(self.x0)
-        for i in range(nx):
-            ans = 0.0
-            for j in range(nx0):
-                dx2 = 0.0
-                for d in range(dim):
-                    dx = x[d, i] - self.x0[j]
-                    dx2 += dx * dx
-                ans += self.ampl[j] * exp(- dx2 / self.sig[j] ** 2) 
-            f[i] = ans / self.exact
-        return
-
-    def exact_gaussian(self, x0, sig, ampl, interval):
-        """ int dx exp(-(x-x0)**2 / sig**2) over range """
-        ans = 0.0
-        for x in [interval[0], interval[-1]]:
-            ans += erf(abs(x0 - x) / sig)
-        return ans * ampl * math.pi ** 0.5 / 2. * sig
-
-    def cython_integrate(VegasTest self, **kargs):
-        " Integrate using I.cython_integrate "
-        global vegastest_instance 
-        vegastest_instance = self
-        return self.I.cython_integrate(& vegastest_fcn, kargs)
-
-    def vec_integrate_cython(VegasTest self, **kargs):
-        " Integrate using I.vec_integrate with cython optimized python fcn "
-        return self.I.vec_integrate(self, **kargs)
-
-    def vec_integrate_python(self, **kargs):
-        " Integrate using I.vec_integrate with pure python vector fcn "
-        return self.I.vec_integrate(self.python_vec_fcn, **kargs)
+#     def python_fcn(self, x):
+#         ans = 0.0
+#         for j in range(len(self.x0)):
+#             dx2 = 0.0
+#             for d in range(x.shape[0]):
+#                 dx = x[d] - self.x0[j]
+#                 dx2 += dx * dx
+#             ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
+#         return ans / self.exact
 
 
-    def integrate_python(self, **kargs):
-        " Integrate using I(fcn) with pure python (non-vector) fcn "
-        return self.I(self.python_fcn, **kargs)
+#     # @cython.boundscheck(False)
+#     # @cython.wraparound(False)
+#     def __call__(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
+#         cdef double ans
+#         cdef double dx2, dx
+#         cdef INT_TYPE i, d, j
+#         cdef INT_TYPE dim = x.shape[0]
+#         cdef INT_TYPE nx0 = len(self.x0)
+#         for i in range(nx):
+#             ans = 0.0
+#             for j in range(nx0):
+#                 dx2 = 0.0
+#                 for d in range(dim):
+#                     dx = x[d, i] - self.x0[j]
+#                     dx2 += dx * dx
+#                 ans += self.ampl[j] * exp(- dx2 / self.sig[j] ** 2) 
+#             f[i] = ans / self.exact
+#         return
+
+#     def exact_gaussian(self, x0, sig, ampl, interval):
+#         """ int dx exp(-(x-x0)**2 / sig**2) over range """
+#         ans = 0.0
+#         for x in [interval[0], interval[-1]]:
+#             ans += erf(abs(x0 - x) / sig)
+#         return ans * ampl * math.pi ** 0.5 / 2. * sig
+
+#     def cython_integrate(VegasTest self, **kargs):
+#         " Integrate using I.cython_integrate "
+#         global vegastest_instance 
+#         vegastest_instance = self
+#         return self.I.cython_integrate(& vegastest_fcn, kargs)
+
+#     def vec_integrate_cython(VegasTest self, **kargs):
+#         " Integrate using I.vec_integrate with cython optimized python fcn "
+#         return self.I.vec_integrate(self, **kargs)
+
+#     def vec_integrate_python(self, **kargs):
+#         " Integrate using I.vec_integrate with pure python vector fcn "
+#         return self.I.vec_integrate(self.python_vec_fcn, **kargs)
 
 
-cdef VegasTest vegastest_instance
+#     def integrate_python(self, **kargs):
+#         " Integrate using I(fcn) with pure python (non-vector) fcn "
+#         return self.I(self.python_fcn, **kargs)
 
-cdef void vegastest_fcn(double[:, ::1] x, double[::1] f, INT_TYPE nx):
-    vegastest_instance.cython_vec_fcn(x, f, nx)
+
+# cdef VegasTest vegastest_instance
+
+# cdef void vegastest_fcn(double[:, ::1] x, double[::1] f, INT_TYPE nx):
+#     vegastest_instance.cython_vec_fcn(x, f, nx)
 
 
 
