@@ -1,0 +1,25 @@
+- Make multivegas --- integrand is a vector of different integrands.
+
+- do we want to disable adapt_to_errors because it isn't so useful anymore?
+  in 1d it is better. Not clear whether the 1/n error dependence beats 
+  the adaptive redistribution in 2 or higher --- quite possibly does.
+  kinoshita's small integral might be a good test case.
+
+
+- Kinoshita's 9-dim integral fails in adapt_to_errors mode (really large neval).
+  Is this because we estimate errors using sum(f**2)/n - mean(f)**2 rather 
+  than sum((f-mean(f))**2) / n ???
+
+- Check whether things run faster if we put x[::1, :1] rather than 
+  the other way around. It could affect the speed of scalar integrands
+  since x[d] isn't strided then. On the other hand realistic integration
+  methods don't use x[d] that much --- it gets mapped into a scalar variable
+  usually. Changing might make it easier to use compiled Fortran and C 
+  code for scalar functions since then x[d] is a simple array (ie, not
+  strided.) This last is an important consideration. On the other hand
+  vectorized code may prefer the vector index to be the outermost -- not
+  clear really. SHOULD DO IT!
+
+
+- get sdist to work properly --- need MANIFEST.in
+
