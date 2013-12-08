@@ -23,3 +23,8 @@
 
 - get sdist to work properly --- need MANIFEST.in
 
+- cythonize WAvg properly; add documentation.
+
+- on 3-gaussian in 6d with 100,000 per itn, 1000 itns it seems
+  to always underestimate the error by a lot. Is it possibly 
+  due to round off error? Might we be missing small errors?

@@ -47,22 +47,12 @@ cdef class Integrator:
     cdef public object analyzer
     # generated
     cdef readonly AdaptiveMap map 
-    cdef readonly object results
     cdef double[::1] sigf_list
     cdef INT_TYPE nstrat 
     cdef INT_TYPE neval_hcube 
     cdef INT_TYPE dim 
     cdef readonly INT_TYPE last_neval
-    # work areas -- store here to avoid lots of reallocation
-    cdef double[:, ::1] _y
-    cdef double[:, ::1] _x
-    cdef double[::1] _jac 
-    cdef INT_TYPE[:] _neval_hcube 
-    cdef double[::1] _fdv 
-    cdef double[::1] _fdv2 
     
-    cdef _integrate(self, fcn, kargs)
-
     
 # cdef class VegasTest:
 #     cdef readonly double[::1] sig

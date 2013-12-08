@@ -1,4 +1,4 @@
-# c#ython: profile=True
+# cython: profile=True
 """ Adaptive multidimensional Monte Carlo integration
 
 Class :class:`vegas.Integrator` gives Monte Carlo estimates of 
@@ -20,14 +20,14 @@ import numpy
 import math
 import exceptions
 
+have_gvar = False
 try:
     import gvar
+    cimport gvar
     import lsqfit
-    if not hasattr(lsqfit, 'WAvg'):
-        # check to make sure recent version of lsqfit
-        raise ImportError
+    have_gvar = True
 except ImportError:
-    # fake versions of gvar.gvar and lsqfit.wavg
+    # fake version of gvar.gvar
     # for use if lsqfit module not available
     class _gvar_standin:
         def __init__(self):
@@ -37,48 +37,42 @@ except ImportError:
                 def __init__(self, mean, sdev):
                     self.mean = float(mean)
                     self.sdev = float(sdev)
+                    self.internaldata = (self.mean, self.sdev)
                 def __str__(self):
                     return "%g +- %g" % (self.mean, self.sdev)
             return GVar(mean, sdev)
 
     gvar = _gvar_standin()
 
-    class _lsqfit_standin:
-        def __init__(self):
-            pass
-        def wavg(self, glist):
-            class WAvg:
-                def __init__(self, glist):
-                    xmean = numpy.array([x.mean for x in glist])
-                    xvar = numpy.array([x.sdev ** 2 for x in glist])
-                    self.mean = numpy.sum(xmean/xvar) / numpy.sum(1./xvar)
-                    self.sdev = numpy.sqrt(1. / numpy.sum(1/xvar))
-                    self.chi2 = ( 
-                        sum(xmean ** 2 / xvar) 
-                        - self.mean ** 2 * sum(1./xvar)
-                        )
-                    self.dof = len(glist)
-                    self.Q = -1
-                def __str__(self):
-                    return "%g +- %g" % (self.mean, self.sdev)
-            return WAvg(glist)
-
-    lsqfit = _lsqfit_standin()
+cdef class WAvg(gvar.GVar):
+    cdef public double chi2
+    cdef public INT_TYPE dof
+    cdef public double Q
+    cdef public object[::1] itn_results
+    def __init__(self, object[::1] glist):
+        cdef numpy.ndarray[numpy.double_t, ndim=1] xmean, xvar
+        cdef gvar.GVar avg
+        self.itn_results = numpy.array(glist)
+        xmean = gvar.mean(glist) 
+        xvar = gvar.var(glist)
+        avg = gvar.gvar(
+            numpy.sum(xmean/xvar) / numpy.sum(1./xvar),
+            numpy.sqrt(1. / numpy.sum(1/xvar)),
+            )
+        super(WAvg, self).__init__(*avg.internaldata)
+        self.chi2 = ( 
+            sum(xmean ** 2 / xvar) 
+            - self.mean ** 2 * sum(1./xvar)
+            )
+        self.dof = len(glist) - 1
+        self.Q = (
+            lsqfit.gammaQ(self.dof/2., self.chi2/2.) 
+            if have_gvar and self.dof > 0 
+            else -1.
+            )
 
 cdef double TINY = 1e-308                            # smallest and biggest
 cdef double HUGE = 1e308
-
-# Wrapper for python functions used by Integrator
-cdef object _python_integrand = None
-
-cdef void _python_integrand_wrapper(double[:,::1] x, double[::1] f, INT_TYPE nx):
-    cdef INT_TYPE i
-    for i in range(nx):
-        f[i] = _python_integrand(x[:, i])
-
-cdef void _vec_python_integrand_wrapper(double[:,::1] x, double[::1] f, INT_TYPE nx):
-    _python_integrand(x, f, nx)
-
 
 # AdaptiveMap is used by Integrator 
 cdef class AdaptiveMap:
@@ -577,7 +571,7 @@ cdef class Integrator(object):
 
     def settings(self):
         cdef INT_TYPE d
-        mode = self._prepare_integration()
+        mode = self._prepare_integrator()
         beta = self.beta if mode == 'adapt_to_integrand' else 0.0
         nhcube = self.nstrat ** self.dim
         neval = nhcube * self.neval_hcube if self.beta <= 0 else self.neval
@@ -672,30 +666,11 @@ cdef class Integrator(object):
         if self.neval_hcube < 2:
             self.neval_hcube = 2
         self.dim = dim
-        if nhcube < self.nhcube_vec:
-            self.nhcube_vec = nhcube
-
-        # memory allocation for work areas -- do once
+        # if nhcube < self.nhcube_vec:
+        #     self.nhcube_vec = nhcube
         if self.beta > 0 and len(self.sigf_list) != nhcube:
             self.sigf_list = numpy.ones(nhcube, float)
-        sum_neval_hcube = self.nhcube_vec * self.neval_hcube
-        self._y = numpy.empty((self.dim, sum_neval_hcube), float)
-        self._x = numpy.empty((self.dim, sum_neval_hcube), float)
-        self._jac = numpy.empty(sum_neval_hcube, float)
-        self._neval_hcube = (
-            numpy.zeros(self.nhcube_vec, int) + self.neval_hcube 
-            )
-        self._fdv = numpy.empty(sum_neval_hcube, float)
-        self._fdv2 = numpy.empty(sum_neval_hcube, float)
         return new_mode
-
-    def _cleanup_integrator(self):
-        self._y = numpy.empty((0, 0), float)
-        self._x = numpy.empty((0, 0), float)
-        self._jac = numpy.empty(0, float)
-        self._neval_hcube = numpy.empty(0, int)
-        self._fdv = numpy.empty(0, float)
-        self._fdv2 = numpy.empty(0, float)
 
     def _prepare_integrand(self, fcn, fcntype=None):
         if fcntype is None:
@@ -709,7 +684,9 @@ cdef class Integrator(object):
 
     def __call__(self, fcn, **kargs):
         """ Integrate ``fcn``, possibly overriding default parameters. """
-        global _python_integrand 
+        cdef object[::1] iteration_results
+        cdef INT_TYPE itn
+        cdef WAvg ans
         # determine fcntype from fcn, self or kargs 
         if 'fcntype' in kargs:
             fcntype = kargs['fcntype']
@@ -717,7 +694,33 @@ cdef class Integrator(object):
         else:
             fcntype = self.fcntype
         fcn = self._prepare_integrand(fcn, fcntype=fcntype)
-        return self._integrate(fcn, kargs)
+
+        # save old settings so they can be restored at end
+        if kargs:
+            old_kargs = self.set(kargs)
+        else:
+            old_kargs = {}
+
+        # main iteration loop
+        mode = self._prepare_integrator()
+        iteration_results =  numpy.empty(self.nitn, object)
+        for itn in range(self.nitn):    # iterate
+            if self.analyzer != None:
+                self.analyzer.begin(itn, self)
+            itn_ans = self._integrator(fcn, mode) 
+            iteration_results[itn] = itn_ans
+            ans = WAvg(iteration_results[:itn + 1])
+            if self.analyzer != None:
+                self.analyzer.end(itn_ans, ans)
+            self.map.adapt(alpha=self.alpha)
+            if (self.rtol * abs(ans.mean) + self.atol) > ans.sdev:
+                break
+
+        # restore old settings
+        if old_kargs:
+            self.set(old_kargs) 
+
+        return ans
 
     def debug(self, fcn, INT_TYPE neval=10):
         """ Evaluate fcn at ``neval`` random points. """
@@ -730,36 +733,11 @@ cdef class Integrator(object):
         fcn = self._prepare_integrand(fcn)
         fcn(x, f, neval)
 
-
-    cdef _integrate(self, fcn, kargs):
-        if kargs:
-            old_kargs = self.set(kargs)
-        else:
-            old_kargs = {}
-        mode = self._prepare_integrator()
-        self.results = [] 
-        for itn in range(self.nitn):    # iterate
-            if self.analyzer != None:
-                self.analyzer.begin(itn, self)
-            itn_ans = self._integrator(fcn, mode) 
-            self.results.append(itn_ans)
-            ans = lsqfit.wavg(self.results)
-            if self.analyzer != None:
-                self.analyzer.end(itn_ans, ans)
-            self.map.adapt(alpha=self.alpha)
-            if (self.rtol * abs(ans.mean) + self.atol) > ans.sdev:
-                break
-        self._cleanup_integrator()
-        if old_kargs:
-            self.set(old_kargs)               # restore settings
-        return ans
-
-
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def _integrator(self, fcn, mode):
         cdef INT_TYPE nhcube = self.nstrat ** self.dim 
-        cdef INT_TYPE nhcube_vec = self.nhcube_vec
+        cdef INT_TYPE nhcube_vec = min(self.nhcube_vec, nhcube)
         cdef INT_TYPE adapt_to_integrand = (
             1 if mode == 'adapt_to_integrand' else 0
             )
@@ -779,9 +757,8 @@ cdef class Integrator(object):
         cdef double[::1] jac = numpy.empty(sum_neval_hcube, float)
         cdef INT_TYPE min_neval_hcube = self.neval_hcube
         cdef INT_TYPE max_neval_hcube = self.neval_hcube
-        # cdef INT_TYPE neval_hcube
         cdef INT_TYPE hcube, i, j, d, hcube_base, ihcube, i_start
-        cdef INT_TYPE[:] neval_hcube = (
+        cdef INT_TYPE[::1] neval_hcube = (
             numpy.zeros(self.nhcube_vec, int) + self.neval_hcube 
             )
         cdef double sum_fdv
@@ -816,15 +793,13 @@ cdef class Integrator(object):
                         max_neval_hcube = neval_hcube[ihcube]
                     sum_neval_hcube += neval_hcube[ihcube]
                 if sum_neval_hcube > y.shape[1]:
-                    # memory allocation for temps if needed
-                    y = numpy.empty((self.dim, sum_neval_hcube), float)  
+                    y = numpy.empty((self.dim, sum_neval_hcube), float)
                     x = numpy.empty((self.dim, sum_neval_hcube), float)
-                    jac = numpy.empty(sum_neval_hcube, float)            
-                    fdv = numpy.empty(sum_neval_hcube, float)     
+                    jac = numpy.empty(sum_neval_hcube, float)    
+                    fdv = numpy.empty(sum_neval_hcube, float)  
                     fdv2 = numpy.empty(sum_neval_hcube, float) 
             self.last_neval += sum_neval_hcube
            
-            # generate integration points and integrate
             i_start = 0
             yran = numpy.random.uniform(0., 1., (self.dim, sum_neval_hcube))
             for ihcube in range(nhcube_vec):
@@ -888,7 +863,7 @@ class reporter:
     def end(self, itn_ans, ans):
         print "    itn %2d: %s\n all itn's: %s"%(self.itn+1, itn_ans, ans)
         print(
-            '    neval = %d  neval/h-cube = %s\n    chi2/dof = %.2f  Q = %.1f' 
+            '    neval = %d  neval/h-cube = %s\n    chi2/dof = %.2f  Q = %.2f' 
             % (
                 self.integrator.last_neval, 
                 self.integrator.neval_hcube_range,
@@ -916,6 +891,9 @@ class reporter:
                     )
         print('')
 
+# wrappers for scalar functions written in cython or python
+# cython version comes in two flavors: with and without exceptions
+# use the former where possible
 cdef class VecCythonIntegrand:
     """ Vector integrand from scalar Cython integrand. """
     # cdef cython_integrand fcn
