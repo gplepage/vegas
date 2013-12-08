@@ -23,53 +23,79 @@ import exceptions
 have_gvar = False
 try:
     import gvar
-    cimport gvar
     import lsqfit
     have_gvar = True
 except ImportError:
     # fake version of gvar.gvar
     # for use if lsqfit module not available
+    class GVar(object):
+        def __init__(self, mean, sdev):
+            self.mean = float(mean)
+            self.sdev = float(sdev)
+            self.internaldata = (self.mean, self.sdev)
+        def __str__(self):
+            return "%g +- %g" % (self.mean, self.sdev)
     class _gvar_standin:
         def __init__(self):
             pass
         def gvar(self, mean, sdev):
-            class GVar:
-                def __init__(self, mean, sdev):
-                    self.mean = float(mean)
-                    self.sdev = float(sdev)
-                    self.internaldata = (self.mean, self.sdev)
-                def __str__(self):
-                    return "%g +- %g" % (self.mean, self.sdev)
             return GVar(mean, sdev)
+        def mean(self, glist):
+            return numpy.array([g.mean for g in glist])
+        def var(self, glist):
+            return numpy.array([g.sdev ** 2 for g in glist])
 
     gvar = _gvar_standin()
+    gvar.GVar = GVar
 
-cdef class WAvg(gvar.GVar):
-    cdef public double chi2
-    cdef public INT_TYPE dof
-    cdef public double Q
-    cdef public object[::1] itn_results
-    def __init__(self, object[::1] glist):
-        cdef numpy.ndarray[numpy.double_t, ndim=1] xmean, xvar
-        cdef gvar.GVar avg
-        self.itn_results = numpy.array(glist)
-        xmean = gvar.mean(glist) 
-        xvar = gvar.var(glist)
-        avg = gvar.gvar(
-            numpy.sum(xmean/xvar) / numpy.sum(1./xvar),
-            numpy.sqrt(1. / numpy.sum(1/xvar)),
-            )
-        super(WAvg, self).__init__(*avg.internaldata)
-        self.chi2 = ( 
-            sum(xmean ** 2 / xvar) 
-            - self.mean ** 2 * sum(1./xvar)
-            )
-        self.dof = len(glist) - 1
+class WAvg(gvar.GVar):
+    def __init__(self):
+        self._v_s2 = 0.
+        self._v2_s2 = 0.
+        self._1_s2 = 0.
+        self.itn_results = []
+        super(WAvg, self).__init__(*gvar.gvar(0., 0.).internaldata)
+    def add(self, g):
+        var = g.sdev ** 2
+        assert var > 0.0, 'zero variance'          
+        self._v_s2 = self._v_s2 + g.mean / var
+        self._v2_s2 = self._v2_s2 + g.mean ** 2 / var
+        self._1_s2 = self._1_s2 + 1. / var
+        super(WAvg, self).__init__(*gvar.gvar(
+            self._v_s2 / self._1_s2,
+            sqrt(1. / self._1_s2),
+            ).internaldata)
+        self.chi2 = self._v2_s2 - self._v_s2 ** 2 / self._1_s2
+        self.dof = len(self.itn_results) - 1
         self.Q = (
             lsqfit.gammaQ(self.dof/2., self.chi2/2.) 
             if have_gvar and self.dof > 0 
             else -1.
             )
+        self.itn_results.append(g)
+
+# class WAvg(_GVar):
+#     def __init__(self, object[::1] glist):
+#         cdef numpy.ndarray[numpy.double_t, ndim=1] xmean, xvar
+#         cdef object avg
+#         self.itn_results = numpy.array(glist)
+#         xmean = gvar.mean(glist) 
+#         xvar = gvar.var(glist)
+#         avg = gvar.gvar(
+#             numpy.sum(xmean/xvar) / numpy.sum(1./xvar),
+#             numpy.sqrt(1. / numpy.sum(1/xvar)),
+#             )
+#         super(WAvg, self).__init__(*avg.internaldata)
+#         self.chi2 = ( 
+#             sum(xmean ** 2 / xvar) 
+#             - self.mean ** 2 * sum(1./xvar)
+#             )
+#         self.dof = len(glist) - 1
+#         self.Q = (
+#             lsqfit.gammaQ(self.dof/2., self.chi2/2.) 
+#             if have_gvar and self.dof > 0 
+#             else -1.
+#             )
 
 cdef double TINY = 1e-308                            # smallest and biggest
 cdef double HUGE = 1e308
@@ -684,9 +710,7 @@ cdef class Integrator(object):
 
     def __call__(self, fcn, **kargs):
         """ Integrate ``fcn``, possibly overriding default parameters. """
-        cdef object[::1] iteration_results
         cdef INT_TYPE itn
-        cdef WAvg ans
         # determine fcntype from fcn, self or kargs 
         if 'fcntype' in kargs:
             fcntype = kargs['fcntype']
@@ -703,15 +727,13 @@ cdef class Integrator(object):
 
         # main iteration loop
         mode = self._prepare_integrator()
-        iteration_results =  numpy.empty(self.nitn, object)
+        ans = WAvg()
         for itn in range(self.nitn):    # iterate
             if self.analyzer != None:
                 self.analyzer.begin(itn, self)
-            itn_ans = self._integrator(fcn, mode) 
-            iteration_results[itn] = itn_ans
-            ans = WAvg(iteration_results[:itn + 1])
+            ans.add(self._integrator(fcn, mode))
             if self.analyzer != None:
-                self.analyzer.end(itn_ans, ans)
+                self.analyzer.end(ans.itn_results[-1], ans)
             self.map.adapt(alpha=self.alpha)
             if (self.rtol * abs(ans.mean) + self.atol) > ans.sdev:
                 break
