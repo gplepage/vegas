@@ -10,49 +10,52 @@ Overview and Tutorial
 
 Introduction
 -------------
-Class :class:`vegas.Integrator` gives Monte Carlo estimates of 
-arbitrary (square-integrable) multidimensional integrals using
-the *vegas* algorithm (G. P. Lepage, J. Comput. Phys. 27 (1978) 192).
-It initially samples the integrand at random points uniformly distributed
-throughout the integration volume, but then uses that information 
-to remap the integration variables along each direction so as to 
-maximize the accuracy of the Monte Carlo estimates. The optimal remapping
-is computed iteratively, over several iterations of the algorithm,
-each of which generates an independent Monte Carlo estimate of the integral. 
-The final result is the weighted average of these independent estimates.
 
-Monte Carlo integration makes few assumptions about the integrand beyond
-square-integrability --- it needn't be analytic nor even continuous. This
-makes Monte Carlo integation unusually robust. It also makes it well suited for
-adaptive integration. Adaptive strategies are essential for multidimensional
-integration, especially in high dimensions, because multidimensional
-space is large, with lots of corners. For example, 90% of the
-integral from 0 to 1 of the 1-dimensional Gaussian :: 
+Class :class:`vegas.Integrator` gives Monte Carlo estimates of
+arbitrary (square-integrable) multidimensional integrals using the
+*vegas* algorithm (G. P. Lepage, J. Comput. Phys. 27 (1978) 192). It
+initially samples the integrand at random points uniformly 
+distributed throughout the integration volume, but then uses that
+informationto remap the integration variables along each direction
+so as to maximize the accuracy of the Monte Carlo estimates. The
+optimal remapping is computed iteratively, over several iterations of
+the algorithm, each of which generates an independent Monte Carlo
+estimate of the integral. The final result is the weighted average
+of these independent estimates.
+
+Monte Carlo integration makes few assumptions about the integrand 
+beyond square-integrability --- it needn't be analytic nor even
+continuous. This makes Monte Carlo integation unusually robust. It
+also makes it well suited for adaptive integration. Adaptive
+strategies are essential for multidimensional integration, especially
+in high dimensions, because multidimensional space is large, with 
+lots of corners. For example, 90% of the integral from 0 to 1 of the
+1-dimensional Gaussian ::
 
     exp(-100 * (x-0.5) ** 2) 
 
-comes from about 23% of the integration volume. This can be compared with the
-integral over a unit hypercuber of a 20-dimensional Gaussian, with the  same
-width, where 90% of the integral comes only 1e-8 of the integration volume.
-Non-adaptive strategies would have a very hard time noticing that there was a
-peak at all.
+comes from about 23% of the integration volume. This can be compared
+with the integral over a unit hypercuber of a 20-dimensional 
+Gaussian, with the same width, where 90% of the integral comes only
+1e-8 of the integration volume. Non-adaptive strategies would have a
+very hard time noticing that there was a peak at all.
 
-Monte Carlo integration also provides efficient and reliable methods 
-for estimating the uncertainty in its results. In particular,
-each Monte Carlo estimate of an integral 
-is a Gaussian random number provided the number of integrand samples is 
-sufficiently large. In practive one generates multiple estimates in order
-to verify that the number of samples is sufficiently large to guarantee 
-Gaussian behavior. Error analysis is straightforward if the integral 
-estimates are Gaussian.
+Monte Carlo integration also provides efficient and reliable methods
+for estimating the uncertainty in its results. In particular, each
+Monte Carlo estimate of an integral is a Gaussian random number
+provided the number of integrand samples is sufficiently large. In
+practive one generates multiple estimates in order to verify that the
+number of samples is sufficiently large to guarantee Gaussian
+behavior. Error analysis is straightforward if the integral estimates
+are Gaussian.
 
-The *vegas* algorithm has been in use for decades and implementations are
-available in may programming languages, including Fortran (the  original
-version), C and C++. The algorithm used here is significantly improved over
-the original implementation, and that used in most other  implementations. The
-module is written in cython, so it is about as fast as optimized Fortran or C,
-particularly  when the integrand is also coded in cython (or some other
-compiled language) --- see below.
+The *vegas* algorithm has been in use for decades and implementations
+are available in may programming languages, including Fortran (the
+original version), C and C++. The algorithm used here is significantly
+improved over the original implementation, and that used in most other
+implementations. The module is written in cython, so it is about as
+fast as optimized Fortran or C, particularly when the integrand is
+also coded in cython (or some other compiled language) --- see below.
 
 Basic Integrals
 ----------------
@@ -90,7 +93,7 @@ volume defined by::
 
 Each time the integrator ``integ`` is applied to a 4d function ``f(x)``, it
 generates a Monte Carlo estimate of the integral of that function. Each
-estimate is actually  the weighted average of ``nitn=10`` separate estimates,
+estimate is actually the weighted average of ``nitn=10`` separate estimates,
 coming from 10 iterations of the *vegas* algorithm; and each *vegas*
 iteration uses about ``neval=1000`` function evaluations. 
 
@@ -190,16 +193,16 @@ The first call to ``integ`` generates the following output::
 
 Integration estimates are shown here for each of the 10 iterations,
 giving both the estimate from just that iteration, and the weighted
-average of results from all iterations up to that  point. Note how
-the first two iterations  are not at all accurate, with uncertainties
+average of results from all iterations up to that point. Note how
+the first two iterations are not at all accurate, with uncertainties
 of order 30--40% of the final results. By the third iteration the
-uncertainty has dropped to 9%, and by  the end the uncertainty from
+uncertainty has dropped to 9%, and by the end the uncertainty from
 each iteration separately is less than 2% --- the adaptive remapping
 has reduced the uncertainty by more than an order of magnitude.
 Combining results from all 10 iterations reduces the uncertainty to
 less than 1%.
 
-|Integrator| object ``integ`` remembers the optimal mappings  for
+|Integrator| object ``integ`` remembers the optimal mappings for
 ``f(x)`` and so no further adaptation is necessary when it is applied
 a second time to ``f(x)``. Consequently even the early iterations are
 quite accurate::
@@ -238,19 +241,19 @@ quite accurate::
 
 
 The final result reported by ``integ(f)`` is the weighted average of
-of results from all 10 iterations. Monte Carlo estimates are 
-Gaussian random variables provided the number of function evaluations
-(``neval``) is large enough. They are characterized by a mean value and a 
-standard deviation, representing the best estimate for the value
-of the integral and the uncertainty in that estimate. Multiple 
-estimates are combined using a weighted average, which yields 
-a new Gaussian random variable with a mean of the means and a new
-(smaller) standard deviation. Computing the ``chi**2`` of the weighted
-average provides an important check on the assumption that ``neval``
-is sufficiently large to guarantee Gaussian behavior. The ``chi**2``
-divided by the number of degrees of freedom (here 9) should be of 
-order one or less. Here ``chi2/dof`` is 0.71, which is fine
-(the ``Q`` or *p-value* is 0.7).
+of results from all 10 iterations. Monte Carlo estimates are Gaussian
+random variables provided the number of function evaluations
+(``neval``) is large enough. They are characterized by a mean value
+and a standard deviation, representing the best estimate for the
+value of the integral and the uncertainty in that estimate. Multiple
+estimates are combined using a weighted average, which yields a new
+Gaussian random variable with a mean of the means and a new (smaller)
+standard deviation. Computing the ``chi**2`` of the weighted average
+provides an important check on the assumption that ``neval`` is
+sufficiently large to guarantee Gaussian behavior. The ``chi**2``
+divided by the number of degrees of freedom (here 9) should be of
+order one or less. Here ``chi2/dof`` is 0.71, which is fine (the
+``Q`` or *p-value* is 0.7).
 
 ``integ(f)`` returns an weighted-average object of type
 :class:`lsqfit.WAvg` (derived from :class:`gvar.GVar`). These objects
@@ -261,7 +264,7 @@ have several attributes::
     ans.chi2  ->  chi**2 of the weighted average of estimates
     ans.dof   ->  number of degrees of freedom used
     ans.Q     ->  Q or p-value of the average
-    ans.iterations -> list of estimates from individual iterations
+    ans.itn_results -> list of estimates from individual iterations
 
 
 Difficult Integrals
@@ -275,6 +278,7 @@ are doubled in length::
         [[-2., 2.],[0., 2.], [0., 2.], [0, 2.]], 
         nitn=10, 
         neval=1000,
+        analyzer=reporter(),
         )
     ans = integ(f)
     print '1st integral in larger volume =', ans
@@ -286,11 +290,12 @@ This code gives ::
     1st estimate in larger volume = 0.00103(34)
     2nd estimate in larger volume = 0.9988(57)
 
-where now the first estimate is completely wrong (by ``2938.1`` standard
-deviations!). The second estimate is fine. To see what happened with 
-first estimate, we again set parameter ``analyzer=vegas.reporter()``
-in the constructor for ``integ`` and to obtain the following 
-information about the early iterations in the first estimate::
+where now the first estimate is completely wrong (by ``2938.1``
+standard deviations!). The second estimate is fine. To see what
+happened with first estimate, we again set parameter
+``analyzer=vegas.reporter()`` in the constructor for ``integ`` and to
+obtain the following information about the early iterations in the
+first estimate::
 
     ...
 
@@ -322,23 +327,23 @@ information about the early iterations in the first estimate::
     ...
 
 In the first iteration, the integrator has clearly missed the fact
-that there is a  giant peak at ``x=[0.5, 0.5, 0.5, 0.5]``. Doubling
+that there is a giant peak at ``x=[0.5, 0.5, 0.5, 0.5]``. Doubling
 the length of each side of the integration volume means that the
 fraction of the volume occupied by the peak is 2^4 = 16 times
 smaller than it was in the first example. The 591 random samples
 of the function in the first iteration were not enough to hit the
-peak.  Some of those sample points hit the outer shoulders of the
+peak. Some of those sample points hit the outer shoulders of the
 beak, causing the integrator to concentrate function evaluations in
 the general vicinity of the peak in the second iteration. This time it
 sees the peak and realizes that it focus still more attention on
 that region. It zeros in on the peak over the next few
 iterations.
 
-Clearly 591 samples of the function is not enough to make  the
-Monte Carlo estimate Gaussian in the first iteration, so  neither the
+Clearly 591 samples of the function is not enough to make the
+Monte Carlo estimate Gaussian in the first iteration, so neither the
 mean nor the standard deviation is to be trusted for that iteration.
-The integrator signals this fact when it reports that the  ``chi**2``
-per degree of freedom is much larger than one: by   the tenth
+The integrator signals this fact when it reports that the ``chi**2``
+per degree of freedom is much larger than one: by  the tenth
 iteration ``chi2/dof = 637``. This large value strongly suggests that
 we should ignore the first estimate completely.
 
