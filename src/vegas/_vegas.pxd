@@ -19,6 +19,9 @@ cdef class VecPythonIntegrand:
     cdef object fcn
     cdef readonly object fcntype
 
+cdef class VecIntegrand:
+    cdef readonly object fcntype
+
 cdef class AdaptiveMap:
     # first index is direction, second is increment
     cdef public double alpha
@@ -52,12 +55,3 @@ cdef class Integrator:
     cdef INT_TYPE neval_hcube 
     cdef INT_TYPE dim 
     cdef readonly INT_TYPE last_neval
-    
-    
-# cdef class VegasTest:
-#     cdef readonly double[::1] sig
-#     cdef readonly double[::1] x0
-#     cdef readonly double[::1] ampl
-#     cdef readonly double exact
-#     cdef public Integrator I
-#     cdef void cython_vec_fcn(self, double[:, ::1] x, double[::1] f, INT_TYPE nx)

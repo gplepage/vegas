@@ -7,422 +7,292 @@ Overview and Tutorial
 .. |AdaptiveMap| replace:: :class:`vegas.AdaptiveMap`
 .. |vegas| replace:: :mod:`vegas`
 .. |WAvg| replace:: :class:`lsqfit.WAvg`
+.. |chi2| replace:: :math:`\chi^2`
 
 Introduction
 -------------
 
-Class :class:`vegas.Integrator` gives Monte Carlo estimates of
-arbitrary (square-integrable) multidimensional integrals using the
-*vegas* algorithm (G. P. Lepage, J. Comput. Phys. 27 (1978) 192). It
-initially samples the integrand at random points uniformly 
-distributed throughout the integration volume, but then uses that
-informationto remap the integration variables along each direction
-so as to maximize the accuracy of the Monte Carlo estimates. The
-optimal remapping is computed iteratively, over several iterations of
-the algorithm, each of which generates an independent Monte Carlo
-estimate of the integral. The final result is the weighted average
-of these independent estimates.
+Class :class:`vegas.Integrator` gives Monte Carlo estimates of arbitrary
+(square-integrable) multidimensional integrals using the *vegas* algorithm (G.
+P. Lepage, J. Comput. Phys. 27 (1978) 192).  The algorithm has two components.
+First an automatic transformation  is applied to to the integration variables
+in an attempt to flatten the integrand. Then a Monte Carlo estimate of the
+integral is made using the  transformed variables. Flattening the integrand
+makes the integral easier and improves the estimate.  The transformation
+applied to the integration variables has a restricted form, and is optimized
+over several iterations of the algorithm: information about the integrand that
+is collected during one iteration is used to  improve the transformation used
+in the next iteration.
 
-Monte Carlo integration makes few assumptions about the integrand 
-beyond square-integrability --- it needn't be analytic nor even
-continuous. This makes Monte Carlo integation unusually robust. It
-also makes it well suited for adaptive integration. Adaptive
-strategies are essential for multidimensional integration, especially
-in high dimensions, because multidimensional space is large, with 
-lots of corners. For example, 90% of the integral from 0 to 1 of the
-1-dimensional Gaussian ::
+Monte Carlo integration makes few assumptions about the integrand  beyond
+square-integrability --- it needn't be analytic nor even continuous. This
+makes Monte Carlo integation unusually robust. It also makes it well suited
+for adaptive integration. Adaptive strategies are essential for
+multidimensional integration, especially in high dimensions, because
+multidimensional space is large, with  lots of corners. For example, 90% of
+the 1-dimensional integral 
 
-    exp(-100 * (x-0.5) ** 2) 
+.. math::
 
-comes from about 23% of the integration volume. This can be compared
-with the integral over a unit hypercuber of a 20-dimensional 
-Gaussian, with the same width, where 90% of the integral comes only
-1e-8 of the integration volume. Non-adaptive strategies would have a
-very hard time noticing that there was a peak at all.
+    \int_0^1 dx\,\mathrm{e}^{- 100 (x-0.5)^2}
 
-Monte Carlo integration also provides efficient and reliable methods
-for estimating the uncertainty in its results. In particular, each
-Monte Carlo estimate of an integral is a Gaussian random number
-provided the number of integrand samples is sufficiently large. In
-practive one generates multiple estimates in order to verify that the
-number of samples is sufficiently large to guarantee Gaussian
-behavior. Error analysis is straightforward if the integral estimates
-are Gaussian.
+comes from about 23% of the integration volume. In 20 dimensions,
+90% of the analogous integral, 
 
-The *vegas* algorithm has been in use for decades and implementations
-are available in may programming languages, including Fortran (the
-original version), C and C++. The algorithm used here is significantly
-improved over the original implementation, and that used in most other
-implementations. The module is written in cython, so it is about as
-fast as optimized Fortran or C, particularly when the integrand is
-also coded in cython (or some other compiled language) --- see below.
+.. math::
+
+    \int_0^1dx_1\cdots\int_0^1 dx_{20} 
+    \,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2},
+
+comes from only 10\ :sup:`-8` of the total integration volume. Non-adaptive
+strategies would have a very hard time noticing that there was a peak at all.
+*vegas* has no trouble with this integral.
+
+Monte Carlo integration also provides efficient and reliable methods for
+estimating the uncertainty in its results. In particular, each Monte Carlo
+estimate of an integral is a Gaussian random number, from a distribution
+whose mean is the correct value of the integral, provided the number of
+integrand samples is sufficiently large. In practive one generates multiple
+estimates in order to verify that the number of samples is sufficiently large
+to guarantee Gaussian behavior. Error analysis is straightforward if the
+integral estimates are Gaussian.
+
+The *vegas* algorithm has been in use for decades and implementations are
+available in may programming languages, including Fortran (the original
+version), C and C++. The algorithm used here is significantly improved over
+the original implementation, and that used in most other implementations.  The
+module is written in cython, so it is almost as fast as optimized Fortran or
+C, particularly when the integrand is also coded in cython (or some other
+compiled language) --- see below.
 
 Basic Integrals
 ----------------
-A simple example that illustrates the standard idiom for 
-using :class:`vegas.Integrator`, here for a 4-dimensional integral, is::
+Here we illustrate |vegas| by estimating the integral
+
+.. math::
+
+    C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
+    \,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2},
+
+where constant :math:`C` is chosen so that the exact value is 1. 
+The following code shows how this can be done::
 
     import vegas
     import math
 
     def f(x): 
         dx2 = 0 
-        for i in range(4): 
-        dx2 += (x[i] - 0.5) ** 2
-    return math.exp(-dx2 * 100.) * (100. / math.pi) ** 2
-
-
-    integ = vegas.Integrator(
-        [[-1., 1.], [0., 1.], [0., 1.], [0., 1.]], 
-        nitn=10, 
-        neval=1000,
-        )
-    ans = integ(f)
-    print '1st estimate of integral =', ans
-    ans = integ(f)
-    print '2nd estimate of integral =', ans
-
-This code estimates the integral of a narrow Gaussian, centered
-at point ``x = [0.5, 0.5, 0.5, 0.5]``, over a four-dimensional 
-volume defined by::
-
-    -1 < x[0] < 1
-     0 < x[1] < 1
-     0 < x[2] < 1
-     0 < x[3] < 1
-
-Each time the integrator ``integ`` is applied to a 4d function ``f(x)``, it
-generates a Monte Carlo estimate of the integral of that function. Each
-estimate is actually the weighted average of ``nitn=10`` separate estimates,
-coming from 10 iterations of the *vegas* algorithm; and each *vegas*
-iteration uses about ``neval=1000`` function evaluations. 
-
-The output from the code above, ::
-
-    1st estimate of integral = 1.0028(89)
-    2nd estimate of integral = 0.9998(44),
-
-shows that the first estimate is 1.0028 ± 0.0089, while the 
-second estimate is 0.9998 ± 0.0044. (The exact value for the 
-integral is 1.0.) The second estimate is substantially more 
-accurate than the first. This is because ``integ`` initially 
-has no knowledge about the structure of ``f(x)``, and so early
-iterations of the *vegas* algorithm are less accurate. As the 
-integrator proceeds it iteratively remaps the integration variables
-in each direction to increase accuracy. |Integrator| object ``integ``
-is fully adapted to the function by the time of the second
-estimate in the code above, and so that estimate is more accurate.
-
-We can examine the evolution of ``integ``'s results by modifying
-its definition to include a ``reporter`` who prints out information
-about each *vegas* iteration::
+        for d in range(4): 
+            dx2 += (x[d] - 0.5) ** 2
+    return math.exp(-dx2 * 100.) * 1013.2118364296088
 
     integ = vegas.Integrator(
-        [[-1., 1.], [0., 1.], [0., 1.], [0., 1.]], 
-        nitn=10, 
-        neval=1000,
+        [[-1., 1.], [0., 1.], [0., 1.], [0., 1.]],
         analyzer=vegas.reporter(),
         )
 
-The first call to ``integ`` generates the following output::
+    result = integ(f, nitn=10, neval=1000)
+    print('result = %s    Q = %.2f' % (result, result.Q))
 
-        Integrator Status:
-        1000 (max) integrand evaluations in each of 10 iterations
-        integrator mode = adapt_to_integrand
-                          redistribute points across h-cubes
-        number of:  strata/axis = 3  increments/axis = 99
-                    h-cubes = 81  evaluations/h-cube = 6 (min)
-                    h-cubes/vector = 30
-        damping parameters: alpha = 0.5  beta= 0.75
-        accuracy: relative = 0  absolute accuracy = 0
+First we define the integrand ``f(x)`` where ``x`` specifies a  point in the
+4-dimensional space. We then create an  integrator, ``integ``, which is an
+integration operator  that can be applied to any 4-dimensional function. It is
+where we specify the integration volume. The ``analyzer=vegas.reporter()`` is
+optional; it causes the integrator to print out intermediate  results as it
+evaluates the integral. Finally we apply ``integ`` to our integrand ``f(x)``,
+telling the integrator to estimate  the integral using ``nitn=10`` iterations
+of the |vegas| algorithm, each of which uses no more than ``neval=1000``
+evaluations of the integrand. Each iteration produces an independent
+estimate of the integral. The final estimate is the weighted average of
+the results from all 10 iterations, and is returned by ``integ(f ...)``.
 
-        axis 0 covers (-1.0, 1.0)
-        axis 1 covers (0.0, 1.0)
-        axis 2 covers (0.0, 1.0)
-        axis 3 covers (0.0, 1.0)
+This code produces the following output:
 
-        itn  1: 0.56(31)
-     all itn's: 0.56(31)
-        neval = 486  neval/h-cube = (6, 6)
-        chi2/dof = 0.00  Q = 1.0
+.. literalinclude:: eg1a.out
 
-        itn  2: 1.30(45)
-     all itn's: 0.79(26)
-        neval = 955  neval/h-cube = (6, 435)
-        chi2/dof = 1.80  Q = 0.2
+There are several things worth noting here:
 
-        itn  3: 0.934(93)
-     all itn's: 0.918(87)
-        neval = 854  neval/h-cube = (6, 154)
-        chi2/dof = 1.04  Q = 0.4
+    **Adaptation:** Integration estimates are shown for each of the 10 iterations,
+    giving both the estimate from just that iteration, and the weighted
+    average of results from all iterations up to that point. The
+    estimates from the first two iterations are not accurate at
+    all, with errors equal to 30--90% of the final result. 
+    ``integ`` initially has no information about the integrand
+    and so does a relatively poor job of estimating the integral.
+    The integrand has a large narrow peak in the center of the 
+    integration volume. Most of ``integ``'s integrand samples 
+    miss the peak in early iterations, but it
+    uses information from the samples in one iteration
+    to remap the integration variables for subsequent iterations,
+    concentrating sampling where the function is largest. 
+    As a result, the per iteration error
+    is reduced to 4% by the fifth iteration, and below 2% by
+    the end --- an improvement by almost a factor of 50 from 
+    the start.
 
-        itn  4: 1.044(69)
-     all itn's: 0.996(54)
-        neval = 750  neval/h-cube = (6, 56)
-        chi2/dof = 1.12  Q = 0.3
+    **Weighted Average:** The final result, 0.9991 ± 0.0092, is obtained from a weighted
+    average of the separate results from each iteration. The results from
+    individual iterations are random numbers whose distribution is 
+    Gaussian, about a mean equal to the integral's value, provided
+    the number of evaluations per iteration (``neval``) is  sufficiently
+    large. The weighted average :math:`\overline I`  minimizes
 
-        itn  5: 1.005(43)
-     all itn's: 1.002(34)
-        neval = 629  neval/h-cube = (6, 24)
-        chi2/dof = 0.85  Q = 0.5
+    .. math::
 
-        itn  6: 1.016(32)
-     all itn's: 1.009(23)
-        neval = 578  neval/h-cube = (6, 14)
-        chi2/dof = 0.70  Q = 0.6
+      \chi^2 \,\equiv\, \sum_i \frac{(I_i - \overline I)^2}{\sigma_{i}}
 
-        itn  7: 1.028(25)
-     all itn's: 1.018(17)
-        neval = 539  neval/h-cube = (6, 11)
-        chi2/dof = 0.63  Q = 0.7
-
-        itn  8: 0.978(21)
-     all itn's: 1.002(13)
-        neval = 529  neval/h-cube = (6, 10)
-        chi2/dof = 0.85  Q = 0.5
-
-        itn  9: 1.012(19)
-     all itn's: 1.006(11)
-        neval = 530  neval/h-cube = (6, 11)
-        chi2/dof = 0.77  Q = 0.6
-
-        itn 10: 0.997(16)
-     all itn's: 1.0028(89)
-        neval = 529  neval/h-cube = (6, 10)
-        chi2/dof = 0.71  Q = 0.7
-
-Integration estimates are shown here for each of the 10 iterations,
-giving both the estimate from just that iteration, and the weighted
-average of results from all iterations up to that point. Note how
-the first two iterations are not at all accurate, with uncertainties
-of order 30--40% of the final results. By the third iteration the
-uncertainty has dropped to 9%, and by the end the uncertainty from
-each iteration separately is less than 2% --- the adaptive remapping
-has reduced the uncertainty by more than an order of magnitude.
-Combining results from all 10 iterations reduces the uncertainty to
-less than 1%.
-
-|Integrator| object ``integ`` remembers the optimal mappings for
-``f(x)`` and so no further adaptation is necessary when it is applied
-a second time to ``f(x)``. Consequently even the early iterations are
-quite accurate::
-
-    Integrator Status:
-        1000 (max) integrand evaluations in each of 10 iterations
-        integrator mode = adapt_to_integrand
-                          redistribute points across h-cubes
-        number of:  strata/axis = 3  increments/axis = 99
-                    h-cubes = 81  evaluations/h-cube = 6 (min)
-                    h-cubes/vector = 30
-        damping parameters: alpha = 0.5  beta= 0.75
-        accuracy: relative = 0  absolute accuracy = 0
-
-        axis 0 covers (-1.0, 1.0)
-        axis 1 covers (0.0, 1.0)
-        axis 2 covers (0.0, 1.0)
-        axis 3 covers (0.0, 1.0)
-
-        itn  1: 1.002(15)
-     all itn's: 1.002(15)
-        neval = 550  neval/h-cube = (6, 11)
-        chi2/dof = 0.00  Q = 1.0
-
-        itn  2: 0.991(15)
-     all itn's: 0.996(10)
-        neval = 570  neval/h-cube = (6, 12)
-        chi2/dof = 0.26  Q = 0.6
-
-    ...
-
-        itn 10: 0.984(14)
-     all itn's: 0.9998(44)
-        neval = 591  neval/h-cube = (6, 16)
-        chi2/dof = 0.34  Q = 1.0
+    where :math:`I_i \pm \sigma_{i}` are the estimates from the 
+    individual iterations. If the :math:`I_i` are Gaussian, 
+    :math:`\chi^2` should be of order the number of degrees of 
+    freedom, which here is the number of iterations minus 1. 
+    The error estimates are not reliable if :math:`\chi^2` is
+    much larger than the number of iterations. This quantified
+    by the *Q* or *p-value* of the weighted average
+    which is the probability that a
+    larger :math:`\chi^2` could result from random (Gaussian)
+    fluctuations. A very small *Q* (less than 0.05-0.1) indicates
+    that the :math:`\chi^2` is too large to be accounted for by
+    statistical fluctuations --- that is, the estimates of the integral
+    from different iterations do not agree with each other to 
+    within errors. This means that ``neval`` is not sufficiently
+    large to guarantee Gaussian behavior, and must be increased
+    if the error estimates are to be trusted:
 
 
-The final result reported by ``integ(f)`` is the weighted average of
-of results from all 10 iterations. Monte Carlo estimates are Gaussian
-random variables provided the number of function evaluations
-(``neval``) is large enough. They are characterized by a mean value
-and a standard deviation, representing the best estimate for the
-value of the integral and the uncertainty in that estimate. Multiple
-estimates are combined using a weighted average, which yields a new
-Gaussian random variable with a mean of the means and a new (smaller)
-standard deviation. Computing the ``chi**2`` of the weighted average
-provides an important check on the assumption that ``neval`` is
-sufficiently large to guarantee Gaussian behavior. The ``chi**2``
-divided by the number of degrees of freedom (here 9) should be of
-order one or less. Here ``chi2/dof`` is 0.71, which is fine (the
-``Q`` or *p-value* is 0.7).
+    ``integ(f)`` returns a weighted-average object,
+    of type :class:`RunningWAvg`, that has the following 
+    attributes:
 
-``integ(f)`` returns an weighted-average object of type
-:class:`lsqfit.WAvg` (derived from :class:`gvar.GVar`). These objects
-have several attributes::
+      ``result.mean`` --- weighted average of all estimates of the integral;
+      
+      ``result.sdev`` --- standard deviation of the weighted average;
+      
+      ``result.chi2`` --- :math:`\chi^2` of the weighted average;
 
-    ans.mean  ->  average of all estimates of the integral
-    ans.sdev  ->  standard deviation of that estimate
-    ans.chi2  ->  chi**2 of the weighted average of estimates
-    ans.dof   ->  number of degrees of freedom used
-    ans.Q     ->  Q or p-value of the average
-    ans.itn_results -> list of estimates from individual iterations
+      ``result.dof`` --- nuumber of degrees of freedom;
 
+      ``result.Q`` --- *Q* or *p-value* of the weighted average's |chi2|;
 
-Difficult Integrals
-------------------------------------
-Multidimensional integration for realistic examples is difficult. 
-To illustrate some of the problems, consider the integrand from 
-the last section but integrated in a volume whose sides
-are doubled in length::
+      ``result.itn_results`` --- list of the integral estimates 
+      from each iteration.
 
-    integ = vegas.Integrator(
-        [[-2., 2.],[0., 2.], [0., 2.], [0, 2.]], 
-        nitn=10, 
-        neval=1000,
+    In this example the final *Q* is 0.22, indicating that the
+    :math:`\chi^2` for this average is not particularly unlikely.
+
+    **More Precision:** For realistic problems, 
+    the cost of a |vegas| integral is 
+    usually dominated by the cost of evaluating the integrand
+    at the Monte Carlo sample points. The number of integrand
+    evaluations per iteration varies from iteration to iteration,
+    here between 486 and 952. Typically |vegas| needs more
+    integration points in early iterations, before it has fully
+    adapted to the integrand.
+
+    Although precision can be increased by increasing either
+    the number of iterations (``nitn``) or the number of
+    integrand evaluations per iteration (``neval``), it is
+    generally far better to increase ``neval``. For example,
+    adding the following lines to the code above ::
+
+      integ.set(analyzer=None)      # turn off verbose output
+
+      result = integ(f, nitn=100, neval=1000)
+      print('larger nitn  => %s    Q = %.2f' % (result, result.Q))
+      
+      result = integ(f, nitn=10, neval=1e4)
+      print('larger neval => %s    Q = %.2f' % (result, result.Q))
+
+    generates the following results:
+
+    .. literalinclude:: eg1b.out
+
+    The total number of integrand evaluations, ``nitn * neval``, is
+    about the same in both cases, but increasing ``neval`` is more
+    than twice as accurate as increasing ``nitn``. Typically one
+    wants to use no more than 10 or 20 iterations beyond the
+    point where vegas has fully adapted. 
+
+    It is also generally useful to compare results from estimates 
+    using different values of ``neval``, differing by factors of
+    4--10 say. Insofar as the two results agree within errors,
+    it is unlikely that non-Gaussian artifacts from small
+    ``neval``\s are important. (These artifacts typically vanish
+    like ``1/neval``, which is faster than the statistical 
+    errors vanish; so the latter ultimately dominate at large
+    ``neval``.)
+
+    **Early Iterations:** The early iterations, before |vegas| has adapted, are quite 
+    crude. With very peaky integrands, these can be far from 
+    the correct answer with highly unreliable errors. For 
+    example, the integral above becomes much more 
+    difficult (because the peak is 2\ :sup:`4` times harder to
+    find) if we double the length of each side of the 
+    integration volume by redefining ``integ`` as::
+
+      integ = vegas.Integrator(
+        [[-2., 2.], [0, 2.], [0, 2.], [0., 2.]],
         analyzer=reporter(),
         )
-    ans = integ(f)
-    print '1st integral in larger volume =', ans
-    ans = integ(f)
-    print '2nd integral in larger volume =', ans
 
-This code gives ::
+    Then the code above gives:
 
-    1st estimate in larger volume = 0.00103(34)
-    2nd estimate in larger volume = 0.9988(57)
+    .. literalinclude:: eg1c.out
 
-where now the first estimate is completely wrong (by ``2938.1``
-standard deviations!). The second estimate is fine. To see what
-happened with first estimate, we again set parameter
-``analyzer=vegas.reporter()`` in the constructor for ``integ`` and to
-obtain the following information about the early iterations in the
-first estimate::
+    |vegas| misses the peak completely in the first few iterations,
+    giving estimates that are wrong (by 670,000 standard deviations!).
+    Some of its samples hit the peak's shoulders, so ``integ`` is 
+    eventually able to find it (by iterations 7--8), but 
+    the integrand estimates are wildly non-Gaussian before that
+    point. This results in a non-sensical final result, as 
+    indicated by the ``Q = 0.00``. 
 
-    ...
+    It is common practice in using |vegas| to discard 
+    estimates from the first several iterations, before the 
+    algorithm has adapted, in order to avoid ruining the 
+    final result in this way. This is done by replacing the 
+    single call to ``integ(f ...)`` in the original code 
+    with two calls::
 
-        itn  1: 0.00034(34)
-     all itn's: 0.00034(34)
-        neval = 591  neval/h-cube = (6, 15)
-        chi2/dof = 0.00  Q = 1.0
+      # step 1 -- adapt to f; discard results
+      integ(f, nitn=7, neval=1000)
 
-        itn  2: 0.61(21)
-     all itn's: 0.00034(34)
-        neval = 973  neval/h-cube = (6, 493)
-        chi2/dof = 8.68  Q = 0.0
+      # step 2 -- integ has adapted to f; keep results
+      result = integ(f, nitn=10, neval=1000)
+      print('result = %s    Q = %.2f' % (result, result.Q))
 
-        itn  3: 0.71(19)
-     all itn's: 0.00034(34)
-        neval = 946  neval/h-cube = (6, 398)
-        chi2/dof = 11.33  Q = 0.0
+    The results from the second step are properly adapted from
+    the start, and the final result is good:
 
-        itn  4: 0.93(12)
-     all itn's: 0.00035(34)
-        neval = 863  neval/h-cube = (6, 142)
-        chi2/dof = 28.70  Q = 0.0
+    .. literalinclude:: eg1d.out
 
-        itn  5: 0.914(53)
-     all itn's: 0.00039(34)
-        neval = 772  neval/h-cube = (6, 50)
-    chi2/dof = 96.75  Q = 0.0
+    **Other Integrands:** Once ``integ`` is trained on ``f(x)``, it can be usefully applied
+    to other functions with similar structure. For example, adding
+    the following at the end of the original code, ::
 
-    ...
+      def g(x):
+        return x[0] * f(x)
 
-In the first iteration, the integrator has clearly missed the fact
-that there is a giant peak at ``x=[0.5, 0.5, 0.5, 0.5]``. Doubling
-the length of each side of the integration volume means that the
-fraction of the volume occupied by the peak is 2^4 = 16 times
-smaller than it was in the first example. The 591 random samples
-of the function in the first iteration were not enough to hit the
-peak. Some of those sample points hit the outer shoulders of the
-beak, causing the integrator to concentrate function evaluations in
-the general vicinity of the peak in the second iteration. This time it
-sees the peak and realizes that it focus still more attention on
-that region. It zeros in on the peak over the next few
-iterations.
+      result = integ(g, nitn=10, neval=1000)
 
-Clearly 591 samples of the function is not enough to make the
-Monte Carlo estimate Gaussian in the first iteration, so neither the
-mean nor the standard deviation is to be trusted for that iteration.
-The integrator signals this fact when it reports that the ``chi**2``
-per degree of freedom is much larger than one: by  the tenth
-iteration ``chi2/dof = 637``. This large value strongly suggests that
-we should ignore the first estimate completely.
+    gives the following new output:
 
-For the second estimate, ``ans.chi2/ans.dof`` is 0.61 which 
-suggests that that estimate is reliably Gaussian. Consequently
-we should feel reasonably confident about the mean and standard
-deviation reported by the second estimate.
+    .. literalinclude:: eg1e.out
 
-A common strategy for using the *vegas* algorithm on integrands
-with high narrow peaks is to call the integrator twice: a first
-time so the integrator can find the peaks and adapt to them, and
-a second time to estimate the integral. The mean and standard 
-deviation are from the first call are discarded, and the 
-``chi**2/dof`` is checked for the second call to verify that 
-it is of order one or less. 
+    The grid is almost optimal for ``g(x)`` from the start
+    because ``g(x)`` peaks in the same region as ``f(x)``.
+    The exact value for this integral is 0.5.
 
-Difficult Integrals --- Overly Zealous Adaptation
----------------------------------------------------
-Consider the much harder seven-dimensional integral in the 
-following example::
-
-    dim = 7         # dimension of integration
-
-    def f(x):       # three narrow Gaussians along the diagonal
-        dx2_a = 0.
-        dx2_b = 0.
-        dx2_c = 0.
-        for i in range(dim):
-            dx2_a += (x[i] - 0.25) ** 2
-            dx2_b += (x[i] - 0.5) ** 2
-            dx2_c += (x[i] - 0.75) ** 2
-        return (100. / math.pi) ** (dim/2.) / 3. * (
-              math.exp(-dx2_a * 100.) 
-            + math.exp(-dx2_b * 100.)
-            + math.exp(-dx2_c * 100.)
-            )
- 
-    integ = vegas.Integrator(
-        dim * [[0., 1.]], 
-        nitn=10, 
-        neval=1000,
-        analyzer=vegas.reporter(),
-        )
-    ans = integ(f)
-
-Running this gives the following plausible output::
-
-    (8114594512784433755, 7385927139888736276, 330532203319418968)
-    1st estimate of integral = 0.214(37)   chi2/dof = 5.48  Q = 0.0
-    2nd estimate of integral = 0.669(19)   chi2/dof = 0.58  Q = 0.8
-
-    (7347371220009087992, 8521783773969794912, 3888315240590098246)
-    1st estimate of integral = 0.3094(89)   chi2/dof = 2.85  Q = 0.0
-    2nd estimate of integral = 0.3362(22)   chi2/dof = 1.38  Q = 0.2
-
-    (2599668822815729321, 3006539213038182690, 4437560779814560636)
-    1st estimate of integral = 0.3336(96)   chi2/dof = 0.85  Q = 0.6
-    2nd estimate of integral = 0.3311(23)   chi2/dof = 0.52  Q = 0.9
-
-    (6999262396578332412, 7973831536332976041, 1671032485900695722)
-    1st estimate of integral = 0.3147(69)   chi2/dof = 15.25  Q = 0.0
-    2nd estimate of integral = 0.3325(22)   chi2/dof = 2.20  Q = 0.0
-
-    (6912587160260435101, 3696713562607419621, 6184517149214074329)
-    1st estimate of integral = 0.3277(71)   chi2/dof = 2.29  Q = 0.0
-    2nd estimate of integral = 0.3343(22)   chi2/dof = 0.59  Q = 0.8
-
-The first estimate looks unreliable but the second estimate seems 
-plausible. As a cross check we run the script again. The integrator
-uses different random numbers and gets a completely different result:
-
-    (8114594512784433755, 7385927139888736276, 330532203319418968)
-    1st estimate of integral = 0.214(37)   chi2/dof = 5.48  Q = 0.0
-    2nd estimate of integral = 0.669(19)   chi2/dof = 0.58  Q = 0.8
-
-Following the advice of the previous section we discard the first
-estimate. The second estimate looks fine, and is indeed a reliable
-estimate of the integral of *two* of the three peaks in the 
-integrand---unfortunately, the integrator has missed one of the 
-peaks completely (the one closest to the origin in this case).
+    Note that |Integrator|\s can be saved in files and reloaded later using
+    Python's :mod:`pickle` module: for example, 
+    ``pickle.dump(integ, openfile)`` saves integrator ``integ``, and 
+    ``integ = pickle.load(openfile)`` reloads it. The is useful for costly
+    integrations that might need to be reanalyzed later since the integrator
+    remembers the variable transformations made to minimize errors, and
+    so need not be readapted to the integrand when used later.
 
 
+Faster Integrands
+-------------------------
+Realistic applications of multi-dimensional integration can 
+require millions or hundreds of millions of evaluations of 
+the integrand. 

@@ -20,6 +20,10 @@ import numpy
 import math
 import exceptions
 
+cdef double TINY = 1e-308                            # smallest and biggest
+cdef double HUGE = 1e308
+
+
 have_gvar = False
 try:
     import gvar
@@ -48,20 +52,28 @@ except ImportError:
     gvar = _gvar_standin()
     gvar.GVar = GVar
 
-class WAvg(gvar.GVar):
-    def __init__(self):
-        self._v_s2 = 0.
-        self._v2_s2 = 0.
-        self._1_s2 = 0.
-        self.itn_results = []
-        super(WAvg, self).__init__(*gvar.gvar(0., 0.).internaldata)
+class RunningWAvg(gvar.GVar):
+    def __init__(self, gvar_list=None):
+        if gvar_list is not None:
+            self.__init__()
+            for g in gvar_list:
+                self.add(g)
+        else:
+            self._v_s2 = 0.
+            self._v2_s2 = 0.
+            self._1_s2 = 0.
+            self.itn_results = []
+            super(RunningWAvg, self).__init__(
+                *gvar.gvar(0., 0.).internaldata,
+                )
     def add(self, g):
+        self.itn_results.append(g)
         var = g.sdev ** 2
-        assert var > 0.0, 'zero variance'          
+        assert var > 0.0, 'zero variance not allowed'          
         self._v_s2 = self._v_s2 + g.mean / var
         self._v2_s2 = self._v2_s2 + g.mean ** 2 / var
         self._1_s2 = self._1_s2 + 1. / var
-        super(WAvg, self).__init__(*gvar.gvar(
+        super(RunningWAvg, self).__init__(*gvar.gvar(
             self._v_s2 / self._1_s2,
             sqrt(1. / self._1_s2),
             ).internaldata)
@@ -72,33 +84,6 @@ class WAvg(gvar.GVar):
             if have_gvar and self.dof > 0 
             else -1.
             )
-        self.itn_results.append(g)
-
-# class WAvg(_GVar):
-#     def __init__(self, object[::1] glist):
-#         cdef numpy.ndarray[numpy.double_t, ndim=1] xmean, xvar
-#         cdef object avg
-#         self.itn_results = numpy.array(glist)
-#         xmean = gvar.mean(glist) 
-#         xvar = gvar.var(glist)
-#         avg = gvar.gvar(
-#             numpy.sum(xmean/xvar) / numpy.sum(1./xvar),
-#             numpy.sqrt(1. / numpy.sum(1/xvar)),
-#             )
-#         super(WAvg, self).__init__(*avg.internaldata)
-#         self.chi2 = ( 
-#             sum(xmean ** 2 / xvar) 
-#             - self.mean ** 2 * sum(1./xvar)
-#             )
-#         self.dof = len(glist) - 1
-#         self.Q = (
-#             lsqfit.gammaQ(self.dof/2., self.chi2/2.) 
-#             if have_gvar and self.dof > 0 
-#             else -1.
-#             )
-
-cdef double TINY = 1e-308                            # smallest and biggest
-cdef double HUGE = 1e308
 
 # AdaptiveMap is used by Integrator 
 cdef class AdaptiveMap:
@@ -522,11 +507,20 @@ cdef class Integrator(object):
         )
 
     def __init__(self, map, **kargs):
-        args = dict(Integrator.defaults)
-        del args['map']
-        args.update(kargs)
-        self.set(args)
-        self.map = AdaptiveMap(map)
+        # N.B. All attributes initialized automatically by cython.
+        #      This is why self.set() works here.
+        if isinstance(map, Integrator):
+            args = {}
+            for k in Integrator.defaults:
+                args[k] = getattr(map, k)
+            args.update(kargs)
+            self.set(args)
+        else:
+            args = dict(Integrator.defaults)
+            del args['map']
+            args.update(kargs)
+            self.set(args)
+            self.map = AdaptiveMap(map)
         self.sigf_list = numpy.array([], float) # dummy
         self.neval_hcube_range = None
         self.last_neval = 0
@@ -614,8 +608,6 @@ cdef class Integrator(object):
                 % (neval, self.nitn)
                 )
         ans = ans + ("    integrator mode = %s\n" % mode)
-        if beta > 0:
-            ans +=   "                      redistribute points across h-cubes\n"
         ans = ans + (
             "    number of:  strata/axis = %d  increments/axis = %d\n"
             % (self.nstrat, self.map.ninc)
@@ -651,6 +643,7 @@ cdef class Integrator(object):
         of integrand evaluations to use. The decisions here 
         are mostly heuristic.
         """
+        # determine integration mode, # of strata, # of increments
         dim = self.map.dim
         neval_eff = (self.neval / 2.0) if self.beta > 0 else self.neval
         ns = int((neval_eff / 2.) ** (1. / dim))# stratifications/axis
@@ -692,8 +685,6 @@ cdef class Integrator(object):
         if self.neval_hcube < 2:
             self.neval_hcube = 2
         self.dim = dim
-        # if nhcube < self.nhcube_vec:
-        #     self.nhcube_vec = nhcube
         if self.beta > 0 and len(self.sigf_list) != nhcube:
             self.sigf_list = numpy.ones(nhcube, float)
         return new_mode
@@ -727,7 +718,7 @@ cdef class Integrator(object):
 
         # main iteration loop
         mode = self._prepare_integrator()
-        ans = WAvg()
+        ans = RunningWAvg()
         for itn in range(self.nitn):    # iterate
             if self.analyzer != None:
                 self.analyzer.begin(itn, self)
@@ -773,10 +764,10 @@ cdef class Integrator(object):
         cdef double dv = (1./self.nstrat) ** self.dim
         cdef double ans_mean = 0.
         cdef double ans_var = 0.
-        cdef INT_TYPE sum_neval_hcube = self.nhcube_vec * self.neval_hcube
-        cdef double[:, ::1] y = numpy.empty((self.dim, sum_neval_hcube), float)
-        cdef double[:, ::1] x = numpy.empty((self.dim, sum_neval_hcube), float)
-        cdef double[::1] jac = numpy.empty(sum_neval_hcube, float)
+        cdef INT_TYPE neval_vec = self.nhcube_vec * self.neval_hcube
+        cdef double[:, ::1] y = numpy.empty((self.dim, neval_vec), float)
+        cdef double[:, ::1] x = numpy.empty((self.dim, neval_vec), float)
+        cdef double[::1] jac = numpy.empty(neval_vec, float)
         cdef INT_TYPE min_neval_hcube = self.neval_hcube
         cdef INT_TYPE max_neval_hcube = self.neval_hcube
         cdef INT_TYPE hcube, i, j, d, hcube_base, ihcube, i_start
@@ -785,8 +776,8 @@ cdef class Integrator(object):
             )
         cdef double sum_fdv
         cdef double sum_fdv2
-        cdef double[::1] fdv = numpy.empty(sum_neval_hcube, float)
-        cdef double[::1] fdv2 = numpy.empty(sum_neval_hcube, float)
+        cdef double[::1] fdv = numpy.empty(neval_vec, float)
+        cdef double[::1] fdv2 = numpy.empty(neval_vec, float)
         cdef double sigf2
         cdef double[:, ::1] yran
         cdef INT_TYPE tmp_hcube, counter = 0 ########
@@ -802,7 +793,7 @@ cdef class Integrator(object):
             # compute neval_hcube for each h-cube
             # reinitialize work areas if necessary
             if redistribute:
-                sum_neval_hcube = 0
+                neval_vec = 0
                 for ihcube in range(nhcube_vec):
                     neval_hcube[ihcube] = <int> (
                         self.sigf_list[hcube_base + ihcube] * neval_sigf
@@ -813,17 +804,17 @@ cdef class Integrator(object):
                         min_neval_hcube = neval_hcube[ihcube]
                     if neval_hcube[ihcube] > max_neval_hcube:
                         max_neval_hcube = neval_hcube[ihcube]
-                    sum_neval_hcube += neval_hcube[ihcube]
-                if sum_neval_hcube > y.shape[1]:
-                    y = numpy.empty((self.dim, sum_neval_hcube), float)
-                    x = numpy.empty((self.dim, sum_neval_hcube), float)
-                    jac = numpy.empty(sum_neval_hcube, float)    
-                    fdv = numpy.empty(sum_neval_hcube, float)  
-                    fdv2 = numpy.empty(sum_neval_hcube, float) 
-            self.last_neval += sum_neval_hcube
+                    neval_vec += neval_hcube[ihcube]
+                if neval_vec > y.shape[1]:
+                    y = numpy.empty((self.dim, neval_vec), float)
+                    x = numpy.empty((self.dim, neval_vec), float)
+                    jac = numpy.empty(neval_vec, float)    
+                    fdv = numpy.empty(neval_vec, float)  
+                    fdv2 = numpy.empty(neval_vec, float) 
+            self.last_neval += neval_vec
            
             i_start = 0
-            yran = numpy.random.uniform(0., 1., (self.dim, sum_neval_hcube))
+            yran = numpy.random.uniform(0., 1., (self.dim, neval_vec))
             for ihcube in range(nhcube_vec):
                 hcube = hcube_base + ihcube
                 tmp_hcube = hcube
@@ -834,8 +825,8 @@ cdef class Integrator(object):
                     for i in range(i_start, i_start + neval_hcube[ihcube]):
                         y[d, i] = (y0[d] + yran[d, i]) / self.nstrat
                 i_start += neval_hcube[ihcube]
-            self.map.map(y, x, jac, sum_neval_hcube)
-            fcn(x, fdv, sum_neval_hcube)
+            self.map.map(y, x, jac, neval_vec)
+            fcn(x, fdv, neval_vec)
             
             # compute integral h-cube by h-cube
             i_start = 0
@@ -862,7 +853,7 @@ cdef class Integrator(object):
                     self.map.add_training_data( y, fdv2, 1)
                 i_start += neval_hcube[ihcube]
             if adapt_to_integrand:
-                self.map.add_training_data(y, fdv2, sum_neval_hcube)
+                self.map.add_training_data(y, fdv2, neval_vec)
 
         # record final results
         self.neval_hcube_range = (min_neval_hcube, max_neval_hcube)
@@ -960,153 +951,10 @@ cdef class VecPythonIntegrand:
         for i in range(nx):
             f[i] = self.fcn(x[:, i])
 
-#
-# Testing code:
-###############
-
-# cdef class VegasTest:
-#     """ Test vegas.
-
-#     This code creates integrands with any number of exponentials along
-#     the diagonal of the integration volume, and then evalues the integral
-#     using different levels of cythonizing in the code.
-
-#     Using 3 exponentials in 8 dimensions, with order 10**6, get fastest
-#     result from cython_integrate, followed by vec_integrate_cython which
-#     was only 10-20% slower. The later is probably the easiest interface
-#     to use for cythonized integrands. 20-30x slower are integrate_python
-#     and vec_integrate_python, with the former slightly faster(!).
-#     """
-#     # cdef readonly double[:] sig
-#     # cdef readonly double[:] x0
-#     # cdef readonly double[:] ampl
-#     # cdef readonly double exact
-
-#     def __init__(
-#         self, 
-#         integrator,
-#         x0=None, 
-#         ampl=None,
-#         sig=None,
-#         ):
-#         self.I = integrator
-#         self.exact = 0.0
-#         self.x0 = numpy.zeros(1, float) if x0 is None else numpy.asarray(x0)
-#         self.ampl = numpy.ones(len(x0), float) if ampl is None else numpy.asarray(ampl)
-#         self.sig = (0.1 + numpy.zeros(len(x0), float)) if sig is None else numpy.asarray(sig)
-#         for x0, sig, ampl in zip(self.x0, self.sig, self.ampl):
-#             tmp = 1.
-#             for d in range(self.I.map.dim):
-#                 tmp *= self.exact_gaussian(x0, sig, ampl, self.I.map.region(d))
-#             self.exact += tmp
-
-#     # @cython.boundscheck(False)
-#     # @cython.wraparound(False)
-#     cdef void cython_vec_fcn(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
-#         cdef double ans
-#         cdef double dx2, dx
-#         cdef INT_TYPE i, d, j
-#         cdef INT_TYPE dim = x.shape[0]
-#         cdef INT_TYPE nx0 = len(self.x0)
-#         for i in range(nx):
-#             ans = 0.0
-#             for j in range(nx0):
-#                 dx2 = 0.0
-#                 for d in range(dim):
-#                     dx = x[d, i] - self.x0[j]
-#                     dx2 += dx * dx
-#                 ans += self.ampl[j] * exp(- dx2 / self.sig[j] ** 2) 
-#             f[i] = ans / self.exact
-#         return
-
-#     # def python_vec_fcn(self, x, f, nx):
-#     #     for i in range(nx):
-#     #         ans = 0.0
-#     #         for j in range(len(self.x0)):
-#     #             dx2 = 0.0
-#     #             for d in range(x.shape[0]):
-#     #                 dx = x[d, i] - self.x0[j]
-#     #                 dx2 += dx * dx
-#     #             ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
-#     #         f[i] = ans / self.exact
-#     #     return
-#     def python_vec_fcn(self, double[:, ::1] xx, double[::1] ff, nx):
-#         " This is 6x faster than the version just above for one example "
-#         x = numpy.asarray(xx)
-#         f = numpy.asarray(ff)
-#         ans = 0.0
-#         for j in range(len(self.x0)):
-#             dx2 = 0.0
-#             for d in range(x.shape[0]):
-#                 dx = x[d, :nx] - self.x0[j]
-#                 dx2 += dx * dx
-#             ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
-#         f[:nx] = ans / self.exact
-#         return
-
-#     def python_fcn(self, x):
-#         ans = 0.0
-#         for j in range(len(self.x0)):
-#             dx2 = 0.0
-#             for d in range(x.shape[0]):
-#                 dx = x[d] - self.x0[j]
-#                 dx2 += dx * dx
-#             ans += self.ampl[j] * numpy.exp(- dx2 / self.sig[j] ** 2) 
-#         return ans / self.exact
-
-
-#     # @cython.boundscheck(False)
-#     # @cython.wraparound(False)
-#     def __call__(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
-#         cdef double ans
-#         cdef double dx2, dx
-#         cdef INT_TYPE i, d, j
-#         cdef INT_TYPE dim = x.shape[0]
-#         cdef INT_TYPE nx0 = len(self.x0)
-#         for i in range(nx):
-#             ans = 0.0
-#             for j in range(nx0):
-#                 dx2 = 0.0
-#                 for d in range(dim):
-#                     dx = x[d, i] - self.x0[j]
-#                     dx2 += dx * dx
-#                 ans += self.ampl[j] * exp(- dx2 / self.sig[j] ** 2) 
-#             f[i] = ans / self.exact
-#         return
-
-#     def exact_gaussian(self, x0, sig, ampl, interval):
-#         """ int dx exp(-(x-x0)**2 / sig**2) over range """
-#         ans = 0.0
-#         for x in [interval[0], interval[-1]]:
-#             ans += erf(abs(x0 - x) / sig)
-#         return ans * ampl * math.pi ** 0.5 / 2. * sig
-
-#     def cython_integrate(VegasTest self, **kargs):
-#         " Integrate using I.cython_integrate "
-#         global vegastest_instance 
-#         vegastest_instance = self
-#         return self.I.cython_integrate(& vegastest_fcn, kargs)
-
-#     def vec_integrate_cython(VegasTest self, **kargs):
-#         " Integrate using I.vec_integrate with cython optimized python fcn "
-#         return self.I.vec_integrate(self, **kargs)
-
-#     def vec_integrate_python(self, **kargs):
-#         " Integrate using I.vec_integrate with pure python vector fcn "
-#         return self.I.vec_integrate(self.python_vec_fcn, **kargs)
-
-
-#     def integrate_python(self, **kargs):
-#         " Integrate using I(fcn) with pure python (non-vector) fcn "
-#         return self.I(self.python_fcn, **kargs)
-
-
-# cdef VegasTest vegastest_instance
-
-# cdef void vegastest_fcn(double[:, ::1] x, double[::1] f, INT_TYPE nx):
-#     vegastest_instance.cython_vec_fcn(x, f, nx)
-
-
+cdef class VecIntegrand:
+    # cdef object fcntype
+    def __init__(self):
+        self.fcntype = 'vector'
 
 
 
