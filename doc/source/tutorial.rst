@@ -290,6 +290,36 @@ There are several things worth noting here:
     remembers the variable transformations made to minimize errors, and
     so need not be readapted to the integrand when used later.
 
+Difficult Integrands
+----------------------
+There are a variety of integrands that pose particular problems for 
+|vegas|. Here we discuss a few of these problem cases.
+
+As illustrated above, large isolated peaks do not pose much
+of a problem so long as those peaks have shoulders that extend into
+an appreciable part of the integration volume. So the 20-dimensional
+integral
+
+.. math::
+
+    \int_0^1dx_1\cdots\int_0^1 dx_{20} 
+    \,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2},
+
+is handled easily by |vegas|. Much harder is a peak without 
+shoulders: for example,
+
+.. math::
+
+    \int_0^1dx_1\cdots\int_0^1 dx_{20} 
+    \,\,\theta(0.2 - \sum_{\mu}(x_\mu-0.5)^2)
+
+where step function 
+:math:`\theta(x)` is 1 for positive arguments and 0 otherwise.
+Indeed |vegas| would almost certainly miss the nonzero region 
+completely unless it sampled with something like 10\ :sup:`17`  integrand evaluations: this integral is the volume of a 20-dimensional sphere of 
+radius 0.2, which is around 3x10\ :sup:`-16`. 
+
+
 
 Faster Integrands
 -------------------------
