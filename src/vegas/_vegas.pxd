@@ -1,7 +1,7 @@
 # ctypedef numpy.intp_t INT_TYPE 
 ctypedef long INT_TYPE
-ctypedef double (*cython_integrand)(double[:]) 
-ctypedef double (*cython_integrand_exc)(double[:]) except? 1e111
+ctypedef double (*cython_integrand)(double[::1]) 
+ctypedef double (*cython_integrand_exc)(double[::1]) except? 1e111
 
 cdef class VecCythonIntegrand:
     cdef cython_integrand fcn

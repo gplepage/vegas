@@ -136,13 +136,13 @@ cdef class AdaptiveMap:
     which creates an ``x`` grid with ``N`` equal-sized increments 
     between ``x[d]=xl[d]`` and ``x[d]=xu[d]``. The training function 
     is then evaluated for the ``x`` values corresponding to 
-    a list of ``y`` values ``y[d, i]`` spread over ``(0,1)`` for 
+    a list of ``y`` values ``y[i, d]`` spread over ``(0,1)`` for 
     each direction ``d``::
 
         ...
         for i in range(ny):
             for d in range(dim):
-                y[d, i] = ....
+                y[i, d] = ....
         x = numpy.empty(y.shape, float)     # container for corresponding x's
         jac = numpy.empty(y.shape, float)   # container for corresponding dx/dy's
         map.map(y, x, jac)                  # fill x and jac
@@ -265,13 +265,13 @@ cdef class AdaptiveMap:
         """ Return ``x`` values corresponding to ``y``. 
 
         ``y`` can be a single ``dim``-dimensional point, or it 
-        can be an array ``y[d,i,j,...]`` of such points (``d=0..dim-1``).
+        can be an array ``y[i,j, ..., d]`` of such points (``d=0..dim-1``).
         """
         y = numpy.asarray(y, float)
         y_shape = y.shape
-        y.shape = y.shape[0], -1
+        y.shape = -1, y.shape[-1]
         x = 0 * y
-        jac = numpy.empty(y.shape[1], float)
+        jac = numpy.empty(y.shape[0], float)
         self.map(y, x, jac)
         x.shape = y_shape
         return x
@@ -284,14 +284,14 @@ cdef class AdaptiveMap:
         """
         y = numpy.asarray(y)
         y_shape = y.shape
-        y.shape = y.shape[0], -1
+        y.shape = -1, y.shape[-1]
         x = 0 * y
-        jac = numpy.empty(y.shape[1], float)
+        jac = numpy.empty(y.shape[0], float)
         self.map(y, x, jac)
         return jac
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
+    # @cython.boundscheck(False)
+    # @cython.wraparound(False)
     cpdef map(
         self, 
         double[:, ::1] y, 
@@ -301,50 +301,50 @@ cdef class AdaptiveMap:
         ):
         """ Map y to x, where jac is the jacobian.
 
-        ``y[d, i]`` is an array of ``ny`` ``y``-values for direction ``d``.
-        ``x[d, i]`` is filled with the corresponding ``x`` values,
+        ``y[i, d]`` is an array of ``ny`` ``y``-values for direction ``d``.
+        ``x[i, d]`` is filled with the corresponding ``x`` values,
         and ``jac[i]`` is filled with the corresponding jacobian 
         values. ``x`` and ``jac`` must be preallocated: for example, ::
 
             x = numpy.empty(y.shape, float)
-            jac = numpy.empty(y.shape[1], float)
+            jac = numpy.empty(y.shape[0], float)
 
         :param y: ``y`` values to be mapped. ``y`` is a contiguous 2-d array,
-            where ``y[d, i]`` contains values for points along direction ``d``.
+            where ``y[i, d]`` contains values for points along direction ``d``.
         :type y: contiguous 2-d array of floats
         :param x: Container for ``x`` values corresponding to ``y``.
         :type x: contiguous 2-d array of floats
         :param jac: Container for jacobian values corresponding to ``y``.
         :type jac: contiguous 1-d array of floats
-        :param ny: Number of ``y`` points: ``y[d, i]`` for ``d=0...dim-1``
+        :param ny: Number of ``y`` points: ``y[i, d]`` for ``d=0...dim-1``
             and ``i=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
             omitted (or negative).
         :type ny: int
         """
         cdef INT_TYPE ninc = self.inc.shape[1]
         cdef INT_TYPE dim = self.inc.shape[0]
-        cdef INT_TYPE i, iy, d
+        cdef INT_TYPE i, iy, d 
         cdef double y_ninc, dy_ninc, tmp_jac
         if ny < 0:
-            ny = y.shape[1]
-        elif ny > y.shape[1]:
-            raise ValueError('ny > y.shape[1]: %d > %d' % (ny, y.shape[1]))
+            ny = y.shape[0]
+        elif ny > y.shape[0]:
+            raise ValueError('ny > y.shape[0]: %d > %d' % (ny, y.shape[0]))
         for i in range(ny):
             jac[i] = 1.
             for d in range(dim):
-                y_ninc = y[d, i] * ninc
+                y_ninc = y[i, d] * ninc
                 iy = <int>floor(y_ninc)
                 dy_ninc = y_ninc  -  iy
                 if iy < ninc:
-                    x[d, i] = self.grid[d, iy] + self.inc[d, iy] * dy_ninc
+                    x[i, d] = self.grid[d, iy] + self.inc[d, iy] * dy_ninc
                     jac[i] *= self.inc[d, iy] * ninc
                 else:
-                    x[d, i] = self.grid[d, ninc]
+                    x[i, d] = self.grid[d, ninc]
                     jac[i] *= self.inc[d, ninc - 1] * ninc
         return
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
+    # @cython.boundscheck(False)
+    # @cython.wraparound(False)
     cpdef add_training_data(
         self, 
         double[:, ::1] y, 
@@ -356,13 +356,13 @@ cdef class AdaptiveMap:
         Accumulates training data for later use by ``self.adapt()``.
 
         :param y: ``y`` values corresponding to the training data. 
-            ``y`` is a contiguous 2-d array, where ``y[d, i]`` 
+            ``y`` is a contiguous 2-d array, where ``y[i, d]`` 
             is for points along direction ``d``.
         :type y: contiguous 2-d array of floats
         :param f: Training function values. ``f[i]`` corresponds to 
-            point ``y[d, i]`` in ``y``-space.
+            point ``y[i, d]`` in ``y``-space.
         :type f: contiguous 2-d array of floats
-        :param ny: Number of ``y`` points: ``y[d, i]`` for ``d=0...dim-1``
+        :param ny: Number of ``y`` points: ``y[i, d]`` for ``d=0...dim-1``
             and ``i=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
             omitted (or negative).
         :type ny: int
@@ -375,12 +375,12 @@ cdef class AdaptiveMap:
             self.sum_f = numpy.zeros((dim, ninc), float)
             self.n_f = numpy.zeros((dim, ninc), float) + TINY
         if ny < 0:
-            ny = y.shape[1]
-        elif ny > y.shape[1]:
-            raise ValueError('ny > y.shape[1]: %d > %d' % (ny, y.shape[1]))
+            ny = y.shape[0]
+        elif ny > y.shape[0]:
+            raise ValueError('ny > y.shape[0]: %d > %d' % (ny, y.shape[0]))
         for d in range(dim):
             for i in range(ny):
-                iy = <int> floor(y[d, i] * ninc)
+                iy = <int> floor(y[i, d] * ninc)
                 self.sum_f[d, iy] += abs(f[i])
                 self.n_f[d, iy] += 1
         return
@@ -765,8 +765,8 @@ cdef class Integrator(object):
         cdef double ans_mean = 0.
         cdef double ans_var = 0.
         cdef INT_TYPE neval_vec = self.nhcube_vec * self.neval_hcube
-        cdef double[:, ::1] y = numpy.empty((self.dim, neval_vec), float)
-        cdef double[:, ::1] x = numpy.empty((self.dim, neval_vec), float)
+        cdef double[:, ::1] y = numpy.empty((neval_vec, self.dim), float)
+        cdef double[:, ::1] x = numpy.empty((neval_vec, self.dim), float)
         cdef double[::1] jac = numpy.empty(neval_vec, float)
         cdef INT_TYPE min_neval_hcube = self.neval_hcube
         cdef INT_TYPE max_neval_hcube = self.neval_hcube
@@ -805,16 +805,16 @@ cdef class Integrator(object):
                     if neval_hcube[ihcube] > max_neval_hcube:
                         max_neval_hcube = neval_hcube[ihcube]
                     neval_vec += neval_hcube[ihcube]
-                if neval_vec > y.shape[1]:
-                    y = numpy.empty((self.dim, neval_vec), float)
-                    x = numpy.empty((self.dim, neval_vec), float)
+                if neval_vec > y.shape[0]:
+                    y = numpy.empty((neval_vec, self.dim), float)
+                    x = numpy.empty((neval_vec, self.dim), float)
                     jac = numpy.empty(neval_vec, float)    
                     fdv = numpy.empty(neval_vec, float)  
                     fdv2 = numpy.empty(neval_vec, float) 
             self.last_neval += neval_vec
            
             i_start = 0
-            yran = numpy.random.uniform(0., 1., (self.dim, neval_vec))
+            yran = numpy.random.uniform(0., 1., (neval_vec, self.dim))
             for ihcube in range(nhcube_vec):
                 hcube = hcube_base + ihcube
                 tmp_hcube = hcube
@@ -823,7 +823,7 @@ cdef class Integrator(object):
                     tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
                 for d in range(self.dim):
                     for i in range(i_start, i_start + neval_hcube[ihcube]):
-                        y[d, i] = (y0[d] + yran[d, i]) / self.nstrat
+                        y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
                 i_start += neval_hcube[ihcube]
             self.map.map(y, x, jac, neval_vec)
             fcn(x, fdv, neval_vec)
@@ -848,7 +848,7 @@ cdef class Integrator(object):
                 ans_var += var
                 if not adapt_to_integrand:
                     for d in range(self.dim):
-                        y[d, 0] = (y0[d] + 0.5) / self.nstrat
+                        y[0, d] = (y0[d] + 0.5) / self.nstrat
                     fdv2[0] = var
                     self.map.add_training_data( y, fdv2, 1)
                 i_start += neval_hcube[ihcube]
@@ -916,7 +916,7 @@ cdef class VecCythonIntegrand:
     def __call__(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
         cdef INT_TYPE i
         for i in range(nx):
-            f[i] = self.fcn(x[:, i])
+            f[i] = self.fcn(x[i, :])
 
 cdef object python_wrapper(cython_integrand fcn):
     ans = VecCythonIntegrand()
@@ -932,7 +932,7 @@ cdef class VecCythonIntegrandExc:
     def __call__(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
         cdef INT_TYPE i
         for i in range(nx):
-            f[i] = self.fcn(x[:, i])
+            f[i] = self.fcn(x[i, :])
 
 cdef object python_wrapper_exc(cython_integrand_exc fcn):
     ans = VecCythonIntegrandExc()
@@ -949,7 +949,7 @@ cdef class VecPythonIntegrand:
     def __call__(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
         cdef INT_TYPE i 
         for i in range(nx):
-            f[i] = self.fcn(x[:, i])
+            f[i] = self.fcn(x[i, :])
 
 cdef class VecIntegrand:
     # cdef object fcntype
