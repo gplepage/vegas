@@ -96,7 +96,7 @@ cdef class AdaptiveMap:
 
     The map is specified by a grid in ``x``-space that, by definition, 
     maps into a uniformly space grid in ``y``-space. The nodes of 
-    the grid are specified by ``grid[d, i]`` where d is the 
+    the grid are specified by ``grid[i, d]`` where d is the 
     direction (``d=0,1...dim-1``) and ``i`` labels the grid point
     (``i=0,1...N-1``). The mapping for specific point ``y`` into
     ``x`` space is:: 
@@ -104,9 +104,9 @@ cdef class AdaptiveMap:
         y[d] -> x[d] = grid[d, i(y[d])] + inc[d, i(y[d])] * delta(y[d])
 
     where ``i(y)=floor(y*N``), ``delta(y)=y*N-i(y)``, and
-    ``inc[d, i] = grid[d, i+1] - grid[d, i]``. The jacobian for this map, :: 
+    ``inc[i, d] = grid[i+1, d] - grid[i, d]``. The jacobian for this map, :: 
 
-        dx[d]/dy[d] = inc[d, i(y[d])] * N,
+        dx[d]/dy[d] = inc[i(y[d]), d] * N,
 
     is piece-wise constant and proportional to the ``x``-space grid 
     spacing. Each increment in the ``x``-space grid maps into an increment of 
@@ -136,13 +136,13 @@ cdef class AdaptiveMap:
     which creates an ``x`` grid with ``N`` equal-sized increments 
     between ``x[d]=xl[d]`` and ``x[d]=xu[d]``. The training function 
     is then evaluated for the ``x`` values corresponding to 
-    a list of ``y`` values ``y[d, i]`` spread over ``(0,1)`` for 
+    a list of ``y`` values ``y[i, d]`` spread over ``(0,1)`` for 
     each direction ``d``::
 
         ...
         for i in range(ny):
             for d in range(dim):
-                y[d, i] = ....
+                y[i, d] = ....
         x = numpy.empty(y.shape, float)     # container for corresponding x's
         jac = numpy.empty(y.shape, float)   # container for corresponding dx/dy's
         map.map(y, x, jac)                  # fill x and jac
@@ -160,7 +160,7 @@ cdef class AdaptiveMap:
 
     The process of computing training data and then adapting the map
     typically has to be repeated several times before the map converges,
-    at which point the ``x``-grid's nodes, ``map.grid[d, i]``, stop changing.
+    at which point the ``x``-grid's nodes, ``map.grid[i, d]``, stop changing.
 
     The speed with which the grid adapts is determined by parameter ``alpha``.
     Large (positive) values imply rapid adaptation, while small values (much
@@ -168,11 +168,11 @@ cdef class AdaptiveMap:
     usually a good idea to slow adaptation down in order to avoid
     instabilities.
 
-    :param grid: Initial ``x`` grid, where ``grid[d, i]`` is the ``i``-th 
+    :param grid: Initial ``x`` grid, where ``grid[i, d]`` is the ``i``-th 
         node in direction ``d``.
     :type x: 2-d array of floats
     :param ninc: Number of increments along each axis of the ``x`` grid. 
-        A new grid is generated if ``ninc`` differs from ``grid.shape[1]``.
+        A new grid is generated if ``ninc`` differs from ``grid.shape[0]``.
         The new grid is designed to give the same jacobian ``dx(y)/dy``
         as the original grid. The default value, ``ninc=None``,  leaves 
         the grid unchanged.
@@ -186,14 +186,14 @@ cdef class AdaptiveMap:
             grid = numpy.array(grid, float)
             if grid.ndim != 2:
                 raise ValueError('grid must be 2-d array not %d-d' % grid.ndim)
-            grid.sort(axis=1)
-            if grid.shape[1] < 2: 
-                raise ValueError("grid.shape[1] smaller than 2: " % grid.shape[1])
+            grid.sort(axis=0)
+            if grid.shape[0] < 2: 
+                raise ValueError("grid.shape[0] smaller than 2: " % grid.shape[0])
             self._init_grid(grid, initinc=True)
         self.sum_f = None
         self.n_f = None
-        if ninc is not None and ninc != self.inc.shape[1]:
-            if self.inc.shape[1] == 1:
+        if ninc is not None and ninc != self.inc.shape[0]:
+            if self.inc.shape[0] == 1:
                 self.make_uniform(ninc=ninc)
             else:
                 self.adapt(ninc=ninc)
@@ -216,7 +216,7 @@ cdef class AdaptiveMap:
         if d < 0:
             return [self.region(d) for d in range(self.dim)]
         else:
-            return (self.grid[d, 0], self.grid[d, -1])
+            return (self.grid[0, d], self.grid[-1, d])
 
     def __reduce__(self):
         """ Capture state for pickling. """
@@ -244,9 +244,9 @@ cdef class AdaptiveMap:
                 )
         new_grid = numpy.empty((dim, ninc + 1), float)
         for d in range(dim):
-            tmp = numpy.linspace(self.grid[d, 0], self.grid[d, -1], ninc + 1)
+            tmp = numpy.linspace(self.grid[0, d], self.grid[-1, d], ninc + 1)
             for i in range(ninc + 1):
-                new_grid[d, i] = tmp[i]
+                new_grid[i, d] = tmp[i]
         self._init_grid(new_grid)
 
     def _init_grid(self, new_grid, initinc=False):
@@ -259,7 +259,7 @@ cdef class AdaptiveMap:
             self.inc = numpy.empty((dim, ninc), float)
         for d in range(dim):
             for i in range(ninc):
-                self.inc[d, i] = self.grid[d, i + 1] - self.grid[d, i]
+                self.inc[i, d] = self.grid[i + 1, d] - self.grid[i, d]
 
     def __call__(self, y):
         """ Return ``x`` values corresponding to ``y``. 
@@ -301,8 +301,8 @@ cdef class AdaptiveMap:
         ):
         """ Map y to x, where jac is the jacobian.
 
-        ``y[d, i]`` is an array of ``ny`` ``y``-values for direction ``d``.
-        ``x[d, i]`` is filled with the corresponding ``x`` values,
+        ``y[i, d]`` is an array of ``ny`` ``y``-values for direction ``d``.
+        ``x[i, d]`` is filled with the corresponding ``x`` values,
         and ``jac[i]`` is filled with the corresponding jacobian 
         values. ``x`` and ``jac`` must be preallocated: for example, ::
 
@@ -310,13 +310,13 @@ cdef class AdaptiveMap:
             jac = numpy.empty(y.shape[1], float)
 
         :param y: ``y`` values to be mapped. ``y`` is a contiguous 2-d array,
-            where ``y[d, i]`` contains values for points along direction ``d``.
+            where ``y[i, d]`` contains values for points along direction ``d``.
         :type y: contiguous 2-d array of floats
         :param x: Container for ``x`` values corresponding to ``y``.
         :type x: contiguous 2-d array of floats
         :param jac: Container for jacobian values corresponding to ``y``.
         :type jac: contiguous 1-d array of floats
-        :param ny: Number of ``y`` points: ``y[d, i]`` for ``d=0...dim-1``
+        :param ny: Number of ``y`` points: ``y[i, d]`` for ``d=0...dim-1``
             and ``i=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
             omitted (or negative).
         :type ny: int
@@ -332,15 +332,15 @@ cdef class AdaptiveMap:
         for i in range(ny):
             jac[i] = 1.
             for d in range(dim):
-                y_ninc = y[d, i] * ninc
+                y_ninc = y[i, d] * ninc
                 iy = <int>floor(y_ninc)
                 dy_ninc = y_ninc  -  iy
                 if iy < ninc:
-                    x[d, i] = self.grid[d, iy] + self.inc[d, iy] * dy_ninc
-                    jac[i] *= self.inc[d, iy] * ninc
+                    x[i, d] = self.grid[iy, d] + self.inc[iy, d] * dy_ninc
+                    jac[i] *= self.inc[iy, d] * ninc
                 else:
-                    x[d, i] = self.grid[d, ninc]
-                    jac[i] *= self.inc[d, ninc - 1] * ninc
+                    x[i, d] = self.grid[ninc, d]
+                    jac[i] *= self.inc[ninc - 1, d] * ninc
         return
 
     @cython.boundscheck(False)
@@ -356,13 +356,13 @@ cdef class AdaptiveMap:
         Accumulates training data for later use by ``self.adapt()``.
 
         :param y: ``y`` values corresponding to the training data. 
-            ``y`` is a contiguous 2-d array, where ``y[d, i]`` 
+            ``y`` is a contiguous 2-d array, where ``y[i, d]`` 
             is for points along direction ``d``.
         :type y: contiguous 2-d array of floats
         :param f: Training function values. ``f[i]`` corresponds to 
-            point ``y[d, i]`` in ``y``-space.
+            point ``y[i, d]`` in ``y``-space.
         :type f: contiguous 2-d array of floats
-        :param ny: Number of ``y`` points: ``y[d, i]`` for ``d=0...dim-1``
+        :param ny: Number of ``y`` points: ``y[i, d]`` for ``d=0...dim-1``
             and ``i=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
             omitted (or negative).
         :type ny: int
@@ -380,9 +380,9 @@ cdef class AdaptiveMap:
             raise ValueError('ny > y.shape[1]: %d > %d' % (ny, y.shape[1]))
         for d in range(dim):
             for i in range(ny):
-                iy = <int> floor(y[d, i] * ninc)
-                self.sum_f[d, iy] += abs(f[i])
-                self.n_f[d, iy] += 1
+                iy = <int> floor(y[i, d] * ninc)
+                self.sum_f[iy, d] += abs(f[i])
+                self.n_f[iy, d] += 1
         return
         
     def adapt(self, double alpha=0.0, ninc=None):
@@ -427,8 +427,8 @@ cdef class AdaptiveMap:
         if new_ninc == 1:
             new_grid = numpy.empty((dim, 2), float)
             for d in range(dim):
-                new_grid[d, 0] = self.grid[d, 0]
-                new_grid[d, 1] = self.grid[d, -1]
+                new_grid[0, d] = self.grid[0, d]
+                new_grid[1, d] = self.grid[-1, d]
             self._init_grid(new_grid)
             return
         #
@@ -438,7 +438,7 @@ cdef class AdaptiveMap:
         for d in range(dim):
             if self.sum_f is not None and alpha != 0:
                 for i in range(old_ninc):
-                    avg_f[i] = self.sum_f[d, i] / self.n_f[d, i]
+                    avg_f[i] = self.sum_f[i, d] / self.n_f[i, d]
             if alpha > 0 and old_ninc > 1:
                 tmp_f = numpy.empty(old_ninc, float)
                 tmp_f[0] = (3. * avg_f[0] + avg_f[1]) / 4.
@@ -457,8 +457,8 @@ cdef class AdaptiveMap:
                     avg_f[i] = (-(1 - avg_f[i]) / log(avg_f[i])) ** alpha
             #
             # regrid
-            new_grid[d, 0] = self.grid[d, 0]
-            new_grid[d, -1] = self.grid[d, -1]
+            new_grid[0, d] = self.grid[0, d]
+            new_grid[-1, d] = self.grid[-1, d]
             i = 0        # new_x index
             j = -1         # self_x index
             acc_f = 0   # sum(avg_f) accumulated
@@ -475,9 +475,9 @@ cdef class AdaptiveMap:
                         break
                 else:
                     acc_f -= f_ninc
-                    new_grid[d, i] = (
-                        self.grid[d, j+1] 
-                        - (acc_f / avg_f[j]) * self.inc[d, j]
+                    new_grid[i, d] = (
+                        self.grid[j+1, d] 
+                        - (acc_f / avg_f[j]) * self.inc[j, d]
                         )
                     continue
                 break
@@ -823,7 +823,7 @@ cdef class Integrator(object):
                     tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
                 for d in range(self.dim):
                     for i in range(i_start, i_start + neval_hcube[ihcube]):
-                        y[d, i] = (y0[d] + yran[d, i]) / self.nstrat
+                        y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
                 i_start += neval_hcube[ihcube]
             self.map.map(y, x, jac, neval_vec)
             fcn(x, fdv, neval_vec)
@@ -848,7 +848,7 @@ cdef class Integrator(object):
                 ans_var += var
                 if not adapt_to_integrand:
                     for d in range(self.dim):
-                        y[d, 0] = (y0[d] + 0.5) / self.nstrat
+                        y[0, d] = (y0[d] + 0.5) / self.nstrat
                     fdv2[0] = var
                     self.map.add_training_data( y, fdv2, 1)
                 i_start += neval_hcube[ihcube]
@@ -898,7 +898,7 @@ class reporter:
                     % (
                         d, 
                         numpy.array2string(
-                            grid[d, start::nskip],precision=3,
+                            grid[start::nskip, d],precision=3,
                             prefix='    grid[xx] = ')
                           )
                     )
@@ -916,7 +916,7 @@ cdef class VecCythonIntegrand:
     def __call__(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
         cdef INT_TYPE i
         for i in range(nx):
-            f[i] = self.fcn(x[:, i])
+            f[i] = self.fcn(x[i, :])
 
 cdef object python_wrapper(cython_integrand fcn):
     ans = VecCythonIntegrand()
@@ -932,7 +932,7 @@ cdef class VecCythonIntegrandExc:
     def __call__(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
         cdef INT_TYPE i
         for i in range(nx):
-            f[i] = self.fcn(x[:, i])
+            f[i] = self.fcn(x[i, :])
 
 cdef object python_wrapper_exc(cython_integrand_exc fcn):
     ans = VecCythonIntegrandExc()
@@ -949,7 +949,7 @@ cdef class VecPythonIntegrand:
     def __call__(self, double[:, ::1] x, double[::1] f, INT_TYPE nx):
         cdef INT_TYPE i 
         for i in range(nx):
-            f[i] = self.fcn(x[:, i])
+            f[i] = self.fcn(x[i, :])
 
 cdef class VecIntegrand:
     # cdef object fcntype
