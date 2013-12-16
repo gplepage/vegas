@@ -1,30 +1,39 @@
 - Make multivegas --- integrand is a vector of different integrands.
 
-- do we want to disable adapt_to_errors because it isn't so useful anymore?
+- YES:: do we want to disable adapt_to_errors because it isn't so useful anymore?
   in 1d it is better. Not clear whether the 1/n error dependence beats 
   the adaptive redistribution in 2 or higher --- quite possibly does.
-  kinoshita's small integral might be a good test case.
+  kinoshita's small integral might be a good test case. CAn get rid of
+  nstrat_crit!!!!
 
+- replace sigf_list with a double list, containing h-cube number and sigf, 
+  so that we only save sigf data for places where sigf is unusually large.
+  
+- need test-vegas written. probably should redo it from scratch
 
-- Kinoshita's 9-dim integral fails in adapt_to_errors mode (really large neval).
+- finish documentation. How does vegas work may be optional??
+
+- CHECK:: Kinoshita's 9-dim integral fails in adapt_to_errors mode (really large neval).
   Is this because we estimate errors using sum(f**2)/n - mean(f)**2 rather 
-  than sum((f-mean(f))**2) / n ???
-
-- Check whether things run faster if we put x[::1, :1] rather than 
-  the other way around. It could affect the speed of scalar integrands
-  since x[d] isn't strided then. On the other hand realistic integration
-  methods don't use x[d] that much --- it gets mapped into a scalar variable
-  usually. Changing might make it easier to use compiled Fortran and C 
-  code for scalar functions since then x[d] is a simple array (ie, not
-  strided.) This last is an important consideration. On the other hand
-  vectorized code may prefer the vector index to be the outermost -- not
-  clear really. SHOULD DO IT!
-
+  than sum((f-mean(f))**2) / n ??? This doesn't help.
 
 - get sdist to work properly --- need MANIFEST.in
 
-- cythonize WAvg properly; add documentation.
+- Think about roundoff error in the accumulation of results. Could introduce
+  vec_mean and vec_var so accumulate whole vectors before folding into 
+  the total answer. Could keep vec_mean and vec_var in arrays that 
+  are summed intelligently at the end. That would be the best but involves
+  a lot of storage possibly, although less than storage in sigf_list if
+  nhcube_vec > 2. See math.fsum documentation in Python manual, and 
+  also: http://code.activestate.com/recipes/393090/ TOO SLOW -- increases
+  time in Kinoshita's 5-dim example by factor of 6. vec_mean and vec_var
+  may best we can do. Not too bad since do sums for each hcube as well. Doing
+  vec_mean and vec_var would only help, however, if nhcube_vec was a lot larger
+  than 30. This is a non issue for the vars since they are all positive. It
+  feels like a non-issue for the means as well since the likelihood of two
+  very large terms cancelling in the sum is very small for numbers coming
+  from Monte Carlo.
 
-- on 3-gaussian in 6d with 100,000 per itn, 1000 itns it seems
-  to always underestimate the error by a lot. Is it possibly 
-  due to round off error? Might we be missing small errors?
+- Do we want a max_neval_hcube, to protect from too much memory? Also could
+  limit nhcube, for the same reason.
+

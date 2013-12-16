@@ -27,9 +27,14 @@ cdef double HUGE = 1e308
 have_gvar = False
 try:
     import gvar
-    import lsqfit
     have_gvar = True
 except ImportError:
+    have_scipy = False
+    try:
+        import scipy.special
+        have_scipy = True
+    except ImportError:
+        pass
     # fake version of gvar.gvar
     # for use if lsqfit module not available
     class GVar(object):
@@ -44,6 +49,11 @@ except ImportError:
             pass
         def gvar(self, mean, sdev):
             return GVar(mean, sdev)
+        def gammaQ(self, a, b):
+            if have_scipy:
+                return scipy.special.gammaincc(a, b)
+            else:
+                return -1.
         def mean(self, glist):
             return numpy.array([g.mean for g in glist])
         def var(self, glist):
@@ -80,10 +90,39 @@ class RunningWAvg(gvar.GVar):
         self.chi2 = self._v2_s2 - self._v_s2 ** 2 / self._1_s2
         self.dof = len(self.itn_results) - 1
         self.Q = (
-            lsqfit.gammaQ(self.dof/2., self.chi2/2.) 
-            if have_gvar and self.dof > 0 
-            else -1.
+            gvar.gammaQ(self.dof/2., self.chi2/2.) 
+            if self.dof > 0 
+            else 1.
             )
+    def summary(self):
+        """ Assemble summary of results into string """
+        acc = RunningWAvg()
+        linedata = []
+        for i, res in enumerate(self.itn_results):
+            acc.add(res)
+            if i > 0:
+                chi2_dof = acc.chi2 / acc.dof 
+                Q = acc.Q
+            else:
+                chi2_dof = 0.0
+                Q = 1.0
+            itn = '%3d' % (i + 1)
+            integral = '%-15s' % res
+            wgtavg = '%-15s' % acc
+            chi2dof = '%8.2f' % (acc.chi2 / acc.dof if i != 0 else 0.0)
+            Q = '%8.2f' % (acc.Q if i != 0 else 1.0)
+            linedata.append((itn, integral, wgtavg, chi2dof, Q))
+        nchar = 5 * [0]
+        for data in linedata:
+            for i, d in enumerate(data):
+                if len(d) > nchar[i]:
+                    nchar[i] = len(d)
+        fmt = '%%%ds   %%-%ds %%-%ds %%%ds %%%ds\n' % tuple(nchar)
+        ans = fmt % ('itn', 'integral', 'wgt average', 'chi2/dof', 'Q')
+        ans += len(ans[:-1]) * '-' + '\n'
+        for data in linedata:
+            ans += fmt % data
+        return ans
 
 # AdaptiveMap is used by Integrator 
 cdef class AdaptiveMap:
@@ -323,7 +362,7 @@ cdef class AdaptiveMap:
         """
         cdef INT_TYPE ninc = self.inc.shape[1]
         cdef INT_TYPE dim = self.inc.shape[0]
-        cdef INT_TYPE i, iy, d 
+        cdef INT_TYPE i, iy, d  
         cdef double y_ninc, dy_ninc, tmp_jac
         if ny < 0:
             ny = y.shape[0]
@@ -782,7 +821,7 @@ cdef class Integrator(object):
         cdef double[:, ::1] yran
         cdef INT_TYPE tmp_hcube, counter = 0 ########
 
-        # iterate over h-cubes in batches of self.nstrat h-cubes
+        # iterate over h-cubes in batches of nhcube_vec h-cubes
         # this allows for vectorization, to reduce python overhead
         self.last_neval = 0
         nhcube_vec = self.nhcube_vec
@@ -839,6 +878,9 @@ cdef class Integrator(object):
                     fdv2[i] = fdv[i] ** 2
                     sum_fdv += fdv[i]
                     sum_fdv2 += fdv2[i]
+                # following is pretty slow - 6x Kinoshita's 5-d integrand
+                # sum_fdv = math.fsum(fdv[i_start:i_start + neval_hcube[ihcube]])
+                # sum_fdv2 = math.fsum(fdv2[i_start:i_start + neval_hcube[ihcube]])
                 mean = sum_fdv / neval_hcube[ihcube]
                 sigf2 = abs(sum_fdv2 / neval_hcube[ihcube] - mean * mean)
                 if redistribute:
@@ -953,7 +995,7 @@ cdef class VecPythonIntegrand:
 
 cdef class VecIntegrand:
     # cdef object fcntype
-    def __init__(self):
+    def __cinit__(self):
         self.fcntype = 'vector'
 
 

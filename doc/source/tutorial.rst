@@ -88,23 +88,23 @@ The following code shows how this can be done::
 
     integ = vegas.Integrator(
         [[-1., 1.], [0., 1.], [0., 1.], [0., 1.]],
-        analyzer=vegas.reporter(),
         )
 
     result = integ(f, nitn=10, neval=1000)
+    print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
 
 First we define the integrand ``f(x)`` where ``x`` specifies a  point in the
 4-dimensional space. We then create an  integrator, ``integ``, which is an
 integration operator  that can be applied to any 4-dimensional function. It is
-where we specify the integration volume. The ``analyzer=vegas.reporter()`` is
-optional; it causes the integrator to print out intermediate  results as it
-evaluates the integral. Finally we apply ``integ`` to our integrand ``f(x)``,
+where we specify the integration volume. 
+Finally we apply ``integ`` to our integrand ``f(x)``,
 telling the integrator to estimate  the integral using ``nitn=10`` iterations
 of the |vegas| algorithm, each of which uses no more than ``neval=1000``
 evaluations of the integrand. Each iteration produces an independent
 estimate of the integral. The final estimate is the weighted average of
 the results from all 10 iterations, and is returned by ``integ(f ...)``.
+``result.summary()`` gives a summary of results from each iteration.
 
 This code produces the following output:
 
@@ -112,42 +112,45 @@ This code produces the following output:
 
 There are several things worth noting here:
 
-    **Adaptation:** Integration estimates are shown for each of the 10 iterations,
+    **Adaptation:** Integration estimates are shown f
+    or each of the 10 iterations,
     giving both the estimate from just that iteration, and the weighted
     average of results from all iterations up to that point. The
     estimates from the first two iterations are not accurate at
-    all, with errors equal to 30--90% of the final result. 
-    ``integ`` initially has no information about the integrand
+    all, with errors equal to 30--190% of the final result. 
+    |vegas| initially has no information about the integrand
     and so does a relatively poor job of estimating the integral.
     The integrand has a large narrow peak in the center of the 
-    integration volume. Most of ``integ``'s integrand samples 
+    integration volume. Most of |vegas|'s integrand samples 
     miss the peak in early iterations, but it
     uses information from the samples in one iteration
     to remap the integration variables for subsequent iterations,
     concentrating sampling where the function is largest. 
     As a result, the per iteration error
     is reduced to 4% by the fifth iteration, and below 2% by
-    the end --- an improvement by almost a factor of 50 from 
-    the start.
+    the end --- an improvement by almost two orders of 
+    magnitude from the start.
 
-    **Weighted Average:** The final result, 0.9991 ± 0.0092, is obtained from a weighted
-    average of the separate results from each iteration. The results from
+    **Weighted Average:** The final result, 1.0015 ± 0.0091, 
+    is obtained from a weighted
+    average of the separate results from each iteration. 
+    Provided the number of integrand evaluations per 
+    iteration (``neval``) is large enough, the results from
     individual iterations are random numbers whose distribution is 
-    Gaussian, about a mean equal to the integral's value, provided
-    the number of evaluations per iteration (``neval``) is  sufficiently
-    large. The weighted average :math:`\overline I`  minimizes
+    Gaussian, with a mean equal to the integral's value. 
+    The weighted average :math:`\overline I`  minimizes
 
     .. math::
 
-      \chi^2 \,\equiv\, \sum_i \frac{(I_i - \overline I)^2}{\sigma_{i}}
+      \chi^2 \,\equiv\, \sum_i \frac{(I_i - \overline I)^2}{\sigma_{i}^2}
 
-    where :math:`I_i \pm \sigma_{i}` are the estimates from the 
+    where :math:`I_i \pm \sigma_{i}` are the estimates from 
     individual iterations. If the :math:`I_i` are Gaussian, 
     :math:`\chi^2` should be of order the number of degrees of 
-    freedom, which here is the number of iterations minus 1. 
+    freedom, here the number of iterations minus 1. 
     The error estimates are not reliable if :math:`\chi^2` is
-    much larger than the number of iterations. This quantified
-    by the *Q* or *p-value* of the weighted average
+    much larger than the number of iterations. This criteria is quantified
+    by the *Q* or *p-value* of the :math:`\chi^2`,
     which is the probability that a
     larger :math:`\chi^2` could result from random (Gaussian)
     fluctuations. A very small *Q* (less than 0.05-0.1) indicates
@@ -156,7 +159,7 @@ There are several things worth noting here:
     from different iterations do not agree with each other to 
     within errors. This means that ``neval`` is not sufficiently
     large to guarantee Gaussian behavior, and must be increased
-    if the error estimates are to be trusted:
+    if the error estimates are to be trusted.
 
 
     ``integ(f)`` returns a weighted-average object,
@@ -176,21 +179,24 @@ There are several things worth noting here:
       ``result.itn_results`` --- list of the integral estimates 
       from each iteration.
 
-    In this example the final *Q* is 0.22, indicating that the
+    In this example the final *Q* is 0.42, indicating that the
     :math:`\chi^2` for this average is not particularly unlikely.
 
-    **More Precision:** For realistic problems, 
-    the cost of a |vegas| integral is 
-    usually dominated by the cost of evaluating the integrand
-    at the Monte Carlo sample points. The number of integrand
-    evaluations per iteration varies from iteration to iteration,
-    here between 486 and 952. Typically |vegas| needs more
+    **Precision:** The precision of |vegas| estimates is
+    determined by ``nitn``, the number of iterations 
+    of the |vegas| algorithm,
+    and by ``neval``, the maximum number of integrand evaluation
+    made per iteration.
+    The computing cost is typically proportional to ``nitn * neval``. 
+    The number of integrand
+    evaluations per iteration
+    varies from iteration to iteration,
+    here between 486 and 959. Typically |vegas| needs more
     integration points in early iterations, before it has fully
     adapted to the integrand.
 
-    Although precision can be increased by increasing either
-    the number of iterations (``nitn``) or the number of
-    integrand evaluations per iteration (``neval``), it is
+    We can increase precision by increasing either of ``nitn`` or ``neval``,
+    but it is 
     generally far better to increase ``neval``. For example,
     adding the following lines to the code above ::
 
@@ -212,16 +218,30 @@ There are several things worth noting here:
     wants to use no more than 10 or 20 iterations beyond the
     point where vegas has fully adapted. 
 
-    It is also generally useful to compare results from estimates 
+    It is also generally useful to compare two or more 
+    results from estimates 
     using different values of ``neval``, differing by factors of
     4--10 say. Insofar as the two results agree within errors,
-    it is unlikely that non-Gaussian artifacts from small
-    ``neval``\s are important. (These artifacts typically vanish
+    it is unlikely that non-Gaussian artifacts due to small
+    ``neval``\s are important. These artifacts lead to
+    systematic errors that typically vanish
     like ``1/neval``, which is faster than the statistical 
-    errors vanish; so the latter ultimately dominate at large
-    ``neval``.)
+    errors vanish. So the statistical errors ultimately dominate at large
+    ``neval``, rendering the systematic errors 
+    negligible --- which is good since 
+    statistical errors are much easier to estimate reliably.
+    (This is another reason for increasing ``neval`` 
+    rather than ``nitn``: making ``neval`` larger is guaranteed
+    to improve the estimate, while making ``nitn`` larger and larger
+    is guaranteed eventually to give the wrong
+    answer, because at some point the statistical error will no longer
+    mask the systematic error. The systematic error for the integral
+    above (with ``neval=1000``) is about -0.00073(7), which 
+    is negligible compared to the statistical error unless
+    ``nitn`` is of order 1500 or larger.)
 
-    **Early Iterations:** The early iterations, before |vegas| has adapted, are quite 
+    **Early Iterations:** The early iterations, 
+    before |vegas| has adapted, are quite 
     crude. With very peaky integrands, these can be far from 
     the correct answer with highly unreliable errors. For 
     example, the integral above becomes much more 
@@ -231,16 +251,16 @@ There are several things worth noting here:
 
       integ = vegas.Integrator(
         [[-2., 2.], [0, 2.], [0, 2.], [0., 2.]],
-        analyzer=reporter(),
         )
 
     Then the code above gives:
 
     .. literalinclude:: eg1c.out
 
-    |vegas| misses the peak completely in the first few iterations,
-    giving estimates that are wrong (by 670,000 standard deviations!).
-    Some of its samples hit the peak's shoulders, so ``integ`` is 
+    |vegas| misses the peak completely in the first two iterations,
+    giving estimates that are completely 
+    wrong (by 76 and 89 standard deviations!).
+    Some of its samples hit the peak's shoulders, so |vegas| is 
     eventually able to find it (by iterations 7--8), but 
     the integrand estimates are wildly non-Gaussian before that
     point. This results in a non-sensical final result, as 
@@ -258,6 +278,7 @@ There are several things worth noting here:
 
       # step 2 -- integ has adapted to f; keep results
       result = integ(f, nitn=10, neval=1000)
+      print(result.summary())
       print('result = %s    Q = %.2f' % (result, result.Q))
 
     The results from the second step are properly adapted from
@@ -290,6 +311,8 @@ There are several things worth noting here:
     remembers the variable transformations made to minimize errors, and
     so need not be readapted to the integrand when used later.
 
+    **vegas Grid:** 
+    
 Difficult Integrands
 ----------------------
 There are a variety of integrands that pose particular problems for 
