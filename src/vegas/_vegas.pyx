@@ -261,6 +261,32 @@ cdef class AdaptiveMap:
         """ Capture state for pickling. """
         return (AdaptiveMap, (numpy.asarray(self.grid),))
 
+    def settings(self, ngrid=5):
+        """ Create string with information about grid nodes.
+
+        Creates a string containing the locations of the nodes
+        in the map grid for each direction. Parameter 
+        ``ngrid`` specifies the maximum number of nodes to print
+        (spread evenly over the grid).
+        """
+        ans = []
+        if ngrid > 0:
+            grid = numpy.array(self.grid)
+            nskip = int(self.ninc // ngrid)
+            if nskip<1:
+                nskip = 1
+            start = nskip // 2
+            for d in range(self.dim):
+                ans += [
+                    "    grid[%2d] = %s" 
+                    % (
+                        d, 
+                        numpy.array2string(
+                            grid[d, start::nskip],precision=3,
+                            prefix='    grid[xx] = ')
+                          )
+                    ]
+        return '\n'.join(ans) + '\n'
 
     def make_uniform(self, ninc=None):
         """ Replace the grid with a uniform grid.
@@ -535,11 +561,10 @@ cdef class Integrator(object):
         neval=1000,       # number of evaluations per iteration
         maxinc_axis=1000,  # number of adaptive-map increments per axis
         nhcube_vec=30,    # number of h-cubes per vector
-        nstrat_crit=50,   # critical number of strata
         nitn=5,           # number of iterations
         alpha=0.5,
         beta=0.75,
-        mode='automatic',
+        mode='adapt_to_integrand',
         rtol=0,
         atol=0,
         analyzer=None,
@@ -600,9 +625,6 @@ cdef class Integrator(object):
             elif k == 'nhcube_vec':
                 old_val[k] = self.nhcube_vec
                 self.nhcube_vec = kargs[k]
-            elif k == 'nstrat_crit':
-                old_val[k] = self.nstrat_crit
-                self.nstrat_crit = kargs[k]
             elif k == 'nitn':
                 old_val[k] = self.nitn
                 self.nitn = kargs[k]
@@ -628,10 +650,10 @@ cdef class Integrator(object):
                 raise AttributeError('no attribute named "%s"' % str(k))
         return old_val
 
-    def settings(self):
+    def settings(self, ngrid=0):
         cdef INT_TYPE d
-        mode = self._prepare_integrator()
-        beta = self.beta if mode == 'adapt_to_integrand' else 0.0
+        mode = self.mode
+        beta = self.beta # if mode != 'adapt_to_errors' else 0.0
         nhcube = self.nstrat ** self.dim
         neval = nhcube * self.neval_hcube if self.beta <= 0 else self.neval
         ans = ""
@@ -672,49 +694,44 @@ cdef class Integrator(object):
             ans = ans +(
                 "    axis %d covers %s\n" % (d, str(self.map.region(d)))
                 )
+        if ngrid > 0:
+            ans += '\n' + self.map.settings(ngrid=ngrid)
         return ans
 
     def _prepare_integrator(self):
         """ called by __call__ before integrating 
 
         Main job is to determine the number of stratifications,
-        the integration mode (if automatic), and the actual number 
+        and the actual number 
         of integrand evaluations to use. The decisions here 
         are mostly heuristic.
         """
-        # determine integration mode, # of strata, # of increments
+        # determine # of strata, # of increments
         dim = self.map.dim
         neval_eff = (self.neval / 2.0) if self.beta > 0 else self.neval
         ns = int((neval_eff / 2.) ** (1. / dim))# stratifications/axis
         ni = int(self.neval / 10.)              # increments/axis
-        if ni > self.maxinc_axis:
+        if ns < 1:
+            ns = 1
+        if ni < 1:
+            ni = 1
+        elif ni  > self.maxinc_axis:
             ni = self.maxinc_axis
-        if ns >= self.nstrat_crit or ns > ni:     
-            new_mode = "adapt_to_errors"
-            if ns > ni:
-                if ns < self.maxinc_axis:
-                    ni = ns
-                else:
-                    ns = int(ns // ni) * ni
+        # want even number increments in each stratification 
+        # or vise versa
+        if ns > ni:
+            if ns < self.maxinc_axis:
+                ni = ns
             else:
-                ni = int(ni // ns) * ns
-        else:                            
-            new_mode = "adapt_to_integrand"
-            if ns < 1:
-                ns = 1
-            if ni < 1:
-                ni = 1
-            elif ni  > self.maxinc_axis:
-                ni = self.maxinc_axis
+                ns = int(ns // ni) * ni
+        else:
             ni = int(ni // ns) * ns
-
-        if self.mode == "automatic" and self.beta > 0:
-            new_mode = "adapt_to_integrand"
-
-        if new_mode == "adapt_to_errors":
-            # no point in having ni > ns in this mode
+        if self.mode == 'adapt_to_errors':
+            # ni > ns makes no sense with this mode
             if ni > ns:
                 ni = ns
+            # beta > 0 incompatible with this mode
+            # self.beta = 0.
 
         self.map.adapt(ninc=ni)    
 
@@ -726,7 +743,6 @@ cdef class Integrator(object):
         self.dim = dim
         if self.beta > 0 and len(self.sigf_list) != nhcube:
             self.sigf_list = numpy.ones(nhcube, float)
-        return new_mode
 
     def _prepare_integrand(self, fcn, fcntype=None):
         if fcntype is None:
@@ -756,12 +772,12 @@ cdef class Integrator(object):
             old_kargs = {}
 
         # main iteration loop
-        mode = self._prepare_integrator()
+        self._prepare_integrator()
         ans = RunningWAvg()
         for itn in range(self.nitn):    # iterate
             if self.analyzer != None:
                 self.analyzer.begin(itn, self)
-            ans.add(self._integrator(fcn, mode))
+            ans.add(self._integrator(fcn))
             if self.analyzer != None:
                 self.analyzer.end(ans.itn_results[-1], ans)
             self.map.adapt(alpha=self.alpha)
@@ -787,14 +803,15 @@ cdef class Integrator(object):
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def _integrator(self, fcn, mode):
+    def _integrator(self, fcn):
         cdef INT_TYPE nhcube = self.nstrat ** self.dim 
         cdef INT_TYPE nhcube_vec = min(self.nhcube_vec, nhcube)
         cdef INT_TYPE adapt_to_integrand = (
-            1 if mode == 'adapt_to_integrand' else 0
+            1 if self.mode == 'adapt_to_integrand' else 0
             )
         cdef INT_TYPE redistribute = (
-            1 if (self.beta > 0 and adapt_to_integrand) else 0
+            # 1 if (self.beta > 0 and adapt_to_integrand) else 0
+            1 if (self.beta > 0) else 0
             )
         cdef double neval_sigf = (
             self.neval / 2. / numpy.sum(self.sigf_list)
@@ -838,6 +855,7 @@ cdef class Integrator(object):
                         self.sigf_list[hcube_base + ihcube] * neval_sigf
                         )
                     if neval_hcube[ihcube] < self.neval_hcube:
+                        # counter += 1
                         neval_hcube[ihcube] = self.neval_hcube
                     if neval_hcube[ihcube] < min_neval_hcube:
                         min_neval_hcube = neval_hcube[ihcube]
@@ -889,8 +907,12 @@ cdef class Integrator(object):
                 ans_mean += mean
                 ans_var += var
                 if not adapt_to_integrand:
+                    # mode = adapt_to_errors
+                    tmp_hcube = hcube
                     for d in range(self.dim):
+                        y0[d] = tmp_hcube % self.nstrat
                         y[0, d] = (y0[d] + 0.5) / self.nstrat
+                        tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
                     fdv2[0] = var
                     self.map.add_training_data( y, fdv2, 1)
                 i_start += neval_hcube[ihcube]
@@ -899,15 +921,16 @@ cdef class Integrator(object):
 
         # record final results
         self.neval_hcube_range = (min_neval_hcube, max_neval_hcube)
+        # self.neval_hcube_range = (min_neval_hcube, float(counter) / nhcube, max_neval_hcube)
         return gvar.gvar(ans_mean, sqrt(ans_var))
 
 class reporter:
     """ analyzer class that prints out a report, iteration
-    by interation, on how vegas is doing. Parameter n_prn
+    by interation, on how vegas is doing. Parameter ngrid
     specifies how many x[i]'s to print out from the maps
     for each axis """
-    def __init__(self, n_prn=0):
-        self.n_prn = n_prn
+    def __init__(self, ngrid=0):
+        self.ngrid = ngrid
 
     def begin(self, itn, integrator):
         self.integrator = integrator
@@ -926,24 +949,7 @@ class reporter:
                 ans.Q if ans.dof > 0 else 1.,
                 )
             )
-        if self.n_prn > 0:
-            map = self.integrator.map
-            grid = numpy.array(map.grid)
-            nskip = int(map.ninc // self.n_prn)
-
-            if nskip<1:
-                nskip = 1
-            start = nskip // 2
-            for d in range(map.dim):
-                print(
-                    "    grid[%2d] = %s" 
-                    % (
-                        d, 
-                        numpy.array2string(
-                            grid[d, start::nskip],precision=3,
-                            prefix='    grid[xx] = ')
-                          )
-                    )
+        print(self.integrator.map.settings(ngrid=self.ngrid))
         print('')
 
 # wrappers for scalar functions written in cython or python
