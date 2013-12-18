@@ -1,16 +1,4 @@
-# cython: profile=True
-""" Adaptive multidimensional Monte Carlo integration
-
-Class :class:`vegas.Integrator` gives Monte Carlo estimates of 
-arbitrary (square-integrable) multidimensional integrals using
-the *vegas* algorithm (G. P. Lepage, J. Comput. Phys. 27(1978) 192).
-It automatically remaps the integration variables along each direction
-to maximize the accuracy of the Monte Carlo estimates. The remapping
-is done over several iterations. The code is written in cython and
-so is fast, particularly when integrands are coded in cython as
-well (see *Tutorial*).
-
-"""
+# c#ython: profile=True
 cimport cython
 cimport numpy
 from libc.math cimport floor, log, abs, tanh, erf, exp, sqrt
@@ -63,6 +51,15 @@ except ImportError:
     gvar.GVar = GVar
 
 class RunningWAvg(gvar.GVar):
+    """ Running weighted average of Monte Carlo estimates.
+
+    This class accumulates independent Monte Carlo 
+    estimates (e.g., of an integral) and combines 
+    them into a single weighted average. It 
+    is derived from :class:`gvar.GVar` (from 
+    the :mod:`lsqfit` module if it is present) and 
+    represents a Gaussian random variable.
+    """
     def __init__(self, gvar_list=None):
         if gvar_list is not None:
             self.__init__()
@@ -75,8 +72,36 @@ class RunningWAvg(gvar.GVar):
             self.itn_results = []
             super(RunningWAvg, self).__init__(
                 *gvar.gvar(0., 0.).internaldata,
-                )
+               )
+
+    def _chi2(self):
+        return self._v2_s2 - self._v_s2 ** 2 / self._1_s2
+    chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
+
+    def _dof(self):
+        return len(self.itn_results) - 1
+    dof = property(
+        _dof, 
+        None, 
+        None, 
+        "Number of degrees of freedom in weighted average."
+        )
+
+    def _Q(self):
+        return (
+            gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
+            if self.dof > 0
+            else 1
+            )
+    Q = property(
+        _Q, 
+        None, 
+        None, 
+        "*Q* or *p-value* of weighted average's *chi**2*.",
+        )
+
     def add(self, g):
+        """ Add estimate ``g`` to the running average. """
         self.itn_results.append(g)
         var = g.sdev ** 2
         assert var > 0.0, 'zero variance not allowed'          
@@ -87,15 +112,8 @@ class RunningWAvg(gvar.GVar):
             self._v_s2 / self._1_s2,
             sqrt(1. / self._1_s2),
             ).internaldata)
-        self.chi2 = self._v2_s2 - self._v_s2 ** 2 / self._1_s2
-        self.dof = len(self.itn_results) - 1
-        self.Q = (
-            gvar.gammaQ(self.dof/2., self.chi2/2.) 
-            if self.dof > 0 
-            else 1.
-            )
     def summary(self):
-        """ Assemble summary of results into string """
+        """ Assemble summary of independent results into a string. """
         acc = RunningWAvg()
         linedata = []
         for i, res in enumerate(self.itn_results):
@@ -549,10 +567,215 @@ cdef class AdaptiveMap:
         self._init_grid(new_grid)
         self.sum_f = None
         self.n_f = None
-        return
-   
+
+    def plot_grid(self, ngrid=40, shrink=False):
+        """ Display plots showing the current grid. 
+
+        :param ngrid: The number of grid nodes in each 
+            direction to include in the plot. The default is 40.
+        :type ngrid: int 
+        :param shrink: Displays entire range of each maxinc_axis
+            if ``False``; otherwise shrink range to include
+            just the nodes being displayed. The default is
+            ``False``. 
+        """
+        import matplotlib.pyplot as plt 
+        fig = plt.figure()
+        nskip = int(self.ninc // ngrid)
+        if nskip < 1:
+            nskip = 1
+        start = nskip // 2
+        def plotdata(idx, grid=numpy.asarray(self.grid)):
+            if idx[0] >= grid.shape[0]:
+                idx[0] -= 1
+            elif idx[0] < 0:
+                idx[0] = 0
+            dx = idx[0]
+            dy = dx + 1
+            xrange = [self.grid[dx, 0], self.grid[dx, -1]]
+            xgrid = grid[dx, start::nskip]
+            xlabel = 'x[%d]' % dx 
+            if dy < grid.shape[0]:
+                yrange = [self.grid[dy, 0], self.grid[dy, -1]]
+                ygrid = grid[dy, start::nskip]
+                ylabel = 'x[%d]' % dy
+                fig_caption = 'axes %d, %d' % (dx, dy)
+            else:
+                yrange = [0., 1.]
+                ygrid = None
+                ylabel = ''
+                fig_caption = 'axis %d' % dx
+            if shrink:
+                xrange = [min(xgrid), max(xgrid)]
+                if ygrid is not None:
+                    yrange = [min(ygrid), max(ygrid)]
+            fig.clear()
+            plt.title(
+                "%s   (press 'n', 'p', 'q' or a digit)"
+                % fig_caption
+                )
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel)
+            # ax = fig.add_subplot(111)
+            # ax.set_ylabel(ylabel)
+            # ax.set_xlabel(xlabel)
+            for i in range(len(xgrid)):
+                plt.plot([xgrid[i], xgrid[i]], yrange, 'k-')
+                if ygrid is not None:
+                    plt.plot(xrange, [ygrid[i], ygrid[i]], 'k-')
+            if shrink:
+                plt.xlim(*xrange)
+                if ygrid is not None:
+                    plt.ylim(*yrange)
+            elif ygrid is None:
+                plt.xlim(*xrange)
+            plt.draw()
+
+        idx = [0]        
+        def onpress(event, idx=idx):
+            try:    # digit?
+                idx[0] = int(event.key)
+            except ValueError:
+                if event.key == 'n':
+                    idx[0] += 1
+                elif event.key == 'p':
+                    idx[0] -= 1
+                elif event.key == 'q':
+                    plt.close()
+                    return
+                else:
+                    return
+            plotdata(idx)
+        
+        fig.canvas.mpl_connect('key_press_event', onpress)
+        plotdata(idx)
+        plt.show()       
 
 cdef class Integrator(object):
+    """ Adaptive multidimensional Monte Carlo integration.
+
+    :class:`vegas.Integrator` objects make Monte Carlo 
+    estimates of multidimensional functions ``f(x)``
+    where ``x[d]`` is a point in the integration volume::
+
+        integ = vegas.Integrator(integration_region)
+
+        result = integ(f, nitn=10, neval=10000)
+
+    The integator makes ``nitn`` estimates of the integral, 
+    each using
+    at most ``neval`` samples of the integrand,
+    as it adapts to the specific features
+    of the integrand. Successive estimates typically improve
+    in accuracy until the integrator has fully adapted.
+    The integrator returns the weighted average of all ``nitn``
+    estimates, together with an estimate of the statistical
+    (Monte Carlo) uncertainty in that estimate of the integral. The 
+    result is an object of type :class:`RunningWAvg`
+    (which is derived from :class:`gvar.GVar`).
+
+    :param map: The integration region as specified by 
+        an array ``xlimit[d, i]`` where ``d`` is the 
+        direction and ``i=0,1`` specify the lower
+        and upper limits of integration in direction ``d``.
+
+        ``map`` could also be the integration map from 
+        another :class:Integrator, or the |Integrator|
+        itself. In this case the grid is copied from the 
+        existing integrator.
+    :type map: array or :class:`vegas.AdaptiveMap` or :class:`vegas.Integrator`
+    :param nitn: The maximum number of iterations used to 
+        adapt to the integrand and estimate its value. The
+        default value is 10.
+    :type nitn: positive int
+    :param neval: The maximum number of integrand evaluations
+        in each iteration of the |vegas| algorithm. Default 
+        value is 1000.
+    :type neval: positive int 
+    :param alpha: Damping parameter controlling the remapping
+        of the integration variables as |vegas| adapts to the
+        integrand. Smaller values slow adaptation, which may 
+        be desirable for difficult integrands. The default value 
+        is 0.5.
+    :type alpha: float 
+    :param beta: Damping parameter controlling the redistribution
+        of integrand evaluations across hypercubes in the 
+        stratified sampling of the integrand (over transformed
+        variables). Smaller values limit the amount of 
+        redistribution. The theoretically optimal value is 1;
+        setting ``beta=0`` prevents any redistribution of 
+        evaluations. The default value is 0.75.
+    :type beta: float 
+    :param nhcube_vec: The number of hypercubes (in |y| space)
+        whose integration points are combined into a single
+        vector to be passed to the integrand 
+        when using |vegas| in vectorized mode. The default
+        value is 100.
+    :type nhcube_vec: positive int 
+    :param maxinc_axis: The maximum number of increments
+        per axis allowed for the |x|-space grid. The default 
+        value is 1000. 
+    :type maxinc_axis: positive int 
+    :param mode: ``mode=adapt_to_integrand`` causes 
+        |vegas| to remap the integration variables to emphasize
+        regions where ``|f(x)|`` is largest. This is 
+        the default mode.
+
+        ``mode=adapt_to_errors`` causes |vegas| to remap 
+        variables to emphasize regions where the Monte Carlo
+        error is largest. This might be superior when 
+        the number of the number of stratifications in 
+        the |y| grid is large (> 50?). It is typically 
+        useful only in one or two dimensions.
+    :param fcntype: Specifies the default type of integrand.
+
+        ``fcntype='scalar'`` imples that the integrand
+        is a function ``f(x)`` of a single integration
+        point. 
+
+        ``fcntype='vector'`` implies that 
+        the integrand function takes three arguments:
+        a list multiple integration points ``x[i, d]``,
+        where ``i=0...nx-1`` labels the integration point
+        and ``d`` labels the direction; a buffer
+        ``f[i]`` into which the corresponding 
+        integrand values are written; and the number
+        ``nx`` of integration points provided. 
+
+        The 
+        default is ``fcntype=scalar``, but this is 
+        overridden if the integrand has a ``fcntype`` 
+        attribute. It is also overridden for classes
+        derived from :class:`VecIntegrand`, which are
+        treated as ``fcntype='vector'`` integrands.
+    :param rtol: Relative error in the integral estimate 
+        at which point the integrator can stop. The default
+        value is 0.0 which means that the integrator will
+        complete all iterations specified by ``nitn``.
+    :type rtol: float less than 1
+    :param atol: Absolute error in the integral estimate 
+        at which point the integrator can stop. The default
+        value is 0.0 which means that the integrator will
+        complete all iterations specified by ``nitn``.
+    :type atol: float 
+    :param analyzer: An object with methods 
+
+            ``analyzer.begin(itn, integrator)``
+
+            ``analyzer.end(itn_result, result)``
+
+        where: ``begin(itn, integrator)`` is called at the start
+        of each |vegas| iteration with ``itn`` equal to the 
+        iteration number and ``integrator`` equal to the 
+        integrator itself; and ``end(itn_result, result)``
+        is called at the end of each iteration with 
+        ``itn_result`` equal to the result for that 
+        iteration and ``result`` equal to the cummulative
+        result of all iterations so far. 
+        Setting ``analyzer=vegas.reporter()``, for 
+        example, causes vegas to print out a running report
+        of its results as they are produced.
+    """
 
     # Settings accessible via the constructor and Integrator.set
     defaults = dict(
@@ -560,8 +783,8 @@ cdef class Integrator(object):
         fcntype='scalar', # default integrand type
         neval=1000,       # number of evaluations per iteration
         maxinc_axis=1000,  # number of adaptive-map increments per axis
-        nhcube_vec=30,    # number of h-cubes per vector
-        nitn=5,           # number of iterations
+        nhcube_vec=100,    # number of h-cubes per vector
+        nitn=10,           # number of iterations
         alpha=0.5,
         beta=0.75,
         mode='adapt_to_integrand',
@@ -604,6 +827,20 @@ cdef class Integrator(object):
             setattr(self, k, odict[k])
 
     def set(self, ka={}, **kargs):
+        """ Reset default parameters in integrator.
+
+        Usage is analogous to the constructor
+        for |Integrator|: for example, :: 
+        
+            old_defaults = integ.set(neval=1e6, nitn=20)
+
+        resets the default values for ``neval`` and ``nitn``
+        in |Integrator| ``integ``. A dictionary, here
+        ``old_defaults``, is returned. It can be used 
+        to restore the old defaults using, for example::
+
+            integ.set(old_defaults)
+        """
         if kargs:
             kargs.update(ka)
         else:
@@ -651,6 +888,14 @@ cdef class Integrator(object):
         return old_val
 
     def settings(self, ngrid=0):
+        """ Assemble summary of integrator settings into string.
+
+        :param ngrid: Number of grid nodes in each direction 
+            to include in summary.
+            The default is 0.
+        :type ngrid: int
+        :returns: String containing the settings.
+        """
         cdef INT_TYPE d
         mode = self.mode
         beta = self.beta # if mode != 'adapt_to_errors' else 0.0
@@ -699,12 +944,10 @@ cdef class Integrator(object):
         return ans
 
     def _prepare_integrator(self):
-        """ called by __call__ before integrating 
+        """ Prep the integrator before integrating.
 
-        Main job is to determine the number of stratifications,
-        and the actual number 
-        of integrand evaluations to use. The decisions here 
-        are mostly heuristic.
+        Decide how many increments and strata to use
+        and allocate space to store the sigf values.
         """
         # determine # of strata, # of increments
         dim = self.map.dim
@@ -745,6 +988,7 @@ cdef class Integrator(object):
             self.sigf_list = numpy.ones(nhcube, float)
 
     def _prepare_integrand(self, fcn, fcntype=None):
+        """ Wrap integrand if needed. """
         if fcntype is None:
             fcntype = self.fcntype
         if hasattr(fcn, 'fcntype'):
@@ -777,16 +1021,16 @@ cdef class Integrator(object):
         for itn in range(self.nitn):    # iterate
             if self.analyzer != None:
                 self.analyzer.begin(itn, self)
-            ans.add(self._integrator(fcn))
+            ans.add(self._integrate(fcn))
             if self.analyzer != None:
                 self.analyzer.end(ans.itn_results[-1], ans)
             self.map.adapt(alpha=self.alpha)
             if (self.rtol * abs(ans.mean) + self.atol) > ans.sdev:
                 break
 
-        # restore old settings
-        if old_kargs:
-            self.set(old_kargs) 
+        # do not restore old settings
+        # if old_kargs:
+        #     self.set(old_kargs) 
 
         return ans
 
@@ -803,7 +1047,8 @@ cdef class Integrator(object):
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def _integrator(self, fcn):
+    def _integrate(self, fcn):
+        """ Do integral for one iteration. """
         cdef INT_TYPE nhcube = self.nstrat ** self.dim 
         cdef INT_TYPE nhcube_vec = min(self.nhcube_vec, nhcube)
         cdef INT_TYPE adapt_to_integrand = (
@@ -925,10 +1170,15 @@ cdef class Integrator(object):
         return gvar.gvar(ans_mean, sqrt(ans_var))
 
 class reporter:
-    """ analyzer class that prints out a report, iteration
+    """ Analyzer class that prints out a report, iteration
     by interation, on how vegas is doing. Parameter ngrid
     specifies how many x[i]'s to print out from the maps
-    for each axis """
+    for each axis.
+
+    :param ngrid: Number of grid nodes printed out for 
+        each direction. Default is 0.
+    :type ngrid: int 
+    """
     def __init__(self, ngrid=0):
         self.ngrid = ngrid
 
@@ -999,9 +1249,30 @@ cdef class VecPythonIntegrand:
         for i in range(nx):
             f[i] = self.fcn(x[i, :])
 
+# preferred base class for vectorized integrands
+# vectorized integrands are typically faster
+# der
 cdef class VecIntegrand:
+    """ Base class for classes providing vectorized integrands.
+
+    A class derived from :class:`vegas.VecInterand` should
+    provide a ``__call__(x, f, nx)`` member where:
+
+        ``x[i, d]`` is a contiguous array where ``i=0...nx-1``
+        labels different integrtion points and ``d=0...`` labels
+        different directions in the integration space.
+
+        ``f[i]`` is a buffer that is filled with the 
+        integrand values for points ``i=0...nx-1``.
+
+        ``nx`` is the number of integration points.
+
+    Deriving from :class:`vegas.VecIntegrand` is the 
+    easiest way to construct integrands in Cython, and
+    gives the fastest results.
+    """
     # cdef object fcntype
-    def __cinit__(self):
+    def __cinit__(self, *args, **kargs):
         self.fcntype = 'vector'
 
 

@@ -24,7 +24,6 @@ cdef class VecIntegrand:
 
 cdef class AdaptiveMap:
     # first index is direction, second is increment
-    cdef public double alpha
     cdef readonly double[:, ::1] grid
     cdef readonly double[:, ::1] inc
     cdef double[:, ::1] sum_f
@@ -35,19 +34,19 @@ cdef class AdaptiveMap:
 
 cdef class Integrator:
     # inputs
-    cdef public object fcntype
-    cdef public INT_TYPE neval
-    cdef public object neval_hcube_range
-    cdef public INT_TYPE nhcube_vec
-    cdef public INT_TYPE maxinc_axis
-    cdef public INT_TYPE nstrat_crit
-    cdef public INT_TYPE nitn
-    cdef public double alpha
-    cdef public double rtol
-    cdef public double atol
-    cdef public object mode
-    cdef public double beta 
-    cdef public object analyzer
+    cdef readonly object fcntype
+    cdef readonly INT_TYPE neval
+    cdef readonly object neval_hcube_range
+    cdef readonly INT_TYPE nhcube_vec
+    cdef readonly INT_TYPE maxinc_axis
+    cdef readonly INT_TYPE nstrat_crit
+    cdef readonly INT_TYPE nitn
+    cdef readonly double alpha
+    cdef readonly double rtol
+    cdef readonly double atol
+    cdef readonly object mode
+    cdef readonly double beta 
+    cdef readonly object analyzer
     # generated
     cdef readonly AdaptiveMap map 
     cdef double[::1] sigf_list

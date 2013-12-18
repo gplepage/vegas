@@ -1,21 +1,10 @@
 - Make multivegas --- integrand is a vector of different integrands.
 
-- YES:: do we want to disable adapt_to_errors because it isn't so useful anymore?
-  in 1d it is better. Not clear whether the 1/n error dependence beats 
-  the adaptive redistribution in 2 or higher --- quite possibly does.
-  kinoshita's small integral might be a good test case. CAn get rid of
-  nstrat_crit!!!!
-
 - replace sigf_list with a double list, containing h-cube number and sigf, 
   so that we only save sigf data for places where sigf is unusually large.
-  
+  See branch mem-opt for a start on this.
+
 - need test-vegas written. probably should redo it from scratch
-
-- finish documentation. How does vegas work may be optional??
-
-- CHECK:: Kinoshita's 9-dim integral fails in adapt_to_errors mode (really large neval).
-  Is this because we estimate errors using sum(f**2)/n - mean(f)**2 rather 
-  than sum((f-mean(f))**2) / n ??? This doesn't help.
 
 - get sdist to work properly --- need MANIFEST.in
 

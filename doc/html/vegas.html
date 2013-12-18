@@ -1,0 +1,680 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The vegas Package &mdash; vegas 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="vegas 1.0 documentation" href="index.html" />
+    <link rel="prev" title="How vegas Works" href="background.html" />
+<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head>
+  <body>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="background.html" title="How vegas Works"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">vegas 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="the-vegas-package">
+<h1>The <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> Package<a class="headerlink" href="#the-vegas-package" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-vegas"></span><div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>This package provides tools for estimating multidimensional 
+integrals numerically using an enhanced version of 
+the adaptive Monte Carlo 
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm (G. P. Lepage, J. Comput. Phys. 27(1978) 192).
+A <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> code generally involves two objects, one representing
+the integrand and the other representing an integration 
+operator for a particular multidimensional volume. A typical
+code sequence for a D-dimensional integral has the structure:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># create the integrand</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="o">...</span> <span class="n">compute</span> <span class="n">the</span> <span class="n">integrand</span> <span class="n">at</span> <span class="n">point</span> <span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="n">d</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.</span><span class="o">..</span><span class="n">D</span><span class="o">-</span><span class="mi">1</span> 
+    <span class="o">...</span>
+
+<span class="c"># create an integrator for volume with </span>
+<span class="c"># xl0 &lt;= x[0] &lt;= xu0, xl1 &lt;= x[1] &lt;= xu1 ...</span>
+<span class="n">integration_region</span> <span class="o">=</span> <span class="p">[[</span><span class="n">xl0</span><span class="p">,</span> <span class="n">xu0</span><span class="p">],</span> <span class="p">[</span><span class="n">xl1</span><span class="p">,</span> <span class="n">xu1</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+<span class="n">integrator</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">integration_region</span><span class="p">)</span>
+
+<span class="c"># do the integral and print out the result</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integrator</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The algorithm iteratively adapts to the integrand over
+<tt class="docutils literal"><span class="pre">nitn</span></tt> iterations, each of which uses at most <tt class="docutils literal"><span class="pre">neval</span></tt>
+integrand samples to generate a Monte Carlo estimate 
+of the integral. The final result is the weighted 
+average of the results fom all iterations.</p>
+<p>The integrator remembers the adaptations it made to <tt class="docutils literal"><span class="pre">f(x)</span></tt>
+and uses them as its starting point if it is reapplied 
+to <tt class="docutils literal"><span class="pre">f(x)</span></tt> or applied to some other function <tt class="docutils literal"><span class="pre">g(x)</span></tt>.
+An integrator&#8217;s state can be archived for future applications
+using Python&#8217;s <tt class="xref py py-mod docutils literal"><span class="pre">pickle</span></tt> module.</p>
+<p>The <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> tutorial and overview contains extended 
+explanations and examples.</p>
+</div>
+<div class="section" id="integrator-objects">
+<h2>Integrator Objects<a class="headerlink" href="#integrator-objects" title="Permalink to this headline">¶</a></h2>
+<p>The central component of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> package is the integrator class:</p>
+<dl class="class">
+<dt id="vegas.Integrator">
+<em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">Integrator</tt><a class="headerlink" href="#vegas.Integrator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adaptive multidimensional Monte Carlo integration.</p>
+<p><a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> objects make Monte Carlo 
+estimates of multidimensional functions <tt class="docutils literal"><span class="pre">f(x)</span></tt>
+where <tt class="docutils literal"><span class="pre">x[d]</span></tt> is a point in the integration volume:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">integration_region</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The integator makes <tt class="docutils literal"><span class="pre">nitn</span></tt> estimates of the integral, 
+each using
+at most <tt class="docutils literal"><span class="pre">neval</span></tt> samples of the integrand,
+as it adapts to the specific features
+of the integrand. Successive estimates typically improve
+in accuracy until the integrator has fully adapted.
+The integrator returns the weighted average of all <tt class="docutils literal"><span class="pre">nitn</span></tt>
+estimates, together with an estimate of the statistical
+(Monte Carlo) uncertainty in that estimate of the integral. The 
+result is an object of type <a class="reference internal" href="#vegas.RunningWAvg" title="vegas.RunningWAvg"><tt class="xref py py-class docutils literal"><span class="pre">RunningWAvg</span></tt></a>
+(which is derived from <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>map</strong> (array or <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><tt class="xref py py-class docutils literal"><span class="pre">vegas.AdaptiveMap</span></tt></a> or <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a>) &#8211; <p>The integration region as specified by 
+an array <tt class="docutils literal"><span class="pre">xlimit[d,</span> <span class="pre">i]</span></tt> where <tt class="docutils literal"><span class="pre">d</span></tt> is the 
+direction and <tt class="docutils literal"><span class="pre">i=0,1</span></tt> specify the lower
+and upper limits of integration in direction <tt class="docutils literal"><span class="pre">d</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">map</span></tt> could also be the integration map from 
+another :class:Integrator, or the <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a>
+itself. In this case the grid is copied from the 
+existing integrator.</p>
+</li>
+<li><strong>nitn</strong> (<em>positive int</em>) &#8211; The maximum number of iterations used to 
+adapt to the integrand and estimate its value. The
+default value is 10.</li>
+<li><strong>neval</strong> (<em>positive int</em>) &#8211; The maximum number of integrand evaluations
+in each iteration of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm. Default 
+value is 1000.</li>
+<li><strong>alpha</strong> (<em>float</em>) &#8211; Damping parameter controlling the remapping
+of the integration variables as <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> adapts to the
+integrand. Smaller values slow adaptation, which may 
+be desirable for difficult integrands. The default value 
+is 0.5.</li>
+<li><strong>beta</strong> (<em>float</em>) &#8211; Damping parameter controlling the redistribution
+of integrand evaluations across hypercubes in the 
+stratified sampling of the integrand (over transformed
+variables). Smaller values limit the amount of 
+redistribution. The theoretically optimal value is 1;
+setting <tt class="docutils literal"><span class="pre">beta=0</span></tt> prevents any redistribution of 
+evaluations. The default value is 0.75.</li>
+<li><strong>nhcube_vec</strong> (<em>positive int</em>) &#8211; The number of hypercubes (in y space)
+whose integration points are combined into a single
+vector to be passed to the integrand 
+when using <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> in vectorized mode. The default
+value is 100.</li>
+<li><strong>maxinc_axis</strong> (<em>positive int</em>) &#8211; The maximum number of increments
+per axis allowed for the x-space grid. The default 
+value is 1000.</li>
+<li><strong>mode</strong> &#8211; <p><tt class="docutils literal"><span class="pre">mode=adapt_to_integrand</span></tt> causes 
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to remap the integration variables to emphasize
+regions where <tt class="docutils literal"><span class="pre">|f(x)|</span></tt> is largest. This is 
+the default mode.</p>
+<p><tt class="docutils literal"><span class="pre">mode=adapt_to_errors</span></tt> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to remap 
+variables to emphasize regions where the Monte Carlo
+error is largest. This might be superior when 
+the number of the number of stratifications in 
+the y grid is large (&gt; 50?). It is typically 
+useful only in one or two dimensions.</p>
+</li>
+<li><strong>fcntype</strong> &#8211; <p>Specifies the default type of integrand.</p>
+<p><tt class="docutils literal"><span class="pre">fcntype='scalar'</span></tt> imples that the integrand
+is a function <tt class="docutils literal"><span class="pre">f(x)</span></tt> of a single integration
+point.</p>
+<p><tt class="docutils literal"><span class="pre">fcntype='vector'</span></tt> implies that 
+the integrand function takes three arguments:
+a list multiple integration points <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt>,
+where <tt class="docutils literal"><span class="pre">i=0...nx-1</span></tt> labels the integration point
+and <tt class="docutils literal"><span class="pre">d</span></tt> labels the direction; a buffer
+<tt class="docutils literal"><span class="pre">f[i]</span></tt> into which the corresponding 
+integrand values are written; and the number
+<tt class="docutils literal"><span class="pre">nx</span></tt> of integration points provided.</p>
+<p>The 
+default is <tt class="docutils literal"><span class="pre">fcntype=scalar</span></tt>, but this is 
+overridden if the integrand has a <tt class="docutils literal"><span class="pre">fcntype</span></tt> 
+attribute. It is also overridden for classes
+derived from <a class="reference internal" href="#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">VecIntegrand</span></tt></a>, which are
+treated as <tt class="docutils literal"><span class="pre">fcntype='vector'</span></tt> integrands.</p>
+</li>
+<li><strong>rtol</strong> (<em>float less than 1</em>) &#8211; Relative error in the integral estimate 
+at which point the integrator can stop. The default
+value is 0.0 which means that the integrator will
+complete all iterations specified by <tt class="docutils literal"><span class="pre">nitn</span></tt>.</li>
+<li><strong>atol</strong> (<em>float</em>) &#8211; Absolute error in the integral estimate 
+at which point the integrator can stop. The default
+value is 0.0 which means that the integrator will
+complete all iterations specified by <tt class="docutils literal"><span class="pre">nitn</span></tt>.</li>
+<li><strong>analyzer</strong> &#8211; <p>An object with methods</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">analyzer.begin(itn,</span> <span class="pre">integrator)</span></tt><p><tt class="docutils literal"><span class="pre">analyzer.end(itn_result,</span> <span class="pre">result)</span></tt></p>
+</div></blockquote>
+<p>where: <tt class="docutils literal"><span class="pre">begin(itn,</span> <span class="pre">integrator)</span></tt> is called at the start
+of each <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> iteration with <tt class="docutils literal"><span class="pre">itn</span></tt> equal to the 
+iteration number and <tt class="docutils literal"><span class="pre">integrator</span></tt> equal to the 
+integrator itself; and <tt class="docutils literal"><span class="pre">end(itn_result,</span> <span class="pre">result)</span></tt>
+is called at the end of each iteration with 
+<tt class="docutils literal"><span class="pre">itn_result</span></tt> equal to the result for that 
+iteration and <tt class="docutils literal"><span class="pre">result</span></tt> equal to the cummulative
+result of all iterations so far. 
+Setting <tt class="docutils literal"><span class="pre">analyzer=vegas.reporter()</span></tt>, for 
+example, causes vegas to print out a running report
+of its results as they are produced.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> objects have attributes for each of these parameters.
+In addition they have the following methods:</p>
+<dl class="method">
+<dt id="vegas.Integrator.set">
+<tt class="descname">set</tt><big>(</big><em>ka={}</em>, <em>**kargs</em><big>)</big><a class="headerlink" href="#vegas.Integrator.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset default parameters in integrator.</p>
+<p>Usage is analogous to the constructor
+for <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a>: for example,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">old_defaults</span> <span class="o">=</span> <span class="n">integ</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">neval</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>resets the default values for <tt class="docutils literal"><span class="pre">neval</span></tt> and <tt class="docutils literal"><span class="pre">nitn</span></tt>
+in <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> <tt class="docutils literal"><span class="pre">integ</span></tt>. A dictionary, here
+<tt class="docutils literal"><span class="pre">old_defaults</span></tt>, is returned. It can be used 
+to restore the old defaults using, for example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">integ</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">old_defaults</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.Integrator.settings">
+<tt class="descname">settings</tt><big>(</big><em>ngrid=0</em><big>)</big><a class="headerlink" href="#vegas.Integrator.settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assemble summary of integrator settings into string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ngrid</strong> (<em>int</em>) &#8211; Number of grid nodes in each direction 
+to include in summary.
+The default is 0.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">String containing the settings.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="adaptivemap-objects">
+<h2>AdaptiveMap Objects<a class="headerlink" href="#adaptivemap-objects" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>&#8216;s remapping of the integration variables is handled
+by <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><tt class="xref py py-class docutils literal"><span class="pre">AdaptiveMap</span></tt></a>.</p>
+<dl class="class">
+<dt id="vegas.AdaptiveMap">
+<em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">AdaptiveMap</tt><a class="headerlink" href="#vegas.AdaptiveMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adaptive map <tt class="docutils literal"><span class="pre">y-&gt;x(y)</span></tt> for multidimensional <tt class="docutils literal"><span class="pre">y</span></tt> and <tt class="docutils literal"><span class="pre">x</span></tt>.</p>
+<p>An <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><tt class="xref py py-class docutils literal"><span class="pre">AdaptiveMap</span></tt></a> defines a multidimensional map <tt class="docutils literal"><span class="pre">y</span> <span class="pre">-&gt;</span> <span class="pre">x(y)</span></tt> 
+from the unit hypercube, with <tt class="docutils literal"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">y[d]</span> <span class="pre">&lt;=</span> <span class="pre">1</span></tt>, to an arbitrary
+hypercube in <tt class="docutils literal"><span class="pre">x</span></tt> space. Each direction is mapped independently 
+with a jacobian that is tunable (i.e., &#8220;adaptive&#8221;).</p>
+<p>The map is specified by a grid in <tt class="docutils literal"><span class="pre">x</span></tt>-space that, by definition, 
+maps into a uniformly space grid in <tt class="docutils literal"><span class="pre">y</span></tt>-space. The nodes of 
+the grid are specified by <tt class="docutils literal"><span class="pre">grid[d,</span> <span class="pre">i]</span></tt> where d is the 
+direction (<tt class="docutils literal"><span class="pre">d=0,1...dim-1</span></tt>) and <tt class="docutils literal"><span class="pre">i</span></tt> labels the grid point
+(<tt class="docutils literal"><span class="pre">i=0,1...N-1</span></tt>). The mapping for specific point <tt class="docutils literal"><span class="pre">y</span></tt> into
+<tt class="docutils literal"><span class="pre">x</span></tt> space is:</p>
+<div class="highlight-python"><pre>y[d] -&gt; x[d] = grid[d, i(y[d])] + inc[d, i(y[d])] * delta(y[d])</pre>
+</div>
+<p>where <tt class="docutils literal"><span class="pre">i(y)=floor(y*N</span></tt>), <tt class="docutils literal"><span class="pre">delta(y)=y*N-i(y)</span></tt>, and
+<tt class="docutils literal"><span class="pre">inc[d,</span> <span class="pre">i]</span> <span class="pre">=</span> <span class="pre">grid[d,</span> <span class="pre">i+1]</span> <span class="pre">-</span> <span class="pre">grid[d,</span> <span class="pre">i]</span></tt>. The jacobian for this map,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dx</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">/</span><span class="n">dy</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">inc</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">d</span><span class="p">])]</span> <span class="o">*</span> <span class="n">N</span><span class="p">,</span>
+</pre></div>
+</div>
+<p>is piece-wise constant and proportional to the <tt class="docutils literal"><span class="pre">x</span></tt>-space grid 
+spacing. Each increment in the <tt class="docutils literal"><span class="pre">x</span></tt>-space grid maps into an increment of 
+size <tt class="docutils literal"><span class="pre">1/N</span></tt> in the corresponding <tt class="docutils literal"><span class="pre">y</span></tt> space. So increments with 
+small <tt class="docutils literal"><span class="pre">delta_x[i]</span></tt> are stretched out in <tt class="docutils literal"><span class="pre">y</span></tt> space, while larger
+increments are shrunk.</p>
+<p>The <tt class="docutils literal"><span class="pre">x</span></tt> grid for an <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><tt class="xref py py-class docutils literal"><span class="pre">AdaptiveMap</span></tt></a> can be specified explicitly
+when it is created: for example,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nb">map</span> <span class="o">=</span> <span class="n">AdaptiveMap</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>creates a two-dimensional map where the <tt class="docutils literal"><span class="pre">x[0]</span></tt> interval <tt class="docutils literal"><span class="pre">(0,0.1)</span></tt>
+and <tt class="docutils literal"><span class="pre">(0.1,1)</span></tt> map into the <tt class="docutils literal"><span class="pre">y[0]</span></tt> intervals <tt class="docutils literal"><span class="pre">(0,0.5)</span></tt> and 
+<tt class="docutils literal"><span class="pre">(0.5,1)</span></tt> respectively, while <tt class="docutils literal"><span class="pre">x[1]</span></tt> intervals <tt class="docutils literal"><span class="pre">(-1.,0)</span></tt> 
+and <tt class="docutils literal"><span class="pre">(0,1)</span></tt> map into <tt class="docutils literal"><span class="pre">y[1]</span></tt> intervals <tt class="docutils literal"><span class="pre">(0,0.5)</span></tt> and  <tt class="docutils literal"><span class="pre">(0.5,1)</span></tt>.</p>
+<p>More typically an initially uniform map is trained so that 
+<tt class="docutils literal"><span class="pre">F(x(y),</span> <span class="pre">dx(y)/dy)</span></tt>, for some training function <tt class="docutils literal"><span class="pre">F</span></tt>, 
+is (approximately) constant across <tt class="docutils literal"><span class="pre">y</span></tt> space. The training function
+is assumed to grow monotonically with the jacobian <tt class="docutils literal"><span class="pre">dx(y)/dy</span></tt> at
+fixed <tt class="docutils literal"><span class="pre">x</span></tt>. The adaptation is done iteratively, beginning 
+with a uniform map:</p>
+<div class="highlight-python"><pre>map = AdaptiveMap([[xl[0], xu[0]], [xl[1], xu[1]]...], ninc=N)</pre>
+</div>
+<p>which creates an <tt class="docutils literal"><span class="pre">x</span></tt> grid with <tt class="docutils literal"><span class="pre">N</span></tt> equal-sized increments 
+between <tt class="docutils literal"><span class="pre">x[d]=xl[d]</span></tt> and <tt class="docutils literal"><span class="pre">x[d]=xu[d]</span></tt>. The training function 
+is then evaluated for the <tt class="docutils literal"><span class="pre">x</span></tt> values corresponding to 
+a list of <tt class="docutils literal"><span class="pre">y</span></tt> values <tt class="docutils literal"><span class="pre">y[i,</span> <span class="pre">d]</span></tt> spread over <tt class="docutils literal"><span class="pre">(0,1)</span></tt> for 
+each direction <tt class="docutils literal"><span class="pre">d</span></tt>:</p>
+<div class="highlight-python"><pre>...
+for i in range(ny):
+    for d in range(dim):
+        y[i, d] = ....
+x = numpy.empty(y.shape, float)     # container for corresponding x's
+jac = numpy.empty(y.shape, float)   # container for corresponding dx/dy's
+map.map(y, x, jac)                  # fill x and jac
+f = F(x, jac)                       # compute training function</pre>
+</div>
+<p>The number of <tt class="docutils literal"><span class="pre">y</span></tt> points is arbitrary, but typically large. Training 
+data is often generated in batches that are accumulated by the 
+map through multiple calls to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nb">map</span><span class="o">.</span><span class="n">add_training_data</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally the map is adapted to the data:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">m</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The process of computing training data and then adapting the map
+typically has to be repeated several times before the map converges,
+at which point the <tt class="docutils literal"><span class="pre">x</span></tt>-grid&#8217;s nodes, <tt class="docutils literal"><span class="pre">map.grid[d,</span> <span class="pre">i]</span></tt>, stop changing.</p>
+<p>The speed with which the grid adapts is determined by parameter <tt class="docutils literal"><span class="pre">alpha</span></tt>.
+Large (positive) values imply rapid adaptation, while small values (much
+less than one) imply slow adaptation. As in any iterative process, it is
+usually a good idea to slow adaptation down in order to avoid
+instabilities.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>grid</strong> &#8211; Initial <tt class="docutils literal"><span class="pre">x</span></tt> grid, where <tt class="docutils literal"><span class="pre">grid[d,</span> <span class="pre">i]</span></tt> is the <tt class="docutils literal"><span class="pre">i</span></tt>-th 
+node in direction <tt class="docutils literal"><span class="pre">d</span></tt>.</li>
+<li><strong>ninc</strong> (<tt class="docutils literal"><span class="pre">int</span></tt> or <tt class="docutils literal"><span class="pre">None</span></tt>) &#8211; Number of increments along each axis of the <tt class="docutils literal"><span class="pre">x</span></tt> grid. 
+A new grid is generated if <tt class="docutils literal"><span class="pre">ninc</span></tt> differs from <tt class="docutils literal"><span class="pre">grid.shape[1]</span></tt>.
+The new grid is designed to give the same jacobian <tt class="docutils literal"><span class="pre">dx(y)/dy</span></tt>
+as the original grid. The default value, <tt class="docutils literal"><span class="pre">ninc=None</span></tt>,  leaves 
+the grid unchanged.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="vegas.AdaptiveMap.dim">
+<tt class="descname">dim</tt><a class="headerlink" href="#vegas.AdaptiveMap.dim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of dimensions.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.AdaptiveMap.ninc">
+<tt class="descname">ninc</tt><a class="headerlink" href="#vegas.AdaptiveMap.ninc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of increments along each grid axis.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.AdaptiveMap.grid">
+<tt class="descname">grid</tt><a class="headerlink" href="#vegas.AdaptiveMap.grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The nodes of the grid defining the maps are <tt class="docutils literal"><span class="pre">self.grid[d,</span> <span class="pre">i]</span></tt>
+where <tt class="docutils literal"><span class="pre">d=0...</span></tt> specifies the direction and <tt class="docutils literal"><span class="pre">i=0...self.ninc</span></tt>
+the node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.AdaptiveMap.inc">
+<tt class="descname">inc</tt><a class="headerlink" href="#vegas.AdaptiveMap.inc" title="Permalink to this definition">¶</a></dt>
+<dd><p>The increment widths of the grid:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">inc</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.AdaptiveMap.adapt">
+<tt class="descname">adapt</tt><big>(</big><em>alpha=0.0</em>, <em>ninc=None</em><big>)</big><a class="headerlink" href="#vegas.AdaptiveMap.adapt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adapt grid to accumulated training data.</p>
+<p>The new grid is designed to make the training function constant
+in <tt class="docutils literal"><span class="pre">y[d]</span></tt> when the <tt class="docutils literal"><span class="pre">y</span></tt>s in the other directions  are integrated out.
+The number of increments along a direction can be changed 
+by setting parameter <tt class="docutils literal"><span class="pre">ninc</span></tt>.</p>
+<p>The grid does not change if no training data has been accumulated,
+unless <tt class="docutils literal"><span class="pre">ninc</span></tt> is specified, in which case the number of 
+increments is adjusted while preserving the relative density
+of increments at different values of <tt class="docutils literal"><span class="pre">x</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>alpha</strong> (<em>double or None</em>) &#8211; Determines the speed with which the grid adapts to 
+training data. Large (postive) values imply rapid evolution; 
+small values (much less than one) imply slow evolution. Typical 
+values are of order one. Choosing <tt class="docutils literal"><span class="pre">alpha&lt;0</span></tt> causes adaptation
+to the unmodified training data (usually not a good idea).</li>
+<li><strong>ninc</strong> (<em>int or None</em>) &#8211; Number of increments along each direction in the 
+new grid. The number is unchanged from the old grid if <tt class="docutils literal"><span class="pre">ninc</span></tt>
+is omitted (or equals <tt class="docutils literal"><span class="pre">None</span></tt>).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.AdaptiveMap.add_training_data">
+<tt class="descname">add_training_data</tt><big>(</big><em>y</em>, <em>f</em>, <em>ny=-1</em><big>)</big><a class="headerlink" href="#vegas.AdaptiveMap.add_training_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add training data <tt class="docutils literal"><span class="pre">f</span></tt> for <tt class="docutils literal"><span class="pre">y</span></tt>-space points <tt class="docutils literal"><span class="pre">y</span></tt>.</p>
+<p>Accumulates training data for later use by <tt class="docutils literal"><span class="pre">self.adapt()</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>y</strong> (<em>contiguous 2-d array of floats</em>) &#8211; <tt class="docutils literal"><span class="pre">y</span></tt> values corresponding to the training data. 
+<tt class="docutils literal"><span class="pre">y</span></tt> is a contiguous 2-d array, where <tt class="docutils literal"><span class="pre">y[i,</span> <span class="pre">d]</span></tt> 
+is for points along direction <tt class="docutils literal"><span class="pre">d</span></tt>.</li>
+<li><strong>f</strong> (<em>contiguous 2-d array of floats</em>) &#8211; Training function values. <tt class="docutils literal"><span class="pre">f[i]</span></tt> corresponds to 
+point <tt class="docutils literal"><span class="pre">y[i,</span> <span class="pre">d]</span></tt> in <tt class="docutils literal"><span class="pre">y</span></tt>-space.</li>
+<li><strong>ny</strong> (<em>int</em>) &#8211; Number of <tt class="docutils literal"><span class="pre">y</span></tt> points: <tt class="docutils literal"><span class="pre">y[i,</span> <span class="pre">d]</span></tt> for <tt class="docutils literal"><span class="pre">d=0...dim-1</span></tt>
+and <tt class="docutils literal"><span class="pre">i=0...ny-1</span></tt>. <tt class="docutils literal"><span class="pre">ny</span></tt> is set to <tt class="docutils literal"><span class="pre">y.shape[0]</span></tt> if it is
+omitted (or negative).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.AdaptiveMap.__call__">
+<tt class="descname">__call__</tt><big>(</big><em>y</em><big>)</big><a class="headerlink" href="#vegas.AdaptiveMap.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <tt class="docutils literal"><span class="pre">x</span></tt> values corresponding to <tt class="docutils literal"><span class="pre">y</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">y</span></tt> can be a single <tt class="docutils literal"><span class="pre">dim</span></tt>-dimensional point, or it 
+can be an array <tt class="docutils literal"><span class="pre">y[i,j,</span> <span class="pre">...,</span> <span class="pre">d]</span></tt> of such points (<tt class="docutils literal"><span class="pre">d=0..dim-1</span></tt>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.AdaptiveMap.jac">
+<tt class="descname">jac</tt><big>(</big><em>y</em><big>)</big><a class="headerlink" href="#vegas.AdaptiveMap.jac" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the map&#8217;s jacobian at <tt class="docutils literal"><span class="pre">y</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">y</span></tt> can be a single <tt class="docutils literal"><span class="pre">dim</span></tt>-dimensional point, or it 
+can be an array <tt class="docutils literal"><span class="pre">y[d,i,j,...]</span></tt> of such points (<tt class="docutils literal"><span class="pre">d=0..dim-1</span></tt>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.AdaptiveMap.make_uniform">
+<tt class="descname">make_uniform</tt><big>(</big><em>ninc=None</em><big>)</big><a class="headerlink" href="#vegas.AdaptiveMap.make_uniform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the grid with a uniform grid.</p>
+<p>The new grid has <tt class="docutils literal"><span class="pre">ninc</span></tt> increments along each direction if 
+<tt class="docutils literal"><span class="pre">ninc</span></tt> is specified. Otherwise it has the same number of 
+increments as the old grid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.AdaptiveMap.map">
+<tt class="descname">map</tt><big>(</big><em>y</em>, <em>x</em>, <em>jac</em>, <em>ny=-1</em><big>)</big><a class="headerlink" href="#vegas.AdaptiveMap.map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Map y to x, where jac is the jacobian.</p>
+<p><tt class="docutils literal"><span class="pre">y[i,</span> <span class="pre">d]</span></tt> is an array of <tt class="docutils literal"><span class="pre">ny</span></tt> <tt class="docutils literal"><span class="pre">y</span></tt>-values for direction <tt class="docutils literal"><span class="pre">d</span></tt>.
+<tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> is filled with the corresponding <tt class="docutils literal"><span class="pre">x</span></tt> values,
+and <tt class="docutils literal"><span class="pre">jac[i]</span></tt> is filled with the corresponding jacobian 
+values. <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">jac</span></tt> must be preallocated: for example,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+<span class="n">jac</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>y</strong> (<em>contiguous 2-d array of floats</em>) &#8211; <tt class="docutils literal"><span class="pre">y</span></tt> values to be mapped. <tt class="docutils literal"><span class="pre">y</span></tt> is a contiguous 2-d array,
+where <tt class="docutils literal"><span class="pre">y[i,</span> <span class="pre">d]</span></tt> contains values for points along direction <tt class="docutils literal"><span class="pre">d</span></tt>.</li>
+<li><strong>x</strong> (<em>contiguous 2-d array of floats</em>) &#8211; Container for <tt class="docutils literal"><span class="pre">x</span></tt> values corresponding to <tt class="docutils literal"><span class="pre">y</span></tt>.</li>
+<li><strong>jac</strong> (<em>contiguous 1-d array of floats</em>) &#8211; Container for jacobian values corresponding to <tt class="docutils literal"><span class="pre">y</span></tt>.</li>
+<li><strong>ny</strong> (<em>int</em>) &#8211; Number of <tt class="docutils literal"><span class="pre">y</span></tt> points: <tt class="docutils literal"><span class="pre">y[i,</span> <span class="pre">d]</span></tt> for <tt class="docutils literal"><span class="pre">d=0...dim-1</span></tt>
+and <tt class="docutils literal"><span class="pre">i=0...ny-1</span></tt>. <tt class="docutils literal"><span class="pre">ny</span></tt> is set to <tt class="docutils literal"><span class="pre">y.shape[0]</span></tt> if it is
+omitted (or negative).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.AdaptiveMap.plot_grid">
+<tt class="descname">plot_grid</tt><big>(</big><em>ngrid=40</em>, <em>shrink=False</em><big>)</big><a class="headerlink" href="#vegas.AdaptiveMap.plot_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display plots showing the current grid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ngrid</strong> (<em>int</em>) &#8211; The number of grid nodes in each 
+direction to include in the plot. The default is 40.</li>
+<li><strong>shrink</strong> &#8211; Displays entire range of each maxinc_axis
+if <tt class="docutils literal"><span class="pre">False</span></tt>; otherwise shrink range to include
+just the nodes being displayed. The default is
+<tt class="docutils literal"><span class="pre">False</span></tt>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.AdaptiveMap.settings">
+<tt class="descname">settings</tt><big>(</big><em>ngrid=5</em><big>)</big><a class="headerlink" href="#vegas.AdaptiveMap.settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create string with information about grid nodes.</p>
+<p>Creates a string containing the locations of the nodes
+in the map grid for each direction. Parameter 
+<tt class="docutils literal"><span class="pre">ngrid</span></tt> specifies the maximum number of nodes to print
+(spread evenly over the grid).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="other-objects">
+<h2>Other Objects<a class="headerlink" href="#other-objects" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="vegas.RunningWAvg">
+<em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">RunningWAvg</tt><a class="headerlink" href="#vegas.RunningWAvg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Running weighted average of Monte Carlo estimates.</p>
+<p>This class accumulates independent Monte Carlo 
+estimates (e.g., of an integral) and combines 
+them into a single weighted average. It 
+is derived from <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt> (from 
+the <tt class="xref py py-mod docutils literal"><span class="pre">lsqfit</span></tt> module if it is present) and 
+represents a Gaussian random variable.</p>
+<dl class="attribute">
+<dt id="vegas.RunningWAvg.mean">
+<tt class="descname">mean</tt><a class="headerlink" href="#vegas.RunningWAvg.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mean value of the weighted average.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.RunningWAvg.sdev">
+<tt class="descname">sdev</tt><a class="headerlink" href="#vegas.RunningWAvg.sdev" title="Permalink to this definition">¶</a></dt>
+<dd><p>The standard deviation of the weighted average.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.RunningWAvg.chi2">
+<tt class="descname">chi2</tt><a class="headerlink" href="#vegas.RunningWAvg.chi2" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>chi**2</em> of weighted average.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.RunningWAvg.dof">
+<tt class="descname">dof</tt><a class="headerlink" href="#vegas.RunningWAvg.dof" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of degrees of freedom in weighted average.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.RunningWAvg.Q">
+<tt class="descname">Q</tt><a class="headerlink" href="#vegas.RunningWAvg.Q" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Q</em> or <em>p-value</em> of weighted average&#8217;s <em>chi**2</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.RunningWAvg.itn_results">
+<tt class="descname">itn_results</tt><a class="headerlink" href="#vegas.RunningWAvg.itn_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>A list of the results from each iteration.</p>
+<dl class="method">
+<dt id="vegas.RunningWAvg.add">
+<tt class="descname">add</tt><big>(</big><em>g</em><big>)</big><a class="headerlink" href="#vegas.RunningWAvg.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add estimate <tt class="docutils literal"><span class="pre">g</span></tt> to the running average.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.RunningWAvg.summary">
+<tt class="descname">summary</tt><big>(</big><big>)</big><a class="headerlink" href="#vegas.RunningWAvg.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assemble summary of independent results into a string.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="vegas.VecIntegrand">
+<em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">VecIntegrand</tt><a class="headerlink" href="#vegas.VecIntegrand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for classes providing vectorized integrands.</p>
+<p>A class derived from <tt class="xref py py-class docutils literal"><span class="pre">vegas.VecInterand</span></tt> should
+provide a <tt class="docutils literal"><span class="pre">__call__(x,</span> <span class="pre">f,</span> <span class="pre">nx)</span></tt> member where:</p>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> is a contiguous array where <tt class="docutils literal"><span class="pre">i=0...nx-1</span></tt>
+labels different integrtion points and <tt class="docutils literal"><span class="pre">d=0...</span></tt> labels
+different directions in the integration space.</p>
+<p><tt class="docutils literal"><span class="pre">f[i]</span></tt> is a buffer that is filled with the 
+integrand values for points <tt class="docutils literal"><span class="pre">i=0...nx-1</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">nx</span></tt> is the number of integration points.</p>
+</div></blockquote>
+<p>Deriving from <a class="reference internal" href="#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.VecIntegrand</span></tt></a> is the 
+easiest way to construct integrands in Cython, and
+gives the fastest results.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">The <tt class="docutils literal"><span class="pre">vegas</span></tt> Package</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#integrator-objects">Integrator Objects</a></li>
+<li><a class="reference internal" href="#adaptivemap-objects">AdaptiveMap Objects</a></li>
+<li><a class="reference internal" href="#other-objects">Other Objects</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="background.html"
+                        title="previous chapter">How <tt class="docutils literal"><span class="pre">vegas</span></tt> Works</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="background.html" title="How vegas Works"
+             >previous</a> |</li>
+        <li><a href="index.html">vegas 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, G.P. Lepage.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

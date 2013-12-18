@@ -1,2 +1,42 @@
-from ._vegas import *
+""" Introduction
+--------------------
+This package provides tools for estimating multidimensional 
+integrals numerically using an enhanced version of 
+the adaptive Monte Carlo 
+|vegas| algorithm (G. P. Lepage, J. Comput. Phys. 27(1978) 192).
+A |vegas| code generally involves two objects, one representing
+the integrand and the other representing an integration 
+operator for a particular multidimensional volume. A typical
+code sequence for a D-dimensional integral has the structure::
+
+    # create the integrand
+    def f(x):
+        ... compute the integrand at point x[d] d=0,1...D-1 
+        ...
+
+    # create an integrator for volume with 
+    # xl0 <= x[0] <= xu0, xl1 <= x[1] <= xu1 ...
+    integration_region = [[xl0, xu0], [xl1, xu1], ...]
+    integrator = vegas.Integrator(integration_region)
+
+    # do the integral and print out the result
+    result = integrator(f, nitn=10, neval=10000)
+    print(result)
+
+The algorithm iteratively adapts to the integrand over
+``nitn`` iterations, each of which uses at most ``neval``
+integrand samples to generate a Monte Carlo estimate 
+of the integral. The final result is the weighted 
+average of the results fom all iterations.
+
+The integrator remembers the adaptations it made to ``f(x)``
+and uses them as its starting point if it is reapplied 
+to ``f(x)`` or applied to some other function ``g(x)``.
+An integrator's state can be archived for future applications
+using Python's :mod:`pickle` module.
+
+The |vegas| tutorial and overview contains extended 
+explanations and examples.
+"""
+from ._vegas import RunningWAvg, AdaptiveMap, Integrator, VecIntegrand
  
