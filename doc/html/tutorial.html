@@ -109,7 +109,7 @@ available in may programming languages, including Fortran (the original
 version), C and C++. The algorithm used here is significantly improved over
 the original implementation, and that used in most other implementations.
 This
-module is written in Dython, so it is almost as fast as optimized Fortran or
+module is written in Cython, so it is almost as fast as optimized Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.</p>
 </div>
@@ -622,6 +622,22 @@ calls, so compilation occurs only once.</p>
 so integrands written in these languages can also be used (and
 would be faster than pure Python).</p>
 </div>
+<div class="section" id="implementation-notes">
+<h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h2>
+<p>This implementation of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> will evolve as experience with the
+new aspects of the algoritm accumulates. One defect in
+this release, which will be fixed soon, is that it can
+consume a lot of memory (ram) if several hundreds of millions of
+integrand evaluations are used per iteration. This is many more
+evaluations than are typically used, so there will be
+no memory problem for the large majority of applications.
+Set beta=0.0 (turning off the new part of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>) if
+it becomes a problem in specific applications.</p>
+<p>This implementation relies upon Cython for its speed and
+numpy for vector processing. It also uses matplotlib
+for graphics and lsqfit for handling Gaussian random
+variables.</p>
+</div>
 </div>
 
 
@@ -636,6 +652,7 @@ would be faster than pure Python).</p>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#basic-integrals">Basic Integrals</a></li>
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>
+<li><a class="reference internal" href="#implementation-notes">Implementation Notes</a></li>
 </ul>
 </li>
 </ul>

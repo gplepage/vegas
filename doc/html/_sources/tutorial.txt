@@ -68,7 +68,7 @@ available in may programming languages, including Fortran (the original
 version), C and C++. The algorithm used here is significantly improved over
 the original implementation, and that used in most other implementations.  
 This
-module is written in Dython, so it is almost as fast as optimized Fortran or
+module is written in Cython, so it is almost as fast as optimized Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.
 
@@ -535,3 +535,20 @@ calls, so compilation occurs only once.
 Cython code can also link easily to compiled C or Fortran code, 
 so integrands written in these languages can also be used (and
 would be faster than pure Python).
+
+Implementation Notes
+---------------------
+This implementation of |vegas| will evolve as experience with the
+new aspects of the algoritm accumulates. One defect in 
+this release, which will be fixed soon, is that it can 
+consume a lot of memory (ram) if several hundreds of millions of
+integrand evaluations are used per iteration. This is many more 
+evaluations than are typically used, so there will be
+no memory problem for the large majority of applications. 
+Set beta=0.0 (turning off the new part of |vegas|) if 
+it becomes a problem in specific applications.
+
+This implementation relies upon Cython for its speed and
+numpy for vector processing. It also uses matplotlib
+for graphics and lsqfit for handling Gaussian random
+variables.
