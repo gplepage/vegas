@@ -1,0 +1,95 @@
+To install:
+
+1. If not alread installed, download and install the following packages:
+
+	a. The numpy python library - provides fast floating-point array 
+		operations in python. Versions earlier than 1.6 may not work.
+		(http://numpy.scipy.org/)
+
+	b. The cython python package - provides a variant of python that 
+		compiles into C code that can itself be compiled and is faster (but
+        less flexible) than ordinary python. Versions earlier than 0.17
+		may not work. 
+		(http://www.cython.org/)
+
+	c. The matplotlib package for 2-d plotting. This is optional
+		unless you want to make pictures of the vegas grid
+		(see the documentation on How vegas Works).
+
+	c. The lsqfit package - provides a module gvar that handles 
+		Gaussian random variables. This is not strictly necessary
+		but vegas output is improved, as is the ease with which
+		vegas results can be manipulated.
+		(http://https://github.com/gplepage/lsqfit.git or use pip)
+
+	The first three of these libraries are usually included in 3rd
+	party distributions of vegas (eg, anaconda). 
+
+	The vegas code works for Python 2.7 and 3.3. It has not been tested
+	for earlier versions.
+
+2. Use 'make install'. This will build the vegas packages, and 
+	then copy it into a standard directory in the user's space that
+	Python knows about. A list of the installed files is stored in file
+	files-vegas.python (in case, for example, you want to uninstall them).
+	
+	N.B. Rather than using make and the makefile, one can instead use 
+	standard distutils commands: eg, 'python setup.py install --user'
+	
+	N.B. If you have previously installed older versions of vegas,
+	consider removing the earlier modules to make sure that the new ones are 
+	used by Python. This will not be a problem if the new modules overwrite
+	the older ones, but could cause trouble if the new modules are written 
+	to a different place. Find out where the older modules are stored by
+	using 'pydoc vegas' before installing the new software
+	(pydoc lists the location of the module under "FILE").
+	
+	N.B. To install vegas for an alternative version of python, say python3 
+	for example, use 'make PYTHON=python3 install'. Python's standard 
+	directories are structured in such a way that it is necessary to do 
+	a separate installation for each python version that will be used for 
+	vegas.
+		
+3. (Optional) Run 'make tests' to test your installation of vegas. 
+	The tests have been successful if the output ends with "OK". 
+	Some tests involve random numbers and so may occasionally --- less than 
+	1 in 100 runs --- fail due to rare multi-sigma fluctuations; rerun the 
+	tests if they do fail. Contact g.p.lepage@cornell.edu if there are 
+	persistent, frequent failures.
+	
+	N.B. The tests can also be run directly using Python's unittest module:
+	"python -m unittest discover".
+
+4. (Optional) Change to subdirectory examples/ and look at some of the 
+ 	sample .py files given there that use vegas. Run them one by one --- 
+	"python simple.py" etc --- or all at once using "make run".
+	
+5. (Optional) Use 'make clean' to erase work files/directories.
+
+
+To uninstall:
+
+1. 'make uninstall' (probably) uninstalls most of what was installed. It 
+	relies upon files with names like "files-vegas.python" that were 
+	created during installation.
+
+
+Problems:
+
+	Contact Peter Lepage: g.p.lepage@cornell.edu
+
+
+# Created by G. Peter Lepage (Cornell University) in 12/2013.
+# Copyright (c) 2013 G. Peter Lepage. 
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version (see <http://www.gnu.org/licenses/>).
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+

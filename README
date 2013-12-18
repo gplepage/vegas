@@ -1,0 +1,29 @@
+vegas
+-----
+This package is for evaluating multidimensional integrals using
+an improved version of the adaptive Monte Carlo vegas algorithm.
+The central package is :mod:`vegas`. A tutorial on its use
+is in doc/html/index.html (or doc/vegas.pdf if you prefer pdf).
+
+The vegas algorithm has been widely used for decades. It can be
+used on modern laptops to do integrals using 100s of millions
+of integrand evaluations.
+
+Test :mod:`vegas` using 'make tests.' Some simple examples are
+in the examples directory.
+
+Installation instructions are in the INSTALLATION file.
+
+
+# Created by G. Peter Lepage (Cornell University) in 12/2013.
+# Copyright (c) 2013 G. Peter Lepage. 
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version (see <http://www.gnu.org/licenses/>).
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
