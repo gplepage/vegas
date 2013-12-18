@@ -1,4 +1,3 @@
-# Created by G. Peter Lepage (Cornell University) on 12/2013.
 # Copyright (c) 2013 G. Peter Lepage. 
 #
 # This program is free software: you can redistribute it and/or modify
@@ -11,4 +10,15 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from vegas._vegas cimport *
+PYTHON = python
+
+run:
+	$(PYTHON) simple.py > simple.tmp
+	- diff -w simple.out simple.tmp
+
+update-all:
+	$(PYTHON) simple.py > simple.out
+
+clean:
+	rm -f *.pyc *.tmp *.p *.prof
+

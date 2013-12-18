@@ -24,7 +24,6 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="vegas 1.0 documentation" href="index.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
@@ -85,13 +84,13 @@ multidimensional integration, especially in high dimensions, because
 multidimensional space is large, with  lots of corners. For example, 90% of
 the 1-dimensional integral</p>
 <div class="math">
-\[\int_0^1 dx\,\mathrm{e}^{- 100 (x-0.5)^2}\]</div>
-<p>comes from about 23% of the integration volume. In 20 dimensions,
+<p><img src="_images/math/baa0d706833f8bc3e655ffbc38aa12f9e721ca3b.png" alt="\int_0^1 dx\,\mathrm{e}^{- 100 (x-0.5)^2}"/></p>
+</div><p>comes from about 23% of the integration volume. In 20 dimensions,
 90% of the analogous integral,</p>
 <div class="math">
-\[\int_0^1dx_1\cdots\int_0^1 dx_{20}
-\,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2},\]</div>
-<p>comes from only 10<sup>-8</sup> of the total integration volume. Non-adaptive
+<p><img src="_images/math/626c7859c29498b03247c48f26b596a7fa9d7718.png" alt="\int_0^1dx_1\cdots\int_0^1 dx_{20}
+\,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2},"/></p>
+</div><p>comes from only 10<sup>-8</sup> of the total integration volume. Non-adaptive
 algorithms would have a very hard time noticing that there was a peak at all.
 <em>vegas</em> has no trouble with this integral.</p>
 <p>Monte Carlo integration also provides efficient and reliable methods for
@@ -118,9 +117,9 @@ compiled language), as discussed below.</p>
 <h2>Basic Integrals<a class="headerlink" href="#basic-integrals" title="Permalink to this headline">¶</a></h2>
 <p>Here we illustrate <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> by estimating the integral</p>
 <div class="math">
-\[C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
-\,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2},\]</div>
-<p>where constant <span class="math">\(C\)</span> is chosen so that the exact value is 1.
+<p><img src="_images/math/e864ae1872392ce5fdcbb101cc2ef86d92ebdeb7.png" alt="C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
+\,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2},"/></p>
+</div><p>where constant <img class="math" src="_images/math/c3355896da590fc491a10150a50416687626d7cc.png" alt="C" style="vertical-align: 0px"/> is chosen so that the exact value is 1.
 The following code shows how this can be done:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -194,20 +193,20 @@ Provided the number of integrand evaluations per
 iteration (<tt class="docutils literal"><span class="pre">neval</span></tt>) is large enough, the results from
 individual iterations are random numbers whose distribution is
 Gaussian, with a mean equal to the integral&#8217;s value.
-The weighted average <span class="math">\(\overline I\)</span>  minimizes</p>
+The weighted average <img class="math" src="_images/math/8c35f36ea19ee4183ef9b447557332a8480f9113.png" alt="\overline I" style="vertical-align: 0px"/>  minimizes</p>
 <div class="math">
-\[\chi^2 \,\equiv\, \sum_i \frac{(I_i - \overline I)^2}{\sigma_{i}^2}\]</div>
-<p>where <span class="math">\(I_i \pm \sigma_{i}\)</span> are the estimates from
-individual iterations. If the <span class="math">\(I_i\)</span> are Gaussian,
-<span class="math">\(\chi^2\)</span> should be of order the number of degrees of
+<p><img src="_images/math/cd2045ccbc3e2a173a816e999a9664c8a7ccf66f.png" alt="\chi^2 \,\equiv\, \sum_i \frac{(I_i - \overline I)^2}{\sigma_{i}^2}"/></p>
+</div><p>where <img class="math" src="_images/math/b8fcc959b921339523aea3a0fd790a34be9c6965.png" alt="I_i \pm \sigma_{i}" style="vertical-align: -4px"/> are the estimates from
+individual iterations. If the <img class="math" src="_images/math/841fb80920b214cd9f8ccb4af360b4891402c0e3.png" alt="I_i" style="vertical-align: -4px"/> are Gaussian,
+<img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> should be of order the number of degrees of
 freedom, here the number of iterations minus 1.
-The error estimates are not reliable if <span class="math">\(\chi^2\)</span> is
+The error estimates are not reliable if <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> is
 much larger than the number of iterations. This criterion is quantified
-by the <em>Q</em> or <em>p-value</em> of the <span class="math">\(\chi^2\)</span>,
+by the <em>Q</em> or <em>p-value</em> of the <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/>,
 which is the probability that a
-larger <span class="math">\(\chi^2\)</span> could result from random (Gaussian)
+larger <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> could result from random (Gaussian)
 fluctuations. A very small <em>Q</em> (less than 0.05-0.1) indicates
-that the <span class="math">\(\chi^2\)</span> is too large to be accounted for by
+that the <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> is too large to be accounted for by
 statistical fluctuations &#8212; that is, the estimates of the integral
 from different iterations do not agree with each other to
 within errors. This means that <tt class="docutils literal"><span class="pre">neval</span></tt> is not sufficiently
@@ -219,14 +218,14 @@ attributes:</p>
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">result.mean</span></tt> &#8212; weighted average of all estimates of the integral;</p>
 <p><tt class="docutils literal"><span class="pre">result.sdev</span></tt> &#8212; standard deviation of the weighted average;</p>
-<p><tt class="docutils literal"><span class="pre">result.chi2</span></tt> &#8212; <span class="math">\(\chi^2\)</span> of the weighted average;</p>
+<p><tt class="docutils literal"><span class="pre">result.chi2</span></tt> &#8212; <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> of the weighted average;</p>
 <p><tt class="docutils literal"><span class="pre">result.dof</span></tt> &#8212; nuumber of degrees of freedom;</p>
-<p><tt class="docutils literal"><span class="pre">result.Q</span></tt> &#8212; <em>Q</em> or <em>p-value</em> of the weighted average&#8217;s <span class="math">\(\chi^2\)</span>;</p>
+<p><tt class="docutils literal"><span class="pre">result.Q</span></tt> &#8212; <em>Q</em> or <em>p-value</em> of the weighted average&#8217;s <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/>;</p>
 <p><tt class="docutils literal"><span class="pre">result.itn_results</span></tt> &#8212; list of the integral estimates
 from each iteration.</p>
 </div></blockquote>
 <p>In this example the final <em>Q</em> is 0.42, indicating that the
-<span class="math">\(\chi^2\)</span> for this average is not particularly unlikely.</p>
+<img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> for this average is not particularly unlikely.</p>
 <p><strong>Precision:</strong> The precision of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> estimates is
 determined by <tt class="docutils literal"><span class="pre">nitn</span></tt>, the number of iterations
 of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm,
@@ -262,7 +261,7 @@ than twice as accurate as increasing <tt class="docutils literal"><span class="p
 wants to use no more than 10 or 20 iterations beyond the
 point where vegas has fully adapted. You want some number of
 iterations so that you can verify Gaussian behavior by
-checking the <span class="math">\(\chi^2\)</span> and <em>Q</em>, but not too many.</p>
+checking the <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> and <em>Q</em>, but not too many.</p>
 <p>It is also generally useful to compare two or more
 results that use values of <tt class="docutils literal"><span class="pre">neval</span></tt> that differ by a
 significant factor (4&#8211;10, say). These should agree within
@@ -276,7 +275,7 @@ effects. The systematic error vanishes like
 the statistical error as <tt class="docutils literal"><span class="pre">neval</span></tt> increases.
 The systematic error can bias the Monte Carlo estimate, however,
 if <tt class="docutils literal"><span class="pre">neval</span></tt> is insufficiently large. This usually
-results in a large <span class="math">\(\chi^2\)</span>, but a
+results in a large <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/>, but a
 more reliable check is to compare
 results that use signficantly different values of <tt class="docutils literal"><span class="pre">neval</span></tt>.
 The systematic errors due to non-Gaussian behavior are
@@ -491,9 +490,9 @@ finding the region of non-zero integrand.</p>
 <p>Note, finally, that integration to infinity is also possible
 by mapping the relevant variable into a different variable
 of finite range &#8212; for example, by
-changing an integral over <span class="math">\(x\equiv\tan(\theta)\)</span>
-from 0 to infinity into one over <span class="math">\(\theta\)</span> from
-0 to <span class="math">\(\pi/2\)</span>.</p>
+changing an integral over <img class="math" src="_images/math/e3c6fcc1a4b75f1f88beaa73c12a7bdcd4bd098b.png" alt="x\equiv\tan(\theta)" style="vertical-align: -3px"/>
+from 0 to infinity into one over <img class="math" src="_images/math/52e8ed7a3ba22130ad3984eb2cd413406475a689.png" alt="\theta" style="vertical-align: 0px"/> from
+0 to <img class="math" src="_images/math/039bf945c704ff98e6f81626bbad32550cc37193.png" alt="\pi/2" style="vertical-align: -1px"/>.</p>
 </div></blockquote>
 </div>
 <div class="section" id="faster-integrands">

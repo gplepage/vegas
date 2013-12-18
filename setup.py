@@ -1,4 +1,19 @@
-""" to build modules in module_list:   python setup.py build_ext --inplace """
+""" to build modules in module_list:   python setup.py build_ext --inplace 
+
+
+Created by G. Peter Lepage (Cornell University) in 12/2013.
+Copyright (c) 2013 G. Peter Lepage.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version (see <http://www.gnu.org/licenses/>).
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+"""
 
 from distutils.core import setup
 from Cython.Build import cythonize
@@ -27,6 +42,7 @@ package_data = dict(vegas=['../vegas.pxd','_vegas.pxd'])
 setup(
 	name='vegas',
 	version=VEGAS_VERSION,
+	description='Tools for adaptive multidimensional Monte Carlo integration.',
 	author='G. Peter Lepage',
 	author_email='g.p.lepage@cornell.edu',
 	include_dirs=include_dirs,
@@ -34,4 +50,29 @@ setup(
     package_dir=package_dir,
     package_data=package_data,
     ext_modules=ext_modules,
+    requires=["cython (>=0.17)","numpy (>=1.7)"],
+    url="https://github.com/gplepage/vegas.git",
+    license='GPLv3+',
+    platforms='Any',
+    long_description="""\
+    This package provides tools evaluating multidimensional 
+    integrals numerically using an enhanced version of 
+	the adaptive Monte Carlo vegas algorithm (G. P. Lepage, 
+	J. Comput. Phys. 27(1978) 192).
+    """,
+    classifiers = [                     #
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Console',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: POSIX',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Cython',
+        'Topic :: Scientific/Engineering'
+        ]
+
 	)

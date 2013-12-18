@@ -1,0 +1,8 @@
+These .py files are simple examples showing how to use vegas. 
+Use 'make run' to run all of them, and compare the check their 
+output against the corresponding .out files.
+
+Some of these examples are discussed in the vegas documentation (which
+starts at doc/html/index.html):
+
+    simple.py - "Basic Integrals" in the Tutorial.

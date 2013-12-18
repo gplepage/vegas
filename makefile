@@ -1,4 +1,4 @@
-# Created by G. Peter Lepage (Cornell University) on 2008-02-12.
+# Created by G. Peter Lepage (Cornell University) on 12/2013.
 # Copyright (c) 2013 G. Peter Lepage. 
 #
 # This program is free software: you can redistribute it and/or modify
@@ -42,6 +42,17 @@ sdist:			# source distribution
 
 tests: 
 	$(PYTHON) -m unittest discover
+
+run-examples:
+	$(MAKE) -C examples PYTHON=$(PYTHON) run
+
+upload-pypi:
+	python setup.py sdist upload
+
+upload-git:
+	make doc-all
+	git commit -a -m "prep for upload"
+	git push origin master
 
 clean:
 	rm -f -r build 

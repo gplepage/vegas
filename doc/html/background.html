@@ -24,7 +24,6 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="vegas 1.0 documentation" href="index.html" />
     <link rel="next" title="The vegas Package" href="vegas.html" />
     <link rel="prev" title="Overview and Tutorial" href="tutorial.html" />
@@ -70,40 +69,40 @@ its remapping of the integration variables in each
 direction, before it makes Monte Carlo estimates of the integral.
 In one dimension, for example, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> converts</p>
 <div class="math">
-\[I = \int_a^b dx\,f(x)\]</div>
-<p>into</p>
+<p><img src="_images/math/80ebc05b6b293cbb48829bf51a9282ab8b39081c.png" alt="I = \int_a^b dx\,f(x)"/></p>
+</div><p>into</p>
 <div class="math">
-\[I = \int_0^1 dy\, J(y)\,f(x(y))\]</div>
-<p>and then does a Monte Carlo estimate in y space.
-The transformation function <span class="math">\(x(y)\)</span> is chosen so that
-Jacobian <span class="math">\(J(y)\propto 1/|f(x)|\)</span>. This choice minimizes
+<p><img src="_images/math/8dd161ca251fe45cad4b3527329a151f0c477a01.png" alt="I = \int_0^1 dy\, J(y)\,f(x(y))"/></p>
+</div><p>and then does a Monte Carlo estimate in y space.
+The transformation function <img class="math" src="_images/math/0eb3094e860d07a5547928542b0e375fe93c9caa.png" alt="x(y)" style="vertical-align: -3px"/> is chosen so that
+Jacobian <img class="math" src="_images/math/5552912a451d5f21e9213b056e382ae73a529c0c.png" alt="J(y)\propto 1/|f(x)|" style="vertical-align: -3px"/>. This choice minimizes
 the statistical errors of the y-space Monte Carlo estimate
 of integral: it flattens the integrand, removing peaks by
 spreading them out in y space.</p>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> implements this transformation using a grid in x space:</p>
 <blockquote>
 <div><div class="math">
-\[\begin{split}x_0 &amp;= a \\
+<p><img src="_images/math/077fc49276c2b66f7e124f08dc65028b373fd263.png" alt="x_0 &amp;= a \\
 x_1 &amp;= x_0 + \Delta x_0 \\
 x_2 &amp;= x_1 + \Delta x_1 \\
 \cdots \\
-x_N &amp;= x_{N-1} + \Delta x_{N-1} = b\end{split}\]</div>
-</div></blockquote>
+x_N &amp;= x_{N-1} + \Delta x_{N-1} = b"/></p>
+</div></div></blockquote>
 <p>The grid specifies the transformation function at the points
-<span class="math">\(y=i/N\)</span> for <span class="math">\(i=0,1\ldots N\)</span>:</p>
+<img class="math" src="_images/math/389b75c77cae997103a92c2f87b4df54980ef6cb.png" alt="y=i/N" style="vertical-align: -3px"/> for <img class="math" src="_images/math/ea2bda8abaf30faa60fe32cd8a1ba7700492c05a.png" alt="i=0,1\ldots N" style="vertical-align: -2px"/>:</p>
 <blockquote>
 <div><div class="math">
-\[x(y\!=\!i/N) = x_i\]</div>
-</div></blockquote>
+<p><img src="_images/math/6b9509edd258585c850b9800d6765072ac0f8d90.png" alt="x(y\!=\!i/N) = x_i"/></p>
+</div></div></blockquote>
 <p>Linear interpolation is used between those points.</p>
 <p>The Jacobian for this transformation function is piecewise constant:</p>
 <blockquote>
 <div><div class="math">
-\[J(y) = N \Delta x_i\]</div>
-</div></blockquote>
-<p>for <span class="math">\(i/N &lt; y &lt; (i+1)/N\)</span>. Consequently the optimal grid is one
-where the grid increments <span class="math">\(\Delta x_i\)</span> are small in regions
-where <span class="math">\(|f(x)|\)</span> is large. These small increments map into
+<p><img src="_images/math/7d575d3c65a46b74825773e42dd757c9794f0e99.png" alt="J(y) = N \Delta x_i"/></p>
+</div></div></blockquote>
+<p>for <img class="math" src="_images/math/94143669df644bd86d34e8b6ac1b3709302207e1.png" alt="i/N &lt; y &lt; (i+1)/N" style="vertical-align: -3px"/>. Consequently the optimal grid is one
+where the grid increments <img class="math" src="_images/math/537cc5ab393d9e36d18cd15fd02206ef9be7d2ad.png" alt="\Delta x_i" style="vertical-align: -4px"/> are small in regions
+where <img class="math" src="_images/math/43a205879f624365c1c1773c849be4c20594794f.png" alt="|f(x)|" style="vertical-align: -3px"/> is large. These small increments map into
 proportionally larger increments in y space.
 This causes the Monte Carlo
 integration to focus its sampling of the integrand in regions where the
@@ -113,7 +112,7 @@ called &#8220;importance sampling.&#8221;</p>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> typically starts with no knowledge of the integrand and
 so starts with a uniform x grid. As it samples the integrand
 it gathers information about where the peaks are, and refines
-its choice of <span class="math">\(\Delta x_i\)</span>s for use
+its choice of <img class="math" src="_images/math/537cc5ab393d9e36d18cd15fd02206ef9be7d2ad.png" alt="\Delta x_i" style="vertical-align: -4px"/>s for use
 in subsequent iterations. The grid converges after several iterations
 to the optimal grid.</p>
 <p>This analysis generalizes easily to multi-dimensional integrals.
