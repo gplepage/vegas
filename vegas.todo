@@ -1,12 +1,19 @@
+Right now:
+
+- change mode into adapt_to_errors, which is then either True or False.
+
+- get sdist to work properly --- need MANIFEST.in
+
+- more examples: slow.py, faster.py, fastest.py, path-integral.py
+  
+
+For later:
+
 - Make multivegas --- integrand is a vector of different integrands.
 
 - replace sigf_list with a double list, containing h-cube number and sigf, 
   so that we only save sigf data for places where sigf is unusually large.
   See branch mem-opt for a start on this.
-
-- need test-vegas written. probably should redo it from scratch
-
-- get sdist to work properly --- need MANIFEST.in
 
 - Think about roundoff error in the accumulation of results. Could introduce
   vec_mean and vec_var so accumulate whole vectors before folding into 

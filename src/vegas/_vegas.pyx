@@ -44,7 +44,74 @@ except ImportError:
             self.sdev = float(sdev)
             self.internaldata = (self.mean, self.sdev)
         def __str__(self):
-            return "%g +- %g" % (self.mean, self.sdev)
+            """ Return string representation of ``self``.
+
+            The representation is designed to show at least
+            one digit of the mean and two digits of the standard deviation. 
+            For cases where mean and standard deviation are not 
+            too different in magnitude, the representation is of the
+            form ``'mean(sdev)'``. When this is not possible, the string
+            has the form ``'mean +- sdev'``.
+            """
+            # taken from gvar.GVar in lsqfit package.
+            def ndec(x, offset=2):
+                ans = offset - numpy.log10(x)
+                ans = int(ans)
+                if ans > 0 and x * 10. ** ans >= [0.5, 9.5, 99.5][offset]:
+                    ans -= 1
+                return 0 if ans < 0 else ans
+            dv = abs(self.sdev)
+            v = self.mean
+            
+            # special cases 
+            if dv == float('inf'):
+                return '%g +- inf' % v
+            elif v == 0 and (dv >= 1e5 or dv < 1e-4):
+                if dv == 0:
+                    return '0(0)'
+                else:
+                    ans = ("%.1e" % dv).split('e')
+                    return "0.0(" + ans[0] + ")e" + ans[1]
+            elif v == 0:
+                if dv >= 9.95:
+                    return '0(%.0f)' % dv
+                elif dv >= 0.995:
+                    return '0.0(%.1f)' % dv
+                else:
+                    ndecimal = ndec(dv)
+                    return '%.*f(%.0f)' % (ndecimal, v, dv * 10. ** ndecimal)
+            elif dv == 0:
+                ans = ('%g' % v).split('e')
+                if len(ans) == 2:
+                    return ans[0] + "(0)e" + ans[1]
+                else:
+                    return ans[0] + "(0)"
+            elif dv < 1e-6 * abs(v) or dv > 1e4 * abs(v):
+                return '%g +- %.2g' % (v, dv)
+            elif abs(v) >= 1e6 or abs(v) < 1e-5:
+                # exponential notation for large |self.mean| 
+                exponent = numpy.floor(numpy.log10(abs(v)))
+                fac = 10.**exponent
+                mantissa = str(self/fac)
+                exponent = "e" + ("%.0e" % fac).split("e")[-1]
+                return mantissa + exponent
+
+            # normal cases
+            if dv >= 9.95:
+                if abs(v) >= 9.5:
+                    return '%.0f(%.0f)' % (v, dv)
+                else:
+                    ndecimal = ndec(abs(v), offset=1)
+                    return '%.*f(%.*f)' % (ndecimal, v, ndecimal, dv)
+            if dv >= 0.995:
+                if abs(v) >= 0.95:
+                    return '%.1f(%.1f)' % (v, dv)
+                else:
+                    ndecimal = ndec(abs(v), offset=1)
+                    return '%.*f(%.*f)' % (ndecimal, v, ndecimal, dv)
+            else:
+                ndecimal = max(ndec(abs(v), offset=1), ndec(dv))
+                return '%.*f(%.0f)' % (ndecimal, v, dv * 10. ** ndecimal)
     class _gvar_standin:
         def __init__(self):
             pass
@@ -103,7 +170,7 @@ class RunningWAvg(gvar.GVar):
     def _Q(self):
         return (
             gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
-            if self.dof > 0
+            if self.dof > 0 and self.chi2 > 0
             else 1
             )
     Q = property(
@@ -162,75 +229,50 @@ cdef class AdaptiveMap:
     An :class:`AdaptiveMap` defines a multidimensional map ``y -> x(y)`` 
     from the unit hypercube, with ``0 <= y[d] <= 1``, to an arbitrary
     hypercube in ``x`` space. Each direction is mapped independently 
-    with a jacobian that is tunable (i.e., "adaptive").
+    with a Jacobian that is tunable (i.e., "adaptive").
 
     The map is specified by a grid in ``x``-space that, by definition, 
-    maps into a uniformly space grid in ``y``-space. The nodes of 
+    maps into a uniformly spaced grid in ``y``-space. The nodes of 
     the grid are specified by ``grid[d, i]`` where d is the 
     direction (``d=0,1...dim-1``) and ``i`` labels the grid point
-    (``i=0,1...N-1``). The mapping for specific point ``y`` into
+    (``i=0,1...N``). The mapping for a specific point ``y`` into
     ``x`` space is:: 
 
         y[d] -> x[d] = grid[d, i(y[d])] + inc[d, i(y[d])] * delta(y[d])
 
-    where ``i(y)=floor(y*N``), ``delta(y)=y*N-i(y)``, and
-    ``inc[d, i] = grid[d, i+1] - grid[d, i]``. The jacobian for this map, :: 
+    where ``i(y)=floor(y*N``), ``delta(y)=y*N - i(y)``, and
+    ``inc[d, i] = grid[d, i+1] - grid[d, i]``. The Jacobian for this map, :: 
 
         dx[d]/dy[d] = inc[d, i(y[d])] * N,
 
     is piece-wise constant and proportional to the ``x``-space grid 
     spacing. Each increment in the ``x``-space grid maps into an increment of 
-    size ``1/N`` in the corresponding ``y`` space. So increments with 
-    small ``delta_x[i]`` are stretched out in ``y`` space, while larger
-    increments are shrunk.
+    size ``1/N`` in the corresponding ``y`` space. So regions in 
+    ``x`` space where ``inc[d, i]`` is small are stretched out
+    in ``y`` space, while larger increments are compressed.
 
     The ``x`` grid for an :class:`AdaptiveMap` can be specified explicitly
-    when it is created: for example, ::
+    when the map is created: for example, ::
 
-        map = AdaptiveMap([[0, 0.1, 1], [-1, 0, 1]])
+        m = AdaptiveMap([[0, 0.1, 1], [-1, 0, 1]])
 
     creates a two-dimensional map where the ``x[0]`` interval ``(0,0.1)``
     and ``(0.1,1)`` map into the ``y[0]`` intervals ``(0,0.5)`` and 
-    ``(0.5,1)`` respectively, while ``x[1]`` intervals ``(-1.,0)`` 
+    ``(0.5,1)`` respectively, while ``x[1]`` intervals ``(-1,0)`` 
     and ``(0,1)`` map into ``y[1]`` intervals ``(0,0.5)`` and  ``(0.5,1)``.
 
-    More typically an initially uniform map is trained so that 
-    ``F(x(y), dx(y)/dy)``, for some training function ``F``, 
-    is (approximately) constant across ``y`` space. The training function
-    is assumed to grow monotonically with the jacobian ``dx(y)/dy`` at
-    fixed ``x``. The adaptation is done iteratively, beginning 
-    with a uniform map::
+    More typically an initially uniform map is trained with data 
+    ``f[j]`` corresponding to ``ny`` points ``y[j, d]``,
+    with ``j=0...ny-1``, uniformly distributed in |y| space: 
+    for example, ::
 
-        map = AdaptiveMap([[xl[0], xu[0]], [xl[1], xu[1]]...], ninc=N)
-
-    which creates an ``x`` grid with ``N`` equal-sized increments 
-    between ``x[d]=xl[d]`` and ``x[d]=xu[d]``. The training function 
-    is then evaluated for the ``x`` values corresponding to 
-    a list of ``y`` values ``y[i, d]`` spread over ``(0,1)`` for 
-    each direction ``d``::
-
-        ...
-        for i in range(ny):
-            for d in range(dim):
-                y[i, d] = ....
-        x = numpy.empty(y.shape, float)     # container for corresponding x's
-        jac = numpy.empty(y.shape, float)   # container for corresponding dx/dy's
-        map.map(y, x, jac)                  # fill x and jac
-        f = F(x, jac)                       # compute training function
-
-    The number of ``y`` points is arbitrary, but typically large. Training 
-    data is often generated in batches that are accumulated by the 
-    map through multiple calls to::
-
-        map.add_training_data(y, f)
-
-    Finally the map is adapted to the data::
-
+        m.add_training_data(y, f)
         m.adapt(alpha=1.5)
 
-    The process of computing training data and then adapting the map
-    typically has to be repeated several times before the map converges,
-    at which point the ``x``-grid's nodes, ``map.grid[d, i]``, stop changing.
+    ``m.adapt(alpha=1.5)`` shrinks grid increments where ``f[j]``
+    is large, and expands them where ``f[j]`` is small. Typically 
+    one has to iterate over several sets of ``y``\s and ``f``\s 
+    before the grid has fully adapted. 
 
     The speed with which the grid adapts is determined by parameter ``alpha``.
     Large (positive) values imply rapid adaptation, while small values (much
@@ -243,7 +285,7 @@ cdef class AdaptiveMap:
     :type x: 2-d array of floats
     :param ninc: Number of increments along each axis of the ``x`` grid. 
         A new grid is generated if ``ninc`` differs from ``grid.shape[1]``.
-        The new grid is designed to give the same jacobian ``dx(y)/dy``
+        The new grid is designed to give the same Jacobian ``dx(y)/dy``
         as the original grid. The default value, ``ninc=None``,  leaves 
         the grid unchanged.
     :type ninc: ``int`` or ``None``
@@ -373,7 +415,7 @@ cdef class AdaptiveMap:
         return x
 
     def jac(self, y):
-        """ Return the map's jacobian at ``y``. 
+        """ Return the map's Jacobian at ``y``. 
 
         ``y`` can be a single ``dim``-dimensional point, or it 
         can be an array ``y[d,i,j,...]`` of such points (``d=0..dim-1``).
@@ -395,25 +437,25 @@ cdef class AdaptiveMap:
         double[::1] jac, 
         INT_TYPE ny=-1
         ):
-        """ Map y to x, where jac is the jacobian.
+        """ Map y to x, where jac is the Jacobian.
 
-        ``y[i, d]`` is an array of ``ny`` ``y``-values for direction ``d``.
-        ``x[i, d]`` is filled with the corresponding ``x`` values,
-        and ``jac[i]`` is filled with the corresponding jacobian 
+        ``y[j, d]`` is an array of ``ny`` ``y``-values for direction ``d``.
+        ``x[j, d]`` is filled with the corresponding ``x`` values,
+        and ``jac[j]`` is filled with the corresponding Jacobian 
         values. ``x`` and ``jac`` must be preallocated: for example, ::
 
             x = numpy.empty(y.shape, float)
             jac = numpy.empty(y.shape[0], float)
 
         :param y: ``y`` values to be mapped. ``y`` is a contiguous 2-d array,
-            where ``y[i, d]`` contains values for points along direction ``d``.
+            where ``y[j, d]`` contains values for points along direction ``d``.
         :type y: contiguous 2-d array of floats
         :param x: Container for ``x`` values corresponding to ``y``.
         :type x: contiguous 2-d array of floats
-        :param jac: Container for jacobian values corresponding to ``y``.
+        :param jac: Container for Jacobian values corresponding to ``y``.
         :type jac: contiguous 1-d array of floats
-        :param ny: Number of ``y`` points: ``y[i, d]`` for ``d=0...dim-1``
-            and ``i=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
+        :param ny: Number of ``y`` points: ``y[j, d]`` for ``d=0...dim-1``
+            and ``j=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
             omitted (or negative).
         :type ny: int
         """
@@ -450,16 +492,20 @@ cdef class AdaptiveMap:
         """ Add training data ``f`` for ``y``-space points ``y``.
 
         Accumulates training data for later use by ``self.adapt()``.
+        Grid increments will be made smaller in regions where
+        ``f`` is larger than average, and larger where ``f`` 
+        is smaller than average. The grid is unchanged (converged?)
+        when ``f`` is constant across the grid.
 
         :param y: ``y`` values corresponding to the training data. 
-            ``y`` is a contiguous 2-d array, where ``y[i, d]`` 
+            ``y`` is a contiguous 2-d array, where ``y[j, d]`` 
             is for points along direction ``d``.
         :type y: contiguous 2-d array of floats
-        :param f: Training function values. ``f[i]`` corresponds to 
-            point ``y[i, d]`` in ``y``-space.
+        :param f: Training function values. ``f[j]`` corresponds to 
+            point ``y[j, d]`` in ``y``-space.
         :type f: contiguous 2-d array of floats
-        :param ny: Number of ``y`` points: ``y[i, d]`` for ``d=0...dim-1``
-            and ``i=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
+        :param ny: Number of ``y`` points: ``y[j, d]`` for ``d=0...dim-1``
+            and ``j=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
             omitted (or negative).
         :type ny: int
         """
@@ -484,15 +530,22 @@ cdef class AdaptiveMap:
     def adapt(self, double alpha=0.0, ninc=None):
         """ Adapt grid to accumulated training data.
 
-        The new grid is designed to make the training function constant
-        in ``y[d]`` when the ``y``\s in the other directions  are integrated out.
-        The number of increments along a direction can be changed 
-        by setting parameter ``ninc``. 
+        ``self.adapt(...)`` projects the training data onto
+        each axis independently and maps it into ``x`` space.
+        It shrinks ``x``-grid increments in regions where the
+        projected training data is large, and grows increments
+        where the projected data is small. The grid along 
+        any direction is unchanged if the training data 
+        is constant along that direction.
 
-        The grid does not change if no training data has been accumulated,
-        unless ``ninc`` is specified, in which case the number of 
-        increments is adjusted while preserving the relative density
-        of increments at different values of ``x``.
+        The number of increments along a direction can be 
+        changed by setting parameter ``ninc``. 
+
+        The grid does not change if no training data has 
+        been accumulated, unless ``ninc`` is specified, in 
+        which case the number of increments is adjusted 
+        while preserving the relative density of increments 
+        at different values of ``x``.
 
         :parameter alpha: Determines the speed with which the grid adapts to 
             training data. Large (postive) values imply rapid evolution; 
@@ -511,8 +564,7 @@ cdef class AdaptiveMap:
         cdef INT_TYPE old_ninc = self.grid.shape[1] - 1
         cdef INT_TYPE dim = self.grid.shape[0]
         cdef INT_TYPE i, j, new_ninc
-        cdef double smth = 3.   # was 3.
-        #
+        
         # initialization
         if ninc is None:
             new_ninc = old_ninc
@@ -527,16 +579,17 @@ cdef class AdaptiveMap:
                 new_grid[d, 1] = self.grid[d, -1]
             self._init_grid(new_grid)
             return
-        #
+        
         # smoothing
         new_grid = numpy.empty((dim, new_ninc + 1), float)
         avg_f = numpy.ones(old_ninc, float) # default = uniform
+        if alpha > 0 and old_ninc > 1:
+            tmp_f = numpy.empty(old_ninc, float)
         for d in range(dim):
             if self.sum_f is not None and alpha != 0:
                 for i in range(old_ninc):
                     avg_f[i] = self.sum_f[d, i] / self.n_f[d, i]
             if alpha > 0 and old_ninc > 1:
-                tmp_f = numpy.empty(old_ninc, float)
                 tmp_f[0] = (3. * avg_f[0] + avg_f[1]) / 4.
                 tmp_f[-1] = (3. * avg_f[-1] + avg_f[-2]) / 4.
                 sum_f = tmp_f[0] + tmp_f[-1]
@@ -551,7 +604,7 @@ cdef class AdaptiveMap:
                         avg_f[i] = TINY
                 for i in range(old_ninc):
                     avg_f[i] = (-(1 - avg_f[i]) / log(avg_f[i])) ** alpha
-            #
+            
             # regrid
             new_grid[d, 0] = self.grid[d, 0]
             new_grid[d, -1] = self.grid[d, -1]
@@ -581,47 +634,77 @@ cdef class AdaptiveMap:
         self.sum_f = None
         self.n_f = None
 
-    def plot_grid(self, ngrid=40, shrink=False):
+    def show_grid(self, ngrid=40, axes=None, shrink=False):
         """ Display plots showing the current grid. 
 
         :param ngrid: The number of grid nodes in each 
             direction to include in the plot. The default is 40.
         :type ngrid: int 
+        :nparam axes: List of pairs of directions to use in 
+            different views of the grid. Using ``None`` in 
+            place of a direction plots the grid for only one
+            direction. Omitting ``axes`` causes a default 
+            set of pairings to be used.
         :param shrink: Displays entire range of each maxinc_axis
             if ``False``; otherwise shrink range to include
             just the nodes being displayed. The default is
             ``False``. 
         """
         import matplotlib.pyplot as plt 
+        dim = self.dim
+        if axes is None:
+            axes = []
+            if dim == 1:
+                axes = [(0, None)]
+            for d in range(dim):
+                axes.append((d, (d + 1) % dim))
+        else:
+            if len(axes) <= 0:
+                return
+            for dx,dy in axes:
+                if dx is not None and (dx < 0 or dx >= dim):
+                    raise ValueError('bad directions: %s' % str((dx, dy)))
+                if dy is not None and (dy < 0 or dy >= dim):
+                    raise ValueError('bad directions: %s' % str((dx, dy)))
         fig = plt.figure()
         nskip = int(self.ninc // ngrid)
         if nskip < 1:
             nskip = 1
         start = nskip // 2
         def plotdata(idx, grid=numpy.asarray(self.grid)):
-            if idx[0] >= grid.shape[0]:
-                idx[0] -= 1
-            elif idx[0] < 0:
-                idx[0] = 0
-            dx = idx[0]
-            dy = dx + 1
-            xrange = [self.grid[dx, 0], self.grid[dx, -1]]
-            xgrid = grid[dx, start::nskip]
-            xlabel = 'x[%d]' % dx 
-            if dy < grid.shape[0]:
+            dx, dy = axes[idx[0]]
+            nnode = 0
+            if dx is not None:
+                xrange = [self.grid[dx, 0], self.grid[dx, -1]]
+                xgrid = grid[dx, start::nskip]
+                nnode = len(xgrid)
+                xlabel = 'x[%d]' % dx 
+            else:
+                xrange = [0., 1.]
+                xgrid = None
+                xlabel = ''
+            if dy is not None:
                 yrange = [self.grid[dy, 0], self.grid[dy, -1]]
                 ygrid = grid[dy, start::nskip]
+                nnode = len(ygrid)
                 ylabel = 'x[%d]' % dy
-                fig_caption = 'axes %d, %d' % (dx, dy)
             else:
                 yrange = [0., 1.]
                 ygrid = None
                 ylabel = ''
-                fig_caption = 'axis %d' % dx
             if shrink:
-                xrange = [min(xgrid), max(xgrid)]
+                if xgrid is not None:
+                    xrange = [min(xgrid), max(xgrid)]
                 if ygrid is not None:
                     yrange = [min(ygrid), max(ygrid)]
+            if None not in [dx, dy]:
+                fig_caption = 'axes %d, %d' % (dx, dy)
+            elif dx is None and dy is not None:
+                fig_caption = 'axis %d' % dy 
+            elif dx is not None and dy is None:
+                fig_caption = 'axis %d' % dx 
+            else:
+                return
             fig.clear()
             plt.title(
                 "%s   (press 'n', 'p', 'q' or a digit)"
@@ -629,19 +712,14 @@ cdef class AdaptiveMap:
                 )
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
-            # ax = fig.add_subplot(111)
-            # ax.set_ylabel(ylabel)
-            # ax.set_xlabel(xlabel)
-            for i in range(len(xgrid)):
-                plt.plot([xgrid[i], xgrid[i]], yrange, 'k-')
+            for i in range(nnode):
+                if xgrid is not None:
+                    plt.plot([xgrid[i], xgrid[i]], yrange, 'k-')
                 if ygrid is not None:
                     plt.plot(xrange, [ygrid[i], ygrid[i]], 'k-')
-            if shrink:
-                plt.xlim(*xrange)
-                if ygrid is not None:
-                    plt.ylim(*yrange)
-            elif ygrid is None:
-                plt.xlim(*xrange)
+            plt.xlim(*xrange)
+            plt.ylim(*yrange)
+
             plt.draw()
 
         idx = [0]        
@@ -651,8 +729,12 @@ cdef class AdaptiveMap:
             except ValueError:
                 if event.key == 'n':
                     idx[0] += 1
+                    if idx[0] >= len(axes):
+                        idx[0] = len(axes) - 1
                 elif event.key == 'p':
                     idx[0] -= 1
+                    if idx[0] < 0:
+                        idx[0] = 0
                 elif event.key == 'q':
                     plt.close()
                     return
@@ -675,17 +757,15 @@ cdef class Integrator(object):
 
         result = integ(f, nitn=10, neval=10000)
 
-    The integator makes ``nitn`` estimates of the integral, 
-    each using
-    at most ``neval`` samples of the integrand,
-    as it adapts to the specific features
-    of the integrand. Successive estimates typically improve
-    in accuracy until the integrator has fully adapted.
-    The integrator returns the weighted average of all ``nitn``
-    estimates, together with an estimate of the statistical
-    (Monte Carlo) uncertainty in that estimate of the integral. The 
-    result is an object of type :class:`RunningWAvg`
-    (which is derived from :class:`gvar.GVar`).
+    The integator makes ``nitn`` estimates of the integral,  each
+    using at most ``neval`` samples of the integrand, as it adapts to
+    the specific features of the integrand. Successive estimates
+    typically improve in accuracy until the integrator has fully
+    adapted. The integrator returns the weighted average of all
+    ``nitn`` estimates, together with an estimate of the statistical
+    (Monte Carlo) uncertainty in that estimate of the integral. The
+    result is an object of type :class:`RunningWAvg` (which is derived
+    from :class:`gvar.GVar`).
 
     :param map: The integration region as specified by 
         an array ``xlimit[d, i]`` where ``d`` is the 
@@ -696,14 +776,18 @@ cdef class Integrator(object):
         another :class:Integrator, or the |Integrator|
         itself. In this case the grid is copied from the 
         existing integrator.
-    :type map: array or :class:`vegas.AdaptiveMap` or :class:`vegas.Integrator`
+    :type map: array or :class:`vegas.AdaptiveMap` 
+        or :class:`vegas.Integrator`
     :param nitn: The maximum number of iterations used to 
         adapt to the integrand and estimate its value. The
         default value is 10.
     :type nitn: positive int
     :param neval: The maximum number of integrand evaluations
-        in each iteration of the |vegas| algorithm. Default 
-        value is 1000.
+        in each iteration of the |vegas| algorithm. Increasing
+        ``neval`` increases the precision: statistical errors should
+        fall at least as fast as ``sqrt(1./neval)`` and often
+        fall much faster. The default value is 1000; realistic
+        problems often require 10--100 times more evaluations.
     :type neval: positive int 
     :param alpha: Damping parameter controlling the remapping
         of the integration variables as |vegas| adapts to the
@@ -722,12 +806,15 @@ cdef class Integrator(object):
     :param nhcube_vec: The number of hypercubes (in |y| space)
         whose integration points are combined into a single
         vector to be passed to the integrand 
-        when using |vegas| in vectorized mode. The default
-        value is 100.
+        when using |vegas| in vectorized mode (``fcntype='vector'``). 
+        The default value is 100. Larger values may be
+        lead to faster evaluations, but at the cost of 
+        more memory for internal work areas.
     :type nhcube_vec: positive int 
     :param maxinc_axis: The maximum number of increments
         per axis allowed for the |x|-space grid. The default 
-        value is 1000. 
+        value is 1000; there is probably little need to use
+        other values.
     :type maxinc_axis: positive int 
     :param mode: ``mode=adapt_to_integrand`` causes 
         |vegas| to remap the integration variables to emphasize
@@ -740,23 +827,36 @@ cdef class Integrator(object):
         the number of the number of stratifications in 
         the |y| grid is large (> 50?). It is typically 
         useful only in one or two dimensions.
+    :param max_nhcube: Maximum number of hypercubes allowed 
+        for stratification. The default value is 5e8. 
+        Larger values can allow for more adaptation 
+        (if ``neval`` is larger than ``2 * max_nhcube``)
+        but also can result in very large internal work 
+        arrays. The maximum setting is a function of 
+        the RAM available to the processor used.
+    :type max_nhcube: positive int 
+    :param max_neval_hcube: Maximum number of integrand evaluations 
+        per hypercube in the stratification. The default value 
+        is 1e7. Larger values might allow for more adaptation
+        (if ``neval`` is larger than ``2 * max_neval_hcube``)
+        but also can result in very large internal work arrays.
+    :type max_neval_hcube: positive int
     :param fcntype: Specifies the default type of integrand.
 
         ``fcntype='scalar'`` imples that the integrand
         is a function ``f(x)`` of a single integration
-        point. 
+        point ``x[d]``. 
 
         ``fcntype='vector'`` implies that 
         the integrand function takes three arguments:
-        a list multiple integration points ``x[i, d]``,
+        a list of integration points ``x[i, d]``,
         where ``i=0...nx-1`` labels the integration point
         and ``d`` labels the direction; a buffer
         ``f[i]`` into which the corresponding 
         integrand values are written; and the number
         ``nx`` of integration points provided. 
 
-        The 
-        default is ``fcntype=scalar``, but this is 
+        The default is ``fcntype=scalar``, but this is 
         overridden if the integrand has a ``fcntype`` 
         attribute. It is also overridden for classes
         derived from :class:`VecIntegrand`, which are
@@ -787,7 +887,8 @@ cdef class Integrator(object):
         result of all iterations so far. 
         Setting ``analyzer=vegas.reporter()``, for 
         example, causes vegas to print out a running report
-        of its results as they are produced.
+        of its results as they are produced. The default 
+        is ``analyzer=None``.
     """
 
     # Settings accessible via the constructor and Integrator.set
@@ -797,6 +898,8 @@ cdef class Integrator(object):
         neval=1000,       # number of evaluations per iteration
         maxinc_axis=1000,  # number of adaptive-map increments per axis
         nhcube_vec=100,    # number of h-cubes per vector
+        max_nhcube=5e8,    # max number of h-cubes
+        max_neval_hcube=1e7, # max number of evaluations per h-cube
         nitn=10,           # number of iterations
         alpha=0.5,
         beta=0.75,
@@ -875,6 +978,12 @@ cdef class Integrator(object):
             elif k == 'nhcube_vec':
                 old_val[k] = self.nhcube_vec
                 self.nhcube_vec = kargs[k]
+            elif k == 'max_nhcube':
+                old_val[k] = self.max_nhcube
+                self.max_nhcube = kargs[k]
+            elif k == 'max_neval_hcube':
+                old_val[k] = self.max_neval_hcube
+                self.max_neval_hcube = kargs[k]
             elif k == 'nitn':
                 old_val[k] = self.nitn
                 self.nitn = kargs[k]
@@ -910,6 +1019,7 @@ cdef class Integrator(object):
         :returns: String containing the settings.
         """
         cdef INT_TYPE d
+        self._prepare_integrator()
         mode = self.mode
         beta = self.beta # if mode != 'adapt_to_errors' else 0.0
         nhcube = self.nstrat ** self.dim
@@ -946,6 +1056,10 @@ cdef class Integrator(object):
             "    damping parameters: alpha = %g  beta= %g\n" 
             % (self.alpha, beta)
             )
+        ans += (
+            "    limits: h-cubes < %.2g  evaluations/h-cube < %.2g\n"
+            % (float(self.max_nhcube), float(self.max_neval_hcube))
+            )
         ans = ans + ("    accuracy: relative = %g" % self.rtol)
         ans = ans + ("  absolute accuracy = %g\n\n" % self.atol)
         for d in range(self.dim):
@@ -969,6 +1083,8 @@ cdef class Integrator(object):
         ni = int(self.neval / 10.)              # increments/axis
         if ns < 1:
             ns = 1
+        elif self.beta > 0 and ns ** dim > self.max_nhcube:
+            ns = int(self.max_nhcube ** (1./dim))
         if ni < 1:
             ni = 1
         elif ni  > self.maxinc_axis:
@@ -1082,8 +1198,8 @@ cdef class Integrator(object):
         cdef double[:, ::1] y = numpy.empty((neval_vec, self.dim), float)
         cdef double[:, ::1] x = numpy.empty((neval_vec, self.dim), float)
         cdef double[::1] jac = numpy.empty(neval_vec, float)
-        cdef INT_TYPE min_neval_hcube = self.neval_hcube
-        cdef INT_TYPE max_neval_hcube = self.neval_hcube
+        cdef INT_TYPE min_neval = self.neval_hcube
+        cdef INT_TYPE max_neval = self.neval_hcube
         cdef INT_TYPE hcube, i, j, d, hcube_base, ihcube, i_start
         cdef INT_TYPE[::1] neval_hcube = (
             numpy.zeros(self.nhcube_vec, int) + self.neval_hcube 
@@ -1115,10 +1231,12 @@ cdef class Integrator(object):
                     if neval_hcube[ihcube] < self.neval_hcube:
                         # counter += 1
                         neval_hcube[ihcube] = self.neval_hcube
-                    if neval_hcube[ihcube] < min_neval_hcube:
-                        min_neval_hcube = neval_hcube[ihcube]
-                    if neval_hcube[ihcube] > max_neval_hcube:
-                        max_neval_hcube = neval_hcube[ihcube]
+                    if neval_hcube[ihcube] > self.max_neval_hcube:
+                        neval_hcube[ihcube] = self.max_neval_hcube
+                    if neval_hcube[ihcube] < min_neval:
+                        min_neval = neval_hcube[ihcube]
+                    if neval_hcube[ihcube] > max_neval:
+                        max_neval = neval_hcube[ihcube]
                     neval_vec += neval_hcube[ihcube]
                 if neval_vec > y.shape[0]:
                     y = numpy.empty((neval_vec, self.dim), float)
@@ -1178,8 +1296,8 @@ cdef class Integrator(object):
                 self.map.add_training_data(y, fdv2, neval_vec)
 
         # record final results
-        self.neval_hcube_range = (min_neval_hcube, max_neval_hcube)
-        # self.neval_hcube_range = (min_neval_hcube, float(counter) / nhcube, max_neval_hcube)
+        self.neval_hcube_range = (min_neval, max_neval)
+        # self.neval_hcube_range = (min_neval, float(counter) / nhcube, max_neval)
         return gvar.gvar(ans_mean, sqrt(ans_var))
 
 class reporter:

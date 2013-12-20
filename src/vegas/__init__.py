@@ -29,14 +29,13 @@ integrand samples to generate a Monte Carlo estimate
 of the integral. The final result is the weighted 
 average of the results fom all iterations.
 
-The integrator remembers the adaptations it made to ``f(x)``
-and uses them as its starting point if it is reapplied 
+The integrator remembers how it adapted to ``f(x)``
+and uses this information as its starting point if it is reapplied 
 to ``f(x)`` or applied to some other function ``g(x)``.
 An integrator's state can be archived for future applications
 using Python's :mod:`pickle` module.
 
-The |vegas| tutorial and overview contains extended 
-explanations and examples.
+There is an extensive tutorial in the |vegas| documentation.
 """
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
@@ -53,4 +52,5 @@ explanations and examples.
 # GNU General Public License for more details.
 
 from ._vegas import RunningWAvg, AdaptiveMap, Integrator, VecIntegrand
+from ._vegas import reporter, gvar
  

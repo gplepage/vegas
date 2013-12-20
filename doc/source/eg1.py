@@ -63,7 +63,11 @@ def main():
     result = integ(f, nitn=10, neval=1000)
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
-    integ.map.plot_grid(30, shrink=False)
+    integ.map.show_grid(
+        30, 
+        axes=[(0, 1), (2, 3), (0, None), (None, 1), (2, 0), (3, 0)], 
+        shrink=False
+        )
 
     if SAVE_OUTPUT:
         unlog_stdout() 
@@ -128,7 +132,7 @@ def main():
     result = integ(f2, nitn=10, neval=4e4, beta=0.75) # , analyzer=vegas.reporter())
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
-    integ.map.plot_grid(70)
+    integ.map.show_grid(70)
     print(integ(f2, nitn=10, neval=4e4, beta=0.).summary())
 
 

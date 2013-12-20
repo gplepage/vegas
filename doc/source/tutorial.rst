@@ -1,4 +1,4 @@
-Overview and Tutorial
+Tutorial
 =======================================
 
 .. moduleauthor:: G. Peter Lepage <g.p.lepage@cornell.edu>
@@ -248,13 +248,13 @@ There are several things worth noting here:
     The possibility of systematic biases
     is another reason for increasing ``neval`` 
     rather than ``nitn`` to obtain more precision. 
-    Making ``neval`` larger is guaranteed
+    Making ``neval`` larger and larger is guaranteed
     to improve the Monte Carlo estimate, with the 
     systematic error vanishing quickly. 
     Making ``nitn`` larger and larger, on the other hand,
     is guaranteed eventually to give the wrong
     answer. This is because at some point the statistical error 
-    will no longer
+    (which falls as ``sqrt(1/nitn)``) will no longer
     mask the systematic error (which is affected by ``neval`` but
     not ``nitn``). The systematic error for the integral
     above (with ``neval=1000``) is about -0.00073(7), which 
@@ -336,7 +336,7 @@ There are several things worth noting here:
 
     **Non-Rectangular Volumes:** |vegas| can integrate over volumes of 
     non-rectangular shape. For example, we can replace integrand ``f(x)`` 
-    above by 
+    above 
     by the same Gaussian, but restricted to a 4-sphere of radius 0.2,
     centered on the Gaussian::
 
@@ -538,17 +538,7 @@ would be faster than pure Python).
 
 Implementation Notes
 ---------------------
-This implementation of |vegas| will evolve as experience with the
-new aspects of the algoritm accumulates. One defect in 
-this release, which will be fixed soon, is that it can 
-consume a lot of memory (ram) if several hundreds of millions of
-integrand evaluations are used per iteration. This is many more 
-evaluations than are typically used, so there will be
-no memory problem for the large majority of applications. 
-Set beta=0.0 (turning off the new part of |vegas|) if 
-it becomes a problem in specific applications.
-
 This implementation relies upon Cython for its speed and
 numpy for vector processing. It also uses matplotlib
 for graphics and lsqfit for handling Gaussian random
-variables.
+variables. matplotlib and lsqfit are optional. 

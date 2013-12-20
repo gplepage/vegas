@@ -30,8 +30,94 @@ The central component of the |vegas| package is the integrator class:
 
 AdaptiveMap Objects
 ---------------------
-|vegas|'s remapping of the integration variables is handled
-by :class:`AdaptiveMap`.
+|vegas|’s remapping of the integration variables is handled
+by a :class:`vegas.AdaptiveMap` object, which maps the original 
+integration variables |x| into new variables |y| in a unit hypercube.
+Each direction has its own map specified by a grid in |x| space:
+
+    .. math::
+
+        x_0 &= a \\
+        x_1 &= x_0 + \Delta x_0 \\
+        x_2 &= x_1 + \Delta x_1 \\
+        \cdots \\
+        x_N &= x_{N-1} + \Delta x_{N-1} = b
+
+where :math:`a` and :math:`b` are the limits of integration. 
+The grid specifies the transformation function at the points 
+:math:`y=i/N` for :math:`i=0,1\ldots N`:
+
+    .. math::
+
+        x(y\!=\!i/N) = x_i
+
+Linear interpolation is used between those points. The Jacobian
+for this transformation is:
+
+    .. math:: 
+
+        J(y) = J_i = N \Delta x_i
+
+|vegas| adjusts the increments sizes to optimize its Monte Carlo
+estimates of the integral. This involves training the grid. To 
+illustrate how this is done with |AdaptiveMap|\s consider a simple
+two dimensional integral over a unit hypercube with integrand::
+
+   def f(x):
+      return x[0] * x[1] ** 2
+
+We want to create a grid that optimizes uniform Monte Carlo estimates
+of the integral in |y| space. We do this by sampling the integrand
+at a large number ``ny`` of random points ``y[j, d]``, where ``j=0...ny-1`` 
+and ``d=0,1``, uniformly distributed throughout the integration 
+volume in |y| space. These samples be used to train the grid
+using the following code::
+
+   import vegas
+   import numpy as np
+
+   def f(x):
+      return x[0] * x[1] ** 2
+
+   m = vegas.Integrator([[0, 1], [0, 1]], ninc=5)
+
+   ny = 1000
+   y = np.random.uniform(0., 1., (ny, 2))  # 1000 random y's
+
+   x = np.empty(y.shape, float)            # work space
+   jac = np.empty(y.shape[0], float)
+   f2 = np.empty(y.shape[0], float)
+
+   print('intial grid:')
+   print(m.settings())
+
+   for itn in range(5):                    # 5 iterations to adapt
+      m.map(y, x, jac)                     # compute x's and jac
+
+      for j in range(ny):                  # compute training data
+         f2[j] = (jac[j] * f(x[j])) ** 2
+
+      m.add_training_data(y, f2)           # adapt
+      m.adapt(alpha=1.5)
+
+      print('iteration %d:' % itn)
+      print(m.settings())
+
+In each of the 5 iterations, the |AdaptiveMap| adjusts the 
+map, making increments smaller where ``f2`` is larger and 
+larger where ``f2`` is smaller. 
+The map converges after only 2 or 3 iterations, as 
+is clear from the output:
+
+.. literalinclude:: eg2a.out
+
+The grid increments along direction 0 shrink at larger 
+values ``x[0]``, varying as ``1/x[0]``. Along direction 1 
+the increments shrink more quickly varying like ``1/x[1]**2``.
+
+|vegas| samples the integrand in order to estimate the integral.
+It uses those same samples to train its |AdaptiveMap| in this 
+fashion, for use in later iterations of the algorithm.
 
 .. autoclass:: vegas.AdaptiveMap
 
@@ -63,7 +149,7 @@ by :class:`AdaptiveMap`.
 
    .. automethod:: map(y, x, jac, ny=-1)
 
-   .. automethod:: plot_grid(ngrid=40, shrink=False)
+   .. automethod:: show_grid(ngrid=40, shrink=False)
 
    .. automethod:: settings(ngrid=5)
 

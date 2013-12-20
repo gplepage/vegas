@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Overview and Tutorial &mdash; vegas 1.0 documentation</title>
+    <title>Tutorial &mdash; vegas 1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -60,8 +60,8 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="overview-and-tutorial">
-<h1>Overview and Tutorial<a class="headerlink" href="#overview-and-tutorial" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>Class <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> gives Monte Carlo estimates of arbitrary
@@ -284,13 +284,13 @@ within the statistical errors.</p>
 <p>The possibility of systematic biases
 is another reason for increasing <tt class="docutils literal"><span class="pre">neval</span></tt>
 rather than <tt class="docutils literal"><span class="pre">nitn</span></tt> to obtain more precision.
-Making <tt class="docutils literal"><span class="pre">neval</span></tt> larger is guaranteed
+Making <tt class="docutils literal"><span class="pre">neval</span></tt> larger and larger is guaranteed
 to improve the Monte Carlo estimate, with the
 systematic error vanishing quickly.
 Making <tt class="docutils literal"><span class="pre">nitn</span></tt> larger and larger, on the other hand,
 is guaranteed eventually to give the wrong
 answer. This is because at some point the statistical error
-will no longer
+(which falls as <tt class="docutils literal"><span class="pre">sqrt(1/nitn)</span></tt>) will no longer
 mask the systematic error (which is affected by <tt class="docutils literal"><span class="pre">neval</span></tt> but
 not <tt class="docutils literal"><span class="pre">nitn</span></tt>). The systematic error for the integral
 above (with <tt class="docutils literal"><span class="pre">neval=1000</span></tt>) is about -0.00073(7), which
@@ -407,7 +407,7 @@ remembers the variable transformations made to minimize errors, and
 so need not be readapted to the integrand when used later.</p>
 <p><strong>Non-Rectangular Volumes:</strong> <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> can integrate over volumes of
 non-rectangular shape. For example, we can replace integrand <tt class="docutils literal"><span class="pre">f(x)</span></tt>
-above by
+above
 by the same Gaussian, but restricted to a 4-sphere of radius 0.2,
 centered on the Gaussian:</p>
 <div class="highlight-python"><pre>def f_sph(x):
@@ -624,19 +624,10 @@ would be faster than pure Python).</p>
 </div>
 <div class="section" id="implementation-notes">
 <h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h2>
-<p>This implementation of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> will evolve as experience with the
-new aspects of the algoritm accumulates. One defect in
-this release, which will be fixed soon, is that it can
-consume a lot of memory (ram) if several hundreds of millions of
-integrand evaluations are used per iteration. This is many more
-evaluations than are typically used, so there will be
-no memory problem for the large majority of applications.
-Set beta=0.0 (turning off the new part of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>) if
-it becomes a problem in specific applications.</p>
 <p>This implementation relies upon Cython for its speed and
 numpy for vector processing. It also uses matplotlib
 for graphics and lsqfit for handling Gaussian random
-variables.</p>
+variables. matplotlib and lsqfit are optional.</p>
 </div>
 </div>
 
@@ -648,7 +639,7 @@ variables.</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Overview and Tutorial</a><ul>
+<li><a class="reference internal" href="#">Tutorial</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#basic-integrals">Basic Integrals</a></li>
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>

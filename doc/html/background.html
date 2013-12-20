@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="vegas 1.0 documentation" href="index.html" />
     <link rel="next" title="The vegas Package" href="vegas.html" />
-    <link rel="prev" title="Overview and Tutorial" href="tutorial.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <!--[if lte IE 6]>
@@ -49,7 +49,7 @@
           <a href="vegas.html" title="The vegas Package"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="tutorial.html" title="Overview and Tutorial"
+          <a href="tutorial.html" title="Tutorial"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">vegas 1.0 documentation</a> &raquo;</li> 
       </ul>
@@ -62,24 +62,75 @@
             
   <div class="section" id="how-vegas-works">
 <h1>How <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> Works<a class="headerlink" href="#how-vegas-works" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="the-vegas-grid-importance-sampling">
-<h2>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> Grid: Importance Sampling<a class="headerlink" href="#the-vegas-grid-importance-sampling" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="importance-sampling">
+<h2>Importance Sampling<a class="headerlink" href="#importance-sampling" title="Permalink to this headline">¶</a></h2>
 <p>The most important adaptive strategy <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses is
 its remapping of the integration variables in each
 direction, before it makes Monte Carlo estimates of the integral.
-In one dimension, for example, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> converts</p>
+This is equivalent to a standard Monte Carlo optimization
+called &#8220;importance sampling.&#8221;</p>
+<p>The idea in one-dimension, for
+example, is to replace the original integral over <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/>,</p>
 <div class="math">
-<p><img src="_images/math/80ebc05b6b293cbb48829bf51a9282ab8b39081c.png" alt="I = \int_a^b dx\,f(x)"/></p>
-</div><p>into</p>
+<p><img src="_images/math/685754b4ff61f76b6c23a8fed4d1c1ea6f95b08f.png" alt="I = \int_a^b dx\; f(x),"/></p>
+</div><p>by an equivalent integral over a new variable <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>,</p>
 <div class="math">
-<p><img src="_images/math/8dd161ca251fe45cad4b3527329a151f0c477a01.png" alt="I = \int_0^1 dy\, J(y)\,f(x(y))"/></p>
-</div><p>and then does a Monte Carlo estimate in y space.
-The transformation function <img class="math" src="_images/math/0eb3094e860d07a5547928542b0e375fe93c9caa.png" alt="x(y)" style="vertical-align: -3px"/> is chosen so that
-Jacobian <img class="math" src="_images/math/5552912a451d5f21e9213b056e382ae73a529c0c.png" alt="J(y)\propto 1/|f(x)|" style="vertical-align: -3px"/>. This choice minimizes
-the statistical errors of the y-space Monte Carlo estimate
-of integral: it flattens the integrand, removing peaks by
-spreading them out in y space.</p>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> implements this transformation using a grid in x space:</p>
+<p><img src="_images/math/e85e4e4ff7c6f671135c564aa1e99f069434b631.png" alt="I = \int_0^1 dy\; J(y)\; f(x(y)),"/></p>
+</div><p>where the transformation <img class="math" src="_images/math/0eb3094e860d07a5547928542b0e375fe93c9caa.png" alt="x(y)" style="vertical-align: -3px"/> is chosen to
+minimize the uncertainty in a Monte Carlo estimate of the
+transformed integral.
+A simple Monte Carlo estimate of that integral is given by</p>
+<div class="math">
+<p><img src="_images/math/f8e06a4803ca960002283e15c73ad80a3db9230b.png" alt="I \approx S^{(1)} \equiv \frac{1}{M} \sum_y \;J(y)\; f(x(y))"/></p>
+</div><p>where the sum is over <img class="math" src="_images/math/5d1e4485dc90c450e8c76826516c1b2ccb8fce16.png" alt="M" style="vertical-align: 0px"/> random points
+uniformly distributed between 0 and 1.</p>
+<p>The estimate <img class="math" src="_images/math/e8b295520d0d944faf93b11756ee637d3a60b45f.png" alt="S^{(1)}" style="vertical-align: 0px"/> is a itself a random number from a distribution
+whose mean is the exact integral and whose variance is:</p>
+<div class="math">
+<p><img src="_images/math/0d8f2a60a03cd87a7d2be0fb356879b231516cf8.png" alt="\sigma_I^2 &amp;= \frac{1}{M}\left(
+\int_0^1 dy\; J^2(y) \; f^2(y(x)) - I^2
+\right) \\
+&amp;= \frac{1}{M}\left(
+\int_a^b dx \;J(y(x))\; f^2(x) - I^2
+\right)"/></p>
+</div><p>The standard deviation <img class="math" src="_images/math/d6e5c2ebb49ac8cd0853c33f5c873a96e8b58f88.png" alt="\sigma_I" style="vertical-align: -3px"/> is an estimate of the possible
+error in the Monte Carlo estimate.
+A simple variational calculation, keeping</p>
+<div class="math">
+<p><img src="_images/math/bb2bdb184676f4ac2ae87eea473228344996796f.png" alt="\int_a^b \frac{dx}{J(y(x))} = 1,"/></p>
+</div><p>shows that <img class="math" src="_images/math/d6e5c2ebb49ac8cd0853c33f5c873a96e8b58f88.png" alt="\sigma_I" style="vertical-align: -3px"/> is minimized if</p>
+<div class="math">
+<p><img src="_images/math/6513a76b8102f5aed9f31bb8751aaf80d98e9eb1.png" alt="J(y(x)) \propto \frac{1}{|f(x)|}."/></p>
+</div><p>Such transformations greatly reduce the standard deviation when the
+integrand has high peaks. Since</p>
+<div class="math">
+<p><img src="_images/math/f17be52c164beba1d8a8f31859d0e007ce7a90ea.png" alt="1/J = \frac{dy}{dx} \propto |f(x)|,"/></p>
+</div><p>the regions in <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/> space where <img class="math" src="_images/math/43a205879f624365c1c1773c849be4c20594794f.png" alt="|f(x)|" style="vertical-align: -3px"/> is large are
+stretched out in <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/> space. Consequently, a uniform Monte Carlo in <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/> space
+places more samples in the peak regions than it would
+if were we integrating in <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/> space &#8212; its samples are concentrated
+in the most important regions, which is why this is called &#8220;importance
+sampling.&#8221; The product <img class="math" src="_images/math/8e2e794f9aaff83690bf35fde9328f8b36b1d36d.png" alt="J(y)\;f(x(y))" style="vertical-align: -3px"/> has no peaks when
+the transformation is optimal.</p>
+<p>The distribution of the Monte Carlo estimates <img class="math" src="_images/math/e8b295520d0d944faf93b11756ee637d3a60b45f.png" alt="S^{(1)}" style="vertical-align: 0px"/> becomes
+Gaussian in the limit of large <img class="math" src="_images/math/5d1e4485dc90c450e8c76826516c1b2ccb8fce16.png" alt="M" style="vertical-align: 0px"/>. Non-Gaussian corrections
+vanish like <img class="math" src="_images/math/0f774ccb90c0752606384066187e81219c6dfa73.png" alt="1/M" style="vertical-align: -1px"/>. For example, it is easy to show that</p>
+<div class="math">
+<p><img src="_images/math/750772f4bb184472dbf6ecf9961f9acd46b3cc77.png" alt="\langle (S^{(1)} - I) ^ 4 \rangle
+=
+3\sigma_I^4\left( 1 - \frac{1}{M}\right)
++ \frac{1}{M^3} \int_0^1 dy \;
+(J(y)\;f(x(y)) - I)^4"/></p>
+</div><p>This moment would equal <img class="math" src="_images/math/7f594e86ed97e0be6d7158113e8d094958fb51fb.png" alt="3\sigma_I^4" style="vertical-align: -7px"/>, which falls like <img class="math" src="_images/math/df113aa952ec1b9718e5b13c6c3cbcc897baf48d.png" alt="1/M^2" style="vertical-align: -1px"/>,
+if the distribution was Gaussian. These results assume
+that <img class="math" src="_images/math/eb1345f0078e4116c3660a4d43c40791a1f18b7f.png" alt="(J(y)\:f(x(y)))^n" style="vertical-align: -3px"/> is integrable for all <img class="math" src="_images/math/174fadd07fd54c9afe288e96558c92e0c1da733a.png" alt="n" style="vertical-align: 0px"/>,
+which need not be the case
+if <img class="math" src="_images/math/c96dd6ec1dc4ad7520fbdc78fcdbec9edd068d0c.png" alt="f(x)" style="vertical-align: -3px"/> has (integrable) singularities.</p>
+</div>
+<div class="section" id="the-vegas-grid">
+<h2>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> Grid<a class="headerlink" href="#the-vegas-grid" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> implements the transformation of an integration variable
+<img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/> into a new variable <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/> using a grid in <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/> space:</p>
 <blockquote>
 <div><div class="math">
 <p><img src="_images/math/077fc49276c2b66f7e124f08dc65028b373fd263.png" alt="x_0 &amp;= a \\
@@ -94,26 +145,44 @@ x_N &amp;= x_{N-1} + \Delta x_{N-1} = b"/></p>
 <div><div class="math">
 <p><img src="_images/math/6b9509edd258585c850b9800d6765072ac0f8d90.png" alt="x(y\!=\!i/N) = x_i"/></p>
 </div></div></blockquote>
-<p>Linear interpolation is used between those points.</p>
-<p>The Jacobian for this transformation function is piecewise constant:</p>
+<p>Linear interpolation is used between those points.
+The Jacobian for this transformation function is piecewise constant:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/7d575d3c65a46b74825773e42dd757c9794f0e99.png" alt="J(y) = N \Delta x_i"/></p>
+<p><img src="_images/math/f41a2bac182dbef90d7938db505cd4348a3ae642.png" alt="J(y) = J_i = N \Delta x_i"/></p>
 </div></div></blockquote>
-<p>for <img class="math" src="_images/math/94143669df644bd86d34e8b6ac1b3709302207e1.png" alt="i/N &lt; y &lt; (i+1)/N" style="vertical-align: -3px"/>. Consequently the optimal grid is one
-where the grid increments <img class="math" src="_images/math/537cc5ab393d9e36d18cd15fd02206ef9be7d2ad.png" alt="\Delta x_i" style="vertical-align: -4px"/> are small in regions
-where <img class="math" src="_images/math/43a205879f624365c1c1773c849be4c20594794f.png" alt="|f(x)|" style="vertical-align: -3px"/> is large. These small increments map into
-proportionally larger increments in y space.
-This causes the Monte Carlo
-integration to focus its sampling of the integrand in regions where the
-integrand
-is large &#8212; a standard Monte Carlo technique
-called &#8220;importance sampling.&#8221;</p>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> typically starts with no knowledge of the integrand and
-so starts with a uniform x grid. As it samples the integrand
-it gathers information about where the peaks are, and refines
-its choice of <img class="math" src="_images/math/537cc5ab393d9e36d18cd15fd02206ef9be7d2ad.png" alt="\Delta x_i" style="vertical-align: -4px"/>s for use
-in subsequent iterations. The grid converges after several iterations
+<p>for <img class="math" src="_images/math/94143669df644bd86d34e8b6ac1b3709302207e1.png" alt="i/N &lt; y &lt; (i+1)/N" style="vertical-align: -3px"/>.</p>
+<p>The variance for a Monte Carlo estimate using this transformation
+becomes</p>
+<div class="math">
+<p><img src="_images/math/0635523bec16b9608fe978c38d8c7cf4275c2042.png" alt="\sigma_I^2 = \frac{1}{M}\left(
+\sum_i J_i \int_{x_i}^{x_{i+1}} dx \; f^2x(x) - I^2
+\right)"/></p>
+</div><p>Treating the <img class="math" src="_images/math/8d395d0978e65f55986e368f46b1f784a6ac1dbd.png" alt="J_i" style="vertical-align: -4px"/> as independent variables, with the
+restriction</p>
+<div class="math">
+<p><img src="_images/math/4186d9569ba2feb72111da48570d95da56743a88.png" alt="\sum_i \frac{\Delta x_i}{J_i} = \sum_i \Delta y_i = 1,"/></p>
+</div><p>it is trivial to show that the standard deviation is minimized
+when</p>
+<div class="math">
+<p><img src="_images/math/bc48c95804970b3c1b2acaf6663d304036bc300e.png" alt="\frac{J_i^2}{\Delta x_i}
+\int_{x_i}^{x_{i+1}} dx \; f^2(x)
+= N^2 \Delta x_i \int_{x_i}^{x_{i+1}} dx \; f^2(x)
+\; \propto \; \mbox{constant}"/></p>
+</div><p>for all <img class="math" src="_images/math/34857b3ba74ce5cd8607f3ebd23e9015908ada71.png" alt="i" style="vertical-align: -1px"/>.</p>
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> adjusts the grid until this last condition is
+satisfied.  As a result grid increments <img class="math" src="_images/math/537cc5ab393d9e36d18cd15fd02206ef9be7d2ad.png" alt="\Delta x_i" style="vertical-align: -4px"/> are
+small in regions where <img class="math" src="_images/math/43a205879f624365c1c1773c849be4c20594794f.png" alt="|f(x)|" style="vertical-align: -3px"/> is large.
+<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> typically has no knowledge of the integrand initially, and
+so starts with a uniform <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/> grid. As it samples the integrand
+it also estimates the integrals</p>
+<div class="math">
+<p><img src="_images/math/7d27ade920a2eade17d12b64d5ae05b3bf997d90.png" alt="\int_{x_i}^{x_{i+1}} dx \; f^2(x),"/></p>
+</div><p>and use this information to refine
+its choice of <img class="math" src="_images/math/537cc5ab393d9e36d18cd15fd02206ef9be7d2ad.png" alt="\Delta x_i" style="vertical-align: -4px"/>s, bringing them closer to their optimal
+values, for use
+in subsequent iterations. The grid usually converges,
+after several iterations,
 to the optimal grid.</p>
 <p>This analysis generalizes easily to multi-dimensional integrals.
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> applies a similar transformation in each direction, and
@@ -131,8 +200,10 @@ in the previous section looks like:</p>
 <p>in the integration code after the integration is finished.
 It causes <tt class="xref py py-mod docutils literal"><span class="pre">matplotlib</span></tt> (if it is installed) to create
 images showing 30 nodes (out of the 99 actually used) of
-the grid in each direction. Obviously <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> is focusing
-its resources on the region around <tt class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></tt>.</p>
+the grid in each direction. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> concentraties its resources
+in regions where the <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/>-grid increments are smallest &#8212; here
+in the region around <tt class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></tt>, where the
+peak is.</p>
 </div>
 <div class="section" id="adaptive-stratified-sampling">
 <h2>Adaptive Stratified Sampling<a class="headerlink" href="#adaptive-stratified-sampling" title="Permalink to this headline">¶</a></h2>
@@ -189,39 +260,43 @@ strategy will always have difficulty adapting to structures that
 lie along diagonals of the integration hypercube. To address such problems,
 this new version of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> introduces a second adaptive strategy,
 based upon another standard Monte Carlo technique called &#8220;stratified
-sampling.&#8221; <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> divides the d-dimensional
-y-space volume into hypercubes using
-a uniform y-space grid with M stratifications on each
+sampling.&#8221; <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> divides the <img class="math" src="_images/math/96ab646de7704969b91c76a214126b45f2b07b25.png" alt="d" style="vertical-align: 0px"/>-dimensional
+<img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space volume into hypercubes using
+a uniform <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space grid with <img class="math" src="_images/math/20694f1b84293018bd5f592d2e569d440e814644.png" alt="M_\mathrm{strat}" style="vertical-align: -4px"/> stratifications on each
 axis. It estimates
 the integral by doing a separate Monte Carlo integration in each of
-the M<sup>d</sup> hypercubes, and adding the results together to provide an estimate
+the <img class="math" src="_images/math/b0782b6ac7d4dcdd10c18b163c5e7ba0ba6e0ab0.png" alt="M_\mathrm{strat}^d" style="vertical-align: -8px"/> hypercubes, and adding the results together to provide an estimate
 for the integral over the entire integration region.
 Typically
-this y-space grid is much coarser than the x-space grid used to
+this <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space grid is much coarser than the <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/>-space grid used to
 remap the integration variables. This is because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> needs
-at least two integrand evaluations in each y-space hypercube, and
-so must keep the number of hypercubes M<sup>d</sup> smaller than <tt class="docutils literal"><span class="pre">neval/2</span></tt>.
-This restricts M when d is large.</p>
-<p>Older versions of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> also divide y-space into hypercubes and
+at least two integrand evaluations in each <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space hypercube, and
+so must keep the number of hypercubes <img class="math" src="_images/math/b0782b6ac7d4dcdd10c18b163c5e7ba0ba6e0ab0.png" alt="M_\mathrm{strat}^d" style="vertical-align: -8px"/> smaller than <tt class="docutils literal"><span class="pre">neval/2</span></tt>.
+This can restrict <img class="math" src="_images/math/20694f1b84293018bd5f592d2e569d440e814644.png" alt="M_\mathrm{strat}" style="vertical-align: -4px"/> severely when <img class="math" src="_images/math/96ab646de7704969b91c76a214126b45f2b07b25.png" alt="d" style="vertical-align: 0px"/> is large.</p>
+<p>Older versions of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> also divide <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space into hypercubes and
 do Monte Carlo estimates in the separate hypercubes. These versions, however,
 use the same number of integrand evaluations in each hypercube.
 In the new version, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> adjusts the number of evaluations used
 in a hypercube in proportion to the standard deviation of
-the integral estimate from that hypercube &#8212; it concentrates
-integration evaluations where the statistical errors are
-largest. In the two-Gaussian example above, for example,
-it shifts
+the integral estimate from that hypercube.
+It uses information about the hypercube&#8217;s standard deviation in one
+iteration to set the number of evaluations for that hypercube
+in the next iteration. In this way it concentrates
+integrand evaluations where the statistical errors are
+largest.</p>
+<p>In the two-Gaussian example above, for example,
+the new <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> shifts
 integration evaluations away from the phantom peaks, into
 the regions occupied by the real peaks since this is where all
-the error comes from.</p>
-<p>This new strategy significantly reduces the statistical errors for integrals
-with large diagonal structures, like the two-Gaussian integral,
-provided <tt class="docutils literal"><span class="pre">neval</span></tt> is large enough to permit a large number M (more
-than 2 or 3) of
-stratifications on each axis. For the two-Gaussain integral, the new adaptive
-strategy (i.e., adaptive stratified sampling) reduces statistical
-errors by more than a factor of 3 over what older versions of
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> give. This is a relatively easy integral;
+the error comes from. This improves <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>&#8216;s ability to estimate
+the contributions from the peaks and
+reduces statistical errors,
+provided <tt class="docutils literal"><span class="pre">neval</span></tt> is large enough to permit a large number  (more
+than 2 or 3) <img class="math" src="_images/math/20694f1b84293018bd5f592d2e569d440e814644.png" alt="M_\mathrm{strat}" style="vertical-align: -4px"/> of
+stratifications on each axis. With <tt class="docutils literal"><span class="pre">neval=4e4</span></tt>,
+statistical errors for the two-Gaussian
+integral are reduced by more than a factor of 3 relative to what older
+versions of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> give. This is a relatively easy integral;
 the difference can be more
 than an order of magnitude for more difficult (and realistic)
 integrals.</p>
@@ -237,7 +312,8 @@ integrals.</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">How <tt class="docutils literal"><span class="pre">vegas</span></tt> Works</a><ul>
-<li><a class="reference internal" href="#the-vegas-grid-importance-sampling">The <tt class="docutils literal"><span class="pre">vegas</span></tt> Grid: Importance Sampling</a></li>
+<li><a class="reference internal" href="#importance-sampling">Importance Sampling</a></li>
+<li><a class="reference internal" href="#the-vegas-grid">The <tt class="docutils literal"><span class="pre">vegas</span></tt> Grid</a></li>
 <li><a class="reference internal" href="#adaptive-stratified-sampling">Adaptive Stratified Sampling</a></li>
 </ul>
 </li>
@@ -245,7 +321,7 @@ integrals.</p>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="tutorial.html"
-                        title="previous chapter">Overview and Tutorial</a></p>
+                        title="previous chapter">Tutorial</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="vegas.html"
                         title="next chapter">The <tt class="docutils literal"><span class="pre">vegas</span></tt> Package</a></p>
@@ -279,7 +355,7 @@ integrals.</p>
           <a href="vegas.html" title="The vegas Package"
              >next</a> |</li>
         <li class="right" >
-          <a href="tutorial.html" title="Overview and Tutorial"
+          <a href="tutorial.html" title="Tutorial"
              >previous</a> |</li>
         <li><a href="index.html">vegas 1.0 documentation</a> &raquo;</li> 
       </ul>

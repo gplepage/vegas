@@ -41,6 +41,10 @@ sdist:			# source distribution
 .PHONY: tests
 
 tests: 
+	@echo 'N.B. Some tests involve random numbers and so fail occasionally'
+	@echo '     (less than 1 in 100 times) due to multi-sigma fluctuations.'
+	@echo '     Run again if any test fails.'
+	@echo ''
 	$(PYTHON) -m unittest discover
 
 run-examples:

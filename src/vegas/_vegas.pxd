@@ -51,7 +51,8 @@ cdef class Integrator:
     cdef readonly object neval_hcube_range
     cdef readonly INT_TYPE nhcube_vec
     cdef readonly INT_TYPE maxinc_axis
-    cdef readonly INT_TYPE nstrat_crit
+    cdef readonly INT_TYPE max_nhcube
+    cdef readonly INT_TYPE max_neval_hcube
     cdef readonly INT_TYPE nitn
     cdef readonly double alpha
     cdef readonly double rtol
