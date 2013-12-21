@@ -55,7 +55,8 @@ def main():
         ))
 
     integ = vegas.Integrator(
-        [[-1., 1.], [0., 1.], [0., 1.], [0., 1.]]
+        [[-1., 1.], [0., 1.], [0., 1.], [0., 1.]],
+        # analyzer=vegas.reporter(),
         )
 
     if SAVE_OUTPUT:

@@ -1,9 +1,16 @@
 Right now:
 
-- get sdist to work properly --- need MANIFEST.in
-  
+- test_vegas.py should test pickling.  
 
 For later:
+
+- If sigf_list gets too large, switch to a mode where sigf 
+  is computed using self.neval_hcube  evaluations per hypercube, whic
+  evaluations are then discarded (to avoid bad feedback, resulting in biases).
+  The extra evaluations would cause at most a factor of 2
+  increase in run time. This would be worth it to gain a factor of 2 or 3
+  smaller error. This is like our original attempt at the new vegas, but is
+  more acceptable as a fall back position for very large values of neval.
 
 - Make multivegas --- integrand is a vector of different integrands.
 

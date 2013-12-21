@@ -645,7 +645,7 @@ cdef class AdaptiveMap:
             place of a direction plots the grid for only one
             direction. Omitting ``axes`` causes a default 
             set of pairings to be used.
-        :param shrink: Displays entire range of each maxinc_axis
+        :param shrink: Display entire range of each axis
             if ``False``; otherwise shrink range to include
             just the nodes being displayed. The default is
             ``False``. 
@@ -773,7 +773,7 @@ cdef class Integrator(object):
         and upper limits of integration in direction ``d``.
 
         ``map`` could also be the integration map from 
-        another :class:Integrator, or the |Integrator|
+        another |Integrator|, or that |Integrator|
         itself. In this case the grid is copied from the 
         existing integrator.
     :type map: array or :class:`vegas.AdaptiveMap` 
@@ -787,13 +787,16 @@ cdef class Integrator(object):
         ``neval`` increases the precision: statistical errors should
         fall at least as fast as ``sqrt(1./neval)`` and often
         fall much faster. The default value is 1000; realistic
-        problems often require 10--100 times more evaluations.
+        problems often require 10--100 times more evaluations
+        than this.
     :type neval: positive int 
     :param alpha: Damping parameter controlling the remapping
         of the integration variables as |vegas| adapts to the
         integrand. Smaller values slow adaptation, which may 
-        be desirable for difficult integrands. The default value 
-        is 0.5.
+        be desirable for difficult integrands. Small ``alpha``\s 
+        are also sometimes useful after the grid has adapted,
+        to minimize fluctuations away from the optimal grid.
+        The default value is 0.5.
     :type alpha: float 
     :param beta: Damping parameter controlling the redistribution
         of integrand evaluations across hypercubes in the 
@@ -805,8 +808,9 @@ cdef class Integrator(object):
     :type beta: float 
     :param nhcube_vec: The number of hypercubes (in |y| space)
         whose integration points are combined into a single
-        vector to be passed to the integrand 
-        when using |vegas| in vectorized mode (``fcntype='vector'``). 
+        vector to be passed to the integrand, in a single batch,
+        when using |vegas| in vector mode (see ``fcntype='vector'``
+        below). 
         The default value is 100. Larger values may be
         lead to faster evaluations, but at the cost of 
         more memory for internal work areas.
@@ -830,7 +834,7 @@ cdef class Integrator(object):
     :param max_nhcube: Maximum number of hypercubes allowed 
         for stratification. The default value is 5e8. 
         Larger values can allow for more adaptation 
-        (if ``neval`` is larger than ``2 * max_nhcube``)
+        (when ``neval`` is larger than ``2 * max_nhcube``),
         but also can result in very large internal work 
         arrays. The maximum setting is a function of 
         the RAM available to the processor used.
@@ -838,7 +842,7 @@ cdef class Integrator(object):
     :param max_neval_hcube: Maximum number of integrand evaluations 
         per hypercube in the stratification. The default value 
         is 1e7. Larger values might allow for more adaptation
-        (if ``neval`` is larger than ``2 * max_neval_hcube``)
+        (when ``neval`` is larger than ``2 * max_neval_hcube``),
         but also can result in very large internal work arrays.
     :type max_neval_hcube: positive int
     :param fcntype: Specifies the default type of integrand.
@@ -1271,9 +1275,6 @@ cdef class Integrator(object):
                     fdv2[i] = fdv[i] ** 2
                     sum_fdv += fdv[i]
                     sum_fdv2 += fdv2[i]
-                # following is pretty slow - 6x Kinoshita's 5-d integrand
-                # sum_fdv = math.fsum(fdv[i_start:i_start + neval_hcube[ihcube]])
-                # sum_fdv2 = math.fsum(fdv2[i_start:i_start + neval_hcube[ihcube]])
                 mean = sum_fdv / neval_hcube[ihcube]
                 sigf2 = abs(sum_fdv2 / neval_hcube[ihcube] - mean * mean)
                 if redistribute:

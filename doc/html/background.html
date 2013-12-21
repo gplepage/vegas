@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="vegas 1.0 documentation" href="index.html" />
-    <link rel="next" title="The vegas Package" href="vegas.html" />
+    <link rel="next" title="vegas Package" href="vegas.html" />
     <link rel="prev" title="Tutorial" href="tutorial.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -46,7 +46,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="vegas.html" title="The vegas Package"
+          <a href="vegas.html" title="vegas Package"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
@@ -95,7 +95,7 @@ whose mean is the exact integral and whose variance is:</p>
 \right)"/></p>
 </div><p>The standard deviation <img class="math" src="_images/math/d6e5c2ebb49ac8cd0853c33f5c873a96e8b58f88.png" alt="\sigma_I" style="vertical-align: -3px"/> is an estimate of the possible
 error in the Monte Carlo estimate.
-A simple variational calculation, keeping</p>
+A simple variational calculation, constrained by</p>
 <div class="math">
 <p><img src="_images/math/bb2bdb184676f4ac2ae87eea473228344996796f.png" alt="\int_a^b \frac{dx}{J(y(x))} = 1,"/></p>
 </div><p>shows that <img class="math" src="_images/math/d6e5c2ebb49ac8cd0853c33f5c873a96e8b58f88.png" alt="\sigma_I" style="vertical-align: -3px"/> is minimized if</p>
@@ -122,7 +122,9 @@ vanish like <img class="math" src="_images/math/0f774ccb90c0752606384066187e8121
 + \frac{1}{M^3} \int_0^1 dy \;
 (J(y)\;f(x(y)) - I)^4"/></p>
 </div><p>This moment would equal <img class="math" src="_images/math/7f594e86ed97e0be6d7158113e8d094958fb51fb.png" alt="3\sigma_I^4" style="vertical-align: -7px"/>, which falls like <img class="math" src="_images/math/df113aa952ec1b9718e5b13c6c3cbcc897baf48d.png" alt="1/M^2" style="vertical-align: -1px"/>,
-if the distribution was Gaussian. These results assume
+if the distribution was Gaussian. The corrections to the Gaussian result
+fall as <img class="math" src="_images/math/fed3a60bbec86edf4662259cfc642787d0c480b2.png" alt="1/M^3" style="vertical-align: -1px"/> and so become negligible at large <img class="math" src="_images/math/5d1e4485dc90c450e8c76826516c1b2ccb8fce16.png" alt="M" style="vertical-align: 0px"/>.
+These results assume
 that <img class="math" src="_images/math/eb1345f0078e4116c3660a4d43c40791a1f18b7f.png" alt="(J(y)\:f(x(y)))^n" style="vertical-align: -3px"/> is integrable for all <img class="math" src="_images/math/174fadd07fd54c9afe288e96558c92e0c1da733a.png" alt="n" style="vertical-align: 0px"/>,
 which need not be the case
 if <img class="math" src="_images/math/c96dd6ec1dc4ad7520fbdc78fcdbec9edd068d0c.png" alt="f(x)" style="vertical-align: -3px"/> has (integrable) singularities.</p>
@@ -155,11 +157,11 @@ The Jacobian for this transformation function is piecewise constant:</p>
 <p>The variance for a Monte Carlo estimate using this transformation
 becomes</p>
 <div class="math">
-<p><img src="_images/math/0635523bec16b9608fe978c38d8c7cf4275c2042.png" alt="\sigma_I^2 = \frac{1}{M}\left(
-\sum_i J_i \int_{x_i}^{x_{i+1}} dx \; f^2x(x) - I^2
+<p><img src="_images/math/932bad78f4c0d9e81e0e4d8cbdde026c903014b6.png" alt="\sigma_I^2 = \frac{1}{M}\left(
+\sum_i J_i \int_{x_i}^{x_{i+1}} dx \; f^2(x) - I^2
 \right)"/></p>
 </div><p>Treating the <img class="math" src="_images/math/8d395d0978e65f55986e368f46b1f784a6ac1dbd.png" alt="J_i" style="vertical-align: -4px"/> as independent variables, with the
-restriction</p>
+constraint</p>
 <div class="math">
 <p><img src="_images/math/4186d9569ba2feb72111da48570d95da56743a88.png" alt="\sum_i \frac{\Delta x_i}{J_i} = \sum_i \Delta y_i = 1,"/></p>
 </div><p>it is trivial to show that the standard deviation is minimized
@@ -193,24 +195,32 @@ the optimal grid for the four-dimensional Gaussian integral
 in the previous section looks like:</p>
 <img alt="_images/eg1a-plt1.png" src="_images/eg1a-plt1.png" style="width: 80%;" />
 <img alt="_images/eg1a-plt2.png" src="_images/eg1a-plt2.png" style="width: 80%;" />
+<p>Every rectangle in these plots receives an equal amount of
+attention from <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>, irrespective of its size. Consequently
+<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> concentrates on regions where the rectangles are small
+and therefore numerous: here
+in the region around <tt class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></tt>, where the
+peak is.</p>
 <p>These plots were obtained by including the line</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">integ</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">plot_grid</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">integ</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">show_grid</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>in the integration code after the integration is finished.
 It causes <tt class="xref py py-mod docutils literal"><span class="pre">matplotlib</span></tt> (if it is installed) to create
-images showing 30 nodes (out of the 99 actually used) of
-the grid in each direction. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> concentraties its resources
-in regions where the <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/>-grid increments are smallest &#8212; here
-in the region around <tt class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></tt>, where the
-peak is.</p>
+images showing the locations of 30 nodes
+of
+the grid in each direction. (The grid uses 99 nodes in all
+on each axis, but that is too many to display at low resolution.)</p>
 </div>
 <div class="section" id="adaptive-stratified-sampling">
 <h2>Adaptive Stratified Sampling<a class="headerlink" href="#adaptive-stratified-sampling" title="Permalink to this headline">¶</a></h2>
 <p>A limitation of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>’s remapping strategy becomes obvious if we look
 at the grid for the following integral, which has two Gaussians
 arranged along the diagonal of the hypercube:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">f2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="k">def</span> <span class="nf">f2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">dx2</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
         <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="mf">3.</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
@@ -227,7 +237,7 @@ arranged along the diagonal of the hypercube:</p>
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f2</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">4e4</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">    Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 
-<span class="n">integ</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">plot_grid</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span>
+<span class="n">integ</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">show_grid</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This code gives the following grid, now showing 70 nodes
@@ -253,12 +263,12 @@ focus on both regions of <tt class="docutils literal"><span class="pre">x[0]</sp
 along the <tt class="docutils literal"><span class="pre">x[1]</span></tt> axis.</p>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses axis-oriented remappings because other
 alternatives are much more complicated and expensive; and <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>’s
-principal adaptive strategy has proven very effective in lots
-of realistic applications.</p>
+principal adaptive strategy has proven very effective in
+many realistic applications.</p>
 <p>An axis-oriented
 strategy will always have difficulty adapting to structures that
-lie along diagonals of the integration hypercube. To address such problems,
-this new version of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> introduces a second adaptive strategy,
+lie along diagonals of the integration volume. To address such problems,
+the new version of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> introduces a second adaptive strategy,
 based upon another standard Monte Carlo technique called &#8220;stratified
 sampling.&#8221; <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> divides the <img class="math" src="_images/math/96ab646de7704969b91c76a214126b45f2b07b25.png" alt="d" style="vertical-align: 0px"/>-dimensional
 <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space volume into hypercubes using
@@ -278,17 +288,17 @@ do Monte Carlo estimates in the separate hypercubes. These versions, however,
 use the same number of integrand evaluations in each hypercube.
 In the new version, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> adjusts the number of evaluations used
 in a hypercube in proportion to the standard deviation of
-the integral estimate from that hypercube.
+the integrand estimates (in <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/> space) from that hypercube.
 It uses information about the hypercube&#8217;s standard deviation in one
 iteration to set the number of evaluations for that hypercube
 in the next iteration. In this way it concentrates
-integrand evaluations where the statistical errors are
+integrand evaluations where the potential statistical errors are
 largest.</p>
 <p>In the two-Gaussian example above, for example,
 the new <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> shifts
 integration evaluations away from the phantom peaks, into
 the regions occupied by the real peaks since this is where all
-the error comes from. This improves <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>&#8216;s ability to estimate
+the error comes from. This improves <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>’s ability to estimate
 the contributions from the peaks and
 reduces statistical errors,
 provided <tt class="docutils literal"><span class="pre">neval</span></tt> is large enough to permit a large number  (more
@@ -324,7 +334,7 @@ integrals.</p>
                         title="previous chapter">Tutorial</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="vegas.html"
-                        title="next chapter">The <tt class="docutils literal"><span class="pre">vegas</span></tt> Package</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">vegas</span></tt> Package</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -352,7 +362,7 @@ integrals.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="vegas.html" title="The vegas Package"
+          <a href="vegas.html" title="vegas Package"
              >next</a> |</li>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"

@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>The vegas Package &mdash; vegas 1.0 documentation</title>
+    <title>vegas Package &mdash; vegas 1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -56,15 +56,15 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="the-vegas-package">
-<h1>The <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> Package<a class="headerlink" href="#the-vegas-package" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="vegas-package">
+<h1><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> Package<a class="headerlink" href="#vegas-package" title="Permalink to this headline">¶</a></h1>
 <span class="target" id="module-vegas"></span><div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>This package provides tools for estimating multidimensional 
 integrals numerically using an enhanced version of 
-the adaptive Monte Carlo 
-<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm (G. P. Lepage, J. Comput. Phys. 27(1978) 192).
-A <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> code generally involves two objects, one representing
+the adaptive Monte Carlo <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm (G. P. Lepage, 
+J. Comput. Phys. 27(1978) 192).</p>
+<p>A <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> code generally involves two objects, one representing
 the integrand and the other representing an integration 
 operator for a particular multidimensional volume. A typical
 code sequence for a D-dimensional integral has the structure:</p>
@@ -93,7 +93,7 @@ and uses this information as its starting point if it is reapplied
 to <tt class="docutils literal"><span class="pre">f(x)</span></tt> or applied to some other function <tt class="docutils literal"><span class="pre">g(x)</span></tt>.
 An integrator&#8217;s state can be archived for future applications
 using Python&#8217;s <tt class="xref py py-mod docutils literal"><span class="pre">pickle</span></tt> module.</p>
-<p>There is an extensive tutorial in the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> documentation.</p>
+<p>See the extensive Tutorial in the first section of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> documentation.</p>
 </div>
 <div class="section" id="integrator-objects">
 <h2>Integrator Objects<a class="headerlink" href="#integrator-objects" title="Permalink to this headline">¶</a></h2>
@@ -130,7 +130,7 @@ an array <tt class="docutils literal"><span class="pre">xlimit[d,</span> <span c
 direction and <tt class="docutils literal"><span class="pre">i=0,1</span></tt> specify the lower
 and upper limits of integration in direction <tt class="docutils literal"><span class="pre">d</span></tt>.</p>
 <p><tt class="docutils literal"><span class="pre">map</span></tt> could also be the integration map from 
-another :class:Integrator, or the <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a>
+another <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a>, or that <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a>
 itself. In this case the grid is copied from the 
 existing integrator.</p>
 </li>
@@ -142,12 +142,15 @@ in each iteration of the <a class="reference internal" href="#module-vegas" titl
 <tt class="docutils literal"><span class="pre">neval</span></tt> increases the precision: statistical errors should
 fall at least as fast as <tt class="docutils literal"><span class="pre">sqrt(1./neval)</span></tt> and often
 fall much faster. The default value is 1000; realistic
-problems often require 10&#8211;100 times more evaluations.</li>
+problems often require 10&#8211;100 times more evaluations
+than this.</li>
 <li><strong>alpha</strong> (<em>float</em>) &#8211; Damping parameter controlling the remapping
 of the integration variables as <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> adapts to the
 integrand. Smaller values slow adaptation, which may 
-be desirable for difficult integrands. The default value 
-is 0.5.</li>
+be desirable for difficult integrands. Small <tt class="docutils literal"><span class="pre">alpha</span></tt>s 
+are also sometimes useful after the grid has adapted,
+to minimize fluctuations away from the optimal grid.
+The default value is 0.5.</li>
 <li><strong>beta</strong> (<em>float</em>) &#8211; Damping parameter controlling the redistribution
 of integrand evaluations across hypercubes in the 
 stratified sampling of the integrand (over transformed
@@ -157,8 +160,9 @@ setting <tt class="docutils literal"><span class="pre">beta=0</span></tt> preven
 evaluations. The default value is 0.75.</li>
 <li><strong>nhcube_vec</strong> (<em>positive int</em>) &#8211; The number of hypercubes (in y space)
 whose integration points are combined into a single
-vector to be passed to the integrand 
-when using <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> in vectorized mode (<tt class="docutils literal"><span class="pre">fcntype='vector'</span></tt>). 
+vector to be passed to the integrand, in a single batch,
+when using <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> in vector mode (see <tt class="docutils literal"><span class="pre">fcntype='vector'</span></tt>
+below). 
 The default value is 100. Larger values may be
 lead to faster evaluations, but at the cost of 
 more memory for internal work areas.</li>
@@ -180,14 +184,14 @@ useful only in one or two dimensions.</p>
 <li><strong>max_nhcube</strong> (<em>positive int</em>) &#8211; Maximum number of hypercubes allowed 
 for stratification. The default value is 5e8. 
 Larger values can allow for more adaptation 
-(if <tt class="docutils literal"><span class="pre">neval</span></tt> is larger than <tt class="docutils literal"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">max_nhcube</span></tt>)
+(when <tt class="docutils literal"><span class="pre">neval</span></tt> is larger than <tt class="docutils literal"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">max_nhcube</span></tt>),
 but also can result in very large internal work 
 arrays. The maximum setting is a function of 
 the RAM available to the processor used.</li>
 <li><strong>max_neval_hcube</strong> (<em>positive int</em>) &#8211; Maximum number of integrand evaluations 
 per hypercube in the stratification. The default value 
 is 1e7. Larger values might allow for more adaptation
-(if <tt class="docutils literal"><span class="pre">neval</span></tt> is larger than <tt class="docutils literal"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">max_neval_hcube</span></tt>)
+(when <tt class="docutils literal"><span class="pre">neval</span></tt> is larger than <tt class="docutils literal"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">max_neval_hcube</span></tt>),
 but also can result in very large internal work arrays.</li>
 <li><strong>fcntype</strong> &#8211; <p>Specifies the default type of integrand.</p>
 <p><tt class="docutils literal"><span class="pre">fcntype='scalar'</span></tt> imples that the integrand
@@ -325,7 +329,7 @@ using the following code:</p>
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
    <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
 
-<span class="n">m</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">ninc</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">AdaptiveMap</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">ninc</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
 <span class="n">ny</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="p">(</span><span class="n">ny</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>  <span class="c"># 1000 random y&#39;s</span>
@@ -360,24 +364,24 @@ is clear from the output:</p>
     grid[ 1] = [ 0.   0.2  0.4  0.6  0.8  1. ]
 
 iteration 0:
-    grid[ 0] = [ 0.     0.404  0.616  0.766  0.887  1.   ]
-    grid[ 1] = [ 0.     0.509  0.695  0.823  0.912  1.   ]
+    grid[ 0] = [ 0.     0.411  0.618  0.772  0.89   1.   ]
+    grid[ 1] = [ 0.     0.508  0.694  0.822  0.911  1.   ]
 
 iteration 1:
-    grid[ 0] = [ 0.     0.418  0.62   0.768  0.89   1.   ]
-    grid[ 1] = [ 0.     0.546  0.723  0.839  0.923  1.   ]
+    grid[ 0] = [ 0.     0.408  0.611  0.76   0.887  1.   ]
+    grid[ 1] = [ 0.     0.542  0.718  0.835  0.922  1.   ]
 
 iteration 2:
-    grid[ 0] = [ 0.     0.425  0.62   0.768  0.891  1.   ]
-    grid[ 1] = [ 0.     0.554  0.726  0.84   0.924  1.   ]
+    grid[ 0] = [ 0.     0.411  0.612  0.76   0.887  1.   ]
+    grid[ 1] = [ 0.     0.551  0.721  0.835  0.924  1.   ]
 
 iteration 3:
-    grid[ 0] = [ 0.     0.427  0.62   0.768  0.891  1.   ]
-    grid[ 1] = [ 0.     0.557  0.727  0.84   0.925  1.   ]
+    grid[ 0] = [ 0.     0.411  0.612  0.76   0.887  1.   ]
+    grid[ 1] = [ 0.     0.554  0.721  0.836  0.924  1.   ]
 
 iteration 4:
-    grid[ 0] = [ 0.     0.429  0.62   0.768  0.891  1.   ]
-    grid[ 1] = [ 0.     0.558  0.727  0.84   0.925  1.   ]
+    grid[ 0] = [ 0.     0.411  0.612  0.76   0.887  1.   ]
+    grid[ 1] = [ 0.     0.555  0.722  0.836  0.925  1.   ]
 
 </pre>
 </div>
@@ -386,7 +390,7 @@ values <tt class="docutils literal"><span class="pre">x[0]</span></tt>, varying 
 the increments shrink more quickly varying like <tt class="docutils literal"><span class="pre">1/x[1]**2</span></tt>.</p>
 <p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> samples the integrand in order to estimate the integral.
 It uses those same samples to train its <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><tt class="xref py py-class docutils literal"><span class="pre">vegas.AdaptiveMap</span></tt></a> in this
-fashion, for use in later iterations of the algorithm.</p>
+fashion, for use in subsequent iterations of the algorithm.</p>
 <dl class="class">
 <dt id="vegas.AdaptiveMap">
 <em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">AdaptiveMap</tt><a class="headerlink" href="#vegas.AdaptiveMap" title="Permalink to this definition">¶</a></dt>
@@ -619,7 +623,7 @@ omitted (or negative).</li>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>ngrid</strong> (<em>int</em>) &#8211; The number of grid nodes in each 
 direction to include in the plot. The default is 40.</li>
-<li><strong>shrink</strong> &#8211; Displays entire range of each maxinc_axis
+<li><strong>shrink</strong> &#8211; Display entire range of each axis
 if <tt class="docutils literal"><span class="pre">False</span></tt>; otherwise shrink range to include
 just the nodes being displayed. The default is
 <tt class="docutils literal"><span class="pre">False</span></tt>.</li>
@@ -742,7 +746,7 @@ gives the fastest results.</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">The <tt class="docutils literal"><span class="pre">vegas</span></tt> Package</a><ul>
+<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">vegas</span></tt> Package</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#integrator-objects">Integrator Objects</a></li>
 <li><a class="reference internal" href="#adaptivemap-objects">AdaptiveMap Objects</a></li>

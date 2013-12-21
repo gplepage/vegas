@@ -76,24 +76,14 @@ applied to the integration variables is optimized
 over several iterations of the algorithm: information about the integrand that
 is collected during one iteration is used to  improve the transformation used
 in the next iteration.</p>
-<p>Monte Carlo integration makes few assumptions about the integrand  beyond
-square-integrability &#8212; it needn&#8217;t be analytic nor even continuous. This
+<p>Monte Carlo integration makes few assumptions about the
+integrand &#8212; it needn&#8217;t be analytic nor even continuous. This
 makes Monte Carlo integation unusually robust. It also makes it well suited
 for adaptive integration. Adaptive strategies are essential for
 multidimensional integration, especially in high dimensions, because
-multidimensional space is large, with  lots of corners. For example, 90% of
-the 1-dimensional integral</p>
-<div class="math">
-<p><img src="_images/math/baa0d706833f8bc3e655ffbc38aa12f9e721ca3b.png" alt="\int_0^1 dx\,\mathrm{e}^{- 100 (x-0.5)^2}"/></p>
-</div><p>comes from about 23% of the integration volume. In 20 dimensions,
-90% of the analogous integral,</p>
-<div class="math">
-<p><img src="_images/math/626c7859c29498b03247c48f26b596a7fa9d7718.png" alt="\int_0^1dx_1\cdots\int_0^1 dx_{20}
-\,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2},"/></p>
-</div><p>comes from only 10<sup>-8</sup> of the total integration volume. Non-adaptive
-algorithms would have a very hard time noticing that there was a peak at all.
-<em>vegas</em> has no trouble with this integral.</p>
+multidimensional space is large, with  lots of corners.</p>
 <p>Monte Carlo integration also provides efficient and reliable methods for
+estimating the
 accuracy of its results. In particular, each Monte Carlo
 estimate of an integral is a random number from a distribution
 whose mean is the correct value of the integral. This distribution is
@@ -128,7 +118,7 @@ The following code shows how this can be done:</p>
     <span class="n">dx2</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
         <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-<span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dx2</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1013.2118364296088</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dx2</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1013.2118364296088</span>
 
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([[</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
 
@@ -176,12 +166,10 @@ estimates from the first two iterations are not accurate at
 all, with errors equal to 30&#8211;190% of the final result.
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> initially has no information about the integrand
 and so does a relatively poor job of estimating the integral.
-The integrand has a large narrow peak in the center of the
-integration volume. Most of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>&#8216;s integrand samples
-miss the peak in early iterations, but it
-uses information from the samples in one iteration
+It uses information from the samples in one iteration, however,
 to remap the integration variables for subsequent iterations,
-concentrating samples where the function is largest.
+concentrating samples where the function is largest and reducing
+errors.
 As a result, the per iteration error
 is reduced to 3.4% by the fifth iteration, and below 2% by
 the end &#8212; an improvement by almost two orders of
@@ -189,18 +177,25 @@ magnitude from the start.</p>
 <p><strong>Weighted Average:</strong> The final result, 1.0015 ± 0.0091,
 is obtained from a weighted
 average of the separate results from each iteration.
-Provided the number of integrand evaluations per
-iteration (<tt class="docutils literal"><span class="pre">neval</span></tt>) is large enough, the results from
-individual iterations are random numbers whose distribution is
-Gaussian, with a mean equal to the integral&#8217;s value.
+The individual estimates are statistical: each
+is a random number drawn from a distribution whose mean
+equals the correct value of the integral, and the errors
+quoted are estimates of the standard deviations of those
+distributions. The distributions are Gaussian provided
+the number of integrand evaluations per iteration (<tt class="docutils literal"><span class="pre">neval</span></tt>)
+is sufficiently large, in which case the standard deviation
+is a reliable estimate of the error.
 The weighted average <img class="math" src="_images/math/8c35f36ea19ee4183ef9b447557332a8480f9113.png" alt="\overline I" style="vertical-align: 0px"/>  minimizes</p>
 <div class="math">
 <p><img src="_images/math/cd2045ccbc3e2a173a816e999a9664c8a7ccf66f.png" alt="\chi^2 \,\equiv\, \sum_i \frac{(I_i - \overline I)^2}{\sigma_{i}^2}"/></p>
 </div><p>where <img class="math" src="_images/math/b8fcc959b921339523aea3a0fd790a34be9c6965.png" alt="I_i \pm \sigma_{i}" style="vertical-align: -4px"/> are the estimates from
 individual iterations. If the <img class="math" src="_images/math/841fb80920b214cd9f8ccb4af360b4891402c0e3.png" alt="I_i" style="vertical-align: -4px"/> are Gaussian,
 <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> should be of order the number of degrees of
-freedom, here the number of iterations minus 1.
-The error estimates are not reliable if <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> is
+freedom (plus or minus the square root of that number);
+here the number of degrees of freedom is the number of
+iterations minus 1.</p>
+<p>The distributions are likely non-Gaussian, and error estimates
+unreliable, if <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> is
 much larger than the number of iterations. This criterion is quantified
 by the <em>Q</em> or <em>p-value</em> of the <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/>,
 which is the probability that a
@@ -219,13 +214,14 @@ attributes:</p>
 <div><p><tt class="docutils literal"><span class="pre">result.mean</span></tt> &#8212; weighted average of all estimates of the integral;</p>
 <p><tt class="docutils literal"><span class="pre">result.sdev</span></tt> &#8212; standard deviation of the weighted average;</p>
 <p><tt class="docutils literal"><span class="pre">result.chi2</span></tt> &#8212; <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> of the weighted average;</p>
-<p><tt class="docutils literal"><span class="pre">result.dof</span></tt> &#8212; nuumber of degrees of freedom;</p>
+<p><tt class="docutils literal"><span class="pre">result.dof</span></tt> &#8212; number of degrees of freedom;</p>
 <p><tt class="docutils literal"><span class="pre">result.Q</span></tt> &#8212; <em>Q</em> or <em>p-value</em> of the weighted average&#8217;s <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/>;</p>
 <p><tt class="docutils literal"><span class="pre">result.itn_results</span></tt> &#8212; list of the integral estimates
 from each iteration.</p>
 </div></blockquote>
 <p>In this example the final <em>Q</em> is 0.42, indicating that the
-<img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> for this average is not particularly unlikely.</p>
+<img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> for this average is not particularly unlikely and
+thus the error estimate is most likely reliable.</p>
 <p><strong>Precision:</strong> The precision of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> estimates is
 determined by <tt class="docutils literal"><span class="pre">nitn</span></tt>, the number of iterations
 of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm,
@@ -239,7 +235,7 @@ varies from iteration to iteration,
 here between 486 and 959. Typically <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> needs more
 integration points in early iterations, before it has fully
 adapted to the integrand.</p>
-<p>We can increase precision by increasing either of <tt class="docutils literal"><span class="pre">nitn</span></tt> or <tt class="docutils literal"><span class="pre">neval</span></tt>,
+<p>We can increase precision by increasing either <tt class="docutils literal"><span class="pre">nitn</span></tt> or <tt class="docutils literal"><span class="pre">neval</span></tt>,
 but it is
 generally far better to increase <tt class="docutils literal"><span class="pre">neval</span></tt>. For example,
 adding the following lines to the code above</p>
@@ -263,7 +259,7 @@ point where vegas has fully adapted. You want some number of
 iterations so that you can verify Gaussian behavior by
 checking the <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> and <em>Q</em>, but not too many.</p>
 <p>It is also generally useful to compare two or more
-results that use values of <tt class="docutils literal"><span class="pre">neval</span></tt> that differ by a
+results from values of <tt class="docutils literal"><span class="pre">neval</span></tt> that differ by a
 significant factor (4&#8211;10, say). These should agree within
 errors. If they do not, it could be due to non-Gaussian
 artifacts caused by a small <tt class="docutils literal"><span class="pre">neval</span></tt>. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>
@@ -275,7 +271,7 @@ effects. The systematic error vanishes like
 the statistical error as <tt class="docutils literal"><span class="pre">neval</span></tt> increases.
 The systematic error can bias the Monte Carlo estimate, however,
 if <tt class="docutils literal"><span class="pre">neval</span></tt> is insufficiently large. This usually
-results in a large <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/>, but a
+results in a large <img class="math" src="_images/math/a61c1e51680e27d35d05bebed87d474972fc70bd.png" alt="\chi^2" style="vertical-align: -3px"/> (and small <em>Q</em>), but a
 more reliable check is to compare
 results that use signficantly different values of <tt class="docutils literal"><span class="pre">neval</span></tt>.
 The systematic errors due to non-Gaussian behavior are
@@ -299,7 +295,7 @@ is negligible compared to the statistical error unless
 aren&#8217;t a problem with <tt class="docutils literal"><span class="pre">nitn=10</span></tt>.</p>
 <p><strong>Early Iterations:</strong> Integral estimates from early iterations,
 before <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> has adapted, can be quite
-crude. With very peaky integrands, these can be far from
+crude. With very peaky integrands, these are often far from
 the correct answer with highly unreliable error estimates. For
 example, the integral above becomes more
 difficult if we double the length of each side of the
@@ -330,7 +326,7 @@ result = 0.2777(70)    Q = 0.00
 giving estimates that are completely
 wrong (by 76 and 89 standard deviations!).
 Some of its samples hit the peak&#8217;s shoulders, so <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> is
-eventually able to find it (by iterations 5&#8211;6), but
+eventually able to find the peak (by iterations 5&#8211;6), but
 the integrand estimates are wildly non-Gaussian before that
 point. This results in a non-sensical final result, as
 indicated by the <tt class="docutils literal"><span class="pre">Q</span> <span class="pre">=</span> <span class="pre">0.00</span></tt>.</p>
@@ -410,22 +406,25 @@ non-rectangular shape. For example, we can replace integrand <tt class="docutils
 above
 by the same Gaussian, but restricted to a 4-sphere of radius 0.2,
 centered on the Gaussian:</p>
-<div class="highlight-python"><pre>def f_sph(x):
-    dx2 = 0
-    for d in range(4):
-        dx2 += (x[d] - 0.5) ** 2
-    if dx2 &lt; 0.2 ** 2:
-        return math.exp(-dx2 * 100.) * 1115.3539360527281318
-    else:
-        return 0.0
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">math</span>
 
-integ = vegas.Integrator([[-1., 1.], [0., 1.], [0., 1.], [0., 1.]])
+<span class="k">def</span> <span class="nf">f_sph</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">dx2</span> <span class="o">&lt;</span> <span class="mf">0.2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dx2</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1115.3539360527281318</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
 
-integ(f_sph, nitn=10, neval=1000)           # adapt the grid
-result = integ(f_sph, nitn=10, neval=1000)  # estimate the integral
-print(result.summary())
-print('result = %s    Q = %.2f' % (result, result.Q))
-    integ</pre>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([[</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+
+<span class="n">integ</span><span class="p">(</span><span class="n">f_sph</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>           <span class="c"># adapt the grid</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f_sph</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>  <span class="c"># estimate the integral</span>
+<span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">    Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+</pre></div>
 </div>
 <p>The normalization is adjusted to again make the
 exact integral equal 1. Integrating as before gives:</p>
@@ -481,18 +480,20 @@ results in this case.</p>
 <p>It is a good idea to make the actual integration volume as large a
 fraction as possible of the total volume used by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>, so
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> doesn&#8217;t spend lots of effort on regions where the integrand
-is exactly 0. Also, it can be challenging to find the region of
+is exactly 0. Also, it can be challenging for <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>
+to find the region of
 non-zero integrand in high dimensions: integrating <tt class="docutils literal"><span class="pre">f_sph(x)</span></tt>
 in 20 dimensions instead of 4, for example,
 would require <tt class="docutils literal"><span class="pre">neval=1e16</span></tt>
 integrand evaluations per iteration to have any chance of
-finding the region of non-zero integrand.</p>
-<p>Note, finally, that integration to infinity is also possible
-by mapping the relevant variable into a different variable
-of finite range &#8212; for example, by
-changing an integral over <img class="math" src="_images/math/e3c6fcc1a4b75f1f88beaa73c12a7bdcd4bd098b.png" alt="x\equiv\tan(\theta)" style="vertical-align: -3px"/>
-from 0 to infinity into one over <img class="math" src="_images/math/52e8ed7a3ba22130ad3984eb2cd413406475a689.png" alt="\theta" style="vertical-align: 0px"/> from
-0 to <img class="math" src="_images/math/039bf945c704ff98e6f81626bbad32550cc37193.png" alt="\pi/2" style="vertical-align: -1px"/>.</p>
+finding the region of non-zero integrand, because the volume of
+the 20-dimensional sphere is a tiny fraction of the total
+integration volume.</p>
+<p>Note, finally, that integration to infinity is also possible:
+map the relevant variable into a different variable
+of finite range. For example,  an integral over <img class="math" src="_images/math/e3c6fcc1a4b75f1f88beaa73c12a7bdcd4bd098b.png" alt="x\equiv\tan(\theta)" style="vertical-align: -3px"/>
+from 0 to infinity is easily reexpressed as
+an integral over <img class="math" src="_images/math/52e8ed7a3ba22130ad3984eb2cd413406475a689.png" alt="\theta" style="vertical-align: 0px"/> from 0 to <img class="math" src="_images/math/039bf945c704ff98e6f81626bbad32550cc37193.png" alt="\pi/2" style="vertical-align: -1px"/>.</p>
 </div></blockquote>
 </div>
 <div class="section" id="faster-integrands">
@@ -502,12 +503,13 @@ comes mostly from
 the cost of evaluating the integrand at the Monte Carlo sample
 points. Integrands written in pure Python are probably fast
 enough for problems where <tt class="docutils literal"><span class="pre">neval=1e3</span></tt> or <tt class="docutils literal"><span class="pre">neval=1e4</span></tt> gives
-enough precision. Realistic problems, however, can require
+enough precision. Some problems, however, require
 hundreds of thousands or millions of function evaluations, or more.</p>
 <p>The cost of evaluating the integrand can be reduced significantly
 by vectorizing it, if that is possible. For example,
 replacing</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">math</span>
 
 <span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
 <span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span>
@@ -530,26 +532,27 @@ replacing</p>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
 <span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span>
 
 <span class="k">class</span> <span class="nc">f_vector</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">VecIntegrand</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span>
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">ff</span><span class="p">,</span> <span class="n">nx</span><span class="p">):</span>
-        <span class="c"># convert integration points xx[i, d] to numpy array</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">xx</span><span class="p">)[:</span><span class="n">nx</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">nx</span><span class="p">):</span>
+        <span class="c"># convert integration points x[i, d] to numpy array</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)[:</span><span class="n">nx</span><span class="p">,</span> <span class="p">:]</span>
 
         <span class="c"># convert array for answer into a numpy array</span>
-        <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ff</span><span class="p">)[:</span><span class="n">nx</span><span class="p">]</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f</span><span class="p">)[:</span><span class="n">nx</span><span class="p">]</span>
 
         <span class="c"># evaluate integrand for all values of i simultaneously</span>
         <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">):</span>
             <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
 
-        <span class="c"># copy answer into f (ie, don&#39;t do f = np.exp(...))</span>
-        <span class="n">f</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="n">norm</span>
+        <span class="c"># copy answer into f (ie, don&#39;t use f = np.exp(...))</span>
+        <span class="n">f</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span>
 
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_vec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
@@ -563,9 +566,9 @@ replacing</p>
 An instance of class <tt class="docutils literal"><span class="pre">f_vector</span></tt> behaves like a function of
 three variables:</p>
 <blockquote>
-<div><p><tt class="docutils literal"><span class="pre">xx[i,</span> <span class="pre">d]</span></tt> &#8212; integration points for each <tt class="docutils literal"><span class="pre">i=0...nx-1</span></tt>
+<div><p><tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> &#8212; integration points for each <tt class="docutils literal"><span class="pre">i=0...nx-1</span></tt>
 (<tt class="docutils literal"><span class="pre">d=0...</span></tt> labels the direction);</p>
-<p><tt class="docutils literal"><span class="pre">ff[i]</span></tt> &#8212; buffer to hold the integrand values
+<p><tt class="docutils literal"><span class="pre">f[i]</span></tt> &#8212; buffer to hold the integrand values
 for each integration point;</p>
 <p><tt class="docutils literal"><span class="pre">nx</span></tt> &#8212; number of integration points.</p>
 </div></blockquote>
@@ -609,6 +612,8 @@ cdef class f_cython(vegas.VecIntegrand):
 <span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">from</span> <span class="nn">cython_integrand</span> <span class="kn">import</span> <span class="n">f_cython</span>
 
+<span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
+
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_vec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
 <span class="n">f</span> <span class="o">=</span> <span class="n">f_cython</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
@@ -622,15 +627,20 @@ module <tt class="docutils literal"><span class="pre">cython_integrand.pyx</span
 it is called. The compiled code is stored and used in subsequent
 calls, so compilation occurs only once.</p>
 <p>Cython code can also link easily to compiled C or Fortran code,
-so integrands written in these languages can also be used (and
+so integrands written in these languages can be used as well (and
 would be faster than pure Python).</p>
 </div>
 <div class="section" id="implementation-notes">
 <h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h2>
 <p>This implementation relies upon Cython for its speed and
 numpy for vector processing. It also uses matplotlib
-for graphics and lsqfit for handling Gaussian random
-variables. matplotlib and lsqfit are optional.</p>
+for graphics, but this is optional. It also uses
+lsqfit for handling Gaussian random variables.  lsqfit is optional
+as well, but it is desirable because it allows for much
+more flexible manipulation of the statistical results from
+<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>: for example, one can do arithmetic with Gaussian
+variables, or apply standard functions (<tt class="docutils literal"><span class="pre">sqrt</span></tt>, <tt class="docutils literal"><span class="pre">log</span></tt> ...) to
+them, if lsqfit is available.</p>
 </div>
 </div>
 

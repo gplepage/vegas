@@ -36,7 +36,7 @@ to ``f(x)`` or applied to some other function ``g(x)``.
 An integrator's state can be archived for future applications
 using Python's :mod:`pickle` module.
 
-There is an extensive tutorial in the |vegas| documentation.
+See the extensive Tutorial in the first section of the |vegas| documentation.
 """
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.

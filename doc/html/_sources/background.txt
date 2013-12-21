@@ -66,7 +66,7 @@ whose mean is the exact integral and whose variance is:
 
 The standard deviation |sigmaI| is an estimate of the possible
 error in the Monte Carlo estimate.
-A simple variational calculation, keeping
+A simple variational calculation, constrained by
 
 .. math::
 
@@ -106,7 +106,9 @@ vanish like :math:`1/M`. For example, it is easy to show that
 	(J(y)\;f(x(y)) - I)^4
 
 This moment would equal :math:`3\sigma_I^4`, which falls like :math:`1/M^2`,
-if the distribution was Gaussian. These results assume 
+if the distribution was Gaussian. The corrections to the Gaussian result 
+fall as :math:`1/M^3` and so become negligible at large :math:`M`.
+These results assume 
 that :math:`(J(y)\:f(x(y)))^n` is integrable for all :math:`n`, 
 which need not be the case
 if :math:`f(x)` has (integrable) singularities.
@@ -146,11 +148,11 @@ becomes
 .. math:: 
 
 	\sigma_I^2 = \frac{1}{M}\left(
-	\sum_i J_i \int_{x_i}^{x_{i+1}} dx \; f^2x(x) - I^2
+	\sum_i J_i \int_{x_i}^{x_{i+1}} dx \; f^2(x) - I^2
 	\right)
 
 Treating the :math:`J_i` as independent variables, with the 
-restriction 
+constraint 
 
 .. math:: 
 
@@ -200,18 +202,23 @@ in the previous section looks like:
 .. image:: eg1a-plt2.*
    :width: 80%
 
-These plots were obtained by including the line ::
-
-    integ.map.plot_grid(30)
-
-in the integration code after the integration is finished.
-It causes :mod:`matplotlib` (if it is installed) to create 
-images showing 30 nodes (out of the 99 actually used) of 
-the grid in each direction. |vegas| concentraties its resources 
-in regions where the |x|-grid increments are smallest --- here
+Every rectangle in these plots receives an equal amount of 
+attention from |vegas|, irrespective of its size. Consequently
+|vegas| concentrates on regions where the rectangles are small
+and therefore numerous: here
 in the region around ``x = [0.5, 0.5, 0.5, 0.5]``, where the
 peak is.
 
+These plots were obtained by including the line ::
+
+    integ.map.show_grid(30)
+
+in the integration code after the integration is finished.
+It causes :mod:`matplotlib` (if it is installed) to create 
+images showing the locations of 30 nodes 
+of 
+the grid in each direction. (The grid uses 99 nodes in all
+on each axis, but that is too many to display at low resolution.) 
 
 Adaptive Stratified Sampling
 -------------------------------
@@ -219,6 +226,9 @@ Adaptive Stratified Sampling
 A limitation of |vegas|’s remapping strategy becomes obvious if we look
 at the grid for the following integral, which has two Gaussians
 arranged along the diagonal of the hypercube::
+
+    import vegas
+    import math
 
     def f2(x): 
         dx2 = 0 
@@ -237,7 +247,7 @@ arranged along the diagonal of the hypercube::
     result = integ(f2, nitn=30, neval=4e4)
     print('result = %s    Q = %.2f' % (result, result.Q))
 
-    integ.map.plot_grid(70)
+    integ.map.show_grid(70)
 
 This code gives the following grid, now showing 70 nodes
 in each direction:
@@ -266,13 +276,13 @@ along the ``x[1]`` axis.
 
 |vegas| uses axis-oriented remappings because other 
 alternatives are much more complicated and expensive; and |vegas|’s
-principal adaptive strategy has proven very effective in lots 
-of realistic applications. 
+principal adaptive strategy has proven very effective in 
+many realistic applications. 
 
 An axis-oriented
 strategy will always have difficulty adapting to structures that
-lie along diagonals of the integration hypercube. To address such problems,
-this new version of |vegas| introduces a second adaptive strategy,
+lie along diagonals of the integration volume. To address such problems,
+the new version of |vegas| introduces a second adaptive strategy,
 based upon another standard Monte Carlo technique called "stratified
 sampling." |vegas| divides the |d|-dimensional 
 |y|-space volume into hypercubes using
@@ -293,18 +303,18 @@ do Monte Carlo estimates in the separate hypercubes. These versions, however,
 use the same number of integrand evaluations in each hypercube. 
 In the new version, |vegas| adjusts the number of evaluations used 
 in a hypercube in proportion to the standard deviation of 
-the integral estimate from that hypercube. 
+the integrand estimates (in |y| space) from that hypercube. 
 It uses information about the hypercube's standard deviation in one
 iteration to set the number of evaluations for that hypercube 
 in the next iteration. In this way it concentrates
-integrand evaluations where the statistical errors are 
+integrand evaluations where the potential statistical errors are 
 largest. 
 
 In the two-Gaussian example above, for example, 
 the new |vegas| shifts
 integration evaluations away from the phantom peaks, into
 the regions occupied by the real peaks since this is where all
-the error comes from. This improves |vegas|'s ability to estimate
+the error comes from. This improves |vegas|’s ability to estimate
 the contributions from the peaks and  
 reduces statistical errors,
 provided ``neval`` is large enough to permit a large number  (more 

@@ -1,4 +1,4 @@
-The :mod:`vegas` Package
+:mod:`vegas` Package
 ==================================================================
 
 .. |Integrator| replace:: :class:`vegas.Integrator`
@@ -79,7 +79,7 @@ using the following code::
    def f(x):
       return x[0] * x[1] ** 2
 
-   m = vegas.Integrator([[0, 1], [0, 1]], ninc=5)
+   m = vegas.AdaptiveMap([[0, 1], [0, 1]], ninc=5)
 
    ny = 1000
    y = np.random.uniform(0., 1., (ny, 2))  # 1000 random y's
@@ -117,7 +117,7 @@ the increments shrink more quickly varying like ``1/x[1]**2``.
 
 |vegas| samples the integrand in order to estimate the integral.
 It uses those same samples to train its |AdaptiveMap| in this 
-fashion, for use in later iterations of the algorithm.
+fashion, for use in subsequent iterations of the algorithm.
 
 .. autoclass:: vegas.AdaptiveMap
 

@@ -27,31 +27,15 @@ over several iterations of the algorithm: information about the integrand that
 is collected during one iteration is used to  improve the transformation used
 in the next iteration.
 
-Monte Carlo integration makes few assumptions about the integrand  beyond
-square-integrability --- it needn't be analytic nor even continuous. This
+Monte Carlo integration makes few assumptions about the 
+integrand --- it needn't be analytic nor even continuous. This
 makes Monte Carlo integation unusually robust. It also makes it well suited
 for adaptive integration. Adaptive strategies are essential for
 multidimensional integration, especially in high dimensions, because
-multidimensional space is large, with  lots of corners. For example, 90% of
-the 1-dimensional integral 
-
-.. math::
-
-    \int_0^1 dx\,\mathrm{e}^{- 100 (x-0.5)^2}
-
-comes from about 23% of the integration volume. In 20 dimensions,
-90% of the analogous integral, 
-
-.. math::
-
-    \int_0^1dx_1\cdots\int_0^1 dx_{20} 
-    \,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2},
-
-comes from only 10\ :sup:`-8` of the total integration volume. Non-adaptive
-algorithms would have a very hard time noticing that there was a peak at all.
-*vegas* has no trouble with this integral.
+multidimensional space is large, with  lots of corners. 
 
 Monte Carlo integration also provides efficient and reliable methods for
+estimating the 
 accuracy of its results. In particular, each Monte Carlo
 estimate of an integral is a random number from a distribution
 whose mean is the correct value of the integral. This distribution is
@@ -91,7 +75,7 @@ The following code shows how this can be done::
         dx2 = 0 
         for d in range(4): 
             dx2 += (x[d] - 0.5) ** 2
-    return math.exp(-dx2 * 100.) * 1013.2118364296088
+        return math.exp(-dx2 * 100.) * 1013.2118364296088
 
     integ = vegas.Integrator([[-1., 1.], [0., 1.], [0., 1.], [0., 1.]])
 
@@ -126,12 +110,10 @@ There are several things worth noting here:
     all, with errors equal to 30--190% of the final result. 
     |vegas| initially has no information about the integrand
     and so does a relatively poor job of estimating the integral.
-    The integrand has a large narrow peak in the center of the 
-    integration volume. Most of |vegas|'s integrand samples 
-    miss the peak in early iterations, but it
-    uses information from the samples in one iteration
+    It uses information from the samples in one iteration, however,
     to remap the integration variables for subsequent iterations,
-    concentrating samples where the function is largest. 
+    concentrating samples where the function is largest and reducing 
+    errors. 
     As a result, the per iteration error
     is reduced to 3.4% by the fifth iteration, and below 2% by
     the end --- an improvement by almost two orders of 
@@ -140,10 +122,14 @@ There are several things worth noting here:
     **Weighted Average:** The final result, 1.0015 ± 0.0091, 
     is obtained from a weighted
     average of the separate results from each iteration. 
-    Provided the number of integrand evaluations per 
-    iteration (``neval``) is large enough, the results from
-    individual iterations are random numbers whose distribution is 
-    Gaussian, with a mean equal to the integral's value. 
+    The individual estimates are statistical: each
+    is a random number drawn from a distribution whose mean
+    equals the correct value of the integral, and the errors 
+    quoted are estimates of the standard deviations of those
+    distributions. The distributions are Gaussian provided 
+    the number of integrand evaluations per iteration (``neval``)
+    is sufficiently large, in which case the standard deviation
+    is a reliable estimate of the error.
     The weighted average :math:`\overline I`  minimizes
 
     .. math::
@@ -153,8 +139,12 @@ There are several things worth noting here:
     where :math:`I_i \pm \sigma_{i}` are the estimates from 
     individual iterations. If the :math:`I_i` are Gaussian, 
     :math:`\chi^2` should be of order the number of degrees of 
-    freedom, here the number of iterations minus 1. 
-    The error estimates are not reliable if :math:`\chi^2` is
+    freedom (plus or minus the square root of that number);
+    here the number of degrees of freedom is the number of 
+    iterations minus 1. 
+
+    The distributions are likely non-Gaussian, and error estimates
+    unreliable, if |chi2| is
     much larger than the number of iterations. This criterion is quantified
     by the *Q* or *p-value* of the :math:`\chi^2`,
     which is the probability that a
@@ -178,7 +168,7 @@ There are several things worth noting here:
       
       ``result.chi2`` --- :math:`\chi^2` of the weighted average;
 
-      ``result.dof`` --- nuumber of degrees of freedom;
+      ``result.dof`` --- number of degrees of freedom;
 
       ``result.Q`` --- *Q* or *p-value* of the weighted average's |chi2|;
 
@@ -186,7 +176,8 @@ There are several things worth noting here:
       from each iteration.
 
     In this example the final *Q* is 0.42, indicating that the
-    :math:`\chi^2` for this average is not particularly unlikely.
+    :math:`\chi^2` for this average is not particularly unlikely and
+    thus the error estimate is most likely reliable.
 
     **Precision:** The precision of |vegas| estimates is
     determined by ``nitn``, the number of iterations 
@@ -202,7 +193,7 @@ There are several things worth noting here:
     integration points in early iterations, before it has fully
     adapted to the integrand.
 
-    We can increase precision by increasing either of ``nitn`` or ``neval``,
+    We can increase precision by increasing either ``nitn`` or ``neval``,
     but it is 
     generally far better to increase ``neval``. For example,
     adding the following lines to the code above ::
@@ -226,7 +217,7 @@ There are several things worth noting here:
     checking the |chi2| and *Q*, but not too many. 
 
     It is also generally useful to compare two or more 
-    results that use values of ``neval`` that differ by a
+    results from values of ``neval`` that differ by a
     significant factor (4--10, say). These should agree within
     errors. If they do not, it could be due to non-Gaussian
     artifacts caused by a small ``neval``. |vegas| 
@@ -238,7 +229,7 @@ There are several things worth noting here:
     the statistical error as ``neval`` increases. 
     The systematic error can bias the Monte Carlo estimate, however, 
     if ``neval`` is insufficiently large. This usually 
-    results in a large |chi2|, but a 
+    results in a large |chi2| (and small *Q*), but a 
     more reliable check is to compare
     results that use signficantly different values of ``neval``.
     The systematic errors due to non-Gaussian behavior are
@@ -264,7 +255,7 @@ There are several things worth noting here:
 
     **Early Iterations:** Integral estimates from early iterations, 
     before |vegas| has adapted, can be quite 
-    crude. With very peaky integrands, these can be far from 
+    crude. With very peaky integrands, these are often far from 
     the correct answer with highly unreliable error estimates. For 
     example, the integral above becomes more 
     difficult if we double the length of each side of the 
@@ -282,7 +273,7 @@ There are several things worth noting here:
     giving estimates that are completely 
     wrong (by 76 and 89 standard deviations!).
     Some of its samples hit the peak's shoulders, so |vegas| is 
-    eventually able to find it (by iterations 5--6), but 
+    eventually able to find the peak (by iterations 5--6), but 
     the integrand estimates are wildly non-Gaussian before that
     point. This results in a non-sensical final result, as 
     indicated by the ``Q = 0.00``. 
@@ -340,6 +331,9 @@ There are several things worth noting here:
     by the same Gaussian, but restricted to a 4-sphere of radius 0.2,
     centered on the Gaussian::
 
+        import vegas 
+        import math 
+        
         def f_sph(x):
             dx2 = 0 
             for d in range(4): 
@@ -355,7 +349,7 @@ There are several things worth noting here:
         result = integ(f_sph, nitn=10, neval=1000)  # estimate the integral
         print(result.summary())
         print('result = %s    Q = %.2f' % (result, result.Q))
-            integ 
+ 
 
     The normalization is adjusted to again make the 
     exact integral equal 1. Integrating as before gives:
@@ -386,19 +380,21 @@ There are several things worth noting here:
     It is a good idea to make the actual integration volume as large a 
     fraction as possible of the total volume used by |vegas|, so 
     |vegas| doesn't spend lots of effort on regions where the integrand
-    is exactly 0. Also, it can be challenging to find the region of 
+    is exactly 0. Also, it can be challenging for |vegas|
+    to find the region of 
     non-zero integrand in high dimensions: integrating ``f_sph(x)``
     in 20 dimensions instead of 4, for example, 
     would require ``neval=1e16`` 
     integrand evaluations per iteration to have any chance of 
-    finding the region of non-zero integrand.
+    finding the region of non-zero integrand, because the volume of 
+    the 20-dimensional sphere is a tiny fraction of the total 
+    integration volume.
 
-    Note, finally, that integration to infinity is also possible
-    by mapping the relevant variable into a different variable
-    of finite range --- for example, by 
-    changing an integral over :math:`x\equiv\tan(\theta)`
-    from 0 to infinity into one over :math:`\theta` from
-    0 to :math:`\pi/2`.
+    Note, finally, that integration to infinity is also possible:
+    map the relevant variable into a different variable
+    of finite range. For example,  an integral over :math:`x\equiv\tan(\theta)`
+    from 0 to infinity is easily reexpressed as 
+    an integral over :math:`\theta` from 0 to :math:`\pi/2`.
 
 
 Faster Integrands
@@ -408,7 +404,7 @@ comes mostly from
 the cost of evaluating the integrand at the Monte Carlo sample 
 points. Integrands written in pure Python are probably fast 
 enough for problems where ``neval=1e3`` or ``neval=1e4`` gives
-enough precision. Realistic problems, however, can require
+enough precision. Some problems, however, require
 hundreds of thousands or millions of function evaluations, or more.
 
 The cost of evaluating the integrand can be reduced significantly
@@ -416,6 +412,7 @@ by vectorizing it, if that is possible. For example,
 replacing ::
 
     import vegas
+    import math
 
     dim = 4
     norm = 1013.2118364296088
@@ -440,26 +437,27 @@ by ::
     import numpy as np
 
     dim = 4
-    norm = 1013.2118364296088
 
     class f_vector(vegas.VecIntegrand):
         def __init__(self, dim):
             self.dim = dim
+            self.norm = 1013.2118364296088
 
-        def __call__(self, xx, ff, nx):
-            # convert integration points xx[i, d] to numpy array
-            x = np.asarray(xx)[:nx, :]
+
+        def __call__(self, x, f, nx):
+            # convert integration points x[i, d] to numpy array
+            x = np.asarray(x)[:nx, :]
             
             # convert array for answer into a numpy array
-            f = np.asarray(ff)[:nx]
+            f = np.asarray(f)[:nx]
             
             # evaluate integrand for all values of i simultaneously
             dx2 = 0.0
             for d in range(self.dim):
                 dx2 += (x[:, d] - 0.5) ** 2
 
-            # copy answer into f (ie, don't do f = np.exp(...))
-            f[:] = np.exp(-100. * dx2) * norm
+            # copy answer into f (ie, don't use f = np.exp(...))
+            f[:] = np.exp(-100. * dx2) * self.norm
 
     integ = vegas.Integrator(dim * [[0, 1]], nhcube_vec=1000)
 
@@ -472,10 +470,10 @@ reduces the cost of the integral by about an order of magnitude.
 An instance of class ``f_vector`` behaves like a function of
 three variables:
 
-    ``xx[i, d]`` --- integration points for each ``i=0...nx-1``
+    ``x[i, d]`` --- integration points for each ``i=0...nx-1``
     (``d=0...`` labels the direction);
 
-    ``ff[i]`` --- buffer to hold the integrand values 
+    ``f[i]`` --- buffer to hold the integrand values 
     for each integration point;
 
     ``nx`` --- number of integration points.
@@ -523,6 +521,8 @@ The main code is then ::
     import vegas
     from cython_integrand import f_cython
 
+    dim = 4
+
     integ = vegas.Integrator(dim * [[0, 1]], nhcube_vec=1000)
 
     f = f_cython(dim=dim)
@@ -536,12 +536,17 @@ it is called. The compiled code is stored and used in subsequent
 calls, so compilation occurs only once.
 
 Cython code can also link easily to compiled C or Fortran code, 
-so integrands written in these languages can also be used (and
+so integrands written in these languages can be used as well (and
 would be faster than pure Python).
 
 Implementation Notes
 ---------------------
 This implementation relies upon Cython for its speed and
 numpy for vector processing. It also uses matplotlib
-for graphics and lsqfit for handling Gaussian random
-variables. matplotlib and lsqfit are optional. 
+for graphics, but this is optional. It also uses
+lsqfit for handling Gaussian random variables.  lsqfit is optional
+as well, but it is desirable because it allows for much 
+more flexible manipulation of the statistical results from
+|vegas|: for example, one can do arithmetic with Gaussian
+variables, or apply standard functions (``sqrt``, ``log`` ...) to
+them, if lsqfit is available. 
