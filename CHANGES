@@ -1,0 +1,8 @@
+Version 1.0 - 2013-12-21
+==========================
+This is the first version of a new implementation
+of the vegas algorithm for adaptive multidimensional
+Monte Carlo integration. It is written in Python/Cython
+and features a significantly improved algorithm
+relative to earlier versions of vegas. In particular
+it now uses two adaptive strategies instead of one.
