@@ -18,12 +18,13 @@ To install:
 
 	c. The lsqfit package - provides a module gvar that handles 
 		Gaussian random variables. This is not strictly necessary
-		but vegas output is improved, as is the ease with which
-		vegas results can be manipulated.
+		but it improves the ease with which vegas results can 
+		be manipulated. And it will be required for a new module
+		that is currently under development (multivegas).
 		(http://https://github.com/gplepage/lsqfit.git or use pip)
 
-	The first three of these libraries are usually included in 3rd
-	party distributions of vegas (eg, anaconda). 
+	The first three of these libraries are usually included in 3rd-party
+	distributions of vegas (eg, anaconda). 
 
 	The vegas code works for Python 2.7 and 3.3. It has not been tested
 	for earlier versions.

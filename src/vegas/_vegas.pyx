@@ -1,4 +1,4 @@
-# c#ython: profile=True
+# cython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
 # Copyright (c) 2013 G. Peter Lepage. 
@@ -816,12 +816,12 @@ cdef class Integrator(object):
         value is 1000; there is probably little need to use
         other values.
     :type maxinc_axis: positive int 
-    :param mode: ``mode=adapt_to_integrand`` causes 
+    :param adapt_to_errors: ``adapt_to_errors=False`` causes 
         |vegas| to remap the integration variables to emphasize
         regions where ``|f(x)|`` is largest. This is 
         the default mode.
 
-        ``mode=adapt_to_errors`` causes |vegas| to remap 
+        ``adapt_to_errors=True`` causes |vegas| to remap 
         variables to emphasize regions where the Monte Carlo
         error is largest. This might be superior when 
         the number of the number of stratifications in 
@@ -903,7 +903,7 @@ cdef class Integrator(object):
         nitn=10,           # number of iterations
         alpha=0.5,
         beta=0.75,
-        mode='adapt_to_integrand',
+        adapt_to_errors=False,
         rtol=0,
         atol=0,
         analyzer=None,
@@ -990,9 +990,9 @@ cdef class Integrator(object):
             elif k == 'alpha':
                 old_val[k] = self.alpha
                 self.alpha = kargs[k]
-            elif k == 'mode':
-                old_val[k] = self.mode
-                self.mode = kargs[k]
+            elif k == 'adapt_to_errors':
+                old_val[k] = self.adapt_to_errors
+                self.adapt_to_errors = kargs[k]
             elif k == 'beta':
                 old_val[k] = self.beta
                 self.beta = kargs[k]
@@ -1020,13 +1020,11 @@ cdef class Integrator(object):
         """
         cdef INT_TYPE d
         self._prepare_integrator()
-        mode = self.mode
-        beta = self.beta # if mode != 'adapt_to_errors' else 0.0
         nhcube = self.nstrat ** self.dim
         neval = nhcube * self.neval_hcube if self.beta <= 0 else self.neval
         ans = ""
         ans = "Integrator Settings:\n"
-        if beta > 0:
+        if self.beta > 0:
             ans = ans + (
                 "    %d (max) integrand evaluations in each of %d iterations\n"
                 % (self.neval, self.nitn)
@@ -1036,12 +1034,11 @@ cdef class Integrator(object):
                 "    %d integrand evaluations in each of %d iterations\n"
                 % (neval, self.nitn)
                 )
-        ans = ans + ("    integrator mode = %s\n" % mode)
         ans = ans + (
             "    number of:  strata/axis = %d  increments/axis = %d\n"
             % (self.nstrat, self.map.ninc)
             )
-        if beta > 0:
+        if self.beta > 0:
             ans = ans + (
                 "                h-cubes = %d  evaluations/h-cube = %d (min)\n"
                 % (nhcube, self.neval_hcube)
@@ -1053,8 +1050,12 @@ cdef class Integrator(object):
                     )
         ans += "                h-cubes/vector = %d\n" % self.nhcube_vec
         ans = ans + (
+            "    adapt_to_errors = %s\n" 
+            % ('True' if self.adapt_to_errors else 'False') 
+            )
+        ans = ans + (
             "    damping parameters: alpha = %g  beta= %g\n" 
-            % (self.alpha, beta)
+            % (self.alpha, self.beta)
             )
         ans += (
             "    limits: h-cubes < %.2g  evaluations/h-cube < %.2g\n"
@@ -1098,12 +1099,10 @@ cdef class Integrator(object):
                 ns = int(ns // ni) * ni
         else:
             ni = int(ni // ns) * ns
-        if self.mode == 'adapt_to_errors':
+        if self.adapt_to_errors:
             # ni > ns makes no sense with this mode
             if ni > ns:
                 ni = ns
-            # beta > 0 incompatible with this mode
-            # self.beta = 0.
 
         self.map.adapt(ninc=ni)    
 
@@ -1181,7 +1180,7 @@ cdef class Integrator(object):
         cdef INT_TYPE nhcube = self.nstrat ** self.dim 
         cdef INT_TYPE nhcube_vec = min(self.nhcube_vec, nhcube)
         cdef INT_TYPE adapt_to_integrand = (
-            1 if self.mode == 'adapt_to_integrand' else 0
+            1 if not self.adapt_to_errors else 0
             )
         cdef INT_TYPE redistribute = (
             # 1 if (self.beta > 0 and adapt_to_integrand) else 0

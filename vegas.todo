@@ -1,7 +1,5 @@
 Right now:
 
-- change mode into adapt_to_errors, which is then either True or False.
-
 - get sdist to work properly --- need MANIFEST.in
 
 - more examples: slow.py, faster.py, fastest.py, path-integral.py

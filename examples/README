@@ -5,4 +5,13 @@ output against the corresponding .out files.
 Some of these examples are discussed in the vegas documentation (which
 starts at doc/html/index.html):
 
-    simple.py - "Basic Integrals" in the Tutorial.
+    simple.py - From "Basic Integrals" in the Tutorial.
+
+    slow.py - The slowest but easiest way to code an integrand.
+
+    faster.py - A vectorized integrand, for greater speed.
+
+    fastest.py - An integrand coded in Cython, for even greater speed.
+
+    path-integral.py - Quantum mechanics using Feynman's path integral.
+    

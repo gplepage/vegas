@@ -57,7 +57,7 @@ cdef class Integrator:
     cdef readonly double alpha
     cdef readonly double rtol
     cdef readonly double atol
-    cdef readonly object mode
+    cdef readonly bint adapt_to_errors
     cdef readonly double beta 
     cdef readonly object analyzer
     # generated

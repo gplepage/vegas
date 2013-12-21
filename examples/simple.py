@@ -3,6 +3,7 @@ vegas example from the Basic Integrals section
 of the Tutorial and Overview section of the 
 vegas documentation.
 """
+from __future__ import print_function   # makes this work for python2 and 3
 
 import vegas
 import math

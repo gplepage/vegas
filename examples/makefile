@@ -15,9 +15,20 @@ PYTHON = python
 run:
 	$(PYTHON) simple.py > simple.tmp
 	- diff -w simple.out simple.tmp
+	$(PYTHON) slow.py > slow.tmp     # about 20s
+	- diff -w slow.out slow.tmp
+	$(PYTHON) faster.py > faster.tmp
+	- diff -w faster.out faster.tmp
+	$(PYTHON) fastest.py > fastest.tmp
+	- diff -w fastest.out fastest.tmp
+	$(PYTHON) path-integral.py > path-integral.tmp  # about 30s
+	- diff -w path-integral.out path-integral.tmp
 
 update-all:
 	$(PYTHON) simple.py > simple.out
+	$(PYTHON) slow.py > slow.out
+	$(PYTHON) faster.py > faster.out
+	$(PYTHON) fastest.py > fastest.out
 
 clean:
 	rm -f *.pyc *.tmp *.p *.prof
