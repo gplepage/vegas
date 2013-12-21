@@ -451,13 +451,15 @@ by ::
             x = np.asarray(xx)[:nx, :]
             
             # convert array for answer into a numpy array
-            f = np.asarray(ff)
+            f = np.asarray(ff)[:nx]
             
             # evaluate integrand for all values of i simultaneously
             dx2 = 0.0
             for d in range(self.dim):
                 dx2 += (x[:, d] - 0.5) ** 2
-            f[:nx] = np.exp(-100. * dx2) * norm
+
+            # copy answer into f (ie, don't do f = np.exp(...))
+            f[:] = np.exp(-100. * dx2) * norm
 
     integ = vegas.Integrator(dim * [[0, 1]], nhcube_vec=1000)
 
@@ -470,7 +472,8 @@ reduces the cost of the integral by about an order of magnitude.
 An instance of class ``f_vector`` behaves like a function of
 three variables:
 
-    ``xx[i, d]`` --- integration points for each ``i=0...nx-1``;
+    ``xx[i, d]`` --- integration points for each ``i=0...nx-1``
+    (``d=0...`` labels the direction);
 
     ``ff[i]`` --- buffer to hold the integrand values 
     for each integration point;

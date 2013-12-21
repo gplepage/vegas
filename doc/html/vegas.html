@@ -166,11 +166,11 @@ more memory for internal work areas.</li>
 per axis allowed for the x-space grid. The default 
 value is 1000; there is probably little need to use
 other values.</li>
-<li><strong>mode</strong> &#8211; <p><tt class="docutils literal"><span class="pre">mode=adapt_to_integrand</span></tt> causes 
+<li><strong>adapt_to_errors</strong> &#8211; <p><tt class="docutils literal"><span class="pre">adapt_to_errors=False</span></tt> causes 
 <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to remap the integration variables to emphasize
 regions where <tt class="docutils literal"><span class="pre">|f(x)|</span></tt> is largest. This is 
 the default mode.</p>
-<p><tt class="docutils literal"><span class="pre">mode=adapt_to_errors</span></tt> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to remap 
+<p><tt class="docutils literal"><span class="pre">adapt_to_errors=True</span></tt> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to remap 
 variables to emphasize regions where the Monte Carlo
 error is largest. This might be superior when 
 the number of the number of stratifications in 
@@ -360,24 +360,24 @@ is clear from the output:</p>
     grid[ 1] = [ 0.   0.2  0.4  0.6  0.8  1. ]
 
 iteration 0:
-    grid[ 0] = [ 0.     0.406  0.617  0.769  0.889  1.   ]
-    grid[ 1] = [ 0.     0.505  0.694  0.824  0.912  1.   ]
+    grid[ 0] = [ 0.     0.404  0.616  0.766  0.887  1.   ]
+    grid[ 1] = [ 0.     0.509  0.695  0.823  0.912  1.   ]
 
 iteration 1:
-    grid[ 0] = [ 0.     0.417  0.62   0.769  0.891  1.   ]
-    grid[ 1] = [ 0.     0.539  0.716  0.835  0.922  1.   ]
+    grid[ 0] = [ 0.     0.418  0.62   0.768  0.89   1.   ]
+    grid[ 1] = [ 0.     0.546  0.723  0.839  0.923  1.   ]
 
 iteration 2:
-    grid[ 0] = [ 0.     0.418  0.616  0.766  0.891  1.   ]
-    grid[ 1] = [ 0.     0.546  0.719  0.834  0.924  1.   ]
+    grid[ 0] = [ 0.     0.425  0.62   0.768  0.891  1.   ]
+    grid[ 1] = [ 0.     0.554  0.726  0.84   0.924  1.   ]
 
 iteration 3:
-    grid[ 0] = [ 0.     0.419  0.616  0.766  0.892  1.   ]
-    grid[ 1] = [ 0.     0.55   0.719  0.834  0.925  1.   ]
+    grid[ 0] = [ 0.     0.427  0.62   0.768  0.891  1.   ]
+    grid[ 1] = [ 0.     0.557  0.727  0.84   0.925  1.   ]
 
 iteration 4:
-    grid[ 0] = [ 0.     0.419  0.615  0.765  0.892  1.   ]
-    grid[ 1] = [ 0.     0.551  0.719  0.834  0.925  1.   ]
+    grid[ 0] = [ 0.     0.429  0.62   0.768  0.891  1.   ]
+    grid[ 1] = [ 0.     0.558  0.727  0.84   0.925  1.   ]
 
 </pre>
 </div>
@@ -609,8 +609,8 @@ omitted (or negative).</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="vegas.AdaptiveMap.plot_grid">
-<tt class="descname">plot_grid</tt><big>(</big><em>ngrid=40</em>, <em>shrink=False</em><big>)</big><a class="headerlink" href="#vegas.AdaptiveMap.plot_grid" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.AdaptiveMap.show_grid">
+<tt class="descname">show_grid</tt><big>(</big><em>ngrid=40</em>, <em>shrink=False</em><big>)</big><a class="headerlink" href="#vegas.AdaptiveMap.show_grid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Display plots showing the current grid.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

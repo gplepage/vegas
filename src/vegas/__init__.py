@@ -2,8 +2,9 @@
 --------------------
 This package provides tools for estimating multidimensional 
 integrals numerically using an enhanced version of 
-the adaptive Monte Carlo 
-|vegas| algorithm (G. P. Lepage, J. Comput. Phys. 27(1978) 192).
+the adaptive Monte Carlo |vegas| algorithm (G. P. Lepage, 
+J. Comput. Phys. 27(1978) 192).
+
 A |vegas| code generally involves two objects, one representing
 the integrand and the other representing an integration 
 operator for a particular multidimensional volume. A typical
@@ -53,4 +54,4 @@ There is an extensive tutorial in the |vegas| documentation.
 
 from ._vegas import RunningWAvg, AdaptiveMap, Integrator, VecIntegrand
 from ._vegas import reporter, gvar
- 
+from ._version import version as __version__

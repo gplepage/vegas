@@ -113,7 +113,6 @@ cdef class Oscillator(PathIntegral):
     Exact E0 is 0.5 for c=0; 0.602405 for c=0.2.
     """
     cdef double c
-    """ E0 is .602405 (according to web) for c=0.2; 0.5 for c=0 """
 
     def __init__(self, c=0.0, *args, **kargs):
         super(Oscillator, self).__init__(*args, **kargs)
@@ -121,3 +120,18 @@ cdef class Oscillator(PathIntegral):
 
     cdef double V(self, double x):
         return x * x / 2. + self.c * x * x * x * x 
+
+
+
+# Created by G. Peter Lepage (Cornell University) in 12/2013.
+# Copyright (c) 2013 G. Peter Lepage. 
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version (see <http://www.gnu.org/licenses/>).
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.

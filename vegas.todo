@@ -1,8 +1,6 @@
 Right now:
 
 - get sdist to work properly --- need MANIFEST.in
-
-- more examples: slow.py, faster.py, fastest.py, path-integral.py
   
 
 For later:

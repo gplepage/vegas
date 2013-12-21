@@ -149,7 +149,7 @@ fashion, for use in later iterations of the algorithm.
 
    .. automethod:: map(y, x, jac, ny=-1)
 
-   .. automethod:: plot_grid(ngrid=40, shrink=False)
+   .. automethod:: show_grid(ngrid=40, shrink=False)
 
    .. automethod:: settings(ngrid=5)
 

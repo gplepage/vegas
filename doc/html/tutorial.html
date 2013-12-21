@@ -541,13 +541,15 @@ replacing</p>
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">xx</span><span class="p">)[:</span><span class="n">nx</span><span class="p">,</span> <span class="p">:]</span>
 
         <span class="c"># convert array for answer into a numpy array</span>
-        <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ff</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ff</span><span class="p">)[:</span><span class="n">nx</span><span class="p">]</span>
 
         <span class="c"># evaluate integrand for all values of i simultaneously</span>
         <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">):</span>
             <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-        <span class="n">f</span><span class="p">[:</span><span class="n">nx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="n">norm</span>
+
+        <span class="c"># copy answer into f (ie, don&#39;t do f = np.exp(...))</span>
+        <span class="n">f</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="n">norm</span>
 
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_vec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
@@ -561,7 +563,8 @@ replacing</p>
 An instance of class <tt class="docutils literal"><span class="pre">f_vector</span></tt> behaves like a function of
 three variables:</p>
 <blockquote>
-<div><p><tt class="docutils literal"><span class="pre">xx[i,</span> <span class="pre">d]</span></tt> &#8212; integration points for each <tt class="docutils literal"><span class="pre">i=0...nx-1</span></tt>;</p>
+<div><p><tt class="docutils literal"><span class="pre">xx[i,</span> <span class="pre">d]</span></tt> &#8212; integration points for each <tt class="docutils literal"><span class="pre">i=0...nx-1</span></tt>
+(<tt class="docutils literal"><span class="pre">d=0...</span></tt> labels the direction);</p>
 <p><tt class="docutils literal"><span class="pre">ff[i]</span></tt> &#8212; buffer to hold the integrand values
 for each integration point;</p>
 <p><tt class="docutils literal"><span class="pre">nx</span></tt> &#8212; number of integration points.</p>
