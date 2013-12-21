@@ -333,7 +333,7 @@ There are several things worth noting here:
 
         import vegas 
         import math 
-        
+
         def f_sph(x):
             dx2 = 0 
             for d in range(4): 
@@ -543,10 +543,22 @@ Implementation Notes
 ---------------------
 This implementation relies upon Cython for its speed and
 numpy for vector processing. It also uses matplotlib
-for graphics, but this is optional. It also uses
-lsqfit for handling Gaussian random variables.  lsqfit is optional
-as well, but it is desirable because it allows for much 
-more flexible manipulation of the statistical results from
-|vegas|: for example, one can do arithmetic with Gaussian
-variables, or apply standard functions (``sqrt``, ``log`` ...) to
-them, if lsqfit is available. 
+for graphics, but this is optional. 
+
+|vegas| also uses the :mod:`gvar` module from the lsqfit 
+package if that package is installed (``pip install lsqfit``).
+Integration results are returned as objects of type 
+:class:`gvar.GVar`, which is a class representing Gaussian
+random variables (i.e., something with a mean and standard 
+deviation). These objects can be combined with numbers and 
+with each other in arbitrary arithmetic expressions to 
+get new :class:`gvar.GVar`\s with the correct standard 
+deviations (and properly correlated with other 
+:class:`gvar.GVar`\s --- that is the tricky part). 
+
+If it is not installed, |vegas| uses a limited substitute
+that supports arithmetic between :class:`gvar.GVar`\s
+and numbers, but not between :class:`gvar.GVar`\s and other
+:class:`gvar.GVar`\s. It also supports ``log``, ``sqrt`` 
+and ``exp`` of :class:`gvar.GVar`\s, but not trig functions 
+--- for these install the lsqfit package.

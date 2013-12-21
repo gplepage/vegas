@@ -1,3 +1,11 @@
+Version 1.1 - 2013-12-22
+=========================
+Original release made use of the lsqfit package in the testing.
+This package is quite useful in conjunction with vegas (for the gvar module)
+but it is not required. The testing and examples now work without 
+lsqfit present, which was the original intent. See discussion at the 
+end of the Tutorial about the role of lsqfit.
+
 Version 1.0 - 2013-12-21
 ==========================
 This is the first version of a new implementation

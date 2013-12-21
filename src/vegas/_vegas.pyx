@@ -27,22 +27,79 @@ cdef double HUGE = 1e308
 
 have_gvar = False
 try:
-    import gvar
+    import xyzgvar
     have_gvar = True
 except ImportError:
-    have_scipy = False
-    try:
-        import scipy.special
-        have_scipy = True
-    except ImportError:
-        pass
     # fake version of gvar.gvar
     # for use if lsqfit module not available
     class GVar(object):
+        """ Poor substitute for GVar in the lsqfit package.
+
+        This supports arithmetic involving GVars and numbers 
+        but not arithmetic involving GVars and GVars. For
+        the latter, you need to install the lsqfit
+        package (whose gvar module provides this functionality).
+
+        This also supports log, sqrt, and exp, but not
+        trig functions etc --- again install lsqfit if 
+        these are needed.
+        """
         def __init__(self, mean, sdev):
             self.mean = float(mean)
-            self.sdev = float(sdev)
+            self.sdev = abs(float(sdev))
             self.internaldata = (self.mean, self.sdev)
+        def __add__(self, double a):
+            return GVar(a + self.mean, self.sdev)
+
+        def __radd__(self, double a):
+            return GVar(a + self.mean, self.sdev)
+            
+        def __sub__(self, double a):
+            return GVar(self.mean - a, self.sdev)
+
+        def __rsub__(self, double a):
+            return GVar(a - self.mean, self.sdev)
+            
+        def __mul__(self, double a):
+            return GVar(self.mean * a, self.sdev * a)
+
+        def __rmul__(self, double a):
+            return GVar(self.mean * a, self.sdev * a)
+
+        def __div__(self, double a):
+            return GVar(self.mean / a, self.sdev / a)
+
+        def __truediv__(self, double a):  # for python3
+            return GVar(self.mean / a, self.sdev / a)
+
+        def __rdiv__(self, double a):
+            return (a / self.mean) * GVar(1., self.sdev / self.mean)
+    
+        def __rtruediv__(self, double a):
+            return (a / self.mean) * GVar(1., self.sdev / self.mean)
+    
+
+        def __neg__(self):
+            return GVar(-self.mean, self.sdev)
+
+        def __pos__(self):
+            return self
+
+        def __pow__(self, double a):
+            return (self.mean ** a) * GVar(1, a * self.sdev / self.mean)
+
+        def __rpow__(self, double a):
+            return (a ** self.mean) * GVar(1., self.sdev * math.log(a))
+
+        def log(self):
+            return GVar(math.log(self.mean), self.sdev / self.mean)
+
+        def exp(self):
+            return math.exp(self.mean) * GVar(1., self.sdev)
+
+        def sqrt(self):
+            return math.sqrt(self.mean) * GVar(1., self.sdev / 2. / self.mean)
+
         def __str__(self):
             """ Return string representation of ``self``.
 
@@ -117,16 +174,50 @@ except ImportError:
             pass
         def gvar(self, mean, sdev):
             return GVar(mean, sdev)
-        def gammaQ(self, a, b):
-            if have_scipy:
-                return scipy.special.gammaincc(a, b)
-            else:
-                return -1.
         def mean(self, glist):
             return numpy.array([g.mean for g in glist])
         def var(self, glist):
             return numpy.array([g.sdev ** 2 for g in glist])
+        def gammaP_ser(self, a, x):
+            """ Power series expansion for P(a, x) (for x < a+1).
 
+            P(a, x) = 1/Gamma(a) * \int_0^x dt exp(-t) t ** (a-1) = 1 - Q(a, x)
+            
+            Not as good as what is used by lsqfit. 
+            """
+            if x == 0:
+                return 0.
+            ans = 0.
+            term = 1. / x
+            for n in range(100):            # increase 100 for more precision
+                term *= x / float(a + n)
+                ans += term
+            log_ans = math.log(ans) - x + a * math.log(x) - math.lgamma(a)
+            return math.exp(log_ans)
+
+        def gammaQ_cf(self, a, x):
+            """ Continuing fraction expansion for Q(a, x) (for x > a+1).
+
+            Q(a, x) = 1/Gamma(a) * \int_x^\infty dt exp(-t) t ** (a-1) = 1 - P(a, x)
+
+            Not as good as what is used by lsqfit
+            """
+            ans = 0.
+            for n in range(100, 0, -1):     # increase 100 for more precision
+                ans = (n * (n-a)) / (x + 2. * n + 1 - a - ans)
+            ans = 1. / (x + 1. - a - ans)
+            log_ans = math.log(ans) - x + a * math.log(x) - math.lgamma(a)
+            return math.exp(log_ans) 
+        def gammaQ(self, a, x):
+            if x < a + 1:
+                return 1. - self.gammaP_ser(a, x)
+            else:
+                return self.gammaQ_cf(a, x)
+        def gammaP(self, a, x):
+            if x < a + 1:
+                return self.gammaP_ser(a, x)
+            else:
+                return 1. - self.gammaQ_cf(a, x)
     gvar = _gvar_standin()
     gvar.GVar = GVar
 

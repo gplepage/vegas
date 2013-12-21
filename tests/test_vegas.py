@@ -302,5 +302,57 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(r1.itn_results[-1].sdev < 0.01)
         self.assertTrue(r1.Q > 1e-3)
 
+
+class Testgvar(unittest.TestCase):
+    """ tests gvar and GVar since might be the vegas substitutes if no lsqfit """
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_init(self):
+        x = gvar.gvar(1., 3.)
+        self.assertEqual(x.mean, 1.)
+        self.assertEqual(x.sdev, 3.)
+
+    def test_math(self):
+        " test math involving GVars "
+        x = gvar.gvar(2., 5.)
+        cases = [
+            (x + 10., 12., 5.),
+            (10 + x, 12. , 5.),
+            (+x, 2., 5.),
+            (x - 6., -4., 5.),
+            (6 - x, 4., 5.),
+            (-x, -2., 5.),
+            (3 * x, 6., 15.),
+            (x * 3., 6., 15.),
+            (x / 4., 0.5, 1.25),
+            (10. / x, 5., 12.5),
+            (x ** 2, 4., 20.),
+            (2 ** x, 4., math.log(2) * 20.),
+            (np.log(x), math.log(2.), 2.5),
+            (np.exp(x), math.exp(2.), math.exp(2.) * 5.),
+            (np.exp(np.log(x)), 2., 5.),
+            (np.sqrt(x), math.sqrt(2.), math.sqrt(2.) * 1.25),
+            (np.sqrt(x ** 2), 2., 5.),
+            ]
+        for y, ymean, ysdev in cases:
+            np_assert_allclose(y.mean, ymean)
+            np_assert_allclose(y.sdev, ysdev)
+
+    def test_gammaQ(self):
+        " gammaQ(a, x) "
+        cases = [
+            (2.371, 5.243, 0.05371580082389009, 0.9266599665892222),
+            (20.12, 20.3, 0.4544782602230986, 0.4864172139106905),
+            (100.1, 105.2, 0.29649013488390663, 0.6818457585776236),
+            (1004., 1006., 0.4706659307021259, 0.5209695379094582),
+            ]
+        for a, x, gax, gxa in cases:
+            np_assert_allclose(gax, gvar.gammaQ(a, x), rtol=0.01)
+            np_assert_allclose(gxa, gvar.gammaQ(x, a), rtol=0.01)
+
 if __name__ == '__main__':
     unittest.main()

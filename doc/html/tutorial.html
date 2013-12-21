@@ -634,13 +634,23 @@ would be faster than pure Python).</p>
 <h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h2>
 <p>This implementation relies upon Cython for its speed and
 numpy for vector processing. It also uses matplotlib
-for graphics, but this is optional. It also uses
-lsqfit for handling Gaussian random variables.  lsqfit is optional
-as well, but it is desirable because it allows for much
-more flexible manipulation of the statistical results from
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>: for example, one can do arithmetic with Gaussian
-variables, or apply standard functions (<tt class="docutils literal"><span class="pre">sqrt</span></tt>, <tt class="docutils literal"><span class="pre">log</span></tt> ...) to
-them, if lsqfit is available.</p>
+for graphics, but this is optional.</p>
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> also uses the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module from the lsqfit
+package if that package is installed (<tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">lsqfit</span></tt>).
+Integration results are returned as objects of type
+<tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>, which is a class representing Gaussian
+random variables (i.e., something with a mean and standard
+deviation). These objects can be combined with numbers and
+with each other in arbitrary arithmetic expressions to
+get new <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s with the correct standard
+deviations (and properly correlated with other
+<tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s &#8212; that is the tricky part).</p>
+<p>If it is not installed, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses a limited substitute
+that supports arithmetic between <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s
+and numbers, but not between <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s and other
+<tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s. It also supports <tt class="docutils literal"><span class="pre">log</span></tt>, <tt class="docutils literal"><span class="pre">sqrt</span></tt>
+and <tt class="docutils literal"><span class="pre">exp</span></tt> of <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s, but not trig functions
+&#8212; for these install the lsqfit package.</p>
 </div>
 </div>
 

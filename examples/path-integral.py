@@ -67,17 +67,17 @@ def main():
     # pathint.integ.map.show_grid(50)
 
     if DO_WAVEFUNCTIONS:
-        # compute wavefunction ** 2 at points x0
+        # compute wavefunction ** 2 * exp(-E0*T) at points x0
         x0 = np.linspace(0., 2., 11)
-        psi2_hosc = pathint.correlator(x0=x0) / exp_E0T
-        exact_hosc = np.empty(psi2_hosc.shape, float)
+        corr_hosc = pathint.correlator(x0=x0)
+        exact_hosc = np.empty(corr_hosc.shape, float)
 
-        print('%5s  %-12s %-10s' % ('x', 'psi**2', 'exact'))
-        print(30 * '-')
-        for i, (x0i, psi2i) in enumerate(zip(x0, psi2_hosc)):
-            exact_hosc[i] = np.exp(- x0i ** 2) / np.sqrt(np.pi)
+        print('%5s  %-17s %-10s' % ('x', 'psi**2*exp(-E0*T)', 'exact'))
+        print(37 * '-')
+        for i, (x0i, psi2i) in enumerate(zip(x0, corr_hosc)):
+            exact_hosc[i] = np.exp(- x0i ** 2) / np.sqrt(np.pi) * np.exp(-T / 2.)
             print(
-                "%5.1f  %-12s %-10.5f"
+                "%5.1f  %-17s %-10.5f"
                 % (x0i, psi2i, exact_hosc[i])
                 )
 
@@ -94,14 +94,14 @@ def main():
     
 
     if DO_WAVEFUNCTIONS:
-        # compute wavefunction ** 2 at points x0
+        # compute wavefunction ** 2 * exp(-E0*T) at points x0
         x0 = np.linspace(0., 2., 11)
-        psi2_ahosc = pathint.correlator(x0=x0) / exp_E0T
+        corr_ahosc = pathint.correlator(x0=x0)
 
-        print('%5s  %-12s' % ('x', 'psi**2'))
-        print(18 * '-')
-        for x0i, psi2i in zip(x0, psi2_ahosc):
-            print("%5.1f  %-12s" % (x0i, psi2i))
+        print('%5s  %-17s' % ('x', 'psi**2*exp(-E0*T)'))
+        print(24 * '-')
+        for x0i, psi2i in zip(x0, corr_ahosc):
+            print("%5.1f  %-17s" % (x0i, psi2i))
         print()
 
 if __name__ == '__main__':

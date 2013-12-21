@@ -51,6 +51,7 @@ run-examples:
 	$(MAKE) -C examples PYTHON=$(PYTHON) run
 
 upload-pypi:
+	# python setup.py register   # used first time only
 	python setup.py sdist upload
 
 upload-git:
