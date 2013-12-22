@@ -15,13 +15,13 @@ PYTHON = python
 run:
 	$(PYTHON) simple.py > simple.tmp
 	- diff -w simple.out simple.tmp
-	$(PYTHON) slow.py > slow.tmp     # about 20s
+	$(PYTHON) slow.py > slow.tmp     # about 6s
 	- diff -w slow.out slow.tmp
 	$(PYTHON) faster.py > faster.tmp
 	- diff -w faster.out faster.tmp
 	$(PYTHON) fastest.py > fastest.tmp
 	- diff -w fastest.out fastest.tmp
-	$(PYTHON) path-integral.py > path-integral.tmp  # about 30s
+	$(PYTHON) path-integral.py > path-integral.tmp  # about 16s
 	- diff -w path-integral.out path-integral.tmp
 
 update-all:

@@ -1,4 +1,4 @@
-# cython: profile=True
+# c#ython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
 # Copyright (c) 2013 G. Peter Lepage. 
@@ -27,7 +27,7 @@ cdef double HUGE = 1e308
 
 have_gvar = False
 try:
-    import xyzgvar
+    import gvar
     have_gvar = True
 except ImportError:
     # fake version of gvar.gvar

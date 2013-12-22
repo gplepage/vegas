@@ -32,11 +32,11 @@ def main():
     f = f_cython(dim=dim)
     
     # adapt the grid; discard these results
-    integ(f, neval=100000, nitn=10)
+    integ(f, neval=25000, nitn=10)
 
     # final result; slow down adaptation because 
     # already adapted, so increases stability
-    result = integ(f, neval=100000, nitn=10, alpha=0.1)
+    result = integ(f, neval=25000, nitn=10, alpha=0.1)
 
     print(result.summary())
 
