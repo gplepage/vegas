@@ -56,6 +56,15 @@ module is written in Cython, so it is almost as fast as optimized Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.
 
+*About Printing:* The examples in this tutorial use the print function as it is
+used in Python 3. Drop the outermost parenthesis in each print statement if
+using Python 2, or add ::
+
+    from __future__ import print_function
+
+at the start of your file.
+
+
 Basic Integrals
 ----------------
 Here we illustrate |vegas| by estimating the integral
@@ -240,14 +249,17 @@ There are several things worth noting here:
     is another reason for increasing ``neval`` 
     rather than ``nitn`` to obtain more precision. 
     Making ``neval`` larger and larger is guaranteed
-    to improve the Monte Carlo estimate, with the 
-    systematic error vanishing quickly. 
+    to improve the Monte Carlo estimate, as the statistical
+    error decreases (at least as fast as ``sqrt(1/neval)``
+    and often faster) and the 
+    systematic error decreases even more quickly (like
+    ``1/neval``). 
     Making ``nitn`` larger and larger, on the other hand,
     is guaranteed eventually to give the wrong
     answer. This is because at some point the statistical error 
     (which falls as ``sqrt(1/nitn)``) will no longer
-    mask the systematic error (which is affected by ``neval`` but
-    not ``nitn``). The systematic error for the integral
+    mask the systematic error (which is unaffected by ``nitn``). 
+    The systematic error for the integral
     above (with ``neval=1000``) is about -0.00073(7), which 
     is negligible compared to the statistical error unless
     ``nitn`` is of order 1500 or larger --- so systematic errors
@@ -491,8 +503,8 @@ is a compiled hybrid of Python and C. The Cython version
 of this code, which we put in a separate file we
 call ``cython_integrand.pyx``, is simpler than the vector version::
 
-    cimport vegas
-    from libc.math cimport exp
+    cimport vegas                   # for VecIntegrand
+    from libc.math cimport exp      # use exp() from C library
 
     import vegas
 

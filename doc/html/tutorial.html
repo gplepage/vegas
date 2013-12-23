@@ -102,6 +102,13 @@ This
 module is written in Cython, so it is almost as fast as optimized Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.</p>
+<p><em>About Printing:</em> The examples in this tutorial use the print function as it is
+used in Python 3. Drop the outermost parenthesis in each print statement if
+using Python 2, or add</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+</pre></div>
+</div>
+<p>at the start of your file.</p>
 </div>
 <div class="section" id="basic-integrals">
 <h2>Basic Integrals<a class="headerlink" href="#basic-integrals" title="Permalink to this headline">¶</a></h2>
@@ -281,14 +288,17 @@ within the statistical errors.</p>
 is another reason for increasing <tt class="docutils literal"><span class="pre">neval</span></tt>
 rather than <tt class="docutils literal"><span class="pre">nitn</span></tt> to obtain more precision.
 Making <tt class="docutils literal"><span class="pre">neval</span></tt> larger and larger is guaranteed
-to improve the Monte Carlo estimate, with the
-systematic error vanishing quickly.
+to improve the Monte Carlo estimate, as the statistical
+error decreases (at least as fast as <tt class="docutils literal"><span class="pre">sqrt(1/neval)</span></tt>
+and often faster) and the
+systematic error decreases even more quickly (like
+<tt class="docutils literal"><span class="pre">1/neval</span></tt>).
 Making <tt class="docutils literal"><span class="pre">nitn</span></tt> larger and larger, on the other hand,
 is guaranteed eventually to give the wrong
 answer. This is because at some point the statistical error
 (which falls as <tt class="docutils literal"><span class="pre">sqrt(1/nitn)</span></tt>) will no longer
-mask the systematic error (which is affected by <tt class="docutils literal"><span class="pre">neval</span></tt> but
-not <tt class="docutils literal"><span class="pre">nitn</span></tt>). The systematic error for the integral
+mask the systematic error (which is unaffected by <tt class="docutils literal"><span class="pre">nitn</span></tt>).
+The systematic error for the integral
 above (with <tt class="docutils literal"><span class="pre">neval=1000</span></tt>) is about -0.00073(7), which
 is negligible compared to the statistical error unless
 <tt class="docutils literal"><span class="pre">nitn</span></tt> is of order 1500 or larger &#8212; so systematic errors
@@ -583,8 +593,8 @@ every case) is to write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
 of this code, which we put in a separate file we
 call <tt class="docutils literal"><span class="pre">cython_integrand.pyx</span></tt>, is simpler than the vector version:</p>
-<div class="highlight-python"><pre>cimport vegas
-from libc.math cimport exp
+<div class="highlight-python"><pre>cimport vegas                   # for VecIntegrand
+from libc.math cimport exp      # use exp() from C library
 
 import vegas
 

@@ -7,10 +7,9 @@ without the  complication of vectorization. Some problems do not vectorize
 well at all.
 """
 
-# import Cython description of vegas
+# import Cython description of vegas (to derive from vegas.VecIntegrand)
 cimport vegas
-cimport cython
-import cython
+
 # import exp() from C
 from libc.math cimport exp
 
