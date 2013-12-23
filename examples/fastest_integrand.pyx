@@ -23,7 +23,7 @@ cdef class f_cython(vegas.VecIntegrand):
     cdef double norm_ac 
     cdef double norm_b
     def __init__(self, dim):
-        self.dim = 6
+        self.dim = dim
         self.norm_ac = 1. / 0.17720931990702889842 ** dim
         self.norm_b = 1. / 0.17724538509027909508 ** dim
 

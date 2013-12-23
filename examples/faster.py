@@ -19,7 +19,7 @@ np.random.seed((1,2))   # causes reproducible random numbers
 
 class f_vec(vegas.VecIntegrand):
     def __init__(self, dim):
-        self.dim = 6
+        self.dim = dim
         self.norm_ac = 1. / 0.17720931990702889842 ** dim
         self.norm_b = 1. / 0.17724538509027909508 ** dim
 
