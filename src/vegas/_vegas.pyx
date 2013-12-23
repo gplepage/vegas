@@ -15,14 +15,78 @@
 
 cimport cython
 cimport numpy
-from libc.math cimport floor, log, abs, tanh, erf, exp, sqrt
+from libc.math cimport floor, log, abs, tanh, erf, exp, sqrt, lgamma
 
 import sys
 import numpy 
 import math
+import warnings
 
 cdef double TINY = 1e-308                            # smallest and biggest
 cdef double HUGE = 1e308
+
+# following two functions are here in case gvar (from lsqfit package)
+# is not available --- see _gvar_standin
+
+cdef double gammaP_ser(double a, double x, double rtol, int itmax):
+    """ Power series expansion for P(a, x) (for x < a+1).
+
+    P(a, x) = 1/Gamma(a) * \int_0^x dt exp(-t) t ** (a-1) = 1 - Q(a, x)
+    """
+    cdef int n
+    cdef double ans, term 
+    if x == 0:
+        return 0.
+    ans = 0.
+    term = 1. / x
+    for n in range(itmax):
+        term *= x / float(a + n)
+        ans += term
+        if abs(term) < rtol * abs(ans):
+            break
+    else:
+        warnings.warn(
+            'gammaP convergence not complete -- want: %.3g << %.3g' 
+            % (abs(term), rtol * abs(ans))
+            )
+    log_ans = math.log(ans) - x + a * math.log(x) - math.lgamma(a)
+    return math.exp(log_ans)
+
+cdef double gammaQ_cf(double a, double x, double rtol, int itmax):
+    """ Continuing fraction expansion for Q(a, x) (for x > a+1).
+
+    Q(a, x) = 1/Gamma(a) * \int_x^\infty dt exp(-t) t ** (a-1) = 1 - P(a, x)
+    Uses Lentz's algorithm for continued fractions.
+    """
+    cdef double tiny = 1e-30 
+    cdef double den, Cj, Dj, fj
+    cdef int j
+    den = x + 1. - a
+    if abs(den) < tiny:
+        den = tiny
+    Cj = x + 1. - a + 1. / tiny
+    Dj = 1 / den 
+    fj = Cj * Dj * tiny
+    for j in range(1, itmax):
+        aj = - j * (j - a) 
+        bj = x + 2 * j + 1. - a
+        Dj = bj + aj * Dj
+        if abs(Dj) < tiny:
+            Dj = tiny
+        Dj = 1. / Dj
+        Cj = bj + aj / Cj
+        if abs(Cj) < tiny:
+            Cj = tiny
+        fac = Cj * Dj
+        fj = fac * fj
+        if abs(fac-1) < rtol:
+            break
+    else:
+        warnings.warn(
+            'gammaQ convergence not complete -- want: %.3g << %.3g' 
+            % (abs(fac-1), rtol)
+            )
+    return math.exp(math.log(fj) - x + a * math.log(x) - math.lgamma(a))
 
 
 have_gvar = False
@@ -169,6 +233,7 @@ except ImportError:
             else:
                 ndecimal = max(ndec(abs(v), offset=1), ndec(dv))
                 return '%.*f(%.0f)' % (ndecimal, v, dv * 10. ** ndecimal)
+
     class _gvar_standin:
         def __init__(self):
             pass
@@ -178,46 +243,30 @@ except ImportError:
             return numpy.array([g.mean for g in glist])
         def var(self, glist):
             return numpy.array([g.sdev ** 2 for g in glist])
-        def gammaP_ser(self, a, x):
-            """ Power series expansion for P(a, x) (for x < a+1).
-
-            P(a, x) = 1/Gamma(a) * \int_0^x dt exp(-t) t ** (a-1) = 1 - Q(a, x)
-            
-            Not as good as what is used by lsqfit. 
-            """
+        def gammaQ(self, double a, double x, double rtol=1e-5, int itmax=10000):
+            " complement of normalized incomplete gamma function: Q(a,x) "
+            if x < 0 or a < 0:
+                raise ValueError('negative argument: %g, %g' % (a, x))
+            if x == 0:
+                return 1.
+            elif a == 0:
+                return 0.
+            if x < a + 1.:
+                return 1. - gammaP_ser(a, x, rtol=rtol, itmax=itmax)
+            else:
+                return gammaQ_cf(a, x, rtol=rtol, itmax=itmax)
+        def gammaP(self, double a, double x, double rtol=1e-5, itmax=10000):
+            " normalized incomplete gamma function: P(a,x) "
+            if x < 0 or a < 0:
+                raise ValueError('negative argument: %g, %g' % (a, x))
             if x == 0:
                 return 0.
-            ans = 0.
-            term = 1. / x
-            for n in range(100):            # increase 100 for more precision
-                term *= x / float(a + n)
-                ans += term
-            log_ans = math.log(ans) - x + a * math.log(x) - math.lgamma(a)
-            return math.exp(log_ans)
-
-        def gammaQ_cf(self, a, x):
-            """ Continuing fraction expansion for Q(a, x) (for x > a+1).
-
-            Q(a, x) = 1/Gamma(a) * \int_x^\infty dt exp(-t) t ** (a-1) = 1 - P(a, x)
-
-            Not as good as what is used by lsqfit
-            """
-            ans = 0.
-            for n in range(100, 0, -1):     # increase 100 for more precision
-                ans = (n * (n-a)) / (x + 2. * n + 1 - a - ans)
-            ans = 1. / (x + 1. - a - ans)
-            log_ans = math.log(ans) - x + a * math.log(x) - math.lgamma(a)
-            return math.exp(log_ans) 
-        def gammaQ(self, a, x):
-            if x < a + 1:
-                return 1. - self.gammaP_ser(a, x)
+            elif a == 0:
+                return 1.
+            if x < a + 1.:
+                return gammaP_ser(a, x, rtol=rtol, itmax=itmax)
             else:
-                return self.gammaQ_cf(a, x)
-        def gammaP(self, a, x):
-            if x < a + 1:
-                return self.gammaP_ser(a, x)
-            else:
-                return 1. - self.gammaQ_cf(a, x)
+                return 1. - gammaQ_cf(a, x, rtol=rtol, itmax=itmax)
     gvar = _gvar_standin()
     gvar.GVar = GVar
 
