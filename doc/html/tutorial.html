@@ -163,7 +163,7 @@ a summary of results from each iteration.</p>
 result = 1.0015(91)    Q = 0.42
 </pre>
 </div>
-<p>There are several things worth noting here:</p>
+<p>There are several things to note here:</p>
 <blockquote>
 <div><p><strong>Adaptation:</strong> Integration estimates are shown for
 each of the 10 iterations,
@@ -177,11 +177,12 @@ It uses information from the samples in one iteration, however,
 to remap the integration variables for subsequent iterations,
 concentrating samples where the function is largest and reducing
 errors.
-As a result, the per iteration error
+As a result, the per-iteration error
 is reduced to 3.4% by the fifth iteration, and below 2% by
 the end &#8212; an improvement by almost two orders of
 magnitude from the start. Eventually the per-iteration error
-stops decreasing because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> has found the optimal remapping &#8212;
+stops decreasing because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> has found the optimal remapping, at which
+point
 it has fully adapted to the integrand.</p>
 <p><strong>Weighted Average:</strong> The final result, 1.0015 ± 0.0091,
 is obtained from a weighted
@@ -485,10 +486,11 @@ result = 0.9952(68)    Q = 0.19
 </pre>
 </div>
 <p>Notice how the errors fluctuate less from iteration to iteration
-with the smaller <tt class="docutils literal"><span class="pre">alpha</span></tt>. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> finds and holds onto the edge
-of the actual integration volume (at radius 0.2) more effectively
-when it is less precipitous about adapting. This leads to better
-results in this case.</p>
+with the smaller <tt class="docutils literal"><span class="pre">alpha</span></tt> in this case.
+Persistent, large fluctuations in the size
+of the per-iteration errors is often a signal that <tt class="docutils literal"><span class="pre">alpha</span></tt> should
+be reduced. In such situations <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> is probably over-reacting
+to random fluctuations it encounters as it samples the integrand.</p>
 <p>It is a good idea to make the actual integration volume as large a
 fraction as possible of the total volume used by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>, so
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> doesn&#8217;t spend lots of effort on regions where the integrand

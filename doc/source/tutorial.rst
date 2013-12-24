@@ -109,7 +109,7 @@ This code produces the following output:
 
 .. literalinclude:: eg1a.out
 
-There are several things worth noting here:
+There are several things to note here:
 
     **Adaptation:** Integration estimates are shown for
     each of the 10 iterations,
@@ -123,11 +123,12 @@ There are several things worth noting here:
     to remap the integration variables for subsequent iterations,
     concentrating samples where the function is largest and reducing 
     errors. 
-    As a result, the per iteration error
+    As a result, the per-iteration error
     is reduced to 3.4% by the fifth iteration, and below 2% by
     the end --- an improvement by almost two orders of 
     magnitude from the start. Eventually the per-iteration error
-    stops decreasing because |vegas| has found the optimal remapping --- 
+    stops decreasing because |vegas| has found the optimal remapping, at which
+    point
     it has fully adapted to the integrand.
 
     **Weighted Average:** The final result, 1.0015 ± 0.0091, 
@@ -386,10 +387,12 @@ There are several things worth noting here:
     .. literalinclude:: eg1g.out
 
     Notice how the errors fluctuate less from iteration to iteration
-    with the smaller ``alpha``. |vegas| finds and holds onto the edge
-    of the actual integration volume (at radius 0.2) more effectively
-    when it is less precipitous about adapting. This leads to better
-    results in this case.
+    with the smaller ``alpha`` in this case. 
+    Persistent, large fluctuations in the size 
+    of the per-iteration errors is often a signal that ``alpha`` should
+    be reduced. In such situations |vegas| is probably over-reacting
+    to random fluctuations it encounters as it samples the integrand. 
+
 
     It is a good idea to make the actual integration volume as large a 
     fraction as possible of the total volume used by |vegas|, so 
