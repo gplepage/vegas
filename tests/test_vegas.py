@@ -13,6 +13,7 @@
 
 from vegas import * 
 import math
+import pickle
 import numpy as np
 from numpy.testing import assert_allclose as np_assert_allclose
 import unittest
@@ -43,6 +44,16 @@ class TestAdaptiveMap(unittest.TestCase):
         np_assert_allclose(m.inc, [[0.2, 0.2, 0.3, 0.3], [1, 1, 2, 2]])
         self.assertEqual(m.dim, 2)
         self.assertEqual(m.ninc, 4)
+
+    def test_pickle(self):
+        " pickle AdaptiveMap "
+        m1 = AdaptiveMap(grid=[[0, 1, 3], [-2, 0, 6]])
+        with open('test_map.p', 'wb') as ofile:
+            pickle.dump(m1, ofile)
+        with open('test_map.p', 'rb') as ifile:
+            m2 = pickle.load(ifile)
+        np_assert_allclose(m2.grid, m1.grid)
+        np_assert_allclose(m2.inc, m1.inc)
 
     def test_map(self):
         " map(...) "
@@ -215,6 +226,20 @@ class TestIntegrator(unittest.TestCase):
             ]
         for i, l in enumerate(I.settings().split('\n')):
             self.assertEqual(l, lines[i])
+
+    def test_pickle(self):
+        I1 = Integrator([[0.,1.],[-1.,1.]], neval=234, nitn=123)
+        with open('test_integ.p', 'wb') as ofile:
+            pickle.dump(I1, ofile)
+        with open('test_integ.p', 'rb') as ifile:
+            I2 = pickle.load(ifile)
+        assert isinstance(I2, Integrator)
+        for k in Integrator.defaults:
+            if k == 'map':
+                np_assert_allclose(I1.map.grid, I2.map.grid)
+                np_assert_allclose(I1.map.inc, I2.map.inc)
+            else:
+                self.assertEqual(getattr(I1, k), getattr(I2, k))
 
     def test_set(self):
         " set "

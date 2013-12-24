@@ -1,3 +1,10 @@
+Version 1.1.2 - ????
+========================
+
+- More polished documentation - a work in progress.
+
+- Fixed bug in pickling of Integrator. Added testing for pickling.
+
 Version 1.1.1 - 2013-12-22
 ============================
 Fixed a tiny typo that would not cause problems particularly, 

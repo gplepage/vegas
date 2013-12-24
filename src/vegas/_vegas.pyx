@@ -1097,8 +1097,7 @@ cdef class Integrator(object):
 
     def __setstate__(self, odict):
         """ Set state for unpickling. """
-        for k in odict:
-            setattr(self, k, odict[k])
+        self.set(odict)
 
     def set(self, ka={}, **kargs):
         """ Reset default parameters in integrator.
