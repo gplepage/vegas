@@ -58,7 +58,7 @@ whose mean is the exact integral and whose variance is:
 .. math::
 
 	\sigma_I^2 &= \frac{1}{M}\left(
-	\int_0^1 dy\; J^2(y) \; f^2(y(x)) - I^2
+	\int_0^1 dy\; J^2(y) \; f^2(x(y)) - I^2
 	\right) \\
 	&= \frac{1}{M}\left(
 	\int_a^b dx \;J(y(x))\; f^2(x) - I^2
@@ -79,7 +79,9 @@ shows that |sigmaI| is minimized if
 	J(y(x)) \propto \frac{1}{|f(x)|}.
 
 Such transformations greatly reduce the standard deviation when the 
-integrand has high peaks. Since
+integrand has high peaks. (Indeed, |sigmaI| vanishes for the 
+optimal transformation if the integrand 
+is positive (or negative) everywhere.) Since
 
 .. math::
 
@@ -202,11 +204,11 @@ in the previous section looks like:
 .. image:: eg1a-plt2.*
    :width: 80%
 
-Every rectangle in these plots receives an equal amount of 
-attention from |vegas|, irrespective of its size. Consequently
-|vegas| concentrates on regions where the rectangles are small
-and therefore numerous: here
-in the region around ``x = [0.5, 0.5, 0.5, 0.5]``, where the
+These grids transform into uniformly-spaced grids in |y| space. 
+Consequently |vegas| gives equal attention to every rectangle in
+these plots, irrespective of its size; and it concentrates
+on regions where the rectangles are small (and therefore numerous) ---
+here in the vicinity of ``x = [0.5, 0.5, 0.5, 0.5]``, where the
 peak is.
 
 These plots were obtained by including the line ::

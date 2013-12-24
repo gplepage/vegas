@@ -87,8 +87,8 @@ uniformly distributed between 0 and 1.</p>
 <p>The estimate <img class="math" src="_images/math/e8b295520d0d944faf93b11756ee637d3a60b45f.png" alt="S^{(1)}" style="vertical-align: 0px"/> is a itself a random number from a distribution
 whose mean is the exact integral and whose variance is:</p>
 <div class="math">
-<p><img src="_images/math/0d8f2a60a03cd87a7d2be0fb356879b231516cf8.png" alt="\sigma_I^2 &amp;= \frac{1}{M}\left(
-\int_0^1 dy\; J^2(y) \; f^2(y(x)) - I^2
+<p><img src="_images/math/ba48cc0b1466330b29d222d7fa7c3608b72e536f.png" alt="\sigma_I^2 &amp;= \frac{1}{M}\left(
+\int_0^1 dy\; J^2(y) \; f^2(x(y)) - I^2
 \right) \\
 &amp;= \frac{1}{M}\left(
 \int_a^b dx \;J(y(x))\; f^2(x) - I^2
@@ -102,7 +102,9 @@ A simple variational calculation, constrained by</p>
 <div class="math">
 <p><img src="_images/math/6513a76b8102f5aed9f31bb8751aaf80d98e9eb1.png" alt="J(y(x)) \propto \frac{1}{|f(x)|}."/></p>
 </div><p>Such transformations greatly reduce the standard deviation when the
-integrand has high peaks. Since</p>
+integrand has high peaks. (Indeed, <img class="math" src="_images/math/d6e5c2ebb49ac8cd0853c33f5c873a96e8b58f88.png" alt="\sigma_I" style="vertical-align: -3px"/> vanishes for the
+optimal transformation if the integrand
+is positive (or negative) everywhere.) Since</p>
 <div class="math">
 <p><img src="_images/math/f17be52c164beba1d8a8f31859d0e007ce7a90ea.png" alt="1/J = \frac{dy}{dx} \propto |f(x)|,"/></p>
 </div><p>the regions in <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/> space where <img class="math" src="_images/math/43a205879f624365c1c1773c849be4c20594794f.png" alt="|f(x)|" style="vertical-align: -3px"/> is large are
@@ -195,11 +197,11 @@ the optimal grid for the four-dimensional Gaussian integral
 in the previous section looks like:</p>
 <img alt="_images/eg1a-plt1.png" src="_images/eg1a-plt1.png" style="width: 80%;" />
 <img alt="_images/eg1a-plt2.png" src="_images/eg1a-plt2.png" style="width: 80%;" />
-<p>Every rectangle in these plots receives an equal amount of
-attention from <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>, irrespective of its size. Consequently
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> concentrates on regions where the rectangles are small
-and therefore numerous: here
-in the region around <tt class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></tt>, where the
+<p>These grids transform into uniformly-spaced grids in <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/> space.
+Consequently <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> gives equal attention to every rectangle in
+these plots, irrespective of its size; and it concentrates
+on regions where the rectangles are small (and therefore numerous) &#8212;
+here in the vicinity of <tt class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></tt>, where the
 peak is.</p>
 <p>These plots were obtained by including the line</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">integ</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">show_grid</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
