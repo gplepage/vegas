@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vegas Package &mdash; vegas 1.1.1 documentation</title>
+    <title>vegas Module &mdash; vegas 1.1.2a documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.1.1',
+        VERSION:     '1.1.2a',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 1.1.1 documentation" href="index.html" />
+    <link rel="top" title="vegas 1.1.2a documentation" href="index.html" />
     <link rel="prev" title="How vegas Works" href="background.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -47,7 +47,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 1.1.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 1.1.2a documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -56,44 +56,27 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="vegas-package">
-<h1><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> Package<a class="headerlink" href="#vegas-package" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="vegas-module">
+<h1><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> Module<a class="headerlink" href="#vegas-module" title="Permalink to this headline">¶</a></h1>
 <span class="target" id="module-vegas"></span><div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>This package provides tools for estimating multidimensional 
-integrals numerically using an enhanced version of 
-the adaptive Monte Carlo <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm (G. P. Lepage, 
-J. Comput. Phys. 27(1978) 192).</p>
-<p>A <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> code generally involves two objects, one representing
-the integrand and the other representing an integration 
-operator for a particular multidimensional volume. A typical
-code sequence for a D-dimensional integral has the structure:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># create the integrand</span>
-<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="o">...</span> <span class="n">compute</span> <span class="n">the</span> <span class="n">integrand</span> <span class="n">at</span> <span class="n">point</span> <span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="n">d</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.</span><span class="o">..</span><span class="n">D</span><span class="o">-</span><span class="mi">1</span> 
-    <span class="o">...</span>
-
-<span class="c"># create an integrator for volume with </span>
-<span class="c"># xl0 &lt;= x[0] &lt;= xu0, xl1 &lt;= x[1] &lt;= xu1 ...</span>
-<span class="n">integration_region</span> <span class="o">=</span> <span class="p">[[</span><span class="n">xl0</span><span class="p">,</span> <span class="n">xu0</span><span class="p">],</span> <span class="p">[</span><span class="n">xl1</span><span class="p">,</span> <span class="n">xu1</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
-<span class="n">integrator</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">integration_region</span><span class="p">)</span>
-
-<span class="c"># do the integral and print out the result</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">integrator</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The algorithm iteratively adapts to the integrand over
-<tt class="docutils literal"><span class="pre">nitn</span></tt> iterations, each of which uses at most <tt class="docutils literal"><span class="pre">neval</span></tt>
-integrand samples to generate a Monte Carlo estimate 
-of the integral. The final result is the weighted 
-average of the results fom all iterations.</p>
-<p>The integrator remembers how it adapted to <tt class="docutils literal"><span class="pre">f(x)</span></tt>
-and uses this information as its starting point if it is reapplied 
-to <tt class="docutils literal"><span class="pre">f(x)</span></tt> or applied to some other function <tt class="docutils literal"><span class="pre">g(x)</span></tt>.
-An integrator&#8217;s state can be archived for future applications
-using Python&#8217;s <tt class="xref py py-mod docutils literal"><span class="pre">pickle</span></tt> module.</p>
-<p>See the extensive Tutorial in the first section of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> documentation.</p>
+<p>The key Python objects supported by the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> module are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> &#8212; an object describing a multidimensional integration
+operator. These contain information about the integration volume,
+but also about optimal remappings of the integration variables based
+upon the last integral evaluated using the object.</li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><tt class="xref py py-class docutils literal"><span class="pre">vegas.AdaptiveMap</span></tt></a> &#8212; an object describing the remappings used by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>.</li>
+<li><a class="reference internal" href="#vegas.RunningWAvg" title="vegas.RunningWAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RunningWAvg</span></tt></a> &#8212; an object describing the result of a <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> integration.
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> returns the weighted average of the integral estimates
+from each <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> iteration as an object of class <a class="reference internal" href="#vegas.RunningWAvg" title="vegas.RunningWAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RunningWAvg</span></tt></a>. These are
+Gaussian random variables &#8212; that is, they have a
+mean and a standard deviation) &#8212; but also contain information about the
+iterations <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> used in generating the result.</li>
+</ul>
+</div></blockquote>
+<p>These are described in detail below.</p>
 </div>
 <div class="section" id="integrator-objects">
 <h2>Integrator Objects<a class="headerlink" href="#integrator-objects" title="Permalink to this headline">¶</a></h2>
@@ -119,6 +102,19 @@ adapted. The integrator returns the weighted average of all
 (Monte Carlo) uncertainty in that estimate of the integral. The
 result is an object of type <a class="reference internal" href="#vegas.RunningWAvg" title="vegas.RunningWAvg"><tt class="xref py py-class docutils literal"><span class="pre">RunningWAvg</span></tt></a> (which is derived
 from <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>).</p>
+<p><a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a>s have a large number of parameters but the 
+only ones that most people will care about are: the
+number <tt class="docutils literal"><span class="pre">nitn</span></tt> of iterations of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm;
+the maximum number <tt class="docutils literal"><span class="pre">neval</span></tt> of integrand evaluations per
+iteration; and the damping parameter <tt class="docutils literal"><span class="pre">alpha</span></tt>, which is used
+to slow down the adaptive algorithms when they would otherwise
+be unstable (e.g., very peaky integrands). Setting parameter
+<tt class="docutils literal"><span class="pre">analyzer=vegas.reporter()</span></tt> is sometimes useful, as well,
+since it causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to print (on <tt class="docutils literal"><span class="pre">sys.stdout</span></tt>) 
+intermediate results from each iteration, as they are 
+produced. This helps when each iteration takes a long time 
+to complete (e.g., an hour) because it allows you to 
+monitor progress as it is being made (or not).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -746,7 +742,7 @@ gives the fastest results.</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">vegas</span></tt> Package</a><ul>
+<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">vegas</span></tt> Module</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#integrator-objects">Integrator Objects</a></li>
 <li><a class="reference internal" href="#adaptivemap-objects">AdaptiveMap Objects</a></li>
@@ -787,7 +783,7 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 1.1.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 1.1.2a documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

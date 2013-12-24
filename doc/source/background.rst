@@ -6,7 +6,7 @@ How :mod:`vegas` Works
 .. |Integrator| replace:: :class:`vegas.Integrator`
 .. |AdaptiveMap| replace:: :class:`vegas.AdaptiveMap`
 .. |vegas| replace:: :mod:`vegas`
-.. |WAvg| replace:: :class:`lsqfit.WAvg`
+.. |WAvg| replace:: :class:`vegas.RunningWAvg`
 .. |chi2| replace:: :math:`\chi^2`
 .. |x| replace:: :math:`x` 
 .. |y| replace:: :math:`y`

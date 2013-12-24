@@ -907,6 +907,20 @@ cdef class Integrator(object):
     result is an object of type :class:`RunningWAvg` (which is derived
     from :class:`gvar.GVar`).
 
+    |Integrator|\s have a large number of parameters but the 
+    only ones that most people will care about are: the
+    number ``nitn`` of iterations of the |vegas| algorithm;
+    the maximum number ``neval`` of integrand evaluations per
+    iteration; and the damping parameter ``alpha``, which is used
+    to slow down the adaptive algorithms when they would otherwise
+    be unstable (e.g., very peaky integrands). Setting parameter
+    ``analyzer=vegas.reporter()`` is sometimes useful, as well,
+    since it causes |vegas| to print (on ``sys.stdout``) 
+    intermediate results from each iteration, as they are 
+    produced. This helps when each iteration takes a long time 
+    to complete (e.g., an hour) because it allows you to 
+    monitor progress as it is being made (or not).
+
     :param map: The integration region as specified by 
         an array ``xlimit[d, i]`` where ``d`` is the 
         direction and ``i=0,1`` specify the lower

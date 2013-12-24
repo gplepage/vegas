@@ -6,7 +6,7 @@ Tutorial
 .. |Integrator| replace:: :class:`vegas.Integrator`
 .. |AdaptiveMap| replace:: :class:`vegas.AdaptiveMap`
 .. |vegas| replace:: :mod:`vegas`
-.. |WAvg| replace:: :class:`lsqfit.WAvg`
+.. |WAvg| replace:: :class:`vegas.RunningWAvg`
 .. |chi2| replace:: :math:`\chi^2`
 .. |x| replace:: x 
 .. |y| replace:: y 
@@ -126,7 +126,9 @@ There are several things worth noting here:
     As a result, the per iteration error
     is reduced to 3.4% by the fifth iteration, and below 2% by
     the end --- an improvement by almost two orders of 
-    magnitude from the start.
+    magnitude from the start. Eventually the per-iteration error
+    stops decreasing because |vegas| has found the optimal remapping --- 
+    it has fully adapted to the integrand.
 
     **Weighted Average:** The final result, 1.0015 ± 0.0091, 
     is obtained from a weighted

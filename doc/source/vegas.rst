@@ -1,18 +1,39 @@
-:mod:`vegas` Package
+:mod:`vegas` Module
 ==================================================================
 
 .. |Integrator| replace:: :class:`vegas.Integrator`
 .. |AdaptiveMap| replace:: :class:`vegas.AdaptiveMap`
 .. |vegas| replace:: :mod:`vegas`
-.. |WAvg| replace:: :class:`lsqfit.WAvg`
+.. |WAvg| replace:: :class:`vegas.RunningWAvg`
 .. |chi2| replace:: :math:`\chi^2`
 .. |x| replace:: x 
 .. |y| replace:: y 
 
 .. moduleauthor:: G. Peter Lepage <g.p.lepage@cornell.edu>
 
-.. automodule:: vegas
-    :synopsis: Adaptive multidimensional Monte Carlo integration
+.. module:: vegas
+     :synopsis: Adaptive multidimensional Monte Carlo integration
+
+Introduction
+----------------
+The key Python objects supported by the |vegas| module are:
+
+   * |Integrator| --- an object describing a multidimensional integration
+     operator. These contain information about the integration volume,
+     but also about optimal remappings of the integration variables based
+     upon the last integral evaluated using the object.
+
+   * |AdaptiveMap| --- an object describing the remappings used by |vegas|.
+
+   * |WAvg| --- an object describing the result of a |vegas| integration. 
+     |vegas| returns the weighted average of the integral estimates
+     from each |vegas| iteration as an object of class |WAvg|. These are 
+     Gaussian random variables --- that is, they have a 
+     mean and a standard deviation) --- but also contain information about the
+     iterations |vegas| used in generating the result.
+
+These are described in detail below.
+
 
 Integrator Objects
 ----------------------------
