@@ -1,4 +1,5 @@
 *.pyc
+*.p
 build/
 __pycache__/
 *.c
