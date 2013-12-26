@@ -48,7 +48,7 @@ cdef class Integrator:
     # inputs
     cdef readonly object fcntype
     cdef readonly INT_TYPE neval
-    cdef readonly object neval_hcube_range
+    cdef readonly INT_TYPE[::1] neval_hcube_range
     cdef readonly INT_TYPE nhcube_vec
     cdef readonly INT_TYPE maxinc_axis
     cdef readonly INT_TYPE max_nhcube
@@ -63,7 +63,28 @@ cdef class Integrator:
     # generated
     cdef readonly AdaptiveMap map 
     cdef double[::1] sigf_list
+    cdef double neval_sigf
     cdef INT_TYPE nstrat 
     cdef INT_TYPE neval_hcube 
     cdef INT_TYPE dim 
     cdef readonly INT_TYPE last_neval
+    # work areas
+    cdef INT_TYPE _calculate_neval_hcube(
+        self, 
+        bint redistribute,
+        INT_TYPE[::1] neval_hcube,
+        INT_TYPE hcube_base,
+        INT_TYPE nhcube_vec,
+        )
+    cdef void _generate_random_y_x_jac(
+        self, 
+        double[:, ::1] y, 
+        double[:, ::1] x, 
+        double[::1] jac, 
+        INT_TYPE neval_vec,
+        INT_TYPE[::1] neval_hcube, 
+        INT_TYPE hcube_base, 
+        INT_TYPE nhcube_vec,
+        )
+
+

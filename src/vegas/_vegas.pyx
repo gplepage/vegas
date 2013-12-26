@@ -1332,6 +1332,79 @@ cdef class Integrator(object):
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
+    cdef INT_TYPE _calculate_neval_hcube(
+        self, 
+        bint redistribute,
+        INT_TYPE[::1] neval_hcube,
+        INT_TYPE hcube_base,
+        INT_TYPE nhcube_vec,
+        ):
+        cdef INT_TYPE neval_vec 
+        cdef INT_TYPE ihcube
+        if redistribute:
+            neval_vec = 0
+            for ihcube in range(nhcube_vec):
+                neval_hcube[ihcube] = <int> (
+                    self.sigf_list[hcube_base + ihcube] * self.neval_sigf
+                    )
+                if neval_hcube[ihcube] < self.neval_hcube:
+                    # counter += 1
+                    neval_hcube[ihcube] = self.neval_hcube
+                if neval_hcube[ihcube] > self.max_neval_hcube:
+                    neval_hcube[ihcube] = self.max_neval_hcube
+                # if neval_hcube[ihcube] < min_neval:
+                #     min_neval = neval_hcube[ihcube]
+                # if neval_hcube[ihcube] > max_neval:
+                #     max_neval = neval_hcube[ihcube]
+                if neval_hcube[ihcube] < self.neval_hcube_range[0]:
+                    self.neval_hcube_range[0] = neval_hcube[ihcube]
+                elif neval_hcube[ihcube] > self.neval_hcube_range[1]:
+                    self.neval_hcube_range[1] = neval_hcube[ihcube]
+                neval_vec += neval_hcube[ihcube]
+            # if neval_vec > y.shape[0]:
+            #     y = numpy.empty((neval_vec, self.dim), float)
+            #     x = numpy.empty((neval_vec, self.dim), float)
+            #     jac = numpy.empty(neval_vec, float)    
+            #     fdv = numpy.empty(neval_vec, float)  
+            #     fdv2 = numpy.empty(neval_vec, float) 
+        else:
+            for ihcube in range(nhcube_vec):
+                neval_hcube[ihcube] = self.neval_nhcube
+            neval_vec = nhcube_vec * self.neval_nhcube
+        return neval_vec
+    
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    cdef void _generate_random_y_x_jac(
+        self, 
+        double[:, ::1] y, 
+        double[:, ::1] x, 
+        double[::1] jac, 
+        INT_TYPE neval_vec,
+        INT_TYPE[::1] neval_hcube, 
+        INT_TYPE hcube_base, 
+        INT_TYPE nhcube_vec,
+        ):
+        cdef INT_TYPE ihcube, hcube, tmp_hcube
+        cdef INT_TYPE i_start=0
+        cdef INT_TYPE[::1] y0 = numpy.empty(self.dim, int)
+        cdef double[:, ::1] yran = numpy.random.uniform(
+            0., 1., (neval_vec, self.dim)
+            )
+        for ihcube in range(nhcube_vec):
+            hcube = hcube_base + ihcube
+            tmp_hcube = hcube
+            for d in range(self.dim):
+                y0[d] = tmp_hcube % self.nstrat
+                tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
+            for d in range(self.dim):
+                for i in range(i_start, i_start + neval_hcube[ihcube]):
+                    y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
+            i_start += neval_hcube[ihcube]
+        self.map.map(y, x, jac, neval_vec)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def _integrate(self, fcn):
         """ Do integral for one iteration. """
         cdef INT_TYPE nhcube = self.nstrat ** self.dim 
@@ -1371,50 +1444,73 @@ cdef class Integrator(object):
         # iterate over h-cubes in batches of nhcube_vec h-cubes
         # this allows for vectorization, to reduce python overhead
         self.last_neval = 0
+        self.neval_hcube_range = numpy.ones(2, int) * self.neval_hcube
         nhcube_vec = self.nhcube_vec
+        self.neval_sigf = (
+            self.neval / 2. / numpy.sum(self.sigf_list)
+            ) if redistribute else 0        
         for hcube_base in range(0, nhcube, nhcube_vec):
             if (hcube_base + nhcube_vec) > nhcube:
                 nhcube_vec = nhcube - hcube_base 
-
             # compute neval_hcube for each h-cube
             # reinitialize work areas if necessary
-            if redistribute:
-                neval_vec = 0
-                for ihcube in range(nhcube_vec):
-                    neval_hcube[ihcube] = <int> (
-                        self.sigf_list[hcube_base + ihcube] * neval_sigf
-                        )
-                    if neval_hcube[ihcube] < self.neval_hcube:
-                        # counter += 1
-                        neval_hcube[ihcube] = self.neval_hcube
-                    if neval_hcube[ihcube] > self.max_neval_hcube:
-                        neval_hcube[ihcube] = self.max_neval_hcube
-                    if neval_hcube[ihcube] < min_neval:
-                        min_neval = neval_hcube[ihcube]
-                    if neval_hcube[ihcube] > max_neval:
-                        max_neval = neval_hcube[ihcube]
-                    neval_vec += neval_hcube[ihcube]
-                if neval_vec > y.shape[0]:
-                    y = numpy.empty((neval_vec, self.dim), float)
-                    x = numpy.empty((neval_vec, self.dim), float)
-                    jac = numpy.empty(neval_vec, float)    
-                    fdv = numpy.empty(neval_vec, float)  
-                    fdv2 = numpy.empty(neval_vec, float) 
-            self.last_neval += neval_vec
-           
-            i_start = 0
-            yran = numpy.random.uniform(0., 1., (neval_vec, self.dim))
-            for ihcube in range(nhcube_vec):
-                hcube = hcube_base + ihcube
-                tmp_hcube = hcube
-                for d in range(self.dim):
-                    y0[d] = tmp_hcube % self.nstrat
-                    tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
-                for d in range(self.dim):
-                    for i in range(i_start, i_start + neval_hcube[ihcube]):
-                        y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
-                i_start += neval_hcube[ihcube]
-            self.map.map(y, x, jac, neval_vec)
+            # if redistribute:
+            #     neval_vec = 0
+            #     for ihcube in range(nhcube_vec):
+            #         neval_hcube[ihcube] = <int> (
+            #             self.sigf_list[hcube_base + ihcube] * neval_sigf
+            #             )
+            #         if neval_hcube[ihcube] < self.neval_hcube:
+            #             # counter += 1
+            #             neval_hcube[ihcube] = self.neval_hcube
+            #         if neval_hcube[ihcube] > self.max_neval_hcube:
+            #             neval_hcube[ihcube] = self.max_neval_hcube
+            #         if neval_hcube[ihcube] < min_neval:
+            #             min_neval = neval_hcube[ihcube]
+            #         if neval_hcube[ihcube] > max_neval:
+            #             max_neval = neval_hcube[ihcube]
+            #         neval_vec += neval_hcube[ihcube]
+            #     if neval_vec > y.shape[0]:
+            #         y = numpy.empty((neval_vec, self.dim), float)
+            #         x = numpy.empty((neval_vec, self.dim), float)
+            #         jac = numpy.empty(neval_vec, float)    
+            #         fdv = numpy.empty(neval_vec, float)  
+            #         fdv2 = numpy.empty(neval_vec, float) 
+            # self.last_neval += neval_vec
+            neval_vec = self._calculate_neval_hcube(
+                    redistribute=redistribute, 
+                    neval_hcube=neval_hcube,
+                    hcube_base=hcube_base,
+                    nhcube_vec=nhcube_vec,
+                    )
+            if neval_vec > y.shape[0]:
+                y = numpy.empty((neval_vec, self.dim), float)
+                x = numpy.empty((neval_vec, self.dim), float)
+                jac = numpy.empty(neval_vec, float)    
+                fdv = numpy.empty(neval_vec, float)  
+                fdv2 = numpy.empty(neval_vec, float) 
+            # i_start = 0
+            # yran = numpy.random.uniform(0., 1., (neval_vec, self.dim))
+            # for ihcube in range(nhcube_vec):
+            #     hcube = hcube_base + ihcube
+            #     tmp_hcube = hcube
+            #     for d in range(self.dim):
+            #         y0[d] = tmp_hcube % self.nstrat
+            #         tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
+            #     for d in range(self.dim):
+            #         for i in range(i_start, i_start + neval_hcube[ihcube]):
+            #             y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
+            #     i_start += neval_hcube[ihcube]
+            # self.map.map(y, x, jac, neval_vec)
+            self._generate_random_y_x_jac(
+                    y=y, 
+                    x=x, 
+                    jac=jac, 
+                    neval_vec=neval_vec,
+                    neval_hcube=neval_hcube, 
+                    hcube_base=hcube_base, 
+                    nhcube_vec=nhcube_vec,
+                    )
             fcn(x, fdv, neval_vec)
             
             # compute integral h-cube by h-cube
@@ -1449,7 +1545,7 @@ cdef class Integrator(object):
                 self.map.add_training_data(y, fdv2, neval_vec)
 
         # record final results
-        self.neval_hcube_range = (min_neval, max_neval)
+        # self.neval_hcube_range = (min_neval, max_neval)
         # self.neval_hcube_range = (min_neval, float(counter) / nhcube, max_neval)
         return gvar.gvar(ans_mean, sqrt(ans_var))
 

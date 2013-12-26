@@ -1,4 +1,4 @@
-# c#ython: profile=True
+# c#ython: profile=True 
 """
 Cython code for the integrand used in path-integral.py.
 
