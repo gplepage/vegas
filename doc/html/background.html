@@ -69,17 +69,22 @@ its remapping of the integration variables in each
 direction, before it makes Monte Carlo estimates of the integral.
 This is equivalent to a standard Monte Carlo optimization
 called &#8220;importance sampling.&#8221;</p>
-<p>The idea in one-dimension, for
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> chooses transformations
+for each integration variable
+that minimize the statistical errors in
+Monte Carlo estimates using integrand
+samples that are uniformly distributed
+in the new variables.
+The idea in one-dimension, for
 example, is to replace the original integral over <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/>,</p>
 <div class="math">
 <p><img src="_images/math/685754b4ff61f76b6c23a8fed4d1c1ea6f95b08f.png" alt="I = \int_a^b dx\; f(x),"/></p>
 </div><p>by an equivalent integral over a new variable <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>,</p>
 <div class="math">
 <p><img src="_images/math/e85e4e4ff7c6f671135c564aa1e99f069434b631.png" alt="I = \int_0^1 dy\; J(y)\; f(x(y)),"/></p>
-</div><p>where the transformation <img class="math" src="_images/math/0eb3094e860d07a5547928542b0e375fe93c9caa.png" alt="x(y)" style="vertical-align: -3px"/> is chosen to
-minimize the uncertainty in a Monte Carlo estimate of the
-transformed integral.
-A simple Monte Carlo estimate of that integral is given by</p>
+</div><p>where <img class="math" src="_images/math/59fa1d4140424fb96b833518314913cfc2234e25.png" alt="J(y)" style="vertical-align: -3px"/> is the Jacobian of the transformation.
+A simple Monte Carlo estimate of the transformed
+integral is given by</p>
 <div class="math">
 <p><img src="_images/math/f8e06a4803ca960002283e15c73ad80a3db9230b.png" alt="I \approx S^{(1)} \equiv \frac{1}{M} \sum_y \;J(y)\; f(x(y))"/></p>
 </div><p>where the sum is over <img class="math" src="_images/math/5d1e4485dc90c450e8c76826516c1b2ccb8fce16.png" alt="M" style="vertical-align: 0px"/> random points
@@ -95,16 +100,14 @@ whose mean is the exact integral and whose variance is:</p>
 \right)"/></p>
 </div><p>The standard deviation <img class="math" src="_images/math/d6e5c2ebb49ac8cd0853c33f5c873a96e8b58f88.png" alt="\sigma_I" style="vertical-align: -3px"/> is an estimate of the possible
 error in the Monte Carlo estimate.
-A simple variational calculation, constrained by</p>
+A straightforward variational calculation, constrained by</p>
 <div class="math">
-<p><img src="_images/math/bb2bdb184676f4ac2ae87eea473228344996796f.png" alt="\int_a^b \frac{dx}{J(y(x))} = 1,"/></p>
+<p><img src="_images/math/8433200feba870f66eda70a89b68d9990fddd0a0.png" alt="\int_a^b \frac{dx}{J(y(x))} = \int_0^1 dy = 1,"/></p>
 </div><p>shows that <img class="math" src="_images/math/d6e5c2ebb49ac8cd0853c33f5c873a96e8b58f88.png" alt="\sigma_I" style="vertical-align: -3px"/> is minimized if</p>
 <div class="math">
-<p><img src="_images/math/6513a76b8102f5aed9f31bb8751aaf80d98e9eb1.png" alt="J(y(x)) \propto \frac{1}{|f(x)|}."/></p>
+<p><img src="_images/math/215e141b98ef0d3cfef8883e163f3b4f8574229f.png" alt="J(y(x)) = \frac{\int_a^b dx\;|f(x)|}{|f(x)|}."/></p>
 </div><p>Such transformations greatly reduce the standard deviation when the
-integrand has high peaks. (Indeed, <img class="math" src="_images/math/d6e5c2ebb49ac8cd0853c33f5c873a96e8b58f88.png" alt="\sigma_I" style="vertical-align: -3px"/> vanishes for the
-optimal transformation if the integrand
-is positive (or negative) everywhere.) Since</p>
+integrand has high peaks. Since</p>
 <div class="math">
 <p><img src="_images/math/f17be52c164beba1d8a8f31859d0e007ce7a90ea.png" alt="1/J = \frac{dy}{dx} \propto |f(x)|,"/></p>
 </div><p>the regions in <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/> space where <img class="math" src="_images/math/43a205879f624365c1c1773c849be4c20594794f.png" alt="|f(x)|" style="vertical-align: -3px"/> is large are
@@ -169,10 +172,10 @@ constraint</p>
 </div><p>it is trivial to show that the standard deviation is minimized
 when</p>
 <div class="math">
-<p><img src="_images/math/bc48c95804970b3c1b2acaf6663d304036bc300e.png" alt="\frac{J_i^2}{\Delta x_i}
+<p><img src="_images/math/fb3eb0e56454e75fd0c28c84a82b219db3014fa6.png" alt="\frac{J_i^2}{\Delta x_i}
 \int_{x_i}^{x_{i+1}} dx \; f^2(x)
 = N^2 \Delta x_i \int_{x_i}^{x_{i+1}} dx \; f^2(x)
-\; \propto \; \mbox{constant}"/></p>
+\; = \; \mbox{constant}"/></p>
 </div><p>for all <img class="math" src="_images/math/34857b3ba74ce5cd8607f3ebd23e9015908ada71.png" alt="i" style="vertical-align: -1px"/>.</p>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> adjusts the grid until this last condition is
 satisfied.  As a result grid increments <img class="math" src="_images/math/537cc5ab393d9e36d18cd15fd02206ef9be7d2ad.png" alt="\Delta x_i" style="vertical-align: -4px"/> are
@@ -198,9 +201,11 @@ in the previous section looks like:</p>
 <img alt="_images/eg1a-plt1.png" src="_images/eg1a-plt1.png" style="width: 80%;" />
 <img alt="_images/eg1a-plt2.png" src="_images/eg1a-plt2.png" style="width: 80%;" />
 <p>These grids transform into uniformly-spaced grids in <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/> space.
-Consequently <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> gives equal attention to every rectangle in
-these plots, irrespective of its size; and it concentrates
-on regions where the rectangles are small (and therefore numerous) &#8212;
+Consequently a uniform, <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space Monte Carlo would place the same
+number of integrand evaluations, on average, in every rectangle
+of these pictures. (The average number is typically much less one
+in higher dimensions.) Integrand evaluations would be concentrated
+in regions where the rectangles are small (and therefore numerous) &#8212;
 here in the vicinity of <tt class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></tt>, where the
 peak is.</p>
 <p>These plots were obtained by including the line</p>
@@ -273,18 +278,18 @@ lie along diagonals of the integration volume. To address such problems,
 the new version of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> introduces a second adaptive strategy,
 based upon another standard Monte Carlo technique called &#8220;stratified
 sampling.&#8221; <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> divides the <img class="math" src="_images/math/96ab646de7704969b91c76a214126b45f2b07b25.png" alt="d" style="vertical-align: 0px"/>-dimensional
-<img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space volume into hypercubes using
-a uniform <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space grid with <img class="math" src="_images/math/20694f1b84293018bd5f592d2e569d440e814644.png" alt="M_\mathrm{strat}" style="vertical-align: -4px"/> stratifications on each
+<img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space volume into <img class="math" src="_images/math/4cf95a348d6cbe912f025e082154e6c0363dd6c4.png" alt="M_\mathrm{st}^d" style="vertical-align: -7px"/> hypercubes using
+a uniform <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space grid with <img class="math" src="_images/math/30864ca487301a1fdde3ea443cf9a4a266cbab8d.png" alt="M_\mathrm{st}" style="vertical-align: -3px"/> stratifications on each
 axis. It estimates
 the integral by doing a separate Monte Carlo integration in each of
-the <img class="math" src="_images/math/b0782b6ac7d4dcdd10c18b163c5e7ba0ba6e0ab0.png" alt="M_\mathrm{strat}^d" style="vertical-align: -8px"/> hypercubes, and adding the results together to provide an estimate
+the hypercubes, and adding the results together to provide an estimate
 for the integral over the entire integration region.
 Typically
 this <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space grid is much coarser than the <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/>-space grid used to
 remap the integration variables. This is because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> needs
 at least two integrand evaluations in each <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space hypercube, and
-so must keep the number of hypercubes <img class="math" src="_images/math/b0782b6ac7d4dcdd10c18b163c5e7ba0ba6e0ab0.png" alt="M_\mathrm{strat}^d" style="vertical-align: -8px"/> smaller than <tt class="docutils literal"><span class="pre">neval/2</span></tt>.
-This can restrict <img class="math" src="_images/math/20694f1b84293018bd5f592d2e569d440e814644.png" alt="M_\mathrm{strat}" style="vertical-align: -4px"/> severely when <img class="math" src="_images/math/96ab646de7704969b91c76a214126b45f2b07b25.png" alt="d" style="vertical-align: 0px"/> is large.</p>
+so must keep the number of hypercubes <img class="math" src="_images/math/4cf95a348d6cbe912f025e082154e6c0363dd6c4.png" alt="M_\mathrm{st}^d" style="vertical-align: -7px"/> smaller than <tt class="docutils literal"><span class="pre">neval/2</span></tt>.
+This can restrict <img class="math" src="_images/math/30864ca487301a1fdde3ea443cf9a4a266cbab8d.png" alt="M_\mathrm{st}" style="vertical-align: -3px"/> severely when <img class="math" src="_images/math/96ab646de7704969b91c76a214126b45f2b07b25.png" alt="d" style="vertical-align: 0px"/> is large.</p>
 <p>Older versions of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> also divide <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space into hypercubes and
 do Monte Carlo estimates in the separate hypercubes. These versions, however,
 use the same number of integrand evaluations in each hypercube.
@@ -304,7 +309,7 @@ the error comes from. This improves <a class="reference internal" href="vegas.ht
 the contributions from the peaks and
 reduces statistical errors,
 provided <tt class="docutils literal"><span class="pre">neval</span></tt> is large enough to permit a large number  (more
-than 2 or 3) <img class="math" src="_images/math/20694f1b84293018bd5f592d2e569d440e814644.png" alt="M_\mathrm{strat}" style="vertical-align: -4px"/> of
+than 2 or 3) <img class="math" src="_images/math/30864ca487301a1fdde3ea443cf9a4a266cbab8d.png" alt="M_\mathrm{st}" style="vertical-align: -3px"/> of
 stratifications on each axis. With <tt class="docutils literal"><span class="pre">neval=4e4</span></tt>,
 statistical errors for the two-Gaussian
 integral are reduced by more than a factor of 3 relative to what older

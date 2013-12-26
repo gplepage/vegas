@@ -14,8 +14,8 @@ How :mod:`vegas` Works
 .. |M| replace:: :math:`M`
 .. |sigmaI| replace:: :math:`\sigma_I`
 .. |x(y)| replace:: :math:`x(y)`
-.. |Ms| replace:: :math:`M_\mathrm{strat}`
-.. |Msd| replace:: :math:`M_\mathrm{strat}^d`
+.. |Ms| replace:: :math:`M_\mathrm{st}`
+.. |Msd| replace:: :math:`M_\mathrm{st}^d`
 .. |d| replace:: :math:`d`
 
 
@@ -27,6 +27,12 @@ direction, before it makes Monte Carlo estimates of the integral.
 This is equivalent to a standard Monte Carlo optimization
 called "importance sampling." 
 
+|vegas| chooses transformations
+for each integration variable 
+that minimize the statistical errors in  
+Monte Carlo estimates using integrand
+samples that are uniformly distributed 
+in the new variables.
 The idea in one-dimension, for
 example, is to replace the original integral over |x|,
 
@@ -40,10 +46,9 @@ by an equivalent integral over a new variable |y|,
     
     I = \int_0^1 dy\; J(y)\; f(x(y)),
 
-where the transformation |x(y)| is chosen to 
-minimize the uncertainty in a Monte Carlo estimate of the 
-transformed integral.
-A simple Monte Carlo estimate of that integral is given by
+where :math:`J(y)` is the Jacobian of the transformation.
+A simple Monte Carlo estimate of the transformed 
+integral is given by
 
 .. math::
 
@@ -66,22 +71,20 @@ whose mean is the exact integral and whose variance is:
 
 The standard deviation |sigmaI| is an estimate of the possible
 error in the Monte Carlo estimate.
-A simple variational calculation, constrained by
+A straightforward variational calculation, constrained by
 
 .. math::
 
-	\int_a^b \frac{dx}{J(y(x))} = 1,
+	\int_a^b \frac{dx}{J(y(x))} = \int_0^1 dy = 1,
 
 shows that |sigmaI| is minimized if 
 
 .. math::
 
-	J(y(x)) \propto \frac{1}{|f(x)|}.
+	J(y(x)) = \frac{\int_a^b dx\;|f(x)|}{|f(x)|}.
 
 Such transformations greatly reduce the standard deviation when the 
-integrand has high peaks. (Indeed, |sigmaI| vanishes for the 
-optimal transformation if the integrand 
-is positive (or negative) everywhere.) Since
+integrand has high peaks. Since
 
 .. math::
 
@@ -168,7 +171,7 @@ when
 	\frac{J_i^2}{\Delta x_i} 
 	\int_{x_i}^{x_{i+1}} dx \; f^2(x) 
 	= N^2 \Delta x_i \int_{x_i}^{x_{i+1}} dx \; f^2(x) 
-	\; \propto \; \mbox{constant}
+	\; = \; \mbox{constant}
 
 for all :math:`i`. 
 
@@ -205,9 +208,11 @@ in the previous section looks like:
    :width: 80%
 
 These grids transform into uniformly-spaced grids in |y| space. 
-Consequently |vegas| gives equal attention to every rectangle in
-these plots, irrespective of its size; and it concentrates
-on regions where the rectangles are small (and therefore numerous) ---
+Consequently a uniform, |y|-space Monte Carlo would place the same
+number of integrand evaluations, on average, in every rectangle 
+of these pictures. (The average number is typically much less one
+in higher dimensions.) Integrand evaluations would be concentrated
+in regions where the rectangles are small (and therefore numerous) ---
 here in the vicinity of ``x = [0.5, 0.5, 0.5, 0.5]``, where the
 peak is.
 
@@ -287,11 +292,11 @@ lie along diagonals of the integration volume. To address such problems,
 the new version of |vegas| introduces a second adaptive strategy,
 based upon another standard Monte Carlo technique called "stratified
 sampling." |vegas| divides the |d|-dimensional 
-|y|-space volume into hypercubes using
+|y|-space volume into |Msd| hypercubes using
 a uniform |y|-space grid with |Ms| stratifications on each 
 axis. It estimates
 the integral by doing a separate Monte Carlo integration in each of 
-the |Msd| hypercubes, and adding the results together to provide an estimate
+the hypercubes, and adding the results together to provide an estimate
 for the integral over the entire integration region.
 Typically 
 this |y|-space grid is much coarser than the |x|-space grid used to 
