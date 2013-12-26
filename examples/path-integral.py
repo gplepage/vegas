@@ -36,7 +36,7 @@ from path_integrand import Oscillator
 
 DO_WAVEFUNCTIONS = True
 
-SHOW_PLOT = True
+SHOW_PLOT = False # True
 
 def main():
     # seed random numbers so reproducible
