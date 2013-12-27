@@ -299,6 +299,20 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.sdev < 1e-3)
 
+    def test_vector_b0(self):
+        " integrate vector fcn beta=0 "
+        class f_vec(VecIntegrand):
+            def __call__(self, x, f, nx):
+                for i in range(nx):
+                    f[i] = (
+                        math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
+                        ) / math.pi ** 2
+        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]], beta=0.0)
+        r = I(f_vec(), neval=10000)
+        self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
+        self.assertTrue(r.Q > 1e-3)
+        self.assertTrue(r.sdev < 1e-3)
+
     def test_adapt_to_errors(self):
         " use adapt_to_errors "
         def f(x):
@@ -306,6 +320,20 @@ class TestIntegrator(unittest.TestCase):
         I = Integrator(
             [[0, math.pi], [-math.pi/2., math.pi/2.]], 
             adapt_to_errors=True,
+            )
+        r = I(f, neval=10000)
+        self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
+        self.assertTrue(r.Q > 1e-3)
+        self.assertTrue(r.sdev < 1e-3)
+
+    def test_adapt_to_errors_b0(self):
+        " use adapt_to_errors with beta=0 "
+        def f(x):
+            return (math.sin(x[0]) ** 2 + math.cos(x[1]) ** 2) / math.pi ** 2
+        I = Integrator(
+            [[0, math.pi], [-math.pi/2., math.pi/2.]], 
+            adapt_to_errors=True,
+            beta=0.0,
             )
         r = I(f, neval=10000)
         self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)

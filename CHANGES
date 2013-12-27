@@ -1,6 +1,12 @@
 Version 1.1.2 - ????
 ========================
 
+- Memory optimization: 
+
+- Refactored Integrator._integrate to prepare for future project.
+
+- Tests for beta=0.0 mode.
+
 - More polished documentation - a work in progress.
 
 - Fixed bug in pickling of Integrator. Added testing for pickling.

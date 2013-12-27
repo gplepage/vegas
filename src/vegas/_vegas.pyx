@@ -886,6 +886,7 @@ cdef class AdaptiveMap:
         plotdata(idx)
         plt.show()       
 
+
 cdef class Integrator(object):
     """ Adaptive multidimensional Monte Carlo integration.
 
@@ -964,8 +965,7 @@ cdef class Integrator(object):
         whose integration points are combined into a single
         vector to be passed to the integrand, in a single batch,
         when using |vegas| in vector mode (see ``fcntype='vector'``
-        below). 
-        The default value is 100. Larger values may be
+        below). The default value is 100. Larger values may be
         lead to faster evaluations, but at the cost of 
         more memory for internal work areas.
     :type nhcube_vec: positive int 
@@ -1082,9 +1082,9 @@ cdef class Integrator(object):
             args.update(kargs)
             self.set(args)
             self.map = AdaptiveMap(map)
-        self.sigf_list = numpy.array([], float) # dummy
+        self.sigf = numpy.array([], float) # dummy
         self.neval_hcube_range = None
-        self.last_neval = 0
+        self.actual_neval = 0
 
     def __reduce__(self):
         """ Capture state for pickling. """
@@ -1178,7 +1178,7 @@ cdef class Integrator(object):
         cdef INT_TYPE d
         self._prepare_integrator()
         nhcube = self.nstrat ** self.dim
-        neval = nhcube * self.neval_hcube if self.beta <= 0 else self.neval
+        neval = nhcube * self.min_neval_hcube if self.beta <= 0 else self.neval
         ans = ""
         ans = "Integrator Settings:\n"
         if self.beta > 0:
@@ -1198,12 +1198,12 @@ cdef class Integrator(object):
         if self.beta > 0:
             ans = ans + (
                 "                h-cubes = %d  evaluations/h-cube = %d (min)\n"
-                % (nhcube, self.neval_hcube)
+                % (nhcube, self.min_neval_hcube)
                 )
         else:
             ans = ans + (
                     "                h-cubes = %d  evaluations/h-cube = %d\n"
-                    % (nhcube, self.neval_hcube)
+                    % (nhcube, self.min_neval_hcube)
                     )
         ans += "                h-cubes/vector = %d\n" % self.nhcube_vec
         ans = ans + (
@@ -1227,61 +1227,6 @@ cdef class Integrator(object):
         if ngrid > 0:
             ans += '\n' + self.map.settings(ngrid=ngrid)
         return ans
-
-    def _prepare_integrator(self):
-        """ Prep the integrator before integrating.
-
-        Decide how many increments and strata to use
-        and allocate space to store the sigf values.
-        """
-        # determine # of strata, # of increments
-        dim = self.map.dim
-        neval_eff = (self.neval / 2.0) if self.beta > 0 else self.neval
-        ns = int((neval_eff / 2.) ** (1. / dim))# stratifications/axis
-        ni = int(self.neval / 10.)              # increments/axis
-        if ns < 1:
-            ns = 1
-        elif self.beta > 0 and ns ** dim > self.max_nhcube:
-            ns = int(self.max_nhcube ** (1./dim))
-        if ni < 1:
-            ni = 1
-        elif ni  > self.maxinc_axis:
-            ni = self.maxinc_axis
-        # want even number increments in each stratification 
-        # or vise versa
-        if ns > ni:
-            if ns < self.maxinc_axis:
-                ni = ns
-            else:
-                ns = int(ns // ni) * ni
-        else:
-            ni = int(ni // ns) * ns
-        if self.adapt_to_errors:
-            # ni > ns makes no sense with this mode
-            if ni > ns:
-                ni = ns
-
-        self.map.adapt(ninc=ni)    
-
-        self.nstrat = ns
-        nhcube = self.nstrat ** dim
-        self.neval_hcube = int(floor(neval_eff // nhcube))
-        if self.neval_hcube < 2:
-            self.neval_hcube = 2
-        self.dim = dim
-        if self.beta > 0 and len(self.sigf_list) != nhcube:
-            self.sigf_list = numpy.ones(nhcube, float)
-
-    def _prepare_integrand(self, fcn, fcntype=None):
-        """ Wrap integrand if needed. """
-        if fcntype is None:
-            fcntype = self.fcntype
-        if hasattr(fcn, 'fcntype'):
-            fcntype = fcn.fcntype
-        if fcntype == 'scalar':
-            return VecPythonIntegrand(fcn)
-        else:
-            return fcn
 
     def __call__(self, fcn, **kargs):
         """ Integrate ``fcn``, possibly overriding default parameters. """
@@ -1312,82 +1257,139 @@ cdef class Integrator(object):
             self.map.adapt(alpha=self.alpha)
             if (self.rtol * abs(ans.mean) + self.atol) > ans.sdev:
                 break
-
-        # do not restore old settings
-        # if old_kargs:
-        #     self.set(old_kargs) 
-
         return ans
 
-    def debug(self, fcn, INT_TYPE neval=10):
-        """ Evaluate fcn at ``neval`` random points. """
-        cdef INT_TYPE i
-        cdef double[:, ::1] y = numpy.random.uniform(
-            0., 1., (self.map.dim, neval)
+    def _prepare_integrand(self, fcn, fcntype=None):
+        """ Wrap integrand if needed. """
+        if fcntype is None:
+            fcntype = self.fcntype
+        if hasattr(fcn, 'fcntype'):
+            fcntype = fcn.fcntype
+        if fcntype == 'scalar':
+            return VecPythonIntegrand(fcn)
+        else:
+            return fcn
+
+    def _prepare_integrator(self):
+        """ Prep the integrator before integrating.
+
+        Decide how many increments and strata to use
+        and allocate space to store the sigf values.
+        """
+        # determine # of strata, # of increments
+        self.dim = self.map.dim
+        self.minimize_sigf_mem = False
+        neval_eff = (self.neval / 2.0) if self.beta > 0 else self.neval
+        ns = int((neval_eff / 2.) ** (1. / self.dim))# stratifications/axis
+        ni = int(self.neval / 10.)              # increments/axis
+        if ns < 1:
+            ns = 1
+        elif self.beta > 0 and ns ** self.dim > self.max_nhcube:
+            # ns = int(self.max_nhcube ** (1. / self.dim))
+            self.minimize_sigf_mem = True
+        if ni < 1:
+            ni = 1
+        elif ni  > self.maxinc_axis:
+            ni = self.maxinc_axis
+        # want even number increments in each stratification 
+        # or vise versa
+        if ns > ni:
+            if ns < self.maxinc_axis:
+                ni = ns
+            else:
+                ns = int(ns // ni) * ni
+        else:
+            ni = int(ni // ns) * ns
+        if self.adapt_to_errors:
+            # ni > ns makes no sense with this mode
+            if ni > ns:
+                ni = ns
+
+        # rebuild map with correct number of increments
+        self.map.adapt(ninc=ni)    
+
+        # determine min number of evaluations per h-cube
+        self.nstrat = ns
+        nhcube = self.nstrat ** self.dim
+        self.min_neval_hcube = int(floor(neval_eff // nhcube))
+        if self.min_neval_hcube < 2:
+            self.min_neval_hcube = 2
+        self.neval_hcube_range = numpy.zeros(2, int) + self.min_neval_hcube
+
+        self._init_workareas(
+            neval_vec=self.nhcube_vec * self.min_neval_hcube,
+            nsigf = (self.nhcube_vec if self.minimize_sigf_mem else nhcube),
             )
-        cdef double[:, ::1] x = self.map(y)
-        cdef double[::1] f = numpy.empty(neval, float)
-        fcn = self._prepare_integrand(fcn)
-        fcn(x, f, neval)
+
+    cdef void _init_workareas(self, INT_TYPE neval_vec, INT_TYPE nsigf):
+        if self.beta > 0 and len(self.sigf) != nsigf:
+            self.sigf = numpy.ones(nsigf, float)
+            self.sum_sigf = nsigf
+        self.neval_hcube = (
+            numpy.zeros(self.nhcube_vec, int) + self.min_neval_hcube 
+            )
+        self.y = numpy.empty((neval_vec, self.dim), float)
+        self.x = numpy.empty((neval_vec, self.dim), float)
+        self.jac = numpy.empty(neval_vec, float)
+        self.fdv = numpy.empty(neval_vec, float)
+        self.fdv2 = numpy.empty(neval_vec, float)
+
+    cdef void _resize_workareas(self, INT_TYPE neval_vec):
+        if self.y.shape[0] >= neval_vec:
+            return
+        self.y = numpy.empty((neval_vec, self.dim), float)
+        self.x = numpy.empty((neval_vec, self.dim), float)
+        self.jac = numpy.empty(neval_vec, float)
+        self.fdv = numpy.empty(neval_vec, float)
+        self.fdv2 = numpy.empty(neval_vec, float)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef INT_TYPE _calculate_neval_hcube(
-        self, 
-        bint redistribute,
-        INT_TYPE[::1] neval_hcube,
+        Integrator self, 
         INT_TYPE hcube_base,
         INT_TYPE nhcube_vec,
         ):
-        cdef INT_TYPE neval_vec 
+        cdef INT_TYPE[::1] neval_hcube = self.neval_hcube
+        cdef INT_TYPE neval_vec = 0
         cdef INT_TYPE ihcube
-        if redistribute:
-            neval_vec = 0
+        cdef double[::1] sigf
+        cdef double neval_sigf
+        if self.beta > 0:
+            sigf = (
+                self.sigf if self.minimize_sigf_mem 
+                else self.sigf[hcube_base:]
+                )            
+            neval_sigf = self.neval / 2. / self.sum_sigf
             for ihcube in range(nhcube_vec):
-                neval_hcube[ihcube] = <int> (
-                    self.sigf_list[hcube_base + ihcube] * self.neval_sigf
-                    )
-                if neval_hcube[ihcube] < self.neval_hcube:
-                    # counter += 1
-                    neval_hcube[ihcube] = self.neval_hcube
+                neval_hcube[ihcube] = <int> (sigf[ihcube] * neval_sigf)
+                if neval_hcube[ihcube] < self.min_neval_hcube:
+                    neval_hcube[ihcube] = self.min_neval_hcube
                 if neval_hcube[ihcube] > self.max_neval_hcube:
                     neval_hcube[ihcube] = self.max_neval_hcube
-                # if neval_hcube[ihcube] < min_neval:
-                #     min_neval = neval_hcube[ihcube]
-                # if neval_hcube[ihcube] > max_neval:
-                #     max_neval = neval_hcube[ihcube]
                 if neval_hcube[ihcube] < self.neval_hcube_range[0]:
                     self.neval_hcube_range[0] = neval_hcube[ihcube]
                 elif neval_hcube[ihcube] > self.neval_hcube_range[1]:
                     self.neval_hcube_range[1] = neval_hcube[ihcube]
                 neval_vec += neval_hcube[ihcube]
-            # if neval_vec > y.shape[0]:
-            #     y = numpy.empty((neval_vec, self.dim), float)
-            #     x = numpy.empty((neval_vec, self.dim), float)
-            #     jac = numpy.empty(neval_vec, float)    
-            #     fdv = numpy.empty(neval_vec, float)  
-            #     fdv2 = numpy.empty(neval_vec, float) 
         else:
-            for ihcube in range(nhcube_vec):
-                neval_hcube[ihcube] = self.neval_nhcube
-            neval_vec = nhcube_vec * self.neval_nhcube
+            neval_hcube[:] = self.min_neval_hcube
+            neval_vec = nhcube_vec * self.min_neval_hcube
         return neval_vec
     
     @cython.boundscheck(False)
     @cython.wraparound(False)
     cdef void _generate_random_y_x_jac(
-        self, 
-        double[:, ::1] y, 
-        double[:, ::1] x, 
-        double[::1] jac, 
+        Integrator self, 
         INT_TYPE neval_vec,
-        INT_TYPE[::1] neval_hcube, 
         INT_TYPE hcube_base, 
         INT_TYPE nhcube_vec,
         ):
+        cdef INT_TYPE[::1] neval_hcube = self.neval_hcube
         cdef INT_TYPE ihcube, hcube, tmp_hcube
         cdef INT_TYPE i_start=0
         cdef INT_TYPE[::1] y0 = numpy.empty(self.dim, int)
+        cdef INT_TYPE i, d
         cdef double[:, ::1] yran = numpy.random.uniform(
             0., 1., (neval_vec, self.dim)
             )
@@ -1399,155 +1401,111 @@ cdef class Integrator(object):
                 tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
             for d in range(self.dim):
                 for i in range(i_start, i_start + neval_hcube[ihcube]):
-                    y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
+                    self.y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
             i_start += neval_hcube[ihcube]
-        self.map.map(y, x, jac, neval_vec)
+        self.map.map(self.y, self.x, self.jac, neval_vec)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
-    def _integrate(self, fcn):
+    cdef object _integrate_vec(
+        Integrator self, 
+        fcn,
+        INT_TYPE neval_vec,
+        INT_TYPE hcube_base, 
+        INT_TYPE nhcube_vec,
+        ):
+        cdef INT_TYPE i_start, i, tmp_hcube, ihcube #, hcube
+        cdef double sum_fdv, sum_fdv2, mean, var, sigf2
+        cdef INT_TYPE y0_d
+        cdef double vec_mean = 0.0 
+        cdef double vec_var = 0.0
+        cdef double vec_sigf = 0.0
+        cdef double dv = (1./self.nstrat) ** self.dim
+        cdef INT_TYPE[::1] neval_hcube = self.neval_hcube
+        cdef double[::1] sigf = (
+            self.sigf if self.minimize_sigf_mem 
+            else self.sigf[hcube_base:]
+            )
+        fcn(self.x, self.fdv, neval_vec)
+        
+        # compute integral h-cube by h-cube
+        i_start = 0
+        for ihcube in range(nhcube_vec):
+            sum_fdv = 0.0
+            sum_fdv2 = 0.0
+            for i in range(i_start, i_start + neval_hcube[ihcube]):
+                self.fdv[i] *= self.jac[i] * dv
+                self.fdv2[i] = self.fdv[i] ** 2
+                sum_fdv += self.fdv[i]
+                sum_fdv2 += self.fdv2[i]
+            mean = sum_fdv / neval_hcube[ihcube]
+            sigf2 = abs(sum_fdv2 / neval_hcube[ihcube] - mean * mean)
+            if self.beta > 0:
+                sigf[ihcube] = sigf2 ** (self.beta / 2.)
+                vec_sigf += sigf[ihcube]
+            var = sigf2 / (neval_hcube[ihcube] - 1.)
+            vec_mean += mean
+            vec_var += var
+            if self.adapt_to_errors:
+                self.fdv2[i_start] = var
+                self.map.add_training_data(self.y[i_start:,:], self.fdv2[i_start:], 1)
+            i_start += neval_hcube[ihcube]
+        if not self.adapt_to_errors:
+            self.map.add_training_data(self.y, self.fdv2, neval_vec)
+        return (vec_mean, vec_var, vec_sigf)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def _integrate(Integrator self not None, fcn not None):
         """ Do integral for one iteration. """
         cdef INT_TYPE nhcube = self.nstrat ** self.dim 
         cdef INT_TYPE nhcube_vec = min(self.nhcube_vec, nhcube)
-        cdef INT_TYPE adapt_to_integrand = (
-            1 if not self.adapt_to_errors else 0
-            )
-        cdef INT_TYPE redistribute = (
-            # 1 if (self.beta > 0 and adapt_to_integrand) else 0
-            1 if (self.beta > 0) else 0
-            )
-        cdef double neval_sigf = (
-            self.neval / 2. / numpy.sum(self.sigf_list)
-            ) if redistribute else 0
-        cdef INT_TYPE[::1] y0 = numpy.empty(self.dim, int)
-        cdef double dv = (1./self.nstrat) ** self.dim
         cdef double ans_mean = 0.
         cdef double ans_var = 0.
-        cdef INT_TYPE neval_vec = self.nhcube_vec * self.neval_hcube
-        cdef double[:, ::1] y = numpy.empty((neval_vec, self.dim), float)
-        cdef double[:, ::1] x = numpy.empty((neval_vec, self.dim), float)
-        cdef double[::1] jac = numpy.empty(neval_vec, float)
-        cdef INT_TYPE min_neval = self.neval_hcube
-        cdef INT_TYPE max_neval = self.neval_hcube
-        cdef INT_TYPE hcube, i, j, d, hcube_base, ihcube, i_start
-        cdef INT_TYPE[::1] neval_hcube = (
-            numpy.zeros(self.nhcube_vec, int) + self.neval_hcube 
-            )
-        cdef double sum_fdv
-        cdef double sum_fdv2
-        cdef double[::1] fdv = numpy.empty(neval_vec, float)
-        cdef double[::1] fdv2 = numpy.empty(neval_vec, float)
-        cdef double sigf2
-        cdef double[:, ::1] yran
-        cdef INT_TYPE tmp_hcube, counter = 0 ########
+        cdef double sum_sigf = 0.
+        cdef double vec_mean, vec_var, vec_sigf
+        cdef INT_TYPE neval_vec
+        cdef INT_TYPE hcube_base 
 
         # iterate over h-cubes in batches of nhcube_vec h-cubes
         # this allows for vectorization, to reduce python overhead
-        self.last_neval = 0
-        self.neval_hcube_range = numpy.ones(2, int) * self.neval_hcube
-        nhcube_vec = self.nhcube_vec
-        self.neval_sigf = (
-            self.neval / 2. / numpy.sum(self.sigf_list)
-            ) if redistribute else 0        
+        self.actual_neval = 0
         for hcube_base in range(0, nhcube, nhcube_vec):
             if (hcube_base + nhcube_vec) > nhcube:
                 nhcube_vec = nhcube - hcube_base 
-            # compute neval_hcube for each h-cube
-            # reinitialize work areas if necessary
-            # if redistribute:
-            #     neval_vec = 0
-            #     for ihcube in range(nhcube_vec):
-            #         neval_hcube[ihcube] = <int> (
-            #             self.sigf_list[hcube_base + ihcube] * neval_sigf
-            #             )
-            #         if neval_hcube[ihcube] < self.neval_hcube:
-            #             # counter += 1
-            #             neval_hcube[ihcube] = self.neval_hcube
-            #         if neval_hcube[ihcube] > self.max_neval_hcube:
-            #             neval_hcube[ihcube] = self.max_neval_hcube
-            #         if neval_hcube[ihcube] < min_neval:
-            #             min_neval = neval_hcube[ihcube]
-            #         if neval_hcube[ihcube] > max_neval:
-            #             max_neval = neval_hcube[ihcube]
-            #         neval_vec += neval_hcube[ihcube]
-            #     if neval_vec > y.shape[0]:
-            #         y = numpy.empty((neval_vec, self.dim), float)
-            #         x = numpy.empty((neval_vec, self.dim), float)
-            #         jac = numpy.empty(neval_vec, float)    
-            #         fdv = numpy.empty(neval_vec, float)  
-            #         fdv2 = numpy.empty(neval_vec, float) 
-            # self.last_neval += neval_vec
             neval_vec = self._calculate_neval_hcube(
-                    redistribute=redistribute, 
-                    neval_hcube=neval_hcube,
                     hcube_base=hcube_base,
                     nhcube_vec=nhcube_vec,
                     )
-            if neval_vec > y.shape[0]:
-                y = numpy.empty((neval_vec, self.dim), float)
-                x = numpy.empty((neval_vec, self.dim), float)
-                jac = numpy.empty(neval_vec, float)    
-                fdv = numpy.empty(neval_vec, float)  
-                fdv2 = numpy.empty(neval_vec, float) 
-            # i_start = 0
-            # yran = numpy.random.uniform(0., 1., (neval_vec, self.dim))
-            # for ihcube in range(nhcube_vec):
-            #     hcube = hcube_base + ihcube
-            #     tmp_hcube = hcube
-            #     for d in range(self.dim):
-            #         y0[d] = tmp_hcube % self.nstrat
-            #         tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
-            #     for d in range(self.dim):
-            #         for i in range(i_start, i_start + neval_hcube[ihcube]):
-            #             y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
-            #     i_start += neval_hcube[ihcube]
-            # self.map.map(y, x, jac, neval_vec)
+            self.actual_neval += neval_vec
+            self._resize_workareas(neval_vec=neval_vec)
             self._generate_random_y_x_jac(
-                    y=y, 
-                    x=x, 
-                    jac=jac, 
                     neval_vec=neval_vec,
-                    neval_hcube=neval_hcube, 
                     hcube_base=hcube_base, 
                     nhcube_vec=nhcube_vec,
                     )
-            fcn(x, fdv, neval_vec)
-            
-            # compute integral h-cube by h-cube
-            i_start = 0
-            for ihcube in range(nhcube_vec):
-                hcube = hcube_base + ihcube
-                sum_fdv = 0.0
-                sum_fdv2 = 0.0
-                for i in range(i_start, i_start + neval_hcube[ihcube]):
-                    fdv[i] *= jac[i] * dv
-                    fdv2[i] = fdv[i] ** 2
-                    sum_fdv += fdv[i]
-                    sum_fdv2 += fdv2[i]
-                mean = sum_fdv / neval_hcube[ihcube]
-                sigf2 = abs(sum_fdv2 / neval_hcube[ihcube] - mean * mean)
-                if redistribute:
-                    self.sigf_list[hcube] = sigf2 ** (self.beta / 2.)
-                var = sigf2 / (neval_hcube[ihcube] - 1.)
-                ans_mean += mean
-                ans_var += var
-                if not adapt_to_integrand:
-                    # mode = adapt_to_errors
-                    tmp_hcube = hcube
-                    for d in range(self.dim):
-                        y0[d] = tmp_hcube % self.nstrat
-                        y[0, d] = (y0[d] + 0.5) / self.nstrat
-                        tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
-                    fdv2[0] = var
-                    self.map.add_training_data( y, fdv2, 1)
-                i_start += neval_hcube[ihcube]
-            if adapt_to_integrand:
-                self.map.add_training_data(y, fdv2, neval_vec)
-
-        # record final results
-        # self.neval_hcube_range = (min_neval, max_neval)
-        # self.neval_hcube_range = (min_neval, float(counter) / nhcube, max_neval)
+            vec_mean, vec_var, vec_sigf = self._integrate_vec(
+                fcn=fcn, 
+                neval_vec=neval_vec, 
+                hcube_base=hcube_base, 
+                nhcube_vec=nhcube_vec,
+                )
+            ans_mean += vec_mean 
+            ans_var += vec_var
+            sum_sigf += vec_sigf
+        self.sum_sigf = sum_sigf
         return gvar.gvar(ans_mean, sqrt(ans_var))
+
+    def debug(self, fcn, INT_TYPE neval=10):
+        """ Evaluate fcn at ``neval`` random points. """
+        cdef INT_TYPE i
+        cdef double[:, ::1] y = numpy.random.uniform(
+            0., 1., (self.map.dim, neval)
+            )
+        cdef double[:, ::1] x = self.map(y)
+        cdef double[::1] f = numpy.empty(neval, float)
+        fcn = self._prepare_integrand(fcn)
+        fcn(x, f, neval)
 
 class reporter:
     """ Analyzer class that prints out a report, iteration
@@ -1573,8 +1531,8 @@ class reporter:
         print(
             '    neval = %d  neval/h-cube = %s\n    chi2/dof = %.2f  Q = %.2f' 
             % (
-                self.integrator.last_neval, 
-                self.integrator.neval_hcube_range,
+                self.integrator.actual_neval, 
+                tuple(self.integrator.neval_hcube_range),
                 ans.chi2 / ans.dof if ans.dof > 0 else 0,
                 ans.Q if ans.dof > 0 else 1.,
                 )
