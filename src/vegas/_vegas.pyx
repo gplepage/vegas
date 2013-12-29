@@ -790,7 +790,11 @@ cdef class AdaptiveMap:
             just the nodes being displayed. The default is
             ``False``. 
         """
-        import matplotlib.pyplot as plt 
+        try:
+            import matplotlib.pyplot as plt 
+        except ImportError:
+            warnings.warn('matplotlib not installed; cannot show_grid')
+            return
         dim = self.dim
         if axes is None:
             axes = []

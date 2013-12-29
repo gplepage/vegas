@@ -362,7 +362,7 @@ with two calls:</p>
 </div>
 <p>The integrator is trained in the first
 step, as it adapts to the integrand, and so is more or less
-fully adapted from the start in the second step which yields:</p>
+fully adapted from the start in the second step, which yields:</p>
 <div class="highlight-python"><pre>itn   integral        wgt average     chi2/dof        Q
 -------------------------------------------------------
   1   1.015(27)       1.015(27)           0.00     1.00
@@ -385,9 +385,11 @@ it can be usefully applied
 to other functions with similar structure. For example, adding
 the following at the end of the original code,</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-  <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">    Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>gives the following new output:</p>

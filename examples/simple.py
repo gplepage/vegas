@@ -9,6 +9,8 @@ import vegas
 import math
 import numpy
 
+SHOW_GRID = True   # display picture of grid
+
 def f(x):
     dx2 = 0
     for d in range(4):
@@ -29,6 +31,8 @@ def main():
     result = integ(f, nitn=10, neval=1000)
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
+    if SHOW_GRID:
+        integ.map.show_grid(30)
 
 if __name__ == '__main__':
     main()
