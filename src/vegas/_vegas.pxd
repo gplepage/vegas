@@ -76,12 +76,13 @@ cdef class Integrator:
     cdef double[::1] fdv 
     cdef double[::1] fdv2
     cdef INT_TYPE[::1] neval_hcube
-    cdef void _init_workareas(self, INT_TYPE neval_vec, INT_TYPE nsigf)
+    cdef void _init_workareas(self)
     cdef void _resize_workareas(self, INT_TYPE neval_vec)
-    cdef INT_TYPE _calculate_neval_hcube(
+    cdef object _calculate_neval_hcube(
         self, 
         INT_TYPE hcube_base,
         INT_TYPE nhcube_vec,
+        fcn,
         )
     cdef void _generate_random_y_x_jac(
         self, 

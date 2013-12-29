@@ -1,13 +1,36 @@
-Version 1.1.2 - ????
+Version 1.2 - 2013-12-28
 ========================
 
-- Memory optimization: 
+- Memory optimization: The (new) adaptive stratified sampling algorithm
+  can use a lot of memory since it must store a float (sigf = the std dev of
+  the integrand) for each h-cube. When neval gets to be 1e8 or larger, 
+  the memory needs start to approach typical RAM limits (in laptops, 
+  anyway). To avoid exceeding these limits, which would greatly slow 
+  progress, vegas now switches to a different mode of operation when
+  the number of h-cubes exceeds parameter max_nhcube (set by default 
+  to 5e8). Rather than store values of sigf for every h-cube for use
+  in the next iteration, it recomputes sigf just before it uses it 
+  to move integrand evalutions around (and then throws the value away). 
+  This requires extra integrand evaluations, beyond those used to estimate
+  the integral. The number of extra evaluations is between 50% and 100% of
+  the number used to estimate the integral, typically increasing 
+  execution time by the same fractions. This is worthwhile provided the
+  adaptive stratified sampling decreases errors by at least 30% 
+  (since omitting it would allow up to 2x as many integration points
+  for the same cost, decreasing errors by a factor of 1/sqrt(2)). The
+  adaptive stratified sampling usually decreases errors by this amount,
+  and frequently by much more. The new mode is in operation if 
+  attribute minimize_sigf_mem is True. Again the threshold for this
+  new behavior is set by max_nhcube which is 5e8 by default, which 
+  is sufficiently large that this new mode will be used quite 
+  infrequently. 
 
 - Refactored Integrator._integrate to prepare for future project.
 
-- Tests for beta=0.0 mode.
+- Tests for beta=0.0 mode and for the propagation of Python exceptions
+  from the integrand.
 
-- More polished documentation - a work in progress.
+- More polished documentation - still a work in progress.
 
 - Fixed bug in pickling of Integrator. Added testing for pickling.
 

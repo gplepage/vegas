@@ -215,6 +215,7 @@ class TestIntegrator(unittest.TestCase):
             '    number of:  strata/axis = 7  increments/axis = 21',
             '                h-cubes = 49  evaluations/h-cube = 2 (min)',
             '                h-cubes/vector = 100',
+            '    minimize_sigf_mem = False',           
             '    adapt_to_errors = False',
             '    damping parameters: alpha = 0.5  beta= 0.75',
             '    limits: h-cubes < 5e+08  evaluations/h-cube < 1e+07',
@@ -298,6 +299,18 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.sdev < 1e-3)
+
+    def test_vector_exception(self):
+        " integrate vector fcn "
+        class f_vec(VecIntegrand):
+            def __call__(self, x, f, nx):
+                for i in range(nx):
+                    f[i] = (
+                        math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
+                        ) / math.pi ** 2 /0.0
+        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
+        with self.assertRaises(ZeroDivisionError):
+            I(f_vec(), neval=100)
 
     def test_vector_b0(self):
         " integrate vector fcn beta=0 "

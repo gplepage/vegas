@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vegas Module &mdash; vegas 1.1.2a documentation</title>
+    <title>vegas Module &mdash; vegas 1.2 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.1.2a',
+        VERSION:     '1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 1.1.2a documentation" href="index.html" />
+    <link rel="top" title="vegas 1.2 documentation" href="index.html" />
     <link rel="prev" title="How vegas Works" href="background.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -47,7 +47,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 1.1.2a documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -72,7 +72,7 @@ upon the last integral evaluated using the object.</li>
 <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> returns the weighted average of the integral estimates
 from each <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> iteration as an object of class <a class="reference internal" href="#vegas.RunningWAvg" title="vegas.RunningWAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RunningWAvg</span></tt></a>. These are
 Gaussian random variables &#8212; that is, they have a
-mean and a standard deviation) &#8212; but also contain information about the
+mean and a standard deviation &#8212; but also contain information about the
 iterations <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> used in generating the result.</li>
 </ul>
 </div></blockquote>
@@ -122,7 +122,7 @@ monitor progress as it is being made (or not).</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>map</strong> (array or <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><tt class="xref py py-class docutils literal"><span class="pre">vegas.AdaptiveMap</span></tt></a> 
 or <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a>) &#8211; <p>The integration region as specified by 
-an array <tt class="docutils literal"><span class="pre">xlimit[d,</span> <span class="pre">i]</span></tt> where <tt class="docutils literal"><span class="pre">d</span></tt> is the 
+an array <tt class="docutils literal"><span class="pre">map[d,</span> <span class="pre">i]</span></tt> where <tt class="docutils literal"><span class="pre">d</span></tt> is the 
 direction and <tt class="docutils literal"><span class="pre">i=0,1</span></tt> specify the lower
 and upper limits of integration in direction <tt class="docutils literal"><span class="pre">d</span></tt>.</p>
 <p><tt class="docutils literal"><span class="pre">map</span></tt> could also be the integration map from 
@@ -132,18 +132,19 @@ existing integrator.</p>
 </li>
 <li><strong>nitn</strong> (<em>positive int</em>) &#8211; The maximum number of iterations used to 
 adapt to the integrand and estimate its value. The
-default value is 10.</li>
+default value is 10; typical values range from 10
+to 20.</li>
 <li><strong>neval</strong> (<em>positive int</em>) &#8211; The maximum number of integrand evaluations
 in each iteration of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm. Increasing
 <tt class="docutils literal"><span class="pre">neval</span></tt> increases the precision: statistical errors should
 fall at least as fast as <tt class="docutils literal"><span class="pre">sqrt(1./neval)</span></tt> and often
-fall much faster. The default value is 1000; realistic
+fall much faster. The default value is 1000; real
 problems often require 10&#8211;100 times more evaluations
 than this.</li>
 <li><strong>alpha</strong> (<em>float</em>) &#8211; Damping parameter controlling the remapping
 of the integration variables as <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> adapts to the
-integrand. Smaller values slow adaptation, which may 
-be desirable for difficult integrands. Small <tt class="docutils literal"><span class="pre">alpha</span></tt>s 
+integrand. Smaller values slow adaptation, which may be
+desirable for difficult integrands. Small or zero <tt class="docutils literal"><span class="pre">alpha</span></tt>s 
 are also sometimes useful after the grid has adapted,
 to minimize fluctuations away from the optimal grid.
 The default value is 0.5.</li>
@@ -156,12 +157,11 @@ setting <tt class="docutils literal"><span class="pre">beta=0</span></tt> preven
 evaluations. The default value is 0.75.</li>
 <li><strong>nhcube_vec</strong> (<em>positive int</em>) &#8211; The number of hypercubes (in y space)
 whose integration points are combined into a single
-vector to be passed to the integrand, in a single batch,
+vector to be passed to the integrand, all together,
 when using <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> in vector mode (see <tt class="docutils literal"><span class="pre">fcntype='vector'</span></tt>
-below). 
-The default value is 100. Larger values may be
+below). The default value is 100. Larger values may be
 lead to faster evaluations, but at the cost of 
-more memory for internal work areas.</li>
+more memory for internal work arrays.</li>
 <li><strong>maxinc_axis</strong> (<em>positive int</em>) &#8211; The maximum number of increments
 per axis allowed for the x-space grid. The default 
 value is 1000; there is probably little need to use
@@ -177,13 +177,19 @@ the number of the number of stratifications in
 the y grid is large (&gt; 50?). It is typically 
 useful only in one or two dimensions.</p>
 </li>
-<li><strong>max_nhcube</strong> (<em>positive int</em>) &#8211; Maximum number of hypercubes allowed 
-for stratification. The default value is 5e8. 
-Larger values can allow for more adaptation 
-(when <tt class="docutils literal"><span class="pre">neval</span></tt> is larger than <tt class="docutils literal"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">max_nhcube</span></tt>),
-but also can result in very large internal work 
-arrays. The maximum setting is a function of 
-the RAM available to the processor used.</li>
+<li><strong>max_nhcube</strong> (<em>positive int</em>) &#8211; If the number of hypercubes in the 
+y-space stratification exceeds <tt class="docutils literal"><span class="pre">max_nhcube</span></tt>,
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> switches to a more costly (in execution time)
+implementation of its adaptive stratified sampling
+algorithm. <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> does this to avoid overly large
+internal work spaces. The optimal value for 
+<tt class="docutils literal"><span class="pre">max_nhcube</span></tt> depends upon how much memory (RAM) 
+is available to the processor doing the integral.
+The execution time increases by 50&#8211;100% in this new
+mode, since <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> has to recompute information that
+it otherwise stores in memory. This parameter
+has an effect only if parameter <tt class="docutils literal"><span class="pre">beta&gt;0</span></tt>; otherwise
+it is ignored.</li>
 <li><strong>max_neval_hcube</strong> (<em>positive int</em>) &#8211; Maximum number of integrand evaluations 
 per hypercube in the stratification. The default value 
 is 1e7. Larger values might allow for more adaptation
@@ -204,7 +210,7 @@ integrand values are written; and the number
 <p>The default is <tt class="docutils literal"><span class="pre">fcntype=scalar</span></tt>, but this is 
 overridden if the integrand has a <tt class="docutils literal"><span class="pre">fcntype</span></tt> 
 attribute. It is also overridden for classes
-derived from <a class="reference internal" href="#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">VecIntegrand</span></tt></a>, which are
+derived from <a class="reference internal" href="#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.VecIntegrand</span></tt></a>, which are
 treated as <tt class="docutils literal"><span class="pre">fcntype='vector'</span></tt> integrands.</p>
 </li>
 <li><strong>rtol</strong> (<em>float less than 1</em>) &#8211; Relative error in the integral estimate 
@@ -783,7 +789,7 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 1.1.2a documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
