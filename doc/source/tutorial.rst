@@ -313,7 +313,7 @@ There are several things to note here:
 
     The integrator is trained in the first 
     step, as it adapts to the integrand, and so is more or less
-    fully adapted from the start in the second step which yields:
+    fully adapted from the start in the second step, which yields:
 
     .. literalinclude:: eg1d.out
 
@@ -325,9 +325,11 @@ There are several things to note here:
     the following at the end of the original code, ::
 
       def g(x):
-        return x[0] * f(x)
+          return x[0] * f(x)
 
       result = integ(g, nitn=10, neval=1000)
+      print(result.summary())
+      print('result = %s    Q = %.2f' % (result, result.Q))
 
     gives the following new output:
 
