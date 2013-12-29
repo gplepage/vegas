@@ -18,6 +18,9 @@ How :mod:`vegas` Works
 .. |Msd| replace:: :math:`M_\mathrm{st}^d`
 .. |d| replace:: :math:`d`
 
+|vegas| uses two adaptive strategies: importance sampling, and
+adaptive stratified sampling. Here we discuss the ideas behind each,
+in turn.
 
 Importance Sampling
 ------------------------------------------------
@@ -30,8 +33,8 @@ called "importance sampling."
 |vegas| chooses transformations
 for each integration variable 
 that minimize the statistical errors in  
-Monte Carlo estimates using integrand
-samples that are uniformly distributed 
+Monte Carlo estimates whose integrand
+samples are uniformly distributed 
 in the new variables.
 The idea in one-dimension, for
 example, is to replace the original integral over |x|,
@@ -208,11 +211,12 @@ in the previous section looks like:
    :width: 80%
 
 These grids transform into uniformly-spaced grids in |y| space. 
-Consequently a uniform, |y|-space Monte Carlo would place the same
+Consequently a uniform, |y|-space Monte Carlo places the same
 number of integrand evaluations, on average, in every rectangle 
 of these pictures. (The average number is typically much less one
-in higher dimensions.) Integrand evaluations would be concentrated
-in regions where the rectangles are small (and therefore numerous) ---
+in higher dimensions.) Integrand evaluations are concentrated
+in regions where the |x|-space rectangles are small 
+(and therefore numerous) ---
 here in the vicinity of ``x = [0.5, 0.5, 0.5, 0.5]``, where the
 peak is.
 
@@ -322,7 +326,7 @@ the new |vegas| shifts
 integration evaluations away from the phantom peaks, into
 the regions occupied by the real peaks since this is where all
 the error comes from. This improves |vegas|’s ability to estimate
-the contributions from the peaks and  
+the contributions from the real peaks and  
 reduces statistical errors,
 provided ``neval`` is large enough to permit a large number  (more 
 than 2 or 3) |Ms| of

@@ -1,10 +1,10 @@
-# c#ython: profile=True
+# c#ython: profile=True 
 """
 Cython code for the integrator used in fastest.py.
 
 Note that this achieves better performance than the integrand in faster.py
 without the  complication of vectorization. Some problems do not vectorize
-well at all.
+well at all.  
 """
 
 # import Cython description of vegas (to derive from vegas.VecIntegrand)

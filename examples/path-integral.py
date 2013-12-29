@@ -45,7 +45,7 @@ def main():
     # initialize path integral
     T = 4.
     ndT = 8
-    neval=25000
+    neval = 25000
 
     # Harmonic oscillator: V = x ** 2 / 2
     pathint = Oscillator(T=T, ndT=ndT, neval=neval)

@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; vegas 1.1.2a documentation</title>
+    <title>Tutorial &mdash; vegas 1.2 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.1.2a',
+        VERSION:     '1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 1.1.2a documentation" href="index.html" />
+    <link rel="top" title="vegas 1.2 documentation" href="index.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -51,7 +51,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 1.1.2a documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -81,7 +81,8 @@ integrand &#8212; it needn&#8217;t be analytic nor even continuous. This
 makes Monte Carlo integation unusually robust. It also makes it well suited
 for adaptive integration. Adaptive strategies are essential for
 multidimensional integration, especially in high dimensions, because
-multidimensional space is large, with  lots of corners.</p>
+multidimensional space is large, with  lots of corners, making it
+easy to lose important features in the integrand.</p>
 <p>Monte Carlo integration also provides efficient and reliable methods for
 estimating the
 accuracy of its results. In particular, each Monte Carlo
@@ -98,8 +99,9 @@ integral estimates are Gaussian.</p>
 available in may programming languages, including Fortran (the original
 version), C and C++. The algorithm used here is significantly improved over
 the original implementation, and that used in most other implementations.
-This
-module is written in Cython, so it is almost as fast as optimized Fortran or
+It uses two adaptive strategies: importance sampling, as in the original
+implementation, and adaptive stratified sampling, which is new.</p>
+<p>This module is written in Cython, so it is almost as fast as optimized Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.</p>
 <p><em>About Printing:</em> The examples in this tutorial use the print function as it is
@@ -112,11 +114,11 @@ using Python 2, or add</p>
 </div>
 <div class="section" id="basic-integrals">
 <h2>Basic Integrals<a class="headerlink" href="#basic-integrals" title="Permalink to this headline">¶</a></h2>
-<p>Here we illustrate <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> by estimating the integral</p>
+<p>Here we illustrate the use of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> by estimating the integral</p>
 <div class="math">
-<p><img src="_images/math/e864ae1872392ce5fdcbb101cc2ef86d92ebdeb7.png" alt="C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
-\,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2},"/></p>
-</div><p>where constant <img class="math" src="_images/math/c3355896da590fc491a10150a50416687626d7cc.png" alt="C" style="vertical-align: 0px"/> is chosen so that the exact value is 1.
+<p><img src="_images/math/a78cfaecbbdb944cd8d52b91710795ee208b9861.png" alt="C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
+\,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2}  ,"/></p>
+</div><p>where constant <img class="math" src="_images/math/c3355896da590fc491a10150a50416687626d7cc.png" alt="C" style="vertical-align: 0px"/> is chosen so that the exact integral is 1.
 The following code shows how this can be done:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -134,7 +136,7 @@ The following code shows how this can be done:</p>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">    Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>First we define the integrand <tt class="docutils literal"><span class="pre">f(x)</span></tt> where <tt class="docutils literal"><span class="pre">x</span></tt> specifies a  point in the
+<p>First we define the integrand <tt class="docutils literal"><span class="pre">f(x)</span></tt> where <tt class="docutils literal"><span class="pre">x[d]</span></tt> specifies a  point in the
 4-dimensional space. We then create an  integrator, <tt class="docutils literal"><span class="pre">integ</span></tt>, which is an
 integration operator  that can be applied to any 4-dimensional function. It is
 where we specify the integration volume.
@@ -358,8 +360,9 @@ with two calls:</p>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">    Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>The results from the second step are well adapted from
-the start, and the final result is good:</p>
+<p>The integrator is trained in the first
+step, as it adapts to the integrand, and so is more or less
+fully adapted from the start in the second step which yields:</p>
 <div class="highlight-python"><pre>itn   integral        wgt average     chi2/dof        Q
 -------------------------------------------------------
   1   1.015(27)       1.015(27)           0.00     1.00
@@ -376,6 +379,7 @@ the start, and the final result is good:</p>
 result = 0.9997(54)    Q = 0.66
 </pre>
 </div>
+<p>The final result is now reliable.</p>
 <p><strong>Other Integrands:</strong> Once <tt class="docutils literal"><span class="pre">integ</span></tt> has been trained on <tt class="docutils literal"><span class="pre">f(x)</span></tt>,
 it can be usefully applied
 to other functions with similar structure. For example, adding
@@ -403,7 +407,7 @@ the following at the end of the original code,</p>
 result = 0.4997(23)    Q = 0.44
 </pre>
 </div>
-<p>The grid is almost optimal for <tt class="docutils literal"><span class="pre">g(x)</span></tt> from the start
+<p>Again the grid is almost optimal for <tt class="docutils literal"><span class="pre">g(x)</span></tt> from the start,
 because <tt class="docutils literal"><span class="pre">g(x)</span></tt> peaks in the same region as <tt class="docutils literal"><span class="pre">f(x)</span></tt>.
 The exact value for this integral is 0.5.</p>
 <p>Note that <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a>s can be saved in files and reloaded later using
@@ -492,7 +496,8 @@ of the per-iteration errors is often a signal that <tt class="docutils literal">
 be reduced. In such situations <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> is probably over-reacting
 to random fluctuations it encounters as it samples the integrand.</p>
 <p>It is a good idea to make the actual integration volume as large a
-fraction as possible of the total volume used by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>, so
+fraction as possible of the total volume used by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> &#8212;
+by choosing integration variables properly &#8212; so
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> doesn&#8217;t spend lots of effort on regions where the integrand
 is exactly 0. Also, it can be challenging for <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>
 to find the region of
@@ -589,9 +594,9 @@ for each integration point;</p>
 <p>We derive class <tt class="docutils literal"><span class="pre">f_vector</span></tt> from <a class="reference internal" href="vegas.html#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.VecIntegrand</span></tt></a> to
 signal to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> that it should present integration points in
 batches to the integrand function. Parameter <tt class="docutils literal"><span class="pre">nhcube_vec</span></tt> tells
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> how many hypercubes to put in a batch; the bigger
-this parameter is, the larger the vectors.</p>
-<p>Unfortunately many realistic problems are difficult to
+<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> how many hypercubes to put in a batch (or vector); the bigger
+this parameter is, the larger the batches.</p>
+<p>Unfortunately many problems are difficult to
 vectorize. The fastest option in such cases (and actually
 every case) is to write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
@@ -648,8 +653,8 @@ would be faster than pure Python).</p>
 <h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h2>
 <p>This implementation relies upon Cython for its speed and
 numpy for vector processing. It also uses matplotlib
-for graphics, but this is optional.</p>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> also uses the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module from the lsqfit
+for graphics, but graphics is optional.</p>
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> also uses the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module from the <tt class="xref py py-mod docutils literal"><span class="pre">lsqfit</span></tt>
 package if that package is installed (<tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">lsqfit</span></tt>).
 Integration results are returned as objects of type
 <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>, which is a class representing Gaussian
@@ -659,7 +664,7 @@ with each other in arbitrary arithmetic expressions to
 get new <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s with the correct standard
 deviations (and properly correlated with other
 <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s &#8212; that is the tricky part).</p>
-<p>If it is not installed, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses a limited substitute
+<p>If <tt class="xref py py-mod docutils literal"><span class="pre">lsqfit</span></tt> is not installed, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses a limited substitute
 that supports arithmetic between <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s
 and numbers, but not between <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s and other
 <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s. It also supports <tt class="docutils literal"><span class="pre">log</span></tt>, <tt class="docutils literal"><span class="pre">sqrt</span></tt>
@@ -723,7 +728,7 @@ and <tt class="docutils literal"><span class="pre">exp</span></tt> of <tt class=
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 1.1.2a documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

@@ -32,7 +32,8 @@ integrand --- it needn't be analytic nor even continuous. This
 makes Monte Carlo integation unusually robust. It also makes it well suited
 for adaptive integration. Adaptive strategies are essential for
 multidimensional integration, especially in high dimensions, because
-multidimensional space is large, with  lots of corners. 
+multidimensional space is large, with  lots of corners, making it 
+easy to lose important features in the integrand. 
 
 Monte Carlo integration also provides efficient and reliable methods for
 estimating the 
@@ -50,9 +51,11 @@ integral estimates are Gaussian.
 The |vegas| algorithm has been in use for decades and implementations are
 available in may programming languages, including Fortran (the original
 version), C and C++. The algorithm used here is significantly improved over
-the original implementation, and that used in most other implementations.  
-This
-module is written in Cython, so it is almost as fast as optimized Fortran or
+the original implementation, and that used in most other implementations.
+It uses two adaptive strategies: importance sampling, as in the original
+implementation, and adaptive stratified sampling, which is new.
+
+This module is written in Cython, so it is almost as fast as optimized Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.
 
@@ -67,14 +70,14 @@ at the start of your file.
 
 Basic Integrals
 ----------------
-Here we illustrate |vegas| by estimating the integral
+Here we illustrate the use of |vegas| by estimating the integral
 
 .. math::
 
     C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
-    \,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2},
+    \,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2}  ,
 
-where constant :math:`C` is chosen so that the exact value is 1. 
+where constant :math:`C` is chosen so that the exact integral is 1. 
 The following code shows how this can be done::
 
     import vegas
@@ -92,7 +95,7 @@ The following code shows how this can be done::
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
 
-First we define the integrand ``f(x)`` where ``x`` specifies a  point in the
+First we define the integrand ``f(x)`` where ``x[d]`` specifies a  point in the
 4-dimensional space. We then create an  integrator, ``integ``, which is an
 integration operator  that can be applied to any 4-dimensional function. It is
 where we specify the integration volume. 
@@ -308,10 +311,13 @@ There are several things to note here:
       print(result.summary())
       print('result = %s    Q = %.2f' % (result, result.Q))
 
-    The results from the second step are well adapted from
-    the start, and the final result is good:
+    The integrator is trained in the first 
+    step, as it adapts to the integrand, and so is more or less
+    fully adapted from the start in the second step which yields:
 
     .. literalinclude:: eg1d.out
+
+    The final result is now reliable.
 
     **Other Integrands:** Once ``integ`` has been trained on ``f(x)``, 
     it can be usefully applied
@@ -327,7 +333,7 @@ There are several things to note here:
 
     .. literalinclude:: eg1e.out
 
-    The grid is almost optimal for ``g(x)`` from the start
+    Again the grid is almost optimal for ``g(x)`` from the start,
     because ``g(x)`` peaks in the same region as ``f(x)``.
     The exact value for this integral is 0.5.
 
@@ -395,7 +401,8 @@ There are several things to note here:
 
 
     It is a good idea to make the actual integration volume as large a 
-    fraction as possible of the total volume used by |vegas|, so 
+    fraction as possible of the total volume used by |vegas| ---
+    by choosing integration variables properly --- so 
     |vegas| doesn't spend lots of effort on regions where the integrand
     is exactly 0. Also, it can be challenging for |vegas|
     to find the region of 
@@ -405,7 +412,7 @@ There are several things to note here:
     integrand evaluations per iteration to have any chance of 
     finding the region of non-zero integrand, because the volume of 
     the 20-dimensional sphere is a tiny fraction of the total 
-    integration volume.
+    integration volume. 
 
     Note, finally, that integration to infinity is also possible:
     map the relevant variable into a different variable
@@ -498,10 +505,10 @@ three variables:
 We derive class ``f_vector`` from :class:`vegas.VecIntegrand` to 
 signal to |vegas| that it should present integration points in 
 batches to the integrand function. Parameter ``nhcube_vec`` tells
-|vegas| how many hypercubes to put in a batch; the bigger 
-this parameter is, the larger the vectors. 
+|vegas| how many hypercubes to put in a batch (or vector); the bigger 
+this parameter is, the larger the batches. 
 
-Unfortunately many realistic problems are difficult to 
+Unfortunately many problems are difficult to 
 vectorize. The fastest option in such cases (and actually
 every case) is to write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
@@ -560,9 +567,9 @@ Implementation Notes
 ---------------------
 This implementation relies upon Cython for its speed and
 numpy for vector processing. It also uses matplotlib
-for graphics, but this is optional. 
+for graphics, but graphics is optional. 
 
-|vegas| also uses the :mod:`gvar` module from the lsqfit 
+|vegas| also uses the :mod:`gvar` module from the :mod:`lsqfit` 
 package if that package is installed (``pip install lsqfit``).
 Integration results are returned as objects of type 
 :class:`gvar.GVar`, which is a class representing Gaussian
@@ -573,7 +580,7 @@ get new :class:`gvar.GVar`\s with the correct standard
 deviations (and properly correlated with other 
 :class:`gvar.GVar`\s --- that is the tricky part). 
 
-If it is not installed, |vegas| uses a limited substitute
+If :mod:`lsqfit` is not installed, |vegas| uses a limited substitute
 that supports arithmetic between :class:`gvar.GVar`\s
 and numbers, but not between :class:`gvar.GVar`\s and other
 :class:`gvar.GVar`\s. It also supports ``log``, ``sqrt`` 

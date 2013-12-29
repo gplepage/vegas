@@ -29,7 +29,7 @@ The key Python objects supported by the |vegas| module are:
      |vegas| returns the weighted average of the integral estimates
      from each |vegas| iteration as an object of class |WAvg|. These are 
      Gaussian random variables --- that is, they have a 
-     mean and a standard deviation) --- but also contain information about the
+     mean and a standard deviation --- but also contain information about the
      iterations |vegas| used in generating the result.
 
 These are described in detail below.

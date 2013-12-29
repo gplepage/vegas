@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>How vegas Works &mdash; vegas 1.1.2a documentation</title>
+    <title>How vegas Works &mdash; vegas 1.2 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.1.2a',
+        VERSION:     '1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 1.1.2a documentation" href="index.html" />
+    <link rel="top" title="vegas 1.2 documentation" href="index.html" />
     <link rel="next" title="vegas Module" href="vegas.html" />
     <link rel="prev" title="Tutorial" href="tutorial.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -51,7 +51,7 @@
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 1.1.2a documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -62,6 +62,9 @@
             
   <div class="section" id="how-vegas-works">
 <h1>How <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> Works<a class="headerlink" href="#how-vegas-works" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses two adaptive strategies: importance sampling, and
+adaptive stratified sampling. Here we discuss the ideas behind each,
+in turn.</p>
 <div class="section" id="importance-sampling">
 <h2>Importance Sampling<a class="headerlink" href="#importance-sampling" title="Permalink to this headline">¶</a></h2>
 <p>The most important adaptive strategy <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses is
@@ -72,8 +75,8 @@ called &#8220;importance sampling.&#8221;</p>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> chooses transformations
 for each integration variable
 that minimize the statistical errors in
-Monte Carlo estimates using integrand
-samples that are uniformly distributed
+Monte Carlo estimates whose integrand
+samples are uniformly distributed
 in the new variables.
 The idea in one-dimension, for
 example, is to replace the original integral over <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/>,</p>
@@ -201,11 +204,12 @@ in the previous section looks like:</p>
 <img alt="_images/eg1a-plt1.png" src="_images/eg1a-plt1.png" style="width: 80%;" />
 <img alt="_images/eg1a-plt2.png" src="_images/eg1a-plt2.png" style="width: 80%;" />
 <p>These grids transform into uniformly-spaced grids in <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/> space.
-Consequently a uniform, <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space Monte Carlo would place the same
+Consequently a uniform, <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y" style="vertical-align: -3px"/>-space Monte Carlo places the same
 number of integrand evaluations, on average, in every rectangle
 of these pictures. (The average number is typically much less one
-in higher dimensions.) Integrand evaluations would be concentrated
-in regions where the rectangles are small (and therefore numerous) &#8212;
+in higher dimensions.) Integrand evaluations are concentrated
+in regions where the <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/>-space rectangles are small
+(and therefore numerous) &#8212;
 here in the vicinity of <tt class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></tt>, where the
 peak is.</p>
 <p>These plots were obtained by including the line</p>
@@ -306,7 +310,7 @@ the new <a class="reference internal" href="vegas.html#module-vegas" title="vega
 integration evaluations away from the phantom peaks, into
 the regions occupied by the real peaks since this is where all
 the error comes from. This improves <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>’s ability to estimate
-the contributions from the peaks and
+the contributions from the real peaks and
 reduces statistical errors,
 provided <tt class="docutils literal"><span class="pre">neval</span></tt> is large enough to permit a large number  (more
 than 2 or 3) <img class="math" src="_images/math/30864ca487301a1fdde3ea443cf9a4a266cbab8d.png" alt="M_\mathrm{st}" style="vertical-align: -3px"/> of
@@ -374,7 +378,7 @@ integrals.</p>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 1.1.2a documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

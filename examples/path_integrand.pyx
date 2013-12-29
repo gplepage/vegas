@@ -1,10 +1,10 @@
-# c#ython: profile=True
+# c#ython: profile=True 
 """
 Cython code for the integrand used in path-integral.py.
 
 class PathIntegral is a base class for classes that 
 do path integrals for 1-d systems. class Oscillator 
-is derived from it and specifies a specific potential.
+is derived from it and specifies a specific potential.  
 """
 
 # import Cython description of vegas

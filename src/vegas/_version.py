@@ -1,2 +1,2 @@
 # File created by vegas setup.py
-version = '1.1.2a'
+version = '1.2'
