@@ -1306,17 +1306,19 @@ cdef class Integrator(object):
 
         # main iteration loop
         self._prepare_integrator()
-        ans = RunningWAvg()
         for itn in range(self.nitn):    # iterate
             if self.analyzer != None:
                 self.analyzer.begin(itn, self)
-            ans.add(self._integrate(fcn))
+            self.result.add(self._integrate(fcn))
             if self.analyzer != None:
-                self.analyzer.end(ans.itn_results[-1], ans)
+                self.analyzer.end(self.result.itn_results[-1], self.result)
             self.map.adapt(alpha=self.alpha)
-            if (self.rtol * abs(ans.mean) + self.atol) > ans.sdev:
+            if (
+                (self.rtol * abs(self.result.mean) + self.atol) 
+                > self.result.sdev
+                ):
                 break
-        return ans
+        return self.result
 
     def _prepare_integrand(self, fcn, fcntype=None):
         """ Wrap integrand if needed. """
@@ -1377,7 +1379,15 @@ cdef class Integrator(object):
         self._init_workareas()
 
     cdef void _init_workareas(self):
-        " Allocate space for and initialize work arrays. "
+        """ Allocate space for and initialize work arrays. 
+
+        This method is called once, at the beginning before the 
+        first iteration of vegas, whenever the Integrator is 
+        applied to an integrand. This means that the work arrays
+        are not resized much after the first iteration --- they
+        are as big as they need to be. Note that sum_sigf and 
+        sigf are reinitialized only if sigf is the wrong size.
+        """
         cdef INT_TYPE neval_vec = self.nhcube_vec * self.min_neval_hcube
         cdef INT_TYPE nsigf = (
             self.nhcube_vec if self.minimize_sigf_mem else
@@ -1398,6 +1408,7 @@ cdef class Integrator(object):
         self.jac = numpy.empty(neval_vec, float)
         self.fdv = numpy.empty(neval_vec, float)
         self.fdv2 = numpy.empty(neval_vec, float)
+        self.result = RunningWAvg()
 
     cdef void _resize_workareas(self, INT_TYPE neval_vec):
         " Check that work arrays are adequately large; resize if necessary. "
@@ -1712,8 +1723,125 @@ cdef class VecIntegrand:
 
 
 
+cdef class MultiIntegrator(Integrator):
 
+    def __init__(self, map, **kargs):
+        super(MultiIntegrator, self).__init__(map, **kargs)
 
+    def _prepare_integrand(self, fcn, fcntype=None):
+        """ Wrap integrand if needed. """
+        if fcntype is None:
+            fcntype = self.fcntype
+        if hasattr(fcn, 'fcntype'):
+            fcntype = fcn.fcntype
+        if fcntype == 'scalar':
+            return VecPythonIntegrand(fcn)
+        else:
+            return fcn
+
+    cdef object _integrate_vec(
+        MultiIntegrator self, 
+        fcn,
+        INT_TYPE neval_vec,
+        INT_TYPE hcube_base, 
+        INT_TYPE nhcube_vec,
+        ):
+        " Do integral for h-cubes in current vector. "
+        cdef INT_TYPE i_start, i, tmp_hcube, ihcube #, hcube
+        cdef double sum_fdv, sum_fdv2, mean, var, sigf2
+        cdef INT_TYPE y0_d
+        cdef double vec_mean = 0.0 
+        cdef double vec_var = 0.0
+        cdef double vec_sigf = 0.0
+        cdef double dv = (1./self.nstrat) ** self.dim
+        cdef INT_TYPE[::1] neval_hcube = self.neval_hcube
+        cdef double[::1] sigf
+        if self.beta > 0:
+            if self.minimize_sigf_mem:
+                sigf = self.sigf
+            else:
+                sigf = self.sigf[hcube_base:]
+        fcn(self.x, self.fdv, neval_vec)
+        
+        # compute integral h-cube by h-cube
+        i_start = 0
+        for ihcube in range(nhcube_vec):
+            sum_fdv = 0.0
+            sum_fdv2 = 0.0
+            for i in range(i_start, i_start + neval_hcube[ihcube]):
+                self.fdv[i] *= self.jac[i] * dv
+                self.fdv2[i] = self.fdv[i] ** 2
+                sum_fdv += self.fdv[i]
+                sum_fdv2 += self.fdv2[i]
+            mean = sum_fdv / neval_hcube[ihcube]
+            sigf2 = abs(sum_fdv2 / neval_hcube[ihcube] - mean * mean)
+            if self.beta > 0:
+                sigf[ihcube] = sigf2 ** (self.beta / 2.)
+                vec_sigf += sigf[ihcube]
+            var = sigf2 / (neval_hcube[ihcube] - 1.)
+            vec_mean += mean
+            vec_var += var
+            if self.adapt_to_errors:
+                self.fdv2[i_start] = var
+                self.map.add_training_data(self.y[i_start:,:], self.fdv2[i_start:], 1)
+            i_start += neval_hcube[ihcube]
+        if not self.adapt_to_errors:
+            self.map.add_training_data(self.y, self.fdv2, neval_vec)
+        sys.stdout.flush()
+        return (vec_mean, vec_var, vec_sigf)
+
+    # @cython.boundscheck(False)
+    # @cython.wraparound(False)
+    def _integrate(MultiIntegrator self not None, fcn not None):
+        """ Do integral for one iteration. 
+
+        Can probably omit this from MultiIntegrator by making
+        ans_mean, ans_var, vec_mean, vec_var objects rather than
+        floats. The customization would all occur in _integrate_vec 
+        and _prepare_integrand.
+        """
+        cdef INT_TYPE nhcube = self.nstrat ** self.dim 
+        cdef INT_TYPE nhcube_vec = min(self.nhcube_vec, nhcube)
+        cdef double ans_mean = 0.
+        cdef double ans_var = 0.
+        cdef double sum_sigf = 0.
+        cdef double vec_mean, vec_var, vec_sigf
+        cdef INT_TYPE neval_vec
+        cdef INT_TYPE hcube_base 
+
+        # iterate over h-cubes in batches of nhcube_vec h-cubes
+        # this allows for vectorization, to reduce python overhead
+        self.actual_neval = 0
+        self.neval_hcube_range = numpy.zeros(2, int) + self.min_neval_hcube        
+        for hcube_base in range(0, nhcube, nhcube_vec):
+            if (hcube_base + nhcube_vec) > nhcube:
+                nhcube_vec = nhcube - hcube_base 
+            neval_vec, vec_sigf = self._calculate_neval_hcube(
+                    hcube_base=hcube_base,
+                    nhcube_vec=nhcube_vec,
+                    fcn=fcn,
+                    )
+            if self.minimize_sigf_mem:
+                sum_sigf += vec_sigf
+            self.actual_neval += neval_vec
+            self._resize_workareas(neval_vec=neval_vec)
+            self._generate_random_y_x_jac(
+                    neval_vec=neval_vec,
+                    hcube_base=hcube_base, 
+                    nhcube_vec=nhcube_vec,
+                    )
+            vec_mean, vec_var, vec_sigf = self._integrate_vec(
+                fcn=fcn, 
+                neval_vec=neval_vec, 
+                hcube_base=hcube_base, 
+                nhcube_vec=nhcube_vec,
+                )
+            ans_mean += vec_mean 
+            ans_var += vec_var
+            if not self.minimize_sigf_mem:
+                sum_sigf += vec_sigf
+        self.sum_sigf = sum_sigf
+        return gvar.gvar(ans_mean, sqrt(ans_var))
 
 
 

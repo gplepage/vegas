@@ -61,6 +61,7 @@ cdef class Integrator:
     cdef readonly double beta 
     cdef readonly object analyzer
     # generated
+    cdef readonly object result
     cdef readonly AdaptiveMap map 
     cdef double[::1] sigf
     cdef double sum_sigf

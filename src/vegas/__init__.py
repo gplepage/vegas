@@ -53,5 +53,6 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 # GNU General Public License for more details.
 
 from ._vegas import RunningWAvg, AdaptiveMap, Integrator, VecIntegrand
+from ._vegas import MultiIntegrator
 from ._vegas import reporter, gvar
 from ._version import version as __version__
