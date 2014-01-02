@@ -215,10 +215,29 @@ class TestIntegrator(unittest.TestCase):
             '    number of:  strata/axis = 7  increments/axis = 21',
             '                h-cubes = 49  evaluations/h-cube = 2 (min)',
             '                h-cubes/vector = 100',
-            '    minimize_sigf_mem = False',           
+            '    minimize_mem = False',           
             '    adapt_to_errors = False',
             '    damping parameters: alpha = 0.5  beta= 0.75',
             '    limits: h-cubes < 5e+08  evaluations/h-cube < 1e+07',
+            '    accuracy: relative = 0  absolute accuracy = 0',
+            '',
+            '    axis 0 covers (0.0, 1.0)',
+            '    axis 1 covers (-1.0, 1.0)',
+            '',
+            ]
+        for i, l in enumerate(I.settings().split('\n')):
+            self.assertEqual(l, lines[i])
+        I = Integrator([[0.,1.],[-1.,1.]], max_nhcube=1, minimize_mem=True)
+        lines = [
+            'Integrator Settings:',
+            '    1000 (max) integrand evaluations in each of 10 iterations',
+            '    number of:  strata/axis = 15  increments/axis = 90',
+            '                h-cubes = 225  evaluations/h-cube = 2 (min)',
+            '                h-cubes/vector = 100',
+            '    minimize_mem = True',
+            '    adapt_to_errors = False',
+            '    damping parameters: alpha = 0.5  beta= 0.75',
+            '    limits: h-cubes < 1  evaluations/h-cube < 1e+07',
             '    accuracy: relative = 0  absolute accuracy = 0',
             '',
             '    axis 0 covers (0.0, 1.0)',
@@ -299,6 +318,32 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.sdev < 1e-3)
+
+    def test_min_sigf(self):
+        " test minimize_mem=True mode "
+        class f_vec(VecIntegrand):
+            def __call__(self, x, f, nx):
+                for i in range(nx):
+                    f[i] = (
+                        math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
+                        ) / math.pi ** 2
+        I = Integrator(
+            [[0, math.pi], 
+            [-math.pi/2., math.pi/2.]],
+            minimize_mem=True,
+            )
+        r = I(f_vec(), neval=10000)
+        self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
+        self.assertTrue(r.Q > 1e-3)
+        self.assertTrue(r.sdev < 1e-3)
+
+    def test_scalar_exception(self):
+        " integrate scalar fcn "
+        def f(x):
+            return (math.sin(x[0]) ** 2 + math.cos(x[1]) ** 2) / math.pi ** 2 / 0.0
+        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
+        with self.assertRaises(ZeroDivisionError):
+            I(f, neval=100)
 
     def test_vector_exception(self):
         " integrate vector fcn "

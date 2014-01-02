@@ -1,3 +1,23 @@
+Version 1.3 - ????
+========================
+
+- Changed the semantics concerning the memory optimization introduced in 
+  v1.2. To run with minimum memory set parameter minimize_mem = True. This
+  will cause vegas to use extra integrand evaluations, which can slow it by
+  50-100%, but also decouples the internal memory used from neval. The 
+  default value, False, is the better choice unless vegas is running out 
+  of RAM. Parameter max_nhcube limits the number of h-cubes used in the
+  stratification, unless beta=0 or minimize_mem=True in which case it is 
+  ignored.
+
+
+
+- An experimental version of MultiIntegrator is included. This allows 
+  vegas to integrate several integrands simultaneously. It needs work.
+
+
+
+
 Version 1.2 - 2013-12-29
 ========================
 

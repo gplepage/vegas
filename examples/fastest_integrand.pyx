@@ -1,6 +1,6 @@
 # c#ython: profile=True 
 """
-Cython code for the integrator used in fastest.py. 
+Cython code for the integrator used in fastest.py.   
 
 Note that this achieves better performance than the integrand in faster.py
 without the  complication of vectorization. Some problems do not vectorize

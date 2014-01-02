@@ -162,11 +162,22 @@ when using <a class="reference internal" href="#module-vegas" title="vegas: Adap
 below). The default value is 100. Larger values may be
 lead to faster evaluations, but at the cost of 
 more memory for internal work arrays.</li>
-<li><strong>maxinc_axis</strong> (<em>positive int</em>) &#8211; The maximum number of increments
-per axis allowed for the x-space grid. The default 
-value is 1000; there is probably little need to use
-other values.</li>
-<li><strong>adapt_to_errors</strong> &#8211; <p><tt class="docutils literal"><span class="pre">adapt_to_errors=False</span></tt> causes 
+<li><strong>minimize_mem</strong> (<em>bool</em>) &#8211; When <tt class="docutils literal"><span class="pre">True</span></tt>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> minimizes 
+internal workspace at the cost of extra evaluations of
+the integrand. This can increase execution time by 
+50&#8211;100% but might be desirable when the number of 
+evaluations is very large (e.g., <tt class="docutils literal"><span class="pre">neval=1e9</span></tt>). Normally
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses internal work space that grows in 
+proportion to <tt class="docutils literal"><span class="pre">neval</span></tt>. If that work space exceeds
+the size of the RAM available to the processor,
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> runs much more slowly. Setting <tt class="docutils literal"><span class="pre">minimize_mem=True</span></tt>
+greatly reduces the internal storage used by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>; in 
+particular it becomes independent of <tt class="docutils literal"><span class="pre">neval</span></tt>. The default
+setting, <tt class="docutils literal"><span class="pre">minimize_mem=False</span></tt>, is much superior 
+unless memory becomes a problem. (The memory is used 
+by the adaptive stratified sampling, so memory is not 
+an issue if <tt class="docutils literal"><span class="pre">beta=0</span></tt>.)</li>
+<li><strong>adapt_to_errors</strong> (<em>bool</em>) &#8211; <p><tt class="docutils literal"><span class="pre">adapt_to_errors=False</span></tt> causes 
 <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to remap the integration variables to emphasize
 regions where <tt class="docutils literal"><span class="pre">|f(x)|</span></tt> is largest. This is 
 the default mode.</p>
@@ -177,25 +188,26 @@ the number of the number of stratifications in
 the y grid is large (&gt; 50?). It is typically 
 useful only in one or two dimensions.</p>
 </li>
-<li><strong>max_nhcube</strong> (<em>positive int</em>) &#8211; If the number of hypercubes in the 
-y-space stratification exceeds <tt class="docutils literal"><span class="pre">max_nhcube</span></tt>,
-<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> switches to a more costly (in execution time)
-implementation of its adaptive stratified sampling
-algorithm. <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> does this to avoid overly large
-internal work spaces. The optimal value for 
-<tt class="docutils literal"><span class="pre">max_nhcube</span></tt> depends upon how much memory (RAM) 
-is available to the processor doing the integral.
-The execution time increases by 50&#8211;100% in this new
-mode, since <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> has to recompute information that
-it otherwise stores in memory. This parameter
-has an effect only if parameter <tt class="docutils literal"><span class="pre">beta&gt;0</span></tt>; otherwise
-it is ignored.</li>
+<li><strong>maxinc_axis</strong> (<em>positive int</em>) &#8211; The maximum number of increments
+per axis allowed for the x-space grid. The default 
+value is 1000; there is probably little need to use
+other values.</li>
+<li><strong>max_nhcube</strong> (<em>positive int</em>) &#8211; Maximum number of y-space hypercubes 
+used for stratified sampling. Setting <tt class="docutils literal"><span class="pre">max_nhcube=1</span></tt>
+turns stratified sampling off, which is probably never 
+a good idea. The default setting (5e8) was chosen to 
+correspond to the point where internal work arrays 
+become comparable in size to the typical amount of RAM 
+available to a processor (in a laptop in 2014). 
+Internal memory usage is large only when <tt class="docutils literal"><span class="pre">beta&gt;0</span></tt>
+and <tt class="docutils literal"><span class="pre">minimize_mem=False</span></tt>; therefore <tt class="docutils literal"><span class="pre">max_nhcube</span></tt> is 
+ignored if <tt class="docutils literal"><span class="pre">beta=0</span></tt> or <tt class="docutils literal"><span class="pre">minimize_mem=True</span></tt>.</li>
 <li><strong>max_neval_hcube</strong> (<em>positive int</em>) &#8211; Maximum number of integrand evaluations 
 per hypercube in the stratification. The default value 
 is 1e7. Larger values might allow for more adaptation
 (when <tt class="docutils literal"><span class="pre">neval</span></tt> is larger than <tt class="docutils literal"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">max_neval_hcube</span></tt>),
 but also can result in very large internal work arrays.</li>
-<li><strong>fcntype</strong> &#8211; <p>Specifies the default type of integrand.</p>
+<li><strong>fcntype</strong> (<em>str</em>) &#8211; <p>Specifies the default type of integrand.</p>
 <p><tt class="docutils literal"><span class="pre">fcntype='scalar'</span></tt> imples that the integrand
 is a function <tt class="docutils literal"><span class="pre">f(x)</span></tt> of a single integration
 point <tt class="docutils literal"><span class="pre">x[d]</span></tt>.</p>

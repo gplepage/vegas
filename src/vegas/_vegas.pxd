@@ -57,15 +57,16 @@ cdef class Integrator:
     cdef readonly double alpha
     cdef readonly double rtol
     cdef readonly double atol
+    cdef readonly bint minimize_mem
     cdef readonly bint adapt_to_errors
     cdef readonly double beta 
+    cdef readonly bint adapt
     cdef readonly object analyzer
     # generated
     cdef readonly object result
     cdef readonly AdaptiveMap map 
     cdef double[::1] sigf
     cdef double sum_sigf
-    cdef bint minimize_sigf_mem
     cdef readonly INT_TYPE nstrat 
     cdef readonly INT_TYPE min_neval_hcube 
     cdef readonly INT_TYPE dim 
@@ -74,11 +75,11 @@ cdef class Integrator:
     cdef double[:, ::1] y
     cdef double[:, ::1] x
     cdef double[::1] jac 
-    cdef double[::1] fdv 
+    cdef double[::1] f 
     cdef double[::1] fdv2
     cdef INT_TYPE[::1] neval_hcube
-    cdef void _init_workareas(self)
-    cdef void _resize_workareas(self, INT_TYPE neval_vec)
+    # cdef void _init_workareas(self)
+    # cdef void _resize_workareas(self, INT_TYPE neval_vec)
     cdef object _calculate_neval_hcube(
         self, 
         INT_TYPE hcube_base,
@@ -91,11 +92,11 @@ cdef class Integrator:
         INT_TYPE hcube_base, 
         INT_TYPE nhcube_vec,
         )
-    cdef object _integrate_vec(
-        Integrator self, 
-        fcn,
-        INT_TYPE neval_vec,
-        INT_TYPE hcube_base, 
-        INT_TYPE nhcube_vec,
-        )
+    # cdef object _integrate_vec(
+    #     Integrator self, 
+    #     fcn,
+    #     INT_TYPE neval_vec,
+    #     INT_TYPE hcube_base, 
+    #     INT_TYPE nhcube_vec,
+    #     )
 
