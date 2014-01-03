@@ -75,7 +75,7 @@ Here we illustrate the use of |vegas| by estimating the integral
 .. math::
 
     C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
-    \,\,\mathrm{e}^{- 100 \sum_{\mu}(x_\mu-0.5)^2}  ,
+    \,\,\mathrm{e}^{- 100 \sum_{d}(x_d-0.5)^2}  ,
 
 where constant :math:`C` is chosen so that the exact integral is 1. 
 The following code shows how this can be done::
@@ -337,7 +337,7 @@ There are several things to note here:
 
     Again the grid is almost optimal for ``g(x)`` from the start,
     because ``g(x)`` peaks in the same region as ``f(x)``.
-    The exact value for this integral is 0.5.
+    The exact value for this integral is very close to 0.5.
 
     Note that |Integrator|\s can be saved in files and reloaded later using
     Python's :mod:`pickle` module: for example, 
@@ -379,29 +379,6 @@ There are several things to note here:
 
     .. literalinclude:: eg1f.out
 
-    This result can be improved somewhat by slowing down
-    |vegas|’s adaptation::
-
-        ...
-        integ(f_sph, nitn=10, neval=1000, alpha=0.1)
-        result = integ(f_sph, nitn=10, neval=1000, alpha=0.1)  
-        ...
-
-    Parameter ``alpha`` controls the speed with which |vegas|
-    adapts, with smaller ``alpha``\s giving slower adaptation. 
-    Here we reduce it to 0.1, from its default value of 0.5, and get
-    the following output:
-
-    .. literalinclude:: eg1g.out
-
-    Notice how the errors fluctuate less from iteration to iteration
-    with the smaller ``alpha`` in this case. 
-    Persistent, large fluctuations in the size 
-    of the per-iteration errors is often a signal that ``alpha`` should
-    be reduced. In such situations |vegas| is probably over-reacting
-    to random fluctuations it encounters as it samples the integrand. 
-
-
     It is a good idea to make the actual integration volume as large a 
     fraction as possible of the total volume used by |vegas| ---
     by choosing integration variables properly --- so 
@@ -421,6 +398,40 @@ There are several things to note here:
     of finite range. For example,  an integral over :math:`x\equiv\tan(\theta)`
     from 0 to infinity is easily reexpressed as 
     an integral over :math:`\theta` from 0 to :math:`\pi/2`.
+
+    **Damping:** This result in the previous section 
+    can be improved somewhat by slowing down
+    |vegas|’s adaptation::
+
+        ...
+        integ(f_sph, nitn=10, neval=1000, alpha=0.1)
+        result = integ(f_sph, nitn=10, neval=1000, alpha=0.1)  
+        ...
+
+    Parameter ``alpha`` controls the speed with which |vegas|
+    adapts, with smaller ``alpha``\s giving slower adaptation. 
+    Here we reduce ``alpha`` to 0.1, from its default value of 0.5, and get
+    the following output:
+
+    .. literalinclude:: eg1g.out
+
+    Notice how the errors fluctuate less from iteration to iteration
+    with the smaller ``alpha`` in this case. 
+    Persistent, large fluctuations in the size 
+    of the per-iteration errors is often a signal that ``alpha`` should
+    be reduced. With larger ``alpha``\s, |vegas| can over-react
+    to random fluctuations it encounters as it samples the integrand. 
+
+    In general, we want ``alpha`` to be large enough so that |vegas| adapts
+    quickly to the integrand, but not so large that it has difficulty 
+    holding on to the optimal tuning once it has found it. The best value
+    depends upon the integrand. Adaptation can be turned off completely
+    by setting parameter ``adapt=False``: e.g., ::
+
+        ...
+        integ(f_sph, nitn=10, neval=1000, alpha=0.1)
+        result = integ(f_sph, nitn=10, neval=1000, adapt=False)  
+        ...
 
 
 Faster Integrands
@@ -565,6 +576,201 @@ Cython code can also link easily to compiled C or Fortran code,
 so integrands written in these languages can be used as well (and
 would be faster than pure Python).
 
+Multiple Integrands Simultaneously
+-----------------------------------
+|vegas| can be used to integrate multiple integrands simultaneously, using
+the same integration points for each of the integrands. This is useful 
+in situations where the integrands have similar structure, with peaks in
+the same locations. There can be a very signficant advantage in sampling
+the different integrands at precisely the same points in |x| space, because
+the Monte Carlo estimates for the different integrals are then correlated. 
+If the integrands are very similar to each other the correlations can be 
+very strong, leading to greatly reduced errors in ratios or differences
+of the resulting integrals. |vegas| captures these correlations by 
+examing fluctuations in estimates of the different integrals over, 
+typically, 10--20 iterations of the |vegas| algorithm with adaptation 
+turned off. (It is important to turn off adaptation so that estimates from
+different iterations come from the same probability distribution.)
+
+Consider a simple example. We want to compute 
+the normalization and first two moments of a 
+sharply peaked probability distribution:
+
+.. math::
+    I_0 &\equiv \int_0^1 d^4x\;
+        \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2}\\
+    I_1 &\equiv \int_0^1 d^4x\; x_0 \; 
+        \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2} \\
+    I_2 &\equiv \int_0^1 d^4x\; x_0^2 \; 
+        \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2}
+
+From these integrals we can determine the mean and width of the distribution
+projected onto one of the axes: 
+
+.. math::
+    \langle x \rangle &\equiv I_1 / I_0 \\[1ex]
+    \sigma_x^2 &\equiv \langle x^2 \rangle - \langle x \rangle^2 \\
+               &= I_2 / I_0 - (I_1 / I_0)^2
+
+This can be done using the following code::
+
+    import vegas
+    import math
+    import gvar as gv
+
+    def f(x):
+        dx2 = 0.0
+        for d in range(4):
+            dx2 += (x[d] - 0.5) ** 2
+        f = math.exp(-200 * dx2)
+        return [f, f * x[0], f * x[0] ** 2]
+
+    def f_avg(x):
+        return sum(f(x)) / 3.
+
+    integ = vegas.Integrator(4 * [[0, 1]])
+
+    # adapt grid to f_avg
+    training = integ(f_avg, nitn=10, neval=1000)
+    print('Adaptation:\n')
+    print(training.summary())
+
+    # evaluate multi-integrands
+    print('\nFinal Results:\n')
+    result = integ.multi(f, nitn=20)
+    print('I[0] =', result[0], '  I[1] =', result[1], '  I[2] =', result[2], '\n')
+    print('<x> =', result[1] / result[0])
+    print(
+        'sigma_x**2 = <x**2> - <x>**2 =', 
+        result[2] / result[0] - (result[1] / result[0]) ** 2
+        )
+    print('\ncorrelation matrix:\n', gv.evalcorr(result))
+
+Here we first train |vegas| on the the average of the three integrands;
+any one of the integrands could have used by itself, but the average costs about
+the same to compute. 
+We then use |vegas| to generate ``nitn=20`` values for each integral.
+|vegas| computes the averages of these 20 values, 
+as well as the covariance matrix for the resulting estimates. Here
+``result`` is an array containing two objects representing Gaussian
+random variables --- type :class:`gvar.GVar` from the ``lsqfit`` package
+which must be installed in order to use ``Integrator.multi()``. These 
+objects encode information about the mean value (``result[i].mean``) 
+and standard deviation (``result[i].sdev``) for the estimates for each
+integral. They also encode information about correlations between 
+different Gaussian variables.
+
+The code produces the following output:
+
+.. literalinclude:: eg3a.out
+
+The estimates for the individual integrals are separately accurate to 
+about ±0.4%, 
+but the estimate for :math:`\langle x \rangle = I_1/I_0` is accurate to ±0.06%.
+This is almost an order
+of magnitude (9.5x) more accurate than we would obtain absent correlations. 
+The correlation matrix shows that there is 99% correlation between the
+statistical fluctuations in estimates for :math:`I_0` and :math:`I_1`,
+and so the bulk of these fluctuations cancel in the ratio. 
+The estimate for the variance :math:`\sigma^2_x`
+is almost two orders of magnitude (92x) more accurate than we would 
+have obtained had the integrals been evaluated separately. Both estimates
+are correct to within the quoted errors. 
+
+|vegas| estimates the covariance matrix from the variations in the integral
+estimates between ``nitn`` different iterations. Thus the error estimates 
+(i.e., the standard deviations) have fractional statistical errors
+of order ``1/sqrt(2 * nitn)``, provided, of course, 
+that ``neval`` is large enough so that
+the estimates are Gaussian. Using ``nitn=10`` or ``20`` means that the error 
+estimates are accurate to 15--20%, which is more than accurate enough for most 
+applications.
+
+As always, |vegas| is faster if the integrand is vectorized. The above 
+example could have been written ::
+
+    import vegas
+    import math
+    import numpy as np
+    import gvar as gv
+
+    class f(vegas.VecIntegrand):
+        def __call__(self, x):
+            x = np.asarray(x)
+            fv = np.empty((x.shape[0], 3), float)
+            dx2 = 0.0
+            for d in range(4):
+                dx2 += (x[:, d] - 0.5) ** 2
+            fv[:, 0] = np.exp(-200. * dx2)
+            fv[:, 1] = fv[:, 0] * x[:, 0]
+            fv[:, 2] = fv[:, 0] * x[:, 0] ** 2
+            return fv
+
+    class f_avg(vegas.VecIntegrand):
+        def __init__(self):
+            self.fcn = f()
+        def __call__(self, x, fs, nx):
+            x = np.asarray(x)[:nx, :]
+            fs = np.asarray(fs)[:nx]
+            fv = self.fcn(x)
+            fs[:] = (fv[:, 0] + fv[:, 1] + fv[:, 2]) / 3.
+
+    integ = vegas.Integrator(4 * [[0, 1]])
+
+    # adapt grid to f_avg
+    training = integ(f_avg(), nitn=10, neval=1000)
+    print('Adaptation:\n')
+    print(training.summary())
+
+    # evaluate multi-integrands
+    print('\nFinal Results:\n')
+    result = integ.multi(f(), nitn=20)
+    print('I[0] =', result[0], '  I[1] =', result[1], '  I[2] =', result[2], '\n')
+    print('<x> =', result[1] / result[0])
+    print(
+        'sigma_x**2 = <x**2> - <x>**2 =', 
+        result[2] / result[0] - (result[1] / result[0]) ** 2
+        )
+    print('\ncorrelation matrix:\n', gv.evalcorr(result))
+
+
+with identical results but faster execution time. 
+Even better would be a Cython 
+version. Here the vector integrand returns integrand values in 
+arrays ``f[i, s]`` where ``i`` labels different integration points
+while ``s=0, 1`` labels the different integrands. Multi-dimensional
+integrands, with ``f[i, s1, s2, ...]``, are also allowed.
+
+|vegas| as a Random Number Generator
+-------------------------------------
+Having adapted to an integrand, |vegas| generates random points
+in the integration volume from a distribution that was optimized
+for the integrand. It is possible to access integration points
+generated by |vegas|, together with
+the weights they carry in an integral, using the iterators
+:meth:`vegas.Iterator.random` and :meth:`vegas.Iterator.random_vec`.
+For example, ::
+
+    integ = vegas.iterator(...)
+    ...
+    integ(f_training)
+    ...
+    for itn in range(10):
+        # estimate integral of f()
+        integral = 0.0
+        for x, wgt in integ.random_vec():
+            for i in range(x.shape[0]):
+                integral += f(x[i, :]) * wgt[i]
+        results.append(integral)
+
+generates 10 Monte Carlo estimates of the integral of function ``f(...)``
+using an integrator trained on function ``f_training(...)``. The integration
+points ``x[i, d]`` are generated from a distribution optimized for ``f_training``,
+which should be similar to ``f``. This low-level
+access is useful for implementing analyses like that in the previous section
+(:meth:`vegas.Integrator.multi`).
+
+
 Implementation Notes
 ---------------------
 This implementation relies upon Cython for its speed and
@@ -587,4 +793,7 @@ that supports arithmetic between :class:`gvar.GVar`\s
 and numbers, but not between :class:`gvar.GVar`\s and other
 :class:`gvar.GVar`\s. It also supports ``log``, ``sqrt`` 
 and ``exp`` of :class:`gvar.GVar`\s, but not trig functions 
---- for these install the lsqfit package.
+--- for these install the lsqfit package. Also the  
+multi-integrand method :meth:`vegas.Integrator.multi` 
+requires the :class:`gvar.GVar` from ``lsqfit``; the substitute
+doesn't work for that method.

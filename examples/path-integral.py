@@ -36,7 +36,7 @@ from path_integrand import Oscillator
 
 DO_WAVEFUNCTIONS = True
 
-SHOW_PLOT = False # True   # plot wavefunction ** 2
+SHOW_PLOT = True   # plot wavefunction ** 2
 
 def main():
     # seed random numbers so reproducible
@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage. 
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

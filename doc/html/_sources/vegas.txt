@@ -48,6 +48,12 @@ The central component of the |vegas| package is the integrator class:
 
     .. automethod:: settings(ngrid=0)
 
+    .. automethod:: multi(fcn, nitn=10)
+
+    .. automethod:: random()
+
+    .. automethod:: random_vec()
+
 
 AdaptiveMap Objects
 ---------------------

@@ -19,8 +19,7 @@ To install:
 	c. The lsqfit package - provides a module gvar that handles 
 		Gaussian random variables. This is not strictly necessary
 		but it improves the ease with which vegas results can 
-		be manipulated. And it will be required for a new module
-		that is currently under development (multivegas).
+		be manipulated. It is required for the method vegas.Integrator.multi.
 		(http://https://github.com/gplepage/lsqfit.git or use pip)
 
 	The first three of these libraries are usually included in 3rd-party
@@ -81,7 +80,7 @@ Problems:
 
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage. 
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

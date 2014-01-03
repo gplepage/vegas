@@ -1,5 +1,16 @@
-Version 1.3 - ????
+Version 1.3 - 2014-01-03
 ========================
+
+- Introduced new method Integrator.multi for doing multiple integrals 
+  simultaneously, using the same integration points for all of the 
+  integrals. Integrating simultaneously can lead to very large reductions
+  in the uncertainties for ratios or differences of integrals whose
+  integrands are very similar. See discussion in the documentation under
+  "Multiple Integrands Simultaneously."
+
+- Introduced iterators (Integrator.random and Integrator.random_vec) 
+  that return |vegas| integration points and weights
+  for applications that use |vegas| as a random number generator.
 
 - Changed the semantics concerning the memory optimization introduced in 
   v1.2. To run with minimum memory set parameter minimize_mem = True. This
@@ -9,13 +20,6 @@ Version 1.3 - ????
   of RAM. Parameter max_nhcube limits the number of h-cubes used in the
   stratification, unless beta=0 or minimize_mem=True in which case it is 
   ignored.
-
-
-
-- An experimental version of MultiIntegrator is included. This allows 
-  vegas to integrate several integrands simultaneously. It needs work.
-
-
 
 
 Version 1.2 - 2013-12-29

@@ -1,5 +1,5 @@
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage. 
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -89,6 +89,13 @@ def main():
 
     if SAVE_OUTPUT:
         unlog_stdout()
+        log_stdout('eg1c1.out')
+    result = vegas.RunningWAvg(result.itn_results[5:])
+    print(result.summary())
+    print('result = %s    Q = %.2f' % (result, result.Q))
+
+    if SAVE_OUTPUT:
+        unlog_stdout()
         log_stdout('eg1d.out')
     integ(f, nitn=7, neval=1000)
     result = integ(f, nitn=10, neval=1000)
@@ -122,6 +129,14 @@ def main():
         log_stdout('eg1g.out')
     integ(f_sphere, nitn=10, neval=1000, alpha=0.1)
     result = integ(f_sphere, nitn=10, neval=1000, alpha=0.1)
+    print(result.summary())
+    print('result = %s    Q = %.2f' % (result, result.Q))
+
+    if SAVE_OUTPUT:
+        unlog_stdout()
+        log_stdout('eg1h.out')
+    integ(f_sphere, nitn=10, neval=1000, alpha=0.1)
+    result = integ(f_sphere, nitn=10, neval=1000, adapt=False)
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
 

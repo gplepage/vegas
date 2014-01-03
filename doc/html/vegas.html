@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vegas Module &mdash; vegas 1.2 documentation</title>
+    <title>vegas Module &mdash; vegas 1.3 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.2',
+        VERSION:     '1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 1.2 documentation" href="index.html" />
+    <link rel="top" title="vegas 1.3 documentation" href="index.html" />
     <link rel="prev" title="How vegas Works" href="background.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -47,7 +47,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -172,10 +172,10 @@ proportion to <tt class="docutils literal"><span class="pre">neval</span></tt>. 
 the size of the RAM available to the processor,
 <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> runs much more slowly. Setting <tt class="docutils literal"><span class="pre">minimize_mem=True</span></tt>
 greatly reduces the internal storage used by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>; in 
-particular it becomes independent of <tt class="docutils literal"><span class="pre">neval</span></tt>. The default
-setting, <tt class="docutils literal"><span class="pre">minimize_mem=False</span></tt>, is much superior 
-unless memory becomes a problem. (The memory is used 
-by the adaptive stratified sampling, so memory is not 
+particular memory becomes independent of <tt class="docutils literal"><span class="pre">neval</span></tt>. The default
+setting (<tt class="docutils literal"><span class="pre">minimize_mem=False</span></tt>), however, is much superior 
+unless memory becomes a problem. (The large memory is needed 
+for adaptive stratified sampling, so memory is not 
 an issue if <tt class="docutils literal"><span class="pre">beta=0</span></tt>.)</li>
 <li><strong>adapt_to_errors</strong> (<em>bool</em>) &#8211; <p><tt class="docutils literal"><span class="pre">adapt_to_errors=False</span></tt> causes 
 <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to remap the integration variables to emphasize
@@ -291,6 +291,113 @@ The default is 0.</td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.Integrator.multi">
+<tt class="descname">multi</tt><big>(</big><em>fcn</em>, <em>nitn=10</em><big>)</big><a class="headerlink" href="#vegas.Integrator.multi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate multiple integrals simultaneously.</p>
+<p>This method estimates integrals for arrays (with any shape) of 
+integrands using the same integration points for every 
+integral. A typical application might look something
+like the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">p</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="o">...</span> <span class="n">some</span> <span class="n">function</span> <span class="n">of</span> <span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">...</span>
+
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">pp</span> <span class="o">=</span> <span class="n">p</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">pp</span><span class="p">,</span> <span class="n">pp</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pp</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">Integrator</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+<span class="c"># train the integrator on p(x)</span>
+<span class="n">training</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+
+<span class="c"># compute multiple integrals</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="o">.</span><span class="n">multi</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="o">...</span> <span class="n">use</span> <span class="n">integral</span> <span class="n">estimates</span> <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>Here the integrator is first trained on function <tt class="docutils literal"><span class="pre">p(x)</span></tt> in 
+a normal integration step. The trained integrator is then
+applied to function <tt class="docutils literal"><span class="pre">f(x)</span></tt> which returns values for 
+three different integrands, arranged in an array.</p>
+<p>The number of integration points used and the adaptations 
+are carried over from the training step. <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>
+does <em>not</em> adapt to <tt class="docutils literal"><span class="pre">f(x)</span></tt> in <tt class="docutils literal"><span class="pre">multi</span></tt>, 
+which is why there is a training step.</p>
+<p><a class="reference internal" href="#vegas.Integrator.multi" title="vegas.Integrator.multi"><tt class="xref py py-meth docutils literal"><span class="pre">vegas.Integrator.multi()</span></tt></a> also works for vectorized
+integrands from classes of the form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">fvec</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">VecIntegrand</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="o">...</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">d</span><span class="p">]</span> <span class="n">are</span> <span class="n">integration</span> <span class="n">points</span> <span class="o">...</span>
+        <span class="o">...</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="n">are</span> <span class="n">integrand</span> <span class="n">values</span> <span class="o">...</span>
+        <span class="k">return</span> <span class="n">f</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">fvec()</span></tt> creates an integrand that accepts multiple
+integration points <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> and returns multiple integrand 
+values <tt class="docutils literal"><span class="pre">f[i,</span> <span class="pre">s1,</span> <span class="pre">s2,</span> <span class="pre">...]</span></tt> where <tt class="docutils literal"><span class="pre">i</span></tt> labels the integration 
+point, <tt class="docutils literal"><span class="pre">d</span></tt> labels the direction, and <tt class="docutils literal"><span class="pre">s1,</span> <span class="pre">s2,</span> <span class="pre">...</span></tt> label the
+different integrands.</p>
+<p>The covariance matrix for the integral estimates is determined
+from fluctuations between the <tt class="docutils literal"><span class="pre">nitn</span></tt> iterations. Taking 
+<tt class="docutils literal"><span class="pre">nitn=10</span></tt> or <tt class="docutils literal"><span class="pre">20</span></tt> usually results in</p>
+<p>This method requires the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module from <tt class="docutils literal"><span class="pre">lsqfit</span></tt>
+(install using <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">lsqfit</span></tt>, for example).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.Integrator.random">
+<tt class="descname">random</tt><big>(</big><big>)</big><a class="headerlink" href="#vegas.Integrator.random" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator over integration points and weights.</p>
+<p>This method creates an iterator that returns integration
+points from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>, and their corresponding weights in an 
+integral. Each point <tt class="docutils literal"><span class="pre">x[d]</span></tt> is accompanied by the weight
+assigned to that point by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> when estimating an integral.</p>
+<p>Given an <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> <tt class="docutils literal"><span class="pre">integ</span></tt>, presumably trained on some
+integrand, the following code would create a Monte Carlo
+estimate of the integral of a possibly different integrand <tt class="docutils literal"><span class="pre">f(x)</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">():</span>
+    <span class="n">integral</span> <span class="o">+=</span> <span class="n">wgt</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here <tt class="docutils literal"><span class="pre">f(x)</span></tt> returns an array <tt class="docutils literal"><span class="pre">f_array[i]</span></tt> corresponding
+to the integrand values for points <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.Integrator.random_vec">
+<tt class="descname">random_vec</tt><big>(</big><big>)</big><a class="headerlink" href="#vegas.Integrator.random_vec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator over integration points and weights.</p>
+<p>This method creates an iterator that returns integration
+points from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>, and their corresponding weights in an 
+integral. The points are provided in arrays <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> where 
+<tt class="docutils literal"><span class="pre">i=0...</span></tt> labels the integration points in a batch 
+(or vector) and <tt class="docutils literal"><span class="pre">d=0...</span></tt> labels direction. The corresponding
+weights assigned by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to each point are provided
+in an array <tt class="docutils literal"><span class="pre">wgt[i]</span></tt>.</p>
+<p>Given an <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> <tt class="docutils literal"><span class="pre">integ</span></tt>, presumably trained on some
+integrand, the following code would create a Monte Carlo
+estimate of the integral of a possibly different 
+(vector) integrand <tt class="docutils literal"><span class="pre">f(x)</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_vec</span><span class="p">():</span>
+    <span class="n">f_array</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">integral</span> <span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">wgt</span><span class="p">,</span> <span class="n">f_array</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here <tt class="docutils literal"><span class="pre">f(x)</span></tt> returns an array <tt class="docutils literal"><span class="pre">f_array[i]</span></tt> corresponding
+to the integrand values for points <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt>. The points and
+weights yielded by the iterator are memoryview objects which
+can be converted to <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> arrays, if needed, using:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">wgt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">wgt</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -734,8 +841,8 @@ represents a Gaussian random variable.</p>
 <dt id="vegas.VecIntegrand">
 <em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">VecIntegrand</tt><a class="headerlink" href="#vegas.VecIntegrand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for classes providing vectorized integrands.</p>
-<p>A class derived from <tt class="xref py py-class docutils literal"><span class="pre">vegas.VecInterand</span></tt> should
-provide a <tt class="docutils literal"><span class="pre">__call__(x,</span> <span class="pre">f,</span> <span class="pre">nx)</span></tt> member where:</p>
+<p>A class derived from <tt class="xref py py-class docutils literal"><span class="pre">vegas.VecInterand</span></tt> will normally
+provide a <tt class="docutils literal"><span class="pre">__call__(self,</span> <span class="pre">x,</span> <span class="pre">f,</span> <span class="pre">nx)</span></tt> method where:</p>
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> is a contiguous array where <tt class="docutils literal"><span class="pre">i=0...nx-1</span></tt>
 labels different integrtion points and <tt class="docutils literal"><span class="pre">d=0...</span></tt> labels
@@ -744,6 +851,23 @@ different directions in the integration space.</p>
 integrand values for points <tt class="docutils literal"><span class="pre">i=0...nx-1</span></tt>.</p>
 <p><tt class="docutils literal"><span class="pre">nx</span></tt> is the number of integration points.</p>
 </div></blockquote>
+<p><tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> and <tt class="docutils literal"><span class="pre">f[i]</span></tt> are <tt class="docutils literal"><span class="pre">memoryview</span></tt> objects. They 
+can be repackaged inside <tt class="docutils literal"><span class="pre">__call__(x,</span> <span class="pre">f,</span> <span class="pre">nx)</span></tt> 
+as <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> arrays, if needed, using:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)[:</span><span class="n">nx</span><span class="p">,</span> <span class="p">:]</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f</span><span class="p">)[:</span><span class="n">nx</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This causes the <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> arrays to use the storage allocated
+internally by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> for <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">f</span></tt>, which is what is 
+wanted for efficiency.</p>
+<p><a class="reference internal" href="#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.VecIntegrand</span></tt></a> is also used for vectorized integrands
+used in <a class="reference internal" href="#vegas.Integrator.multi" title="vegas.Integrator.multi"><tt class="xref py py-meth docutils literal"><span class="pre">vegas.Integrator.multi()</span></tt></a>. The derived class should
+then provice a <tt class="docutils literal"><span class="pre">__call__(self,</span> <span class="pre">x)</span></tt> method where again 
+<tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> is a contiguous array containing multiple integration 
+points, but which now returns an array <tt class="docutils literal"><span class="pre">f[i,</span> <span class="pre">s1,</span> <span class="pre">s2,</span> <span class="pre">...]</span></tt> of 
+integrand values where <tt class="docutils literal"><span class="pre">s1,</span> <span class="pre">s2,</span> <span class="pre">...</span></tt> label the different 
+integrands (the shape is arbitrary).</p>
 <p>Deriving from <a class="reference internal" href="#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.VecIntegrand</span></tt></a> is the 
 easiest way to construct integrands in Cython, and
 gives the fastest results.</p>
@@ -801,7 +925,7 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

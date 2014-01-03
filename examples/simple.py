@@ -9,7 +9,7 @@ import vegas
 import math
 import numpy
 
-SHOW_GRID = False # True   # display picture of grid
+SHOW_GRID = True   # display picture of grid
 
 def f(x):
     dx2 = 0
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     main()
 
 
-# Copyright (c) 2013 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage. 
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

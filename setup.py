@@ -1,8 +1,7 @@
 """ to build modules in module_list:   python setup.py build_ext --inplace 
 
-
 Created by G. Peter Lepage (Cornell University) in 12/2013.
-Copyright (c) 2013 G. Peter Lepage.
+Copyright (c) 2013-14 G. Peter Lepage.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,7 +19,7 @@ from Cython.Build import cythonize
 import sys
 import numpy
 
-VEGAS_VERSION = '1.2'
+VEGAS_VERSION = '1.3'
 
 # create vegas/version.py so vegas knows its version number 
 with open("src/vegas/_version.py","w") as version_file:
@@ -50,7 +49,7 @@ setup(
     package_dir=package_dir,
     package_data=package_data,
     ext_modules=ext_modules,
-    requires=["cython (>=0.17)","numpy (>=1.7)"],
+    requires=["cython (>=0.17)","numpy (>=1.7)", "lsqfit"],
     url="https://github.com/gplepage/vegas.git",
     license='GPLv3+',
     platforms='Any',

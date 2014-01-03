@@ -1,6 +1,6 @@
 # c#ython: profile=True 
 """
-Cython code for the integrator used in fastest.py.   
+Cython code for the integrator used in fastest.py.      
 
 Note that this achieves better performance than the integrand in faster.py
 without the  complication of vectorization. Some problems do not vectorize
@@ -51,7 +51,7 @@ cdef class f_cython(vegas.VecIntegrand):
         return
 
 
-# Copyright (c) 2013 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage. 
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

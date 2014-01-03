@@ -1,6 +1,6 @@
 # c#ython: profile=True 
 """
-Cython code for the integrand used in path-integral.py.
+Cython code for the integrand used in path-integral.py.  
 
 class PathIntegral is a base class for classes that    
 do path integrals for 1-d systems. class Oscillator 
@@ -124,7 +124,7 @@ cdef class Oscillator(PathIntegral):
 
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage. 
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

@@ -1,5 +1,5 @@
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage. 
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -302,8 +302,8 @@ class TestIntegrator(unittest.TestCase):
             return (math.sin(x[0]) ** 2 + math.cos(x[1]) ** 2) / math.pi ** 2
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
         r = I(f, neval=10000)
-        self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
-        self.assertTrue(r.Q > 1e-3)
+        self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
+        self.assertGreater(r.Q, 1e-3)
 
     def test_vector(self):
         " integrate vector fcn "
@@ -315,9 +315,9 @@ class TestIntegrator(unittest.TestCase):
                         ) / math.pi ** 2
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
         r = I(f_vec(), neval=10000)
-        self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
-        self.assertTrue(r.Q > 1e-3)
-        self.assertTrue(r.sdev < 1e-3)
+        self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
+        self.assertGreater(r.Q, 1e-3)
+        self.assertLess(r.sdev, 1e-3)
 
     def test_min_sigf(self):
         " test minimize_mem=True mode "
@@ -397,6 +397,39 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.sdev < 1e-3)
+
+    def test_multi(self):
+        " multi "
+        def f_s(x):
+            dx2 = 0.
+            for d in range(4):
+                dx2 += (x[d] - 0.5) ** 2
+            return math.exp(-100. * dx2)
+        def f_multi_s(x):
+            dx2 = 0.
+            for d in range(4):
+                dx2 += (x[d] - 0.5) ** 2
+            f = math.exp(-100. * dx2)
+            return [f, f * x[0]]
+        class f_multi_v(VecIntegrand):
+            def __call__(self, x):
+                x = np.asarray(x)
+                f = np.empty((x.shape[0], 2), float)
+                dx2 = 0.
+                for d in range(4):
+                    dx2 += (x[:, d] - 0.5) ** 2
+                f[:, 0] = np.exp(-100. * dx2)
+                f[:, 1] = x[:, 0] * f[:, 0]
+                return f
+        I = Integrator(4 * [[0, 1]])
+        warmup = I(f_s, neval=1000, nitn=10)
+        try:
+            for r in [I.multi(f_multi_v(), nitn=10), I.multi(f_multi_s, nitn=10)]:
+                ratio = r[1] / r[0]
+                self.assertLess(abs(ratio.mean - 0.5), 5 * ratio.sdev)
+                self.assertLess(ratio.sdev, 1e-2)
+        except ImportError:
+            print('skippin Integrator.multi test -- no gvar module')
 
     def test_adaptive(self):
         " adaptive? "

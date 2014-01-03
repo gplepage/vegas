@@ -1,5 +1,5 @@
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage. 
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,20 +12,7 @@
 # GNU General Public License for more details.
 
 ctypedef long INT_TYPE
-ctypedef double (*cython_integrand)(double[::1]) 
-ctypedef double (*cython_integrand_exc)(double[::1]) except? 1e111
-
-cdef class VecCythonIntegrand:
-    cdef cython_integrand fcn
-    cdef readonly object fcntype
-
-cdef object python_wrapper(cython_integrand fcn)
-
-cdef class VecCythonIntegrandExc:
-    cdef cython_integrand_exc fcn
-    cdef readonly object fcntype
-
-cdef object python_wrapper_exc(cython_integrand_exc fcn)
+ctypedef ssize_t INTP_TYPE
 
 cdef class VecPythonIntegrand:
     cdef object fcn
@@ -65,38 +52,17 @@ cdef class Integrator:
     # generated
     cdef readonly object result
     cdef readonly AdaptiveMap map 
-    cdef double[::1] sigf
     cdef double sum_sigf
     cdef readonly INT_TYPE nstrat 
     cdef readonly INT_TYPE min_neval_hcube 
     cdef readonly INT_TYPE dim 
     cdef readonly INT_TYPE actual_neval
-    # work areas
+    # internal work areas
     cdef double[:, ::1] y
     cdef double[:, ::1] x
     cdef double[::1] jac 
     cdef double[::1] f 
     cdef double[::1] fdv2
     cdef INT_TYPE[::1] neval_hcube
-    # cdef void _init_workareas(self)
-    # cdef void _resize_workareas(self, INT_TYPE neval_vec)
-    cdef object _calculate_neval_hcube(
-        self, 
-        INT_TYPE hcube_base,
-        INT_TYPE nhcube_vec,
-        fcn,
-        )
-    cdef void _generate_random_y_x_jac(
-        self, 
-        INT_TYPE neval_vec,
-        INT_TYPE hcube_base, 
-        INT_TYPE nhcube_vec,
-        )
-    # cdef object _integrate_vec(
-    #     Integrator self, 
-    #     fcn,
-    #     INT_TYPE neval_vec,
-    #     INT_TYPE hcube_base, 
-    #     INT_TYPE nhcube_vec,
-    #     )
+    cdef double[::1] sigf
 

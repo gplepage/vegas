@@ -40,7 +40,7 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 """
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage. 
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,6 +53,5 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 # GNU General Public License for more details.
 
 from ._vegas import RunningWAvg, AdaptiveMap, Integrator, VecIntegrand
-from ._vegas import MultiIntegrator, RunningMWAvg
 from ._vegas import reporter, gvar
 from ._version import version as __version__
