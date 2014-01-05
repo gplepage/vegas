@@ -1019,7 +1019,7 @@ cdef class Integrator(object):
     :param max_nhcube: Maximum number of |y|-space hypercubes 
         used for stratified sampling. Setting ``max_nhcube=1``
         turns stratified sampling off, which is probably never 
-        a good idea. The default setting (5e8) was chosen to 
+        a good idea. The default setting (1e9) was chosen to 
         correspond to the point where internal work arrays 
         become comparable in size to the typical amount of RAM 
         available to a processor (in a laptop in 2014). 
@@ -1091,7 +1091,7 @@ cdef class Integrator(object):
         neval=1000,       # number of evaluations per iteration
         maxinc_axis=1000,  # number of adaptive-map increments per axis
         nhcube_vec=100,    # number of h-cubes per vector
-        max_nhcube=5e8,    # max number of h-cubes
+        max_nhcube=1e9,    # max number of h-cubes
         max_neval_hcube=1e7, # max number of evaluations per h-cube
         nitn=10,           # number of iterations
         alpha=0.5,
@@ -1107,6 +1107,9 @@ cdef class Integrator(object):
     def __init__(Integrator self not None, map, **kargs):
         # N.B. All attributes initialized automatically by cython.
         #      This is why self.set() works here.
+        self.sigf = numpy.array([], float) # dummy
+        self.neval_hcube_range = None
+        self.actual_neval = 0
         if isinstance(map, Integrator):
             args = {}
             for k in Integrator.defaults:
@@ -1117,11 +1120,8 @@ cdef class Integrator(object):
             args = dict(Integrator.defaults)
             del args['map']
             args.update(kargs)
-            self.set(args)
             self.map = AdaptiveMap(map)
-        self.sigf = numpy.array([], float) # dummy
-        self.neval_hcube_range = None
-        self.actual_neval = 0
+            self.set(args)
 
     def __reduce__(Integrator self not None):
         """ Capture state for pickling. """
@@ -1135,6 +1135,11 @@ cdef class Integrator(object):
     def __setstate__(Integrator self not None, odict):
         """ Set state for unpickling. """
         self.set(odict)
+
+    property nhcube:
+        " Number of |y| space hypercubes for stratification. "
+        def __get__(self):
+            return self.nstrat ** self.dim
 
     def set(Integrator self not None, ka={}, **kargs):
         """ Reset default parameters in integrator.
@@ -1207,6 +1212,7 @@ cdef class Integrator(object):
                 self.atol = kargs[k]
             else:
                 raise AttributeError('no attribute named "%s"' % str(k))
+        self._prepare_integrator()
         return old_val
 
     def settings(Integrator self not None, ngrid=0):
@@ -1539,7 +1545,7 @@ cdef class Integrator(object):
         INT_TYPE nhcube_vec,
         ):
         " Do integral for h-cubes in current vector. "
-        cdef INT_TYPE i_start, i, tmp_hcube, ihcube #, hcube
+        cdef INT_TYPE i_start, i, tmp_hcube, ihcube
         cdef double sum_fdv, sum_fdv2, mean, var, sigf2, fdv
         cdef INT_TYPE y0_d
         cdef double vec_mean = 0.0 
@@ -1634,7 +1640,7 @@ cdef class Integrator(object):
         else:
             return gvar.gvar(ans_mean, ans_var)
 
-    def random_vec(Integrator self not None):
+    def random_vec(Integrator self not None, bint id_hcubes=False):
         """ Iterator over integration points and weights.
 
         This method creates an iterator that returns integration
@@ -1657,12 +1663,7 @@ cdef class Integrator(object):
 
         Here ``f(x)`` returns an array ``f_array[i]`` corresponding
         to the integrand values for points ``x[i, d]``. The points and
-        weights yielded by the iterator are memoryview objects which
-        can be converted to :mod:`numpy` arrays, if needed, using::
-
-            x = numpy.asarray(x)
-            wgt = numpy.asarray(wgt)
-
+        weights yielded by the iterator are :mod:`numpy` arrays.
         """
         cdef INT_TYPE nhcube = self.nstrat ** self.dim 
         cdef double dv_y = 1. / nhcube
@@ -1670,8 +1671,11 @@ cdef class Integrator(object):
         cdef INT_TYPE neval_vec
         cdef INT_TYPE hcube_base 
         cdef INT_TYPE i_start, ihcube, i
+        cdef INT_TYPE[::1] hcube
         cdef double vec_sigf
         old_defaults = self.set(adapt=False)
+        if id_hcubes:
+            hcube = numpy.empty(self.y.shape[0], int)
         for hcube_base in range(0, nhcube, nhcube_vec):
             if (hcube_base + nhcube_vec) > nhcube:
                 nhcube_vec = nhcube - hcube_base 
@@ -1690,11 +1694,21 @@ cdef class Integrator(object):
                 neval_hcube = self.neval_hcube[ihcube]
                 for i in range(i_start, i_start + neval_hcube):
                     self.jac[i] *= dv_y / neval_hcube
+                    if id_hcubes:
+                        hcube[i] = hcube_base + ihcube
+
                 i_start += neval_hcube
-            yield (
-                numpy.asarray(self.x[:neval_vec, :]), 
-                numpy.asarray(self.jac[:neval_vec]),
-                )
+            if id_hcubes:
+                yield (
+                    numpy.asarray(self.x[:neval_vec, :]), 
+                    numpy.asarray(self.jac[:neval_vec]),
+                    numpy.asarray(hcube[:neval_vec]),
+                    )
+            else:
+                yield (
+                    numpy.asarray(self.x[:neval_vec, :]), 
+                    numpy.asarray(self.jac[:neval_vec]),
+                    )
         self.set(old_defaults)
 
     def random(Integrator self not None):
@@ -1718,8 +1732,6 @@ cdef class Integrator(object):
         """
         cdef double[:, ::1] x 
         cdef double[::1] wgt
-        # numpy.ndarray[numpy.double_t, ndim=2] x
-        # numpy.ndarray[numpy.double_t, ndim=1] wgt
         cdef INT_TYPE i
         for x,wgt in self.random_vec():
             for i in range(x.shape[0]):
@@ -1759,8 +1771,8 @@ cdef class Integrator(object):
         does *not* adapt to ``f(x)`` in ``multi``, 
         which is why there is a training step.
 
-        :meth:`vegas.Integrator.multi` also works for vectorized
-        integrands from classes of the form::
+        :meth:`vegas.Integrator.multi` also works (and is faster) 
+        for vectorized integrands from classes of the form::
 
             class fvec(vegas.VecIntegrand):
                 ...
@@ -1773,7 +1785,7 @@ cdef class Integrator(object):
         ``fvec()`` creates an integrand that accepts multiple
         integration points ``x[i, d]`` and returns multiple integrand 
         values ``f[i, s1, s2, ...]`` where ``i`` labels the integration 
-        point, ``d`` labels the direction, and ``s1, s2, ...`` label the
+        point, ``d`` labels direction, and ``s1, s2, ...`` label the
         different integrands.
 
         The covariance matrix for the integral estimates is determined
@@ -1784,8 +1796,10 @@ cdef class Integrator(object):
         This method requires the :mod:`gvar` module from ``lsqfit``
         (install using ``pip install lsqfit``, for example). 
         """
-        cdef double[:, ::1] x 
-        cdef double[::1] wgt
+        # cdef double[:, ::1] x 
+        # cdef double[::1] wgt
+        cdef numpy.ndarray[numpy.double_t, ndim=2] x 
+        cdef numpy.ndarray[numpy.double_t, ndim=1] wgt
         cdef INT_TYPE itn
         if not have_gvar:
             raise ImportError(
@@ -1808,7 +1822,7 @@ cdef class Integrator(object):
             for itn in range(nitn):
                 integral = 0.0
                 for x, wgt in self.random_vec():
-                    integral += numpy.dot(wgt, fcn(x))
+                    integral += wgt.dot(fcn(x)) # numpy.dot(wgt, fcn(x))
                 results.append(integral)
             return gvar.dataset.avg_data(results)
 

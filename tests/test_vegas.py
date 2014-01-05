@@ -207,8 +207,8 @@ class TestIntegrator(unittest.TestCase):
                 self.assertNotEqual(getattr(I,k), Integrator.defaults[k])
             elif k not in ['map']:
                 self.assertEqual(getattr(I,k), Integrator.defaults[k])
-        np.testing.assert_allclose(I.map.grid[0], [0., 1.])
-        np.testing.assert_allclose(I.map.grid[1], [-1., 1.])
+        np.testing.assert_allclose([I.map.grid[0,0], I.map.grid[0, -1]], [0., 1.])
+        np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, -1]], [-1., 1.])
         lines = [
             'Integrator Settings:',
             '    234 (max) integrand evaluations in each of 123 iterations',
@@ -218,7 +218,7 @@ class TestIntegrator(unittest.TestCase):
             '    minimize_mem = False',           
             '    adapt_to_errors = False',
             '    damping parameters: alpha = 0.5  beta= 0.75',
-            '    limits: h-cubes < 5e+08  evaluations/h-cube < 1e+07',
+            '    limits: h-cubes < 1e+09  evaluations/h-cube < 1e+07',
             '    accuracy: relative = 0  absolute accuracy = 0',
             '',
             '    axis 0 covers (0.0, 1.0)',
@@ -283,7 +283,12 @@ class TestIntegrator(unittest.TestCase):
         old_defaults = I.set(**new_defaults)
         for k in new_defaults:
             if k == 'map':
-                np_assert_allclose(I.map.grid, new_defaults['map'].grid)
+                np_assert_allclose(
+                    [
+                        [I.map.grid[0, 0], I.map.grid[0, -1]], 
+                        [I.map.grid[1, 0], I.map.grid[1, -1]]
+                    ], 
+                    new_defaults['map'].grid)
             else:
                 self.assertEqual(getattr(I,k), new_defaults[k])
 
@@ -397,6 +402,38 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.sdev < 1e-3)
+
+    def test_random_vec(self):
+        " random_vec "
+        def f(x):
+            dx2 = 0.
+            for d in range(4):
+                dx2 += (x[d] - 0.5) ** 2
+            return math.exp(-100. * dx2)
+        def fv(x):
+            dx2 = 0.
+            for d in range(4):
+                dx2 += (x[:, d] - 0.5) ** 2
+            return np.exp(-100. * dx2)
+        integ = Integrator(4 * [[0, 1]])
+        warmup = integ(f, nitn=10, neval=1000)
+        result = integ(f, nitn=1, neval=1000, adapt=False)
+        integral = 0.0
+        for x, wgt in integ.random_vec():
+            integral += wgt.dot(fv(x))
+        self.assertLess(abs(result.mean-integral), 5 * result.sdev)
+
+    def test_random(self):
+        " random "
+        def f(x):
+            return x[0] ** 2 + x[1] ** 3
+        integ = Integrator(2 * [[0, 2]])
+        warmup = integ(f, nitn=10, neval=100)
+        result = integ(f, nitn=1, neval=100, adapt=False)
+        integral = 0.0
+        for x, wgt in integ.random():
+            integral += wgt * f(x)
+        self.assertLess(abs(result.mean-integral), 5 * result.sdev)
 
     def test_multi(self):
         " multi "

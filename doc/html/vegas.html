@@ -195,7 +195,7 @@ other values.</li>
 <li><strong>max_nhcube</strong> (<em>positive int</em>) &#8211; Maximum number of y-space hypercubes 
 used for stratified sampling. Setting <tt class="docutils literal"><span class="pre">max_nhcube=1</span></tt>
 turns stratified sampling off, which is probably never 
-a good idea. The default setting (5e8) was chosen to 
+a good idea. The default setting (1e9) was chosen to 
 correspond to the point where internal work arrays 
 become comparable in size to the typical amount of RAM 
 available to a processor (in a laptop in 2014). 
@@ -326,8 +326,8 @@ three different integrands, arranged in an array.</p>
 are carried over from the training step. <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>
 does <em>not</em> adapt to <tt class="docutils literal"><span class="pre">f(x)</span></tt> in <tt class="docutils literal"><span class="pre">multi</span></tt>, 
 which is why there is a training step.</p>
-<p><a class="reference internal" href="#vegas.Integrator.multi" title="vegas.Integrator.multi"><tt class="xref py py-meth docutils literal"><span class="pre">vegas.Integrator.multi()</span></tt></a> also works for vectorized
-integrands from classes of the form:</p>
+<p><a class="reference internal" href="#vegas.Integrator.multi" title="vegas.Integrator.multi"><tt class="xref py py-meth docutils literal"><span class="pre">vegas.Integrator.multi()</span></tt></a> also works (and is faster) 
+for vectorized integrands from classes of the form:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">fvec</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">VecIntegrand</span><span class="p">):</span>
     <span class="o">...</span>
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
@@ -340,7 +340,7 @@ integrands from classes of the form:</p>
 <p><tt class="docutils literal"><span class="pre">fvec()</span></tt> creates an integrand that accepts multiple
 integration points <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> and returns multiple integrand 
 values <tt class="docutils literal"><span class="pre">f[i,</span> <span class="pre">s1,</span> <span class="pre">s2,</span> <span class="pre">...]</span></tt> where <tt class="docutils literal"><span class="pre">i</span></tt> labels the integration 
-point, <tt class="docutils literal"><span class="pre">d</span></tt> labels the direction, and <tt class="docutils literal"><span class="pre">s1,</span> <span class="pre">s2,</span> <span class="pre">...</span></tt> label the
+point, <tt class="docutils literal"><span class="pre">d</span></tt> labels direction, and <tt class="docutils literal"><span class="pre">s1,</span> <span class="pre">s2,</span> <span class="pre">...</span></tt> label the
 different integrands.</p>
 <p>The covariance matrix for the integral estimates is determined
 from fluctuations between the <tt class="docutils literal"><span class="pre">nitn</span></tt> iterations. Taking 
@@ -393,12 +393,7 @@ estimate of the integral of a possibly different
 </div>
 <p>Here <tt class="docutils literal"><span class="pre">f(x)</span></tt> returns an array <tt class="docutils literal"><span class="pre">f_array[i]</span></tt> corresponding
 to the integrand values for points <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt>. The points and
-weights yielded by the iterator are memoryview objects which
-can be converted to <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> arrays, if needed, using:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="n">wgt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">wgt</span><span class="p">)</span>
-</pre></div>
-</div>
+weights yielded by the iterator are <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> arrays.</p>
 </dd></dl>
 
 </dd></dl>

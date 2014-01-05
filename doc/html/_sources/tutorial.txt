@@ -696,7 +696,6 @@ example could have been written ::
 
     class f(vegas.VecIntegrand):
         def __call__(self, x):
-            x = np.asarray(x)
             fv = np.empty((x.shape[0], 3), float)
             dx2 = 0.0
             for d in range(4):
