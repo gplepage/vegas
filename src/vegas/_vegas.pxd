@@ -14,10 +14,6 @@
 ctypedef long INT_TYPE
 ctypedef ssize_t INTP_TYPE
 
-cdef class VecPythonIntegrand:
-    cdef object fcn
-    cdef readonly object fcntype
-
 cdef class VecIntegrand:
     cdef readonly object fcntype
 
@@ -52,11 +48,11 @@ cdef class Integrator:
     # generated
     cdef readonly object result
     cdef readonly AdaptiveMap map 
-    cdef double sum_sigf
+    cdef readonly double sum_sigf
     cdef readonly INT_TYPE nstrat 
     cdef readonly INT_TYPE min_neval_hcube 
     cdef readonly INT_TYPE dim 
-    cdef readonly INT_TYPE actual_neval
+    cdef readonly INT_TYPE last_neval
     # internal work areas
     cdef double[:, ::1] y
     cdef double[:, ::1] x
@@ -64,5 +60,5 @@ cdef class Integrator:
     cdef double[::1] f 
     cdef double[::1] fdv2
     cdef INT_TYPE[::1] neval_hcube
-    cdef double[::1] sigf
+    cdef readonly double[::1] sigf
 

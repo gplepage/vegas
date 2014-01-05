@@ -160,7 +160,7 @@ class TestAdaptiveMap(unittest.TestCase):
             [[0, 2. * 2.**(-0.5), 2.], [0, 4. * 2**(-1./3.), 4.]]
             )
 
-class TestRunningWAvg(unittest.TestCase):
+class TestRWAvg(unittest.TestCase):
     def setUp(self):
         pass 
 
@@ -168,8 +168,8 @@ class TestRunningWAvg(unittest.TestCase):
         pass 
 
     def test_all(self):
-        " RunningWavg "
-        a = RunningWAvg()
+        " RWavg "
+        a = RWAvg()
         a.add(gvar.gvar(1, 1))
         a.add(gvar.gvar(2, 2))
         a.add(gvar.gvar(3, 3))
