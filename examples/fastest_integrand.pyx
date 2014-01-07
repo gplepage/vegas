@@ -13,7 +13,7 @@ cimport vegas
 # import exp() from C
 from libc.math cimport exp
 
-import numpy
+import numpy as np
 import vegas
 import math
 
@@ -27,10 +27,11 @@ cdef class f_cython(vegas.VecIntegrand):
         self.norm_ac = 1. / 0.17720931990702889842 ** dim
         self.norm_b = 1. / 0.17724538509027909508 ** dim
 
-    def __call__(self, double[:, ::1] x, double[::1] f, int nx):
+    def __call__(self, double[:, ::1] x):
         cdef int d, j
         cdef double dx2a, dx2b, dx2c, dx
-        for j in range(nx):
+        cdef double[::1] f = np.empty(x.shape[0], float)
+        for j in range(len(f)):
             dx2a = 0
             for d in range(self.dim):
                 dx = (x[j, d] - 0.25) 
@@ -48,7 +49,7 @@ cdef class f_cython(vegas.VecIntegrand):
                 + exp(-100. * dx2b) * self.norm_b
                 + exp(-100. * dx2c) * self.norm_ac
                 ) / 3.
-        return
+        return f
 
 
 # Copyright (c) 2013-14 G. Peter Lepage. 

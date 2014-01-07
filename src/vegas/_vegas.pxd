@@ -29,7 +29,6 @@ cdef class AdaptiveMap:
 
 cdef class Integrator:
     # inputs
-    cdef readonly object fcntype
     cdef readonly INT_TYPE neval
     cdef readonly INT_TYPE[::1] neval_hcube_range
     cdef readonly INT_TYPE nhcube_vec
@@ -46,18 +45,17 @@ cdef class Integrator:
     cdef readonly bint adapt
     cdef readonly object analyzer
     # generated
-    cdef readonly object result
     cdef readonly AdaptiveMap map 
     cdef readonly double sum_sigf
     cdef readonly INT_TYPE nstrat 
     cdef readonly INT_TYPE min_neval_hcube 
     cdef readonly INT_TYPE dim 
     cdef readonly INT_TYPE last_neval
+    cdef readonly INT_TYPE nhcube
     # internal work areas
     cdef double[:, ::1] y
     cdef double[:, ::1] x
     cdef double[::1] jac 
-    cdef double[::1] f 
     cdef double[::1] fdv2
     cdef INT_TYPE[::1] neval_hcube
     cdef readonly double[::1] sigf

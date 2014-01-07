@@ -23,9 +23,7 @@ class f_vec(vegas.VecIntegrand):
         self.norm_ac = 1. / 0.17720931990702889842 ** dim
         self.norm_b = 1. / 0.17724538509027909508 ** dim
 
-    def __call__(self, x, f, nx):
-        x = np.asarray(x)[:nx, :]
-        f = np.asarray(f)[:nx]
+    def __call__(self, x):
         dx2a = 0
         for d in range(self.dim):
             dx2a += (x[:, d] - 0.25) ** 2 
@@ -38,7 +36,7 @@ class f_vec(vegas.VecIntegrand):
         # make sure answer is copied into f (as opposed to
         #    reassigning f to new space containing the answer
         #    ---  so f[:] = ..., not f = ...)
-        f[:] = (
+        return (
             np.exp(- 100. * dx2a) * self.norm_ac
             + np.exp(-100. * dx2b) * self.norm_b
             + np.exp(-100. * dx2c) * self.norm_ac

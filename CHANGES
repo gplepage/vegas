@@ -1,3 +1,37 @@
+Version 2.0 - 2014-01-06
+==========================
+This is a significant upgrade and cleanup of the code. As a result
+it is not entirely backwards compatible with earlier versions (see below).
+
+- Integrands are allowed to be array-valued now, with different elements
+  of the array representing different integrands. vegas always tunes on 
+  the first function in the array. vegas determines whether the 
+  integrand is scalar- or array-valued automatically, and returns
+  results that are either scalar or array-valued, as appropriate. 
+  This functionality replaces method Integrator.multi, and is 
+  implemented quite a bit differently (and better); 
+  Integrator.multi has now disappeared. There is no longer a need for a 
+  separate method for array-valued integrands.
+
+- The calling conventions for integrands in vector mode have been changed
+  (simplified): eg,
+
+    class fv(vegas.VecIntegrand):
+      def __call__(self, x):
+        return x[:, 0] ** 2 + x[:, 1] ** 4
+
+  See discussion in the tutorial. This is not compatible with the old
+  convention. The fcntype argument to Integrator is no longer needed.
+
+- Renamed RunningWAvg to RWAvg -- shorter name. Also introduced RWAvgArray 
+  for arrays of same.
+
+- Major reorganization of the internal code to simplify the developer's
+  life. The code appears to be somewhat faster, though probably not 
+  enough to be noticed by anyone other than the developer.
+
+
+
 Version 1.3 - 2014-01-03
 ========================
 

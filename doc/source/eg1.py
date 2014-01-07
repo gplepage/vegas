@@ -73,7 +73,7 @@ def main():
     if SAVE_OUTPUT:
         unlog_stdout() 
         log_stdout('eg1b.out')
-    result = integ(f, nitn=100, neval=1000, )
+    result = integ(f, nitn=100, neval=1000 )
     print('larger nitn  => %s    Q = %.2f' % (result, result.Q))
     result = integ(f, nitn=10, neval=1e4)
     print('larger neval => %s    Q = %.2f' % (result, result.Q))
@@ -82,7 +82,10 @@ def main():
         unlog_stdout()
         log_stdout('eg1c.out')
     # integ.set(map=[[-2., .4, .6, 2.], [0, .4, .6, 2.], [0,.4, .6, 2.], [0.,.4, .6, 2.]])
-    integ.set(map=[[-2., 2.], [0, 2.], [0, 2.], [0., 2.]])
+    # integ.set(map=[[-2., 2.], [0, 2.], [0, 2.], [0., 2.]])
+    integ = vegas.Integrator(
+      [[-2., 2.], [0, 2.], [0, 2.], [0., 2.]],
+      )    
     result = integ(f, nitn=10, neval=1000) 
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
@@ -90,7 +93,7 @@ def main():
     if SAVE_OUTPUT:
         unlog_stdout()
         log_stdout('eg1c1.out')
-    result = vegas.RunningWAvg(result.itn_results[5:])
+    result = vegas.RWAvg(result.itn_results[5:])
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
 

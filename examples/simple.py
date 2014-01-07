@@ -9,7 +9,7 @@ import vegas
 import math
 import numpy
 
-SHOW_GRID = False #True   # display picture of grid
+SHOW_GRID = True   # display picture of grid
 
 def f(x):
     dx2 = 0

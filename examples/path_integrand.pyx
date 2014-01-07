@@ -64,20 +64,23 @@ cdef class PathIntegral(vegas.VecIntegrand):
         """ Derived classes needs to fill this in. """
         raise NotImplementedError('need to define V')
 
-    def __call__(self, theta, f, ntheta):
+    def __call__(self, theta):
         """ integrand for the path integral """
         cdef int i, j 
         cdef double S, jac
         cdef double a = self.T / self.ndT
         cdef double m_2a = self.m / 2. / a
-        for i in range(ntheta):
+        cdef double[::1] f = np.empty(theta.shape[0], float)
+        for i in range(len(f)):
             # map back to range -oo to +oo
             jac = self.norm
             for j in range(theta.shape[1]):
                 self.x[j + 1] = self.xscale * tan(theta[i, j])
                 jac *= (self.xscale + self.x[j + 1] ** 2 / self.xscale)
             
-            # periodic boundary condition
+            # enforce periodic boundary condition
+            # N.B. self.x[-1] is integrated over if x0=None
+            #      but otherwise is set equal to x0 (by set_region)
             self.x[0] = self.x[-1]
             
             # compute the action
@@ -85,6 +88,7 @@ cdef class PathIntegral(vegas.VecIntegrand):
             for j in range(self.ndT):
                 S += m_2a * (self.x[j + 1] - self.x[j]) ** 2 + a * self.V(self.x[j])
             f[i] = exp(-S) * jac
+        return f
 
     def correlator(self, x0=None):
         """ Compute < x0 | exp(-H*T) | x0 > for array of x0 values.

@@ -4,7 +4,7 @@
 .. |Integrator| replace:: :class:`vegas.Integrator`
 .. |AdaptiveMap| replace:: :class:`vegas.AdaptiveMap`
 .. |vegas| replace:: :mod:`vegas`
-.. |WAvg| replace:: :class:`vegas.RunningWAvg`
+.. |WAvg| replace:: :class:`vegas.RWAvg`
 .. |chi2| replace:: :math:`\chi^2`
 .. |x| replace:: x 
 .. |y| replace:: y 
@@ -32,6 +32,9 @@ The key Python objects supported by the |vegas| module are:
      mean and a standard deviation --- but also contain information about the
      iterations |vegas| used in generating the result.
 
+   * :class:`vegas.RWAvgArray` --- an array version of |WAvg| used when
+     the integrand is array-valued.
+
 These are described in detail below.
 
 
@@ -44,15 +47,15 @@ The central component of the |vegas| package is the integrator class:
     |Integrator| objects have attributes for each of these parameters.
     In addition they have the following methods:
 
+    .. automethod:: __call__(fcn, **kargs)
+
     .. automethod:: set(ka={}, **kargs)
 
     .. automethod:: settings(ngrid=0)
 
-    .. automethod:: multi(fcn, nitn=10)
+    .. automethod:: random(yield_hcube=False, yield_y=False)
 
-    .. automethod:: random()
-
-    .. automethod:: random_vec()
+    .. automethod:: random_vec(yield_hcube=False, yield_y=False)
 
 
 AdaptiveMap Objects
@@ -183,7 +186,7 @@ fashion, for use in subsequent iterations of the algorithm.
 Other Objects
 ----------------
 
-.. autoclass:: vegas.RunningWAvg
+.. autoclass:: vegas.RWAvg
 
    .. attribute:: mean
 
@@ -201,7 +204,23 @@ Other Objects
 
    .. attribute:: itn_results
 
-   A list of the results from each iteration.
+      A list of the results from each iteration.
+
+   .. automethod:: add(g)
+
+   .. automethod:: summary()
+
+.. autoclass:: vegas.RWAvgArray
+    
+   .. autoattribute:: chi2
+
+   .. autoattribute:: dof
+
+   .. autoattribute:: Q
+
+   .. attribute:: itn_results
+
+      A list of the results from each iteration.
 
    .. automethod:: add(g)
 

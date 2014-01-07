@@ -17,7 +17,7 @@ import pickle
 import numpy as np
 from numpy.testing import assert_allclose as np_assert_allclose
 import unittest
-
+import warnings
 
 class TestAdaptiveMap(unittest.TestCase):
     def setUp(self):
@@ -188,7 +188,30 @@ class TestRWAvg(unittest.TestCase):
             ""
             ]
         self.assertEqual(a.summary(), '\n'.join(s))
-
+    
+    def test_array(self):
+        " RWAvgArray "
+        a = RWAvgArray((2,))
+        a.add([gvar.gvar(1, 1), gvar.gvar(10,10)])
+        a.add([gvar.gvar(2, 2), gvar.gvar(20,20)])
+        a.add([gvar.gvar(3, 3), gvar.gvar(30,30)])
+        self.assertEqual(a.shape, (2,))
+        np_assert_allclose(a[0].mean, 1.346938775510204)
+        np_assert_allclose(a[0].sdev, 0.8571428571428571)
+        self.assertEqual(a.dof, 4)
+        np_assert_allclose(a.chi2, 2*0.5306122448979592)
+        np_assert_allclose(a.Q, 0.900374555485)
+        self.assertEqual(str(a[0]), '1.35(86)')
+        self.assertEqual(str(a[1]), '13.5(8.6)')
+        s = [
+            "itn   integral        wgt average     chi2/dof        Q",
+            "-------------------------------------------------------",
+            "  1   1.0(1.0)        1.0(1.0)            0.00     1.00",
+            "  2   2.0(2.0)        1.20(89)            0.20     0.82",
+            "  3   3.0(3.0)        1.35(86)            0.27     0.90",
+            ""
+            ]
+        self.assertEqual(a.summary(), '\n'.join(s))
 
 class TestIntegrator(unittest.TestCase):
     def setUp(self):
@@ -214,7 +237,7 @@ class TestIntegrator(unittest.TestCase):
             '    234 (max) integrand evaluations in each of 123 iterations',
             '    number of:  strata/axis = 7  increments/axis = 21',
             '                h-cubes = 49  evaluations/h-cube = 2 (min)',
-            '                h-cubes/vector = 100',
+            '                h-cubes/vector = 1000',
             '    minimize_mem = False',           
             '    adapt_to_errors = False',
             '    damping parameters: alpha = 0.5  beta= 0.75',
@@ -233,7 +256,7 @@ class TestIntegrator(unittest.TestCase):
             '    1000 (max) integrand evaluations in each of 10 iterations',
             '    number of:  strata/axis = 15  increments/axis = 90',
             '                h-cubes = 225  evaluations/h-cube = 2 (min)',
-            '                h-cubes/vector = 100',
+            '                h-cubes/vector = 1000',
             '    minimize_mem = True',
             '    adapt_to_errors = False',
             '    damping parameters: alpha = 0.5  beta= 0.75',
@@ -265,7 +288,6 @@ class TestIntegrator(unittest.TestCase):
         " set "
         new_defaults = dict(
             map=AdaptiveMap([[1,2],[0,1]]),
-            fcntype='vectpr', # default integrand type
             neval=100,       # number of evaluations per iteration
             maxinc_axis=100,  # number of adaptive-map increments per axis
             nhcube_vec=10,    # number of h-cubes per vector
@@ -293,13 +315,21 @@ class TestIntegrator(unittest.TestCase):
                 self.assertEqual(getattr(I,k), new_defaults[k])
 
     def test_volume(self):
-        " integrate 1 "
+        " integrate constant "
         def f(x):
             return 2.
         I = Integrator([[-1, 1], [0, 4]])
         r = I(f)
-        np_assert_allclose(r.mean, 16)
+        np_assert_allclose(r.mean, 16, rtol=1e-6)
         self.assertTrue(r.sdev < 1e-6)
+        # def f(x):                         # doesn't always work;
+        #     return [1., 2.]               # problem is the svd cut
+        # I = Integrator([[-1, 1], [0, 4]]) # which can't diagnose
+        # r = I(f)                          # the issue correctly
+        # np_assert_allclose(r[0].mean, 8, rtol=5e-2)
+        # self.assertTrue(r[0].sdev < 1e-6)
+        # np_assert_allclose(r[1].mean, 16, rtol=5e-2)
+        # self.assertTrue(r[1].sdev < 1e-6)
 
     def test_scalar(self):
         " integrate scalar fcn "
@@ -313,11 +343,13 @@ class TestIntegrator(unittest.TestCase):
     def test_vector(self):
         " integrate vector fcn "
         class f_vec(VecIntegrand):
-            def __call__(self, x, f, nx):
-                for i in range(nx):
+            def __call__(self, x):
+                f = np.empty(x.shape[0], float)
+                for i in range(f.shape[0]):
                     f[i] = (
                         math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
                         ) / math.pi ** 2
+                return f
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
         r = I(f_vec(), neval=10000)
         self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
@@ -327,11 +359,13 @@ class TestIntegrator(unittest.TestCase):
     def test_min_sigf(self):
         " test minimize_mem=True mode "
         class f_vec(VecIntegrand):
-            def __call__(self, x, f, nx):
-                for i in range(nx):
+            def __call__(self, x):
+                f = np.empty(x.shape[0], float)
+                for i in range(f.shape[0]):
                     f[i] = (
                         math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
                         ) / math.pi ** 2
+                return f
         I = Integrator(
             [[0, math.pi], 
             [-math.pi/2., math.pi/2.]],
@@ -353,11 +387,9 @@ class TestIntegrator(unittest.TestCase):
     def test_vector_exception(self):
         " integrate vector fcn "
         class f_vec(VecIntegrand):
-            def __call__(self, x, f, nx):
-                for i in range(nx):
-                    f[i] = (
-                        math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
-                        ) / math.pi ** 2 /0.0
+            def __call__(self, x):
+                f = 1/0.
+                return (np.sin(x[:, 0]) ** 2 + np.cos(x[:, 1]) ** 2) / f
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
         with self.assertRaises(ZeroDivisionError):
             I(f_vec(), neval=100)
@@ -365,11 +397,12 @@ class TestIntegrator(unittest.TestCase):
     def test_vector_b0(self):
         " integrate vector fcn beta=0 "
         class f_vec(VecIntegrand):
-            def __call__(self, x, f, nx):
-                for i in range(nx):
-                    f[i] = (
-                        math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
-                        ) / math.pi ** 2
+            def __call__(self, x):
+                return (np.sin(x[:, 0]) ** 2 + np.cos(x[:, 1]) ** 2) / math.pi ** 2
+                # for i in range(nx):
+                #     f[i] = (
+                #         math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
+                #         ) / math.pi ** 2
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]], beta=0.0)
         r = I(f_vec(), neval=10000)
         self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
@@ -436,7 +469,7 @@ class TestIntegrator(unittest.TestCase):
         self.assertLess(abs(result.mean-integral), 5 * result.sdev)
 
     def test_multi(self):
-        " multi "
+        " multi-integrand "
         def f_s(x):
             dx2 = 0.
             for d in range(4):
@@ -460,13 +493,13 @@ class TestIntegrator(unittest.TestCase):
                 return f
         I = Integrator(4 * [[0, 1]])
         warmup = I(f_s, neval=1000, nitn=10)
-        try:
-            for r in [I.multi(f_multi_v(), nitn=10), I.multi(f_multi_s, nitn=10)]:
+        if have_gvar:
+            for r in [I(f_multi_v(), nitn=10), I(f_multi_s, nitn=10)]:
                 ratio = r[1] / r[0]
                 self.assertLess(abs(ratio.mean - 0.5), 5 * ratio.sdev)
                 self.assertLess(ratio.sdev, 1e-2)
-        except ImportError:
-            print('skippin Integrator.multi test -- no gvar module')
+        else:
+            warnings.warn("no gvar module -- multi-integrand integrals will be sub-optimal")
 
     def test_adaptive(self):
         " adaptive? "
