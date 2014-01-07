@@ -243,12 +243,12 @@ arranged along the diagonal of the hypercube::
 
     def f2(x): 
         dx2 = 0 
-        for i in range(4): 
-            dx2 += (x[i] - 1/3.) ** 2
+        for d in range(4): 
+            dx2 += (x[d] - 1/3.) ** 2
         ans = math.exp(-dx2 * 100.) * 1013.2167575422921535
         dx2 = 0 
-        for i in range(4): 
-            dx2 += (x[i] - 2/3.) ** 2
+        for d in range(4): 
+            dx2 += (x[d] - 2/3.) ** 2
         ans += math.exp(-dx2 * 100.) * 1013.2167575422921535
         return ans / 2.
 
