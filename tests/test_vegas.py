@@ -499,7 +499,9 @@ class TestIntegrator(unittest.TestCase):
                 self.assertLess(abs(ratio.mean - 0.5), 5 * ratio.sdev)
                 self.assertLess(ratio.sdev, 1e-2)
         else:
-            warnings.warn("no gvar module -- multi-integrand integrals will be sub-optimal")
+            warnings.warn(
+                "no gvar module -- for better results try: pip install gvar"
+                )
 
     def test_adaptive(self):
         " adaptive? "

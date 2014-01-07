@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; vegas 2.0 documentation</title>
+    <title>Tutorial &mdash; vegas 2.0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '2.0',
+        VERSION:     '2.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.0 documentation" href="index.html" />
+    <link rel="top" title="vegas 2.0.1 documentation" href="index.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -51,7 +51,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -627,8 +627,10 @@ arithmetical expressions. <a class="reference internal" href="vegas.html#module-
 of <tt class="docutils literal"><span class="pre">GVar</span></tt>s for use if the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module is not installed, but that
 version does <em>not</em> handle correlations at all (and, therefore, won&#8217;t
 allow a statement like <tt class="docutils literal"><span class="pre">result[1]</span> <span class="pre">/</span> <span class="pre">result[0]</span></tt> above). To make full
-use of this <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> feature install the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module. (It comes
-with <tt class="docutils literal"><span class="pre">lsqfit</span></tt> and is installed using, for example, <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">lsqfit</span></tt>.)</p>
+use of this <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> feature install the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module. It can be
+installed as part of the <tt class="docutils literal"><span class="pre">lsqfit</span></tt> distribution (e.g., <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">lsqfit</span></tt>)
+or by itself (e.g., <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gvar</span></tt>); source code can be found at
+<a class="reference external" href="https://github.com/gplepage/lsqfit.git">https://github.com/gplepage/lsqfit.git</a>.</p>
 </div>
 <div class="section" id="faster-integrands">
 <h2>Faster Integrands<a class="headerlink" href="#faster-integrands" title="Permalink to this headline">¶</a></h2>
@@ -827,21 +829,22 @@ access is used inside <a class="reference internal" href="vegas.html#module-vega
 numpy for vector processing. It also uses matplotlib
 for graphics, but graphics is optional.</p>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> also uses the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module from the <tt class="xref py py-mod docutils literal"><span class="pre">lsqfit</span></tt>
-package if that package is installed (<tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">lsqfit</span></tt>).
+distribution if that package is installed (<tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">lsqfit</span></tt>
+or <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gvar</span></tt> for just <tt class="docutils literal"><span class="pre">gvar</span></tt>).
 Integration results are returned as objects of type
 <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>, which is a class representing Gaussian
 random variables (i.e., something with a mean and standard
 deviation). These objects can be combined with numbers and
 with each other in arbitrary arithmetic expressions to
 get new <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s with the correct standard
-deviations (and properly correlated with other
-<tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s &#8212; that is the tricky part).</p>
-<p>If <tt class="xref py py-mod docutils literal"><span class="pre">lsqfit</span></tt> is not installed, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses a limited substitute
+deviations, and properly correlated with other
+<tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s &#8212; that is the tricky part.</p>
+<p>If <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> is not installed, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses a limited substitute
 that supports arithmetic between <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s
 and numbers, but not between <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s and other
 <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s. It also supports <tt class="docutils literal"><span class="pre">log</span></tt>, <tt class="docutils literal"><span class="pre">sqrt</span></tt>
 and <tt class="docutils literal"><span class="pre">exp</span></tt> of <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s, but not trig functions
-&#8212; for these install the lsqfit package. Most importantly
+&#8212; for these install the <tt class="docutils literal"><span class="pre">gvar</span></tt> module. Most importantly
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> will not provide correlation information for
 integrals of array-valued integrands unless the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt>
 module is available.</p>
@@ -905,11 +908,11 @@ module is available.</p>
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2013, G.P. Lepage.
+        &copy; Copyright 2013-14, G.P. Lepage.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>

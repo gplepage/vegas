@@ -1,3 +1,10 @@
+Version 2.0.1 - 2014-01-07
+===========================
+Tiny improvement in how vegas interacts with the gvar module. The gvar
+module can now be installed by itself, without the rest of the lsqfit 
+distribution: pip install gvar. Array-valued integrands work much better
+with gvar installed.
+
 Version 2.0 - 2014-01-06
 ==========================
 This is a significant upgrade and cleanup of the code. As a result

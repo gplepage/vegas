@@ -529,8 +529,10 @@ arithmetical expressions. |vegas| provides a simplified implementation
 of ``GVar``\s for use if the :mod:`gvar` module is not installed, but that 
 version does *not* handle correlations at all (and, therefore, won't 
 allow a statement like ``result[1] / result[0]`` above). To make full
-use of this |vegas| feature install the :mod:`gvar` module. (It comes
-with ``lsqfit`` and is installed using, for example, ``pip install lsqfit``.)
+use of this |vegas| feature install the :mod:`gvar` module. It can be 
+installed as part of the ``lsqfit`` distribution (e.g., ``pip install lsqfit``)
+or by itself (e.g., ``pip install gvar``); source code can be found at 
+https://github.com/gplepage/lsqfit.git.
 
 
 Faster Integrands
@@ -740,22 +742,23 @@ numpy for vector processing. It also uses matplotlib
 for graphics, but graphics is optional. 
 
 |vegas| also uses the :mod:`gvar` module from the :mod:`lsqfit` 
-package if that package is installed (``pip install lsqfit``).
+distribution if that package is installed (``pip install lsqfit``
+or ``pip install gvar`` for just ``gvar``).
 Integration results are returned as objects of type 
 :class:`gvar.GVar`, which is a class representing Gaussian
 random variables (i.e., something with a mean and standard 
 deviation). These objects can be combined with numbers and 
 with each other in arbitrary arithmetic expressions to 
 get new :class:`gvar.GVar`\s with the correct standard 
-deviations (and properly correlated with other 
-:class:`gvar.GVar`\s --- that is the tricky part). 
+deviations, and properly correlated with other 
+:class:`gvar.GVar`\s --- that is the tricky part. 
 
-If :mod:`lsqfit` is not installed, |vegas| uses a limited substitute
+If :mod:`gvar` is not installed, |vegas| uses a limited substitute
 that supports arithmetic between :class:`gvar.GVar`\s
 and numbers, but not between :class:`gvar.GVar`\s and other
 :class:`gvar.GVar`\s. It also supports ``log``, ``sqrt`` 
 and ``exp`` of :class:`gvar.GVar`\s, but not trig functions 
---- for these install the lsqfit package. Most importantly
+--- for these install the ``gvar`` module. Most importantly
 |vegas| will not provide correlation information for 
 integrals of array-valued integrands unless the :mod:`gvar`
 module is available.

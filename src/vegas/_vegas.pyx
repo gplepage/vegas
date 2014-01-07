@@ -25,7 +25,7 @@ import warnings
 cdef double TINY = 10 ** (sys.float_info.min_10_exp + 50)  # smallest and biggest
 cdef double HUGE = 10 ** (sys.float_info.max_10_exp - 50)  # with extra headroom
 
-# following two functions are here in case gvar (from lsqfit package)
+# following two functions are here in case gvar (from lsqfit distribution)
 # is not available --- see _gvar_standin
 
 cdef double gammaP_ser(double a, double x, double rtol, int itmax):
@@ -96,17 +96,18 @@ except ImportError:
     have_gvar = False
 
     # fake version of gvar.gvar
-    # for use if lsqfit module not available
+    # for use if gvar module not available
     class GVar(object):
-        """ Poor substitute for GVar in the lsqfit package.
+        """ Poor substitute for GVar in the gvar package.
 
         This supports arithmetic involving GVars and numbers 
         but not arithmetic involving GVars and GVars. For
-        the latter, you need to install the lsqfit
-        package (whose gvar module provides this functionality).
+        the latter, you need to install the gvar module
+        (either as part of the lsqfit distribution or 
+        on its own: pip install gvar).
 
         This also supports log, sqrt, and exp, but not
-        trig functions etc --- again install lsqfit if 
+        trig functions etc --- again install gvar if 
         these are needed.
         """
         def __init__(self, mean, sdev):
@@ -175,7 +176,7 @@ except ImportError:
             form ``'mean(sdev)'``. When this is not possible, the string
             has the form ``'mean +- sdev'``.
             """
-            # taken from gvar.GVar in lsqfit package.
+            # taken from gvar.GVar in gvar module (lsqfit distribution)
             def ndec(x, offset=2):
                 ans = offset - numpy.log10(x)
                 ans = int(ans)
@@ -292,7 +293,7 @@ class RWAvg(gvar.GVar):
     estimates (e.g., of an integral) and combines 
     them into a single weighted average. It 
     is derived from :class:`gvar.GVar` (from 
-    the :mod:`lsqfit` module if it is present) and 
+    the :mod:`gvar` module if it is present) and 
     represents a Gaussian random variable.
     """
     def __init__(self, gvar_list=None):
@@ -384,15 +385,11 @@ class RWAvgArray(numpy.ndarray):
     estimates (e.g., of an integral) and combines 
     them into an array of weighted averages. It 
     is derived from :class:`numpy.ndarray`. The array
-    elements are :class:`gvar.GVar`\s (from ``lsqfit``) and 
-    represent Gaussian random variables.
+    elements are :class:`gvar.GVar`\s (from the ``gvar`` module if
+    present) and represent Gaussian random variables.
     """
     def __new__(subtype, shape, dtype=object, buffer=None, offset=0,
         strides=None, order=None):
-        # if not have_gvar:
-        #     raise ImportError(
-        #         'need gvar (from lsqfit) for MultiIntegrator; cannot find it'
-        #         )
         obj = numpy.ndarray.__new__(
             subtype, shape=shape, dtype=object, buffer=None, offset=offset, 
             strides=strides, order=order

@@ -6,7 +6,7 @@ To install:
 		operations in python. Versions earlier than 1.6 may not work.
 		(http://numpy.scipy.org/)
 
-	b. The cython python package - provides a variant of python that 
+	b. The Cython python package - provides a variant of python that 
 		compiles into C code that can itself be compiled and is faster (but
         less flexible) than ordinary python. Versions earlier than 0.17
 		may not work. 
@@ -16,14 +16,15 @@ To install:
 		unless you want to make pictures of the vegas grid
 		(see the documentation on How vegas Works).
 
-	c. The lsqfit package - provides a module gvar that handles 
-		Gaussian random variables. This is not strictly necessary
-		but it improves the ease with which vegas results can 
-		be manipulated. It is required for the method vegas.Integrator.multi.
+	c. The gvar module which handles Gaussian random variables. This is not 
+	    strictly required but greatly improves postprocessing of vegas results,
+	    especially when integrating array-valued integrands. gvar is can be
+	    installed as part of the lsqfit distribution (pip install lsqfit) or
+	    it can be installed by itself (pip install gvar).
 		(http://https://github.com/gplepage/lsqfit.git or use pip)
 
 	The first three of these libraries are usually included in 3rd-party
-	distributions of vegas (eg, anaconda). 
+	distributions of python. 
 
 	The vegas code works for Python 2.7 and 3.3. It has not been tested
 	for earlier versions.
