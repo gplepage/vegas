@@ -1960,7 +1960,7 @@ cdef class VecIntegrand:
     provide a ``__call__(self, x)`` method that returns an 
     array ``f`` where:
 
-        ``x[i, d]`` is a contiguous array where ``i=0...``
+        ``x[i, d]`` is a contiguous :mod:`numpy` array where ``i=0...``
         labels different integrtion points and ``d=0...`` labels
         different directions in the integration space.
 
@@ -1971,15 +1971,15 @@ cdef class VecIntegrand:
         for multiple integrands (i.e., an 
         array-valued integrand).
 
-    ``x`` is a :mod:`numpy` array.
-
     Deriving from :class:`vegas.VecIntegrand` is the 
     easiest way to construct integrands in Cython, and
     gives the fastest results.
     """
     # cdef object fcntype
+    # cdef public object fcn
     def __cinit__(self, *args, **kargs):
         self.fcntype = 'vector'
+        self.fcn = None
     def ref_f(self, x):
         cdef numpy.ndarray fx = numpy.asarray(self(x))
         if fx.ndim == 1:
@@ -1987,7 +1987,31 @@ cdef class VecIntegrand:
         else:
             fx = fx.reshape((x.shape[0], -1))
             return fx[:, 0]
+    def __call__(self, x):
+        if self.fcn is None:
+            raise TypeError('no __call__ method defined')
+        else:
+            return self.fcn(x)
         
+
+def vecintegrand(f):
+    """ Decorator for vector-mode integrand functions.
+
+    Applying :func:`vegas.vecintegrand` to a function ``fcn`` repackages
+    the function in a format that |vegas| can understand. Appropriate 
+    functions take a :mod:`numpy` array of integration points ``x[i, d]`` 
+    as an argument, where ``i=0...`` labels the integration point and 
+    ``d=0...`` labels direction, and return an array ``f[i]`` of 
+    integrand values (or arrays of integrand values) for the corresponding 
+    points. The meaning of ``fcn(x)`` is unchanged by the decorator, but 
+    the type of ``fcn`` is changed.
+
+    This decorator provides an alternative to deriving an integrand
+    class from :class:`vegas.VecIntegrand`.
+    """
+    ans = VecIntegrand()
+    ans.fcn = f
+    return ans
 
 
 

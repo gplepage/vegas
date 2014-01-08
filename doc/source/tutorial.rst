@@ -497,7 +497,7 @@ This can be done using the following code::
 The code is very similar to that used in the previous section. The
 main difference is that the integrand function and |vegas|
 return arrays of results --- in
-both cases, one for each of the three integrals. |vegas| always adapts to 
+both cases, one result for each of the three integrals. |vegas| always adapts to 
 the first integrand in the array. The ``Q`` value is for all three
 of the integrals, taken together. 
 
@@ -553,7 +553,7 @@ replacing ::
     import math
 
     dim = 4
-    norm = 1013.2118364296088
+    norm = 1013.2118364296088 ** (dim / 4.)
 
     def f_scalar(x):              
         dx2 = 0.0
@@ -574,12 +574,10 @@ by ::
     import vegas
     import numpy as np
 
-    dim = 4
-
     class f_vector(vegas.VecIntegrand):
         def __init__(self, dim):
             self.dim = dim
-            self.norm = 1013.2118364296088
+            self.norm = 1013.2118364296088 ** (dim / 4.)
 
         def __call__(self, x):
             # evaluate integrand at multiple points simultaneously
@@ -588,9 +586,9 @@ by ::
                 dx2 += (x[:, d] - 0.5) ** 2
             return np.exp(-100. * dx2) * self.norm
 
-    integ = vegas.Integrator(dim * [[0, 1]], nhcube_vec=1000)
+    f = f_vector(dim=4)
+    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_vec=1000)
 
-    f = f_vector(dim=dim)
     integ(f, nitn=10, neval=200000)
     result = integ(f, nitn=10, neval=200000)
     print('result = %s   Q = %.2f' % (result, result.Q))
@@ -607,9 +605,35 @@ batches to the integrand function. Parameter ``nhcube_vec`` tells
 |vegas| how many hypercubes to put in a batch (or vector); the bigger 
 this parameter is, the larger the batches. 
 
-Not every problem is easily
-vectorize. The fastest option in such cases (and actually
-every case) is to write the integrand in Cython, which
+An alternative to deriving from :class:`vegas.VecIntegrand` is 
+to apply the :func:`vegas.vecintegrand` decorator to a (vectorized)
+function for the integrand: e.g., ::
+
+    import vegas
+    import numpy as np
+
+    dim = 4
+    norm = 1013.2118364296088 ** (dim / 4.)
+
+    @vegas.vecintegrand
+    def f(x):
+        # evaluate integrand at multiple points simultaneously
+        dx2 = 0.0
+        for d in range(dim):
+            dx2 += (x[:, d] - 0.5) ** 2
+        return np.exp(-100. * dx2) * norm
+
+    integ = vegas.Integrator(dim * [[0, 1]], nhcube_vec=1000)
+
+    integ(f, nitn=10, neval=200000)
+    result = integ(f, nitn=10, neval=200000)
+    print('result = %s   Q = %.2f' % (result, result.Q))
+
+
+
+Not every problem is easy to
+vectorize. The fastest option when vectorization is complicated (and actually
+in every case) is to write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
 of this code, which we put in a separate file we
 call ``cython_integrand.pyx``, is::
@@ -622,7 +646,7 @@ call ``cython_integrand.pyx``, is::
 
     cdef class f_cython(vegas.VecIntegrand):
         cdef double norm
-        cdef int dim
+        cdef readonly int dim
 
         def __init__(self, dim):
             self.dim = dim
@@ -646,11 +670,9 @@ The main code is then ::
     import vegas
     from cython_integrand import f_cython
 
-    dim = 4
+    f = f_cython(dim=4)
+    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_vec=1000)
 
-    integ = vegas.Integrator(dim * [[0, 1]], nhcube_vec=1000)
-
-    f = f_cython(dim=dim)
     integ(f, nitn=10, neval=200000)
     result = integ(f, nitn=10, neval=200000)
     print('result = %s   Q = %.2f' % (result, result.Q))
@@ -669,24 +691,20 @@ The code from the previous section could have been written as::
 
     dim = 4
 
-    class vecf(vegas.VecIntegrand):
-        def __init__(self, dim):
-            self.dim = dim
-
-        def __call__(self, x):
-            f = np.empty((x.shape[0], 3), float)
-            dx2 = 0.0
-            for d in range(self.dim):
-                dx2 += (x[:, d] - 0.5) ** 2
-            f[:, 0] = np.exp(-200 * dx2)
-            f[:, 1] = x[:, 0] * f[:, 0]
-            f[:, 2] = x[:, 0] ** 2 * f[:, 0]
-            return f
-
+    @vegas.vecintegrand
+    def f(x):
+        ans = np.empty((x.shape[0], 3), float)
+        dx2 = 0.0
+        for d in range(dim):
+            dx2 += (x[:, d] - 0.5) ** 2
+        ans[:, 0] = np.exp(-200 * dx2)
+        ans[:, 1] = x[:, 0] * ans[:, 0]
+        ans[:, 2] = x[:, 0] ** 2 * ans[:, 0]
+        return ans
 
     integ = vegas.Integrator(4 * [[0, 1]])
-    # # adapt grid
-    f = vecf(dim)
+    
+    # adapt grid
     training = integ(f, nitn=10, neval=1000)
 
     # final analysis
@@ -705,6 +723,7 @@ Note that the vectorized index (here ``:``) always comes first.
 Cython code can also link easily to compiled C or Fortran code, 
 so integrands written in these languages can be used as well (and
 would be faster than pure Python).
+
 
 |vegas| as a Random Number Generator
 -------------------------------------

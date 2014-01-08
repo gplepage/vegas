@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vegas Module &mdash; vegas 2.0.1 documentation</title>
+    <title>vegas Module &mdash; vegas 2.0.1+ documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '2.0.1',
+        VERSION:     '2.0.1+',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.0.1 documentation" href="index.html" />
+    <link rel="top" title="vegas 2.0.1+ documentation" href="index.html" />
     <link rel="prev" title="How vegas Works" href="background.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -47,7 +47,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.0.1+ documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -788,8 +788,8 @@ in the map grid for each direction. Parameter
 </dd></dl>
 
 </div>
-<div class="section" id="other-objects">
-<h2>Other Objects<a class="headerlink" href="#other-objects" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="other-objects-and-functions">
+<h2>Other Objects and Functions<a class="headerlink" href="#other-objects-and-functions" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="vegas.RWAvg">
 <em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">RWAvg</tt><a class="headerlink" href="#vegas.RWAvg" title="Permalink to this definition">¶</a></dt>
@@ -898,6 +898,22 @@ present) and represent Gaussian random variables.</p>
 
 </dd></dl>
 
+<dl class="function">
+<dt id="vegas.vecintegrand">
+<tt class="descclassname">vegas.</tt><tt class="descname">vecintegrand</tt><big>(</big><big>)</big><a class="headerlink" href="#vegas.vecintegrand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for vector-mode integrand functions.</p>
+<p>Applying <a class="reference internal" href="#vegas.vecintegrand" title="vegas.vecintegrand"><tt class="xref py py-func docutils literal"><span class="pre">vegas.vecintegrand()</span></tt></a> to a function <tt class="docutils literal"><span class="pre">fcn</span></tt> repackages
+the function in a format that <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> can understand. Appropriate 
+functions take a <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> array of integration points <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> 
+as an argument, where <tt class="docutils literal"><span class="pre">i=0...</span></tt> labels the integration point and 
+<tt class="docutils literal"><span class="pre">d=0...</span></tt> labels direction, and return an array <tt class="docutils literal"><span class="pre">f[i]</span></tt> of 
+integrand values (or arrays of integrand values) for the corresponding 
+points. The meaning of <tt class="docutils literal"><span class="pre">fcn(x)</span></tt> is unchanged by the decorator, but 
+the type of <tt class="docutils literal"><span class="pre">fcn</span></tt> is changed.</p>
+<p>This decorator provides an alternative to deriving an integrand
+class from <a class="reference internal" href="#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.VecIntegrand</span></tt></a>.</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="vegas.VecIntegrand">
 <em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">VecIntegrand</tt><a class="headerlink" href="#vegas.VecIntegrand" title="Permalink to this definition">¶</a></dt>
@@ -906,7 +922,7 @@ present) and represent Gaussian random variables.</p>
 provide a <tt class="docutils literal"><span class="pre">__call__(self,</span> <span class="pre">x)</span></tt> method that returns an 
 array <tt class="docutils literal"><span class="pre">f</span></tt> where:</p>
 <blockquote>
-<div><p><tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> is a contiguous array where <tt class="docutils literal"><span class="pre">i=0...</span></tt>
+<div><p><tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> is a contiguous <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> array where <tt class="docutils literal"><span class="pre">i=0...</span></tt>
 labels different integrtion points and <tt class="docutils literal"><span class="pre">d=0...</span></tt> labels
 different directions in the integration space.</p>
 <p><tt class="docutils literal"><span class="pre">f[i]</span></tt> is a contiguous array containing the integrand
@@ -916,7 +932,6 @@ for a single integrand, or an array (of any shape)
 for multiple integrands (i.e., an 
 array-valued integrand).</p>
 </div></blockquote>
-<p><tt class="docutils literal"><span class="pre">x</span></tt> is a <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> array.</p>
 <p>Deriving from <a class="reference internal" href="#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.VecIntegrand</span></tt></a> is the 
 easiest way to construct integrands in Cython, and
 gives the fastest results.</p>
@@ -937,7 +952,7 @@ gives the fastest results.</p>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#integrator-objects">Integrator Objects</a></li>
 <li><a class="reference internal" href="#adaptivemap-objects">AdaptiveMap Objects</a></li>
-<li><a class="reference internal" href="#other-objects">Other Objects</a></li>
+<li><a class="reference internal" href="#other-objects-and-functions">Other Objects and Functions</a></li>
 </ul>
 </li>
 </ul>
@@ -974,7 +989,7 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.0.1+ documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

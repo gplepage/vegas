@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; vegas 2.0.1 documentation</title>
+    <title>Tutorial &mdash; vegas 2.0.1+ documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '2.0.1',
+        VERSION:     '2.0.1+',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.0.1 documentation" href="index.html" />
+    <link rel="top" title="vegas 2.0.1+ documentation" href="index.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -51,7 +51,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.0.1+ documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -588,7 +588,7 @@ projected onto one of the axes:</p>
 <p>The code is very similar to that used in the previous section. The
 main difference is that the integrand function and <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>
 return arrays of results &#8212; in
-both cases, one for each of the three integrals. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> always adapts to
+both cases, one result for each of the three integrals. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> always adapts to
 the first integrand in the array. The <tt class="docutils literal"><span class="pre">Q</span></tt> value is for all three
 of the integrals, taken together.</p>
 <p>The code produces the following output:</p>
@@ -648,7 +648,7 @@ replacing</p>
 <span class="kn">import</span> <span class="nn">math</span>
 
 <span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span>
+<span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">f_scalar</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
@@ -667,12 +667,10 @@ replacing</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
-<span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
-
 <span class="k">class</span> <span class="nc">f_vector</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">VecIntegrand</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="c"># evaluate integrand at multiple points simultaneously</span>
@@ -681,9 +679,9 @@ replacing</p>
             <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span>
 
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_vec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">f_vector</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_vec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
-<span class="n">f</span> <span class="o">=</span> <span class="n">f_vector</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
 <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">   Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
@@ -699,9 +697,33 @@ signal to <a class="reference internal" href="vegas.html#module-vegas" title="ve
 batches to the integrand function. Parameter <tt class="docutils literal"><span class="pre">nhcube_vec</span></tt> tells
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> how many hypercubes to put in a batch (or vector); the bigger
 this parameter is, the larger the batches.</p>
-<p>Not every problem is easily
-vectorize. The fastest option in such cases (and actually
-every case) is to write the integrand in Cython, which
+<p>An alternative to deriving from <a class="reference internal" href="vegas.html#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.VecIntegrand</span></tt></a> is
+to apply the <a class="reference internal" href="vegas.html#vegas.vecintegrand" title="vegas.vecintegrand"><tt class="xref py py-func docutils literal"><span class="pre">vegas.vecintegrand()</span></tt></a> decorator to a (vectorized)
+function for the integrand: e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span>
+
+<span class="nd">@vegas.vecintegrand</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c"># evaluate integrand at multiple points simultaneously</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="n">norm</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_vec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+<span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">   Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Not every problem is easy to
+vectorize. The fastest option when vectorization is complicated (and actually
+in every case) is to write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
 of this code, which we put in a separate file we
 call <tt class="docutils literal"><span class="pre">cython_integrand.pyx</span></tt>, is:</p>
@@ -713,7 +735,7 @@ import numpy
 
 cdef class f_cython(vegas.VecIntegrand):
     cdef double norm
-    cdef int dim
+    cdef readonly int dim
 
     def __init__(self, dim):
         self.dim = dim
@@ -736,11 +758,9 @@ cdef class f_cython(vegas.VecIntegrand):
 <span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">from</span> <span class="nn">cython_integrand</span> <span class="kn">import</span> <span class="n">f_cython</span>
 
-<span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">f_cython</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_vec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_vec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
-
-<span class="n">f</span> <span class="o">=</span> <span class="n">f_cython</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
 <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">   Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
@@ -758,24 +778,20 @@ The code from the previous section could have been written as:</p>
 
 <span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
 
-<span class="k">class</span> <span class="nc">vecf</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">VecIntegrand</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>
-
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
-        <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">):</span>
-            <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-        <span class="n">f</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">200</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
-        <span class="n">f</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">f</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="n">f</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">f</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">f</span>
-
+<span class="nd">@vegas.vecintegrand</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">ans</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">200</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+    <span class="n">ans</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ans</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">ans</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ans</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ans</span>
 
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
-<span class="c"># # adapt grid</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">vecf</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+
+<span class="c"># adapt grid</span>
 <span class="n">training</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
 <span class="c"># final analysis</span>
@@ -908,7 +924,7 @@ module is available.</p>
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.0.1+ documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

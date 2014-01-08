@@ -25,12 +25,10 @@ from fastest_integrand import f_cython
 np.random.seed((1,2))   # causes reproducible random numbers
 
 def main():
-    dim = 6
-    integ = vegas.Integrator(dim * [[0, 1]])
+    # create integrand and integrator
+    f = f_cython(dim=6)
+    integ = vegas.Integrator(f.dim * [[0, 1]])
 
-    # create integrand
-    f = f_cython(dim=dim)
-    
     # adapt the grid; discard these results
     integ(f, neval=25000, nitn=10)
 

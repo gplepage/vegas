@@ -1,3 +1,13 @@
+Version 2.0.1+ - ????
+======================
+
+- Have more robust mechanisms for defining integrands for vegas's vector 
+  mode. Deriving from vegas.VecIntegand but failing to define a __call__
+  results in an error message (saying there is no __call__). Also there
+  is now a function decorator, vegas.vecintegrand, that can be applied
+  to an ordinary function to make it suitable as an integrand.
+
+
 Version 2.0.1 - 2014-01-07
 ===========================
 Tiny improvement in how vegas interacts with the gvar module. The gvar

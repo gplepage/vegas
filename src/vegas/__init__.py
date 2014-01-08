@@ -53,5 +53,5 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 # GNU General Public License for more details.
 
 from ._vegas import RWAvg, RWAvgArray, AdaptiveMap, Integrator, VecIntegrand
-from ._vegas import reporter, gvar, have_gvar
+from ._vegas import reporter, gvar, have_gvar, vecintegrand
 from ._version import version as __version__

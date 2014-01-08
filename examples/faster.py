@@ -43,13 +43,11 @@ class f_vec(vegas.VecIntegrand):
             ) / 3.
 
 def main():
-    dim = 6
+    # create integrand
+    f = f_vec(dim=6)
 
     # increase vector size (using nhcube_vec) to improve efficiency
-    integ = vegas.Integrator(dim * [[0, 1]], nhcube_vec=2000)
-
-    # create integrand
-    f = f_vec(dim=dim)
+    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_vec=2000)
     
     # adapt the grid; discard these results
     integ(f, neval=25000, nitn=10)

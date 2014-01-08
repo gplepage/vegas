@@ -19,7 +19,7 @@ import math
 
 
 cdef class f_cython(vegas.VecIntegrand):
-    cdef int dim 
+    cdef readonly int dim 
     cdef double norm_ac 
     cdef double norm_b
     def __init__(self, dim):

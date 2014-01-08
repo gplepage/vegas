@@ -16,6 +16,7 @@ ctypedef ssize_t INTP_TYPE
 
 cdef class VecIntegrand:
     cdef readonly object fcntype
+    cdef public object fcn
 
 cdef class AdaptiveMap:
     # first index is direction, second is increment

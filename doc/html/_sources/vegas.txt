@@ -183,8 +183,8 @@ fashion, for use in subsequent iterations of the algorithm.
 
    .. automethod:: settings(ngrid=5)
 
-Other Objects
-----------------
+Other Objects and Functions
+----------------------------
 
 .. autoclass:: vegas.RWAvg
 
@@ -226,6 +226,7 @@ Other Objects
 
    .. automethod:: summary()
 
-.. autoclass:: vegas.VecIntegrand
+.. autofunction:: vegas.vecintegrand
 
+.. autoclass:: vegas.VecIntegrand
 
