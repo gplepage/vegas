@@ -4,7 +4,7 @@
 .. |Integrator| replace:: :class:`vegas.Integrator`
 .. |AdaptiveMap| replace:: :class:`vegas.AdaptiveMap`
 .. |vegas| replace:: :mod:`vegas`
-.. |WAvg| replace:: :class:`vegas.RWAvg`
+.. |WAvg| replace:: :class:`vegas.RAvg`
 .. |chi2| replace:: :math:`\chi^2`
 .. |x| replace:: x 
 .. |y| replace:: y 
@@ -32,7 +32,7 @@ The key Python objects supported by the |vegas| module are:
      mean and a standard deviation --- but also contain information about the
      iterations |vegas| used in generating the result.
 
-   * :class:`vegas.RWAvgArray` --- an array version of |WAvg| used when
+   * :class:`vegas.RAvgArray` --- an array version of |WAvg| used when
      the integrand is array-valued.
 
 These are described in detail below.
@@ -186,7 +186,7 @@ fashion, for use in subsequent iterations of the algorithm.
 Other Objects and Functions
 ----------------------------
 
-.. autoclass:: vegas.RWAvg
+.. autoclass:: vegas.RAvg
 
    .. attribute:: mean
 
@@ -210,7 +210,7 @@ Other Objects and Functions
 
    .. automethod:: summary()
 
-.. autoclass:: vegas.RWAvgArray
+.. autoclass:: vegas.RAvgArray
     
    .. autoattribute:: chi2
 

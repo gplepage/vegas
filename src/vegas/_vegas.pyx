@@ -113,6 +113,7 @@ except ImportError:
         def __init__(self, mean, sdev):
             self.mean = float(mean)
             self.sdev = abs(float(sdev))
+            self.var = self.sdev ** 2
             self.internaldata = (self.mean, self.sdev)
         def __add__(self, double a):
             return GVar(a + self.mean, self.sdev)
@@ -286,33 +287,44 @@ except ImportError:
     gvar = _gvar_standin()
     gvar.GVar = GVar
 
-class RWAvg(gvar.GVar):
-    """ Running weighted average of Monte Carlo estimates.
+class RAvg(gvar.GVar):
+    """ Running average of Monte Carlo estimates.
 
     This class accumulates independent Monte Carlo 
     estimates (e.g., of an integral) and combines 
-    them into a single weighted average. It 
+    them into a single average. It 
     is derived from :class:`gvar.GVar` (from 
     the :mod:`gvar` module if it is present) and 
     represents a Gaussian random variable.
+
+    Different estimates are weighted by their
+    inverse variances if parameter ``weight=True``;
+    otherwise straight, unweighted averages are used.
     """
-    def __init__(self, gvar_list=None):
-        if gvar_list is not None:
-            self.__init__()
-            for g in gvar_list:
-                self.add(g)
-        else:
+    def __init__(self, weighted=True):
+        if weighted:
             self._v_s2 = 0.
             self._v2_s2 = 0.
             self._1_s2 = 0.
-
-            self.itn_results = []
-            super(RWAvg, self).__init__(
-                *gvar.gvar(0., 0.).internaldata,
-               )
+            self.weighted = True
+        else:
+            self._v = 0.
+            self._v2 = 0.
+            self._s2 = 0.
+            self._n = 0
+            self.weighted = False
+        self.itn_results = []
+        super(RAvg, self).__init__(
+            *gvar.gvar(0., 0.).internaldata,
+           )
 
     def _chi2(self):
-        return self._v2_s2 - self._v_s2 ** 2 / self._1_s2
+        if len(self.itn_results) <= 1:
+            return 0.0
+        if self.weighted:
+            return self._v2_s2 - self._v_s2 ** 2 / self._1_s2
+        else:
+            return (self._v2 - self.mean ** 2 * self._n) * self._n / self._s2
     chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
 
     def _dof(self):
@@ -340,17 +352,30 @@ class RWAvg(gvar.GVar):
     def add(self, g):
         """ Add estimate ``g`` to the running average. """
         self.itn_results.append(g)
-        var = g.sdev ** 2 + TINY
-        self._v_s2 = self._v_s2 + g.mean / var
-        self._v2_s2 = self._v2_s2 + g.mean ** 2 / var
-        self._1_s2 = self._1_s2 + 1. / var
-        super(RWAvg, self).__init__(*gvar.gvar(
-            self._v_s2 / self._1_s2,
-            sqrt(1. / self._1_s2),
-            ).internaldata)
+        tiny = sys.float_info.epsilon * 10 * g.mean ** 2 + TINY
+        if self.weighted:
+            var = g.sdev ** 2 + tiny
+            self._v_s2 +=   g.mean / var
+            self._v2_s2 +=  g.mean ** 2 / var
+            self._1_s2 +=  1. / var
+            super(RAvg, self).__init__(*gvar.gvar(
+                self._v_s2 / self._1_s2,
+                sqrt(1. / self._1_s2),
+                ).internaldata)
+        else:
+            self._v += g.mean 
+            self._v2 += g.mean ** 2
+            self._s2 += g.var + tiny
+            self._n += 1
+            super(RAvg, self).__init__(*gvar.gvar(
+                self._v / self._n,
+                sqrt(self._s2) / self._n,
+                ).internaldata)
+
+
     def summary(self):
         """ Assemble summary of independent results into a string. """
-        acc = RWAvg()
+        acc = RAvg()
         linedata = []
         for i, res in enumerate(self.itn_results):
             acc.add(res)
@@ -378,40 +403,64 @@ class RWAvg(gvar.GVar):
             ans += fmt % data
         return ans
 
-class RWAvgArray(numpy.ndarray):
-    """ Running weighted average of array-valued Monte Carlo estimates.
+class RAvgArray(numpy.ndarray):
+    """ Running average of array-valued Monte Carlo estimates.
 
     This class accumulates independent arrays of Monte Carlo 
     estimates (e.g., of an integral) and combines 
-    them into an array of weighted averages. It 
+    them into an array of averages. It 
     is derived from :class:`numpy.ndarray`. The array
     elements are :class:`gvar.GVar`\s (from the ``gvar`` module if
     present) and represent Gaussian random variables.
+
+    Different estimates are weighted by their
+    inverse covariance matrices if parameter ``weight=True``;
+    otherwise straight, unweighted averages are used.
     """
-    def __new__(subtype, shape, dtype=object, buffer=None, offset=0,
-        strides=None, order=None):
+    def __new__(
+        subtype, shape, weighted=True,
+        dtype=object, buffer=None, offset=0, strides=None, order=None
+        ):
         obj = numpy.ndarray.__new__(
-            subtype, shape=shape, dtype=object, buffer=None, offset=offset, 
+            subtype, shape=shape, dtype=object, buffer=buffer, offset=offset, 
             strides=strides, order=order
             )
         if buffer is None:
             obj.flat = numpy.array(obj.size * [gvar.gvar(0,0)])
-        obj._invcov_v = 0.
-        obj._v_invcov_v = 0.
-        obj._invcov = 0.
         obj.itn_results = []
+        if weighted:
+            obj._invcov_v = 0.
+            obj._v_invcov_v = 0.
+            obj._invcov = 0.
+            obj.weighted = True
+        else:
+            obj._v = 0.
+            obj._v2 = 0.
+            obj._cov = 0.
+            obj._n = 0
+            obj.weighted = False
         return obj
     
     def __array_finalize__(self, obj):
         if obj is None:
             return
         self.itn_results = getattr(obj, 'itn_results', [])
-        self._invcov_v = getattr(obj, '_invcov_v', 0.0)
-        self._v_invcov_v = getattr(obj, '_v_invcov_v', 0.0)
-        self._invcov = getattr(obj, '_invcov', 0.0)
-    
+        if obj.weighted:
+            self._invcov_v = getattr(obj, '_invcov_v', 0.0)
+            self._v_invcov_v = getattr(obj, '_v_invcov_v', 0.0)
+            self._invcov = getattr(obj, '_invcov', 0.0)
+            self.weighted = getattr(obj, 'weighted', True)
+        else:
+            self._v = getattr(obj, '_v', 0.)
+            self._v2 = getattr(obj, '_v2', 0.)
+            self._cov = getattr(obj, '_cov', 0.)
+            self._n = getattr(obj, '_n', 0.)
+            self.weighted = getattr(obj, 'weighted', False)
+
     def _inv(self, matrix):
         " Invert matrix, with protection against singular matrices. "
+        if True:
+            return numpy.linalg.inv(matrix)
         if not have_gvar:
             return numpy.linalg.pinv(matrix, rcond=sys.float_info.epsilon * 10)
         svd = gvar.SVD(matrix, svdcut=sys.float_info.epsilon * 10, rescale=True)
@@ -422,14 +471,20 @@ class RWAvgArray(numpy.ndarray):
             )
 
     def _chi2(self):
-        if len(self.itn_results) == 0:
+        if len(self.itn_results) <= 1:
             return 0.0
-        cov = self._inv(self._invcov)
-        return self._v_invcov_v - self._invcov_v.dot(cov.dot(self._invcov_v))
+        if self.weighted:
+            cov = self._inv(self._invcov)
+            return self._v_invcov_v - self._invcov_v.dot(cov.dot(self._invcov_v))
+        else:
+            invcov = self._inv(self._cov / self._n)
+            return numpy.trace(   # inefficient -- fix at some point
+                (self._v2 - numpy.outer(self._v, self._v) / self._n).dot(invcov)
+                )
     chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
 
     def _dof(self):
-        if len(self.itn_results) == 0:
+        if len(self.itn_results) <= 1:
             return 0
         return (len(self.itn_results) - 1) * self.itn_results[0].size
     dof = property(
@@ -438,7 +493,7 @@ class RWAvgArray(numpy.ndarray):
         )
 
     def _Q(self):
-        if self.dof <= 0 or self.chi2 < 0:
+        if self.dof <= 0 or self.chi2 <= 0:
             return 1.
         return gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
     Q = property(
@@ -451,19 +506,36 @@ class RWAvgArray(numpy.ndarray):
         g = numpy.asarray(g)
         self.itn_results.append(g)
         g = g.reshape((-1,))
-        invcov = self._inv(gvar.evalcov(g))
-        v = gvar.mean(g)
-        u = invcov.dot(v)
-        self._invcov += invcov
-        self._invcov_v += u 
-        self._v_invcov_v += v.dot(u)
-        cov = self._inv(self._invcov)
-        mean = cov.dot(self._invcov_v)
-        self[:] = gvar.gvar(mean, cov).reshape(self.shape)
+        gmean = gvar.mean(g)
+        tiny = sys.float_info.epsilon * 10
+        gcov = gvar.evalcov(g) 
+        gcov[numpy.diag_indices_from(gcov)] = (
+            abs(gcov[numpy.diag_indices_from(gcov)])
+            + tiny * gmean ** 2 + TINY
+            )
+        if self.weighted:
+            invcov = self._inv(gcov)
+            v = gvar.mean(g)
+            u = invcov.dot(v)
+            self._invcov += invcov
+            self._invcov_v += u 
+            self._v_invcov_v += v.dot(u)
+            cov = self._inv(self._invcov)
+            mean = cov.dot(self._invcov_v)
+            self[:] = gvar.gvar(mean, cov).reshape(self.shape)
+        else:
+            gmean = gvar.mean(g)
+            self._v2 += numpy.outer(gmean, gmean)
+            self._v += gmean
+            self._cov += gcov
+            self._n += 1
+            mean = self._v / self._n 
+            cov = self._cov / (self._n ** 2)
+            self[:] = gvar.gvar(mean, cov).reshape(self.shape)            
    
     def summary(self):
         """ Assemble summary of independent results into a string. """
-        acc = RWAvgArray(self.shape)
+        acc = RAvgArray(self.shape)
 
         linedata = []
         for i, res in enumerate(self.itn_results):
@@ -1049,7 +1121,7 @@ cdef class Integrator(object):
     adapted. The integrator returns the weighted average of all
     ``nitn`` estimates, together with an estimate of the statistical
     (Monte Carlo) uncertainty in that estimate of the integral. The
-    result is an object of type :class:`RWAvg` (which is derived
+    result is an object of type :class:`RAvg` (which is derived
     from :class:`gvar.GVar`).
 
     Integrands can be array-valued, in which case ``f(x)`` 
@@ -1114,6 +1186,14 @@ cdef class Integrator(object):
         setting ``beta=0`` prevents any redistribution of 
         evaluations. The default value is 0.75.
     :type beta: float 
+    :param adapt: Setting ``adapt=False`` prevents further 
+        adaptation by |vegas|. Typically this would be done 
+        after training the |Integrator| on an integrand, in order
+        to stabilize the integral estimates. |vegas| uses 
+        unweighted averages to combine results from different 
+        iterations when ``adapt=False``. The default setting 
+        is ``adapt=True``.
+    :type adapt: bool
     :param nhcube_vec: The number of hypercubes (in |y| space)
         whose integration points are combined into a single
         vector to be passed to the integrand, all together,
@@ -1820,9 +1900,11 @@ cdef class Integrator(object):
                     mean = numpy.zeros(ns, float)
                     var = numpy.zeros((ns, ns), float)
                     if integrand_shape == ():
-                        result = RWAvg()
+                        result = RAvg(weighted=self.adapt)
                     else:
-                        result = RWAvgArray(integrand_shape)
+                        result = RAvgArray(
+                            integrand_shape, weighted=self.adapt
+                            )
 
 
                 # repackage in simpler (uniform) format

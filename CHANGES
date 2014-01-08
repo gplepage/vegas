@@ -1,12 +1,42 @@
-Version 2.0.1+ - ????
-======================
+Version 2.1 - 2014-01-08
+=========================
+vegas normally uses weighted averages to combine results from different 
+iterations. This is important since earlier iterations may have much larger
+errors and so should carry less weight in the average. The weighted averages
+mean, however, that the integral estimates are biased (see discussion of
+systematic error in the Tutorial). The bias is completely negligible compared
+to the statistical errors, and so unproblematic, unless the number of 
+iterations (nitn) is made very large (eg, thousands). vegas does not need to,
+and no longer does use weighted averages when parameter adapt=False, because
+then different iterations are all the same (since there is no adaptation 
+going on). Consequently the estimates for the mean and std deviation 
+are unbiased when adapt=False. This is likely a non-issue for most 
+and possibly all applications (since the bias vanishes so quickly with
+increasing neval --- like 1/neval), but taking unweighted averages is 
+more correct when adapt=False so that is what vegas does now. 
+
+Other changes:
+
+- Added parameter adapt to Integrator, as mentioned above. Setting alpha=False
+  prevents vegas from adapting any further. See the discussion in the Tutorial.
+
+- RWAvg and RWAvgArray have changed names to RAvg and RAvgArray. The R 
+  stands for "running", since these objects keep a running total. The "W"
+  used to stand for "weighted" but is inappropriate now since averages 
+  may be weighted or unweighted (depending upon parameter Integrator.adapt).
+
+- Changed the way vegas handles situations where variances
+  (or diagonal elements of covariance matrices) are negative or otherwise
+  afflicted by roundoff error. A small positive number is added, scaled by
+  the mean**2 (roughly 1e-15 * mean**2). This helps vegas survive unusual
+  situations like a constant integrand (independent of x) without generating
+  nan's or divide checks. 
 
 - Have more robust mechanisms for defining integrands for vegas's vector 
   mode. Deriving from vegas.VecIntegand but failing to define a __call__
   results in an error message (saying there is no __call__). Also there
   is now a function decorator, vegas.vecintegrand, that can be applied
   to an ordinary function to make it suitable as an integrand.
-
 
 Version 2.0.1 - 2014-01-07
 ===========================

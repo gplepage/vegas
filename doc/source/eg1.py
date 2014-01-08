@@ -93,9 +93,6 @@ def main():
     if SAVE_OUTPUT:
         unlog_stdout()
         log_stdout('eg1c1.out')
-    result = vegas.RWAvg(result.itn_results[5:])
-    print(result.summary())
-    print('result = %s    Q = %.2f' % (result, result.Q))
 
     if SAVE_OUTPUT:
         unlog_stdout()
@@ -131,7 +128,7 @@ def main():
         unlog_stdout()
         log_stdout('eg1g.out')
     integ(f_sphere, nitn=10, neval=1000, alpha=0.1)
-    result = integ(f_sphere, nitn=10, neval=1000, alpha=0.1)
+    result = integ(f_sphere, nitn=10, neval=1000, adapt=False) # alpha=0.1)
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
 
@@ -139,7 +136,7 @@ def main():
         unlog_stdout()
         log_stdout('eg1h.out')
     integ(f_sphere, nitn=10, neval=1000, alpha=0.1)
-    result = integ(f_sphere, nitn=10, neval=1000, adapt=False)
+    result = integ(f_sphere, nitn=10, neval=1000, alpha=0.1)
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
 

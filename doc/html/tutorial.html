@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; vegas 2.0.1+ documentation</title>
+    <title>Tutorial &mdash; vegas 2.1 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '2.0.1+',
+        VERSION:     '2.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.0.1+ documentation" href="index.html" />
+    <link rel="top" title="vegas 2.1 documentation" href="index.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -51,7 +51,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.0.1+ documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -180,15 +180,18 @@ to remap the integration variables for subsequent iterations,
 concentrating samples where the function is largest and reducing
 errors.
 As a result, the per-iteration error
-is reduced to 3.4% by the fifth iteration, and below 2% by
+is reduced to 4.3% by the fifth iteration, and below 2% by
 the end &#8212; an improvement by almost two orders of
 magnitude from the start. Eventually the per-iteration error
-stops decreasing because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> has found the optimal remapping, at which
-point
+stops decreasing because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> has found the optimal remapping,
+at which point
 it has fully adapted to the integrand.</p>
 <p><strong>Weighted Average:</strong> The final result, 1.0015 ± 0.0091,
 is obtained from a weighted
-average of the separate results from each iteration.
+average of the separate results from each iteration:
+estimates are weighted by the inverse variance, thereby giving
+much less weight to the early iterations, where the errors are
+largest.
 The individual estimates are statistical: each
 is a random number drawn from a distribution whose mean
 equals the correct value of the integral, and the errors
@@ -220,7 +223,7 @@ within errors. This means that <tt class="docutils literal"><span class="pre">ne
 large to guarantee Gaussian behavior, and must be increased
 if the error estimates are to be trusted.</p>
 <p><tt class="docutils literal"><span class="pre">integ(f...)</span></tt> returns a weighted-average object,
-of type <a class="reference internal" href="vegas.html#vegas.RWAvg" title="vegas.RWAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RWAvg</span></tt></a>, that has the following
+of type <a class="reference internal" href="vegas.html#vegas.RAvg" title="vegas.RAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RAvg</span></tt></a>, that has the following
 attributes:</p>
 <blockquote>
 <div><p><tt class="docutils literal"><span class="pre">result.mean</span></tt> &#8212; weighted average of all estimates of the integral;</p>
@@ -304,7 +307,7 @@ answer. This is because at some point the statistical error
 (which falls as <tt class="docutils literal"><span class="pre">sqrt(1/nitn)</span></tt>) will no longer
 mask the systematic error (which is unaffected by <tt class="docutils literal"><span class="pre">nitn</span></tt>).
 The systematic error for the integral
-above (with <tt class="docutils literal"><span class="pre">neval=1000</span></tt>) is about -0.00073(7), which
+above (with <tt class="docutils literal"><span class="pre">neval=1000</span></tt>) is about -0.0008(1), which
 is negligible compared to the statistical error unless
 <tt class="docutils literal"><span class="pre">nitn</span></tt> is of order 1500 or larger &#8212; so systematic errors
 aren&#8217;t a problem with <tt class="docutils literal"><span class="pre">nitn=10</span></tt>.</p>
@@ -497,17 +500,17 @@ the following output:</p>
 <div class="highlight-python"><pre>itn   integral        wgt average     chi2/dof        Q
 -------------------------------------------------------
   1   1.004(21)       1.004(21)           0.00     1.00
-  2   0.982(23)       0.994(16)           0.50     0.48
-  3   0.998(20)       0.996(12)           0.26     0.77
-  4   0.977(19)       0.990(10)           0.40     0.75
-  5   1.015(19)       0.9960(90)          0.65     0.63
-  6   1.003(18)       0.9974(81)          0.54     0.75
-  7   1.001(21)       0.9978(75)          0.45     0.84
-  8   0.997(20)       0.9977(70)          0.39     0.91
-  9   1.003(23)       0.9981(67)          0.35     0.95
- 10   1.017(28)       0.9992(65)          0.36     0.96
+  2   0.988(24)       0.997(16)           0.26     0.61
+  3   1.023(24)       1.005(13)           0.56     0.57
+  4   0.996(19)       1.002(11)           0.43     0.73
+  5   1.009(25)       1.0032(99)          0.34     0.85
+  6   0.981(22)       0.9995(90)          0.44     0.82
+  7   1.010(22)       1.0010(84)          0.40     0.88
+  8   0.979(20)       0.9978(77)          0.48     0.85
+  9   1.068(25)       1.0037(74)          1.29     0.24
+ 10   0.973(24)       1.0010(71)          1.32     0.22
 
-result = 0.9992(65)    Q = 0.96
+result = 1.0031(72)    Q = 0.14
 </pre>
 </div>
 <p>Notice how the errors fluctuate less from iteration to iteration
@@ -519,14 +522,42 @@ to random fluctuations it encounters as it samples the integrand.</p>
 <p>In general, we want <tt class="docutils literal"><span class="pre">alpha</span></tt> to be large enough so that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> adapts
 quickly to the integrand, but not so large that it has difficulty
 holding on to the optimal tuning once it has found it. The best value
-depends upon the integrand. Adaptation can be turned off completely
-by setting parameter <tt class="docutils literal"><span class="pre">adapt=False</span></tt>: e.g.,</p>
+depends upon the integrand.</p>
+<p><strong>adapt=False:</strong> Adaptation can be turned off completely
+by setting parameter <tt class="docutils literal"><span class="pre">adapt=False</span></tt>. There are three reasons one
+might do this. The first is if <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> is exhibiting the
+kind of instability discussed in the previous section &#8212; one might
+use the following code, instead of that presented there:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="o">...</span>
 <span class="n">integ</span><span class="p">(</span><span class="n">f_sph</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f_sph</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 <span class="o">...</span>
 </pre></div>
 </div>
+<p>The second reason is that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> runs slightly faster when it is
+no longer adapting to the integrand. The difference is not signficant
+for complicated integrands, but is noticable in simpler cases.</p>
+<p>The third reason for turning off adaptation is that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses
+unweighted averages, rather than weighted averages, to combine
+results from different iterations when <tt class="docutils literal"><span class="pre">adapt=False</span></tt>.
+Unweighted averages are not biased. They have no systematic error
+of the sort discussed above, and so give correct results even
+for very large numbers of iterations, <tt class="docutils literal"><span class="pre">nitn</span></tt>.</p>
+<p>The lack of systematic biases is <em>not</em> a strong reason for turning
+off adaptation, however, since the biases are
+usually negligible. Also, again,
+errors tend to fall faster if the number of evaluations per iteration
+<tt class="docutils literal"><span class="pre">neval</span></tt> is increased rather than the number of iterations. Finally
+in practice it is difficult to know precisely when <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> is
+finished adapting. One often finds (modest) continued improvement after
+the training step, leading to more accurate final results.</p>
+<p>Training the integrator and then setting <tt class="docutils literal"><span class="pre">adapt=False</span></tt> for the
+final results works best if the number of evaluations per iteration
+(<tt class="docutils literal"><span class="pre">neval</span></tt>) is the same in both steps. This is because the second
+of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>&#8216;s adaptation strategies (adaptive stratified sampling) is
+usually reinitialized when <tt class="docutils literal"><span class="pre">neval</span></tt> changes, and so is not
+used at all when <tt class="docutils literal"><span class="pre">neval</span></tt> is changed at the same time <tt class="docutils literal"><span class="pre">adapt=False</span></tt>
+is set.</p>
 </div></blockquote>
 </div>
 <div class="section" id="multiple-integrands-simultaneously">
@@ -600,8 +631,8 @@ sigma_x**2 = &lt;x**2&gt; - &lt;x&gt;**2 = 0.002506(15)
 
 correlation matrix:
  [[ 1.          0.98054444  0.92734262]
- [ 0.98054444  1.          0.9820775 ]
- [ 0.92734262  0.9820775   1.        ]]
+ [ 0.98054444  1.          0.98207749]
+ [ 0.92734262  0.98207749  1.        ]]
 </pre>
 </div>
 <p>The estimates for the individual integrals are separately accurate to
@@ -924,7 +955,7 @@ module is available.</p>
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.0.1+ documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

@@ -127,16 +127,19 @@ There are several things to note here:
     concentrating samples where the function is largest and reducing 
     errors. 
     As a result, the per-iteration error
-    is reduced to 3.4% by the fifth iteration, and below 2% by
+    is reduced to 4.3% by the fifth iteration, and below 2% by
     the end --- an improvement by almost two orders of 
     magnitude from the start. Eventually the per-iteration error
-    stops decreasing because |vegas| has found the optimal remapping, at which
-    point
+    stops decreasing because |vegas| has found the optimal remapping, 
+    at which point
     it has fully adapted to the integrand.
 
     **Weighted Average:** The final result, 1.0015 ± 0.0091, 
     is obtained from a weighted
-    average of the separate results from each iteration. 
+    average of the separate results from each iteration:
+    estimates are weighted by the inverse variance, thereby giving
+    much less weight to the early iterations, where the errors are
+    largest.
     The individual estimates are statistical: each
     is a random number drawn from a distribution whose mean
     equals the correct value of the integral, and the errors 
@@ -174,7 +177,7 @@ There are several things to note here:
 
 
     ``integ(f...)`` returns a weighted-average object,
-    of type :class:`vegas.RWAvg`, that has the following 
+    of type :class:`vegas.RAvg`, that has the following 
     attributes:
 
       ``result.mean`` --- weighted average of all estimates of the integral;
@@ -266,7 +269,7 @@ There are several things to note here:
     (which falls as ``sqrt(1/nitn)``) will no longer
     mask the systematic error (which is unaffected by ``nitn``). 
     The systematic error for the integral
-    above (with ``neval=1000``) is about -0.00073(7), which 
+    above (with ``neval=1000``) is about -0.0008(1), which 
     is negligible compared to the statistical error unless
     ``nitn`` is of order 1500 or larger --- so systematic errors
     aren't a problem with ``nitn=10``.
@@ -425,13 +428,46 @@ There are several things to note here:
     In general, we want ``alpha`` to be large enough so that |vegas| adapts
     quickly to the integrand, but not so large that it has difficulty 
     holding on to the optimal tuning once it has found it. The best value
-    depends upon the integrand. Adaptation can be turned off completely
-    by setting parameter ``adapt=False``: e.g., ::
+    depends upon the integrand. 
+
+    **adapt=False:** Adaptation can be turned off completely
+    by setting parameter ``adapt=False``. There are three reasons one
+    might do this. The first is if |vegas| is exhibiting the 
+    kind of instability discussed in the previous section --- one might
+    use the following code, instead of that presented there::
 
         ...
         integ(f_sph, nitn=10, neval=1000, alpha=0.1)
         result = integ(f_sph, nitn=10, neval=1000, adapt=False)  
         ...
+
+    The second reason is that |vegas| runs slightly faster when it is 
+    no longer adapting to the integrand. The difference is not signficant
+    for complicated integrands, but is noticable in simpler cases.
+
+    The third reason for turning off adaptation is that |vegas| uses
+    unweighted averages, rather than weighted averages, to combine 
+    results from different iterations when ``adapt=False``. 
+    Unweighted averages are not biased. They have no systematic error
+    of the sort discussed above, and so give correct results even 
+    for very large numbers of iterations, ``nitn``. 
+
+    The lack of systematic biases is *not* a strong reason for turning
+    off adaptation, however, since the biases are 
+    usually negligible. Also, again,
+    errors tend to fall faster if the number of evaluations per iteration
+    ``neval`` is increased rather than the number of iterations. Finally
+    in practice it is difficult to know precisely when |vegas| is 
+    finished adapting. One often finds (modest) continued improvement after 
+    the training step, leading to more accurate final results.
+
+    Training the integrator and then setting ``adapt=False`` for the 
+    final results works best if the number of evaluations per iteration
+    (``neval``) is the same in both steps. This is because the second
+    of |vegas|'s adaptation strategies (adaptive stratified sampling) is
+    usually reinitialized when ``neval`` changes, and so is not 
+    used at all when ``neval`` is changed at the same time ``adapt=False``
+    is set.
 
 Multiple Integrands Simultaneously
 -----------------------------------

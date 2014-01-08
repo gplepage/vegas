@@ -19,6 +19,9 @@ from numpy.testing import assert_allclose as np_assert_allclose
 import unittest
 import warnings
 
+if have_gvar:
+    import gvar as gv
+
 class TestAdaptiveMap(unittest.TestCase):
     def setUp(self):
         pass
@@ -160,7 +163,7 @@ class TestAdaptiveMap(unittest.TestCase):
             [[0, 2. * 2.**(-0.5), 2.], [0, 4. * 2**(-1./3.), 4.]]
             )
 
-class TestRWAvg(unittest.TestCase):
+class TestRAvg(unittest.TestCase):
     def setUp(self):
         pass 
 
@@ -169,7 +172,7 @@ class TestRWAvg(unittest.TestCase):
 
     def test_all(self):
         " RWavg "
-        a = RWAvg()
+        a = RAvg()
         a.add(gvar.gvar(1, 1))
         a.add(gvar.gvar(2, 2))
         a.add(gvar.gvar(3, 3))
@@ -189,9 +192,84 @@ class TestRWAvg(unittest.TestCase):
             ]
         self.assertEqual(a.summary(), '\n'.join(s))
     
+    def test_ravg_wgtd(self):
+        " weighted RAvg "
+        if not have_gvar:
+            return
+        mean = np.random.uniform(-10., 10.)
+        xbig = gv.gvar(mean, 1.)
+        xsmall = gv.gvar(mean, 0.1)
+        ravg = RAvg()
+        N = 30
+        for i in range(N):
+            ravg.add(gv.gvar(xbig(), xbig.sdev))
+            ravg.add(gv.gvar(xsmall(), xsmall.sdev))
+        np_assert_allclose(
+            ravg.sdev, 1/ (N * ( 1. / xbig.var + 1. / xsmall.var)) ** 0.5 
+            )
+        self.assertLess(abs(ravg.mean - mean), 5 * ravg.sdev)
+        self.assertGreater(ravg.Q, 1e-3)
+        self.assertEqual(ravg.dof, 2 * N - 1)
+
+    def test_ravg_unwgtd(self):
+        " unweighted RAvg "
+        if not have_gvar:
+            return
+        mean = np.random.uniform(-10., 10.)
+        x = gv.gvar(mean, 0.1)
+        ravg = RAvg(weighted=False)
+        N = 30
+        for i in range(N):
+            ravg.add(gv.gvar(x(), x.sdev))
+        np_assert_allclose( ravg.sdev, x.sdev / (N ** 0.5))
+        self.assertLess(abs(ravg.mean - mean), 5 * ravg.sdev)
+        self.assertGreater(ravg.Q, 1e-3)
+        self.assertEqual(ravg.dof, N - 1)
+
+    def test_ravgarray_wgtd(self):
+        " weighted RAvgArray "
+        if not have_gvar:
+            return
+        mean = np.random.uniform(-10., 10., (2,))
+        cov = np.array([[1., 0.5], [0.5, 2.]])
+        invcov = np.linalg.inv(cov)
+        N = 30
+        xbig = gv.gvar(mean, cov)
+        rbig = gv.raniter(xbig, N)
+        xsmall = gv.gvar(mean, cov / 10.)
+        rsmall = gv.raniter(xsmall, N)
+        ravg = RAvgArray(2)
+        for rb, rs in zip(rbig, rsmall):
+            ravg.add(gv.gvar(rb, cov))
+            ravg.add(gv.gvar(rs, cov / 10.))
+        np_assert_allclose(gv.evalcov(ravg), cov / (10. + 1.) / N)
+        for i in range(2):
+            self.assertLess(abs(mean[i] - ravg[i].mean), 5 * ravg[i].sdev)
+        self.assertEqual(ravg.dof, 4 * N - 2)
+        self.assertGreater(ravg.Q, 1e-3)
+
+    def test_ravgarray_unwgtd(self):
+        " unweighted RAvgArray "
+        if not have_gvar:
+            return
+        gv.ranseed((1,2))
+        mean = np.random.uniform(-10., 10., (2,))
+        cov = np.array([[1., 0.5], [0.5, 2.]]) / 10.
+        N = 30
+        x = gv.gvar(mean, cov)
+        r = gv.raniter(x, N)
+        ravg = RAvgArray(2, weighted=False)
+        for ri in r: 
+            ravg.add(gv.gvar(ri, cov))
+        np_assert_allclose(gv.evalcov(ravg), cov / N)
+        for i in range(2):
+            self.assertLess(abs(mean[i] - ravg[i].mean), 5 * ravg[i].sdev)
+        self.assertEqual(ravg.dof, 2 * N - 2)
+        self.assertGreater(ravg.Q, 1e-3)
+
     def test_array(self):
-        " RWAvgArray "
-        a = RWAvgArray((2,))
+        " RAvgArray "
+        a = RAvgArray((2,))
         a.add([gvar.gvar(1, 1), gvar.gvar(10,10)])
         a.add([gvar.gvar(2, 2), gvar.gvar(20,20)])
         a.add([gvar.gvar(3, 3), gvar.gvar(30,30)])
@@ -219,6 +297,13 @@ class TestIntegrator(unittest.TestCase):
 
     def tearDown(self):
         pass 
+
+    def test_have_gvar(self):
+        " have gvar module? "
+        if not have_gvar:
+            warnings.warn(
+                "no gvar module -- for better results try: pip install gvar"
+                )
 
     def test_init(self):
         " Integrator "
@@ -315,21 +400,21 @@ class TestIntegrator(unittest.TestCase):
                 self.assertEqual(getattr(I,k), new_defaults[k])
 
     def test_volume(self):
-        " integrate constant "
+        " integrate constants "
         def f(x):
             return 2.
         I = Integrator([[-1, 1], [0, 4]])
         r = I(f)
         np_assert_allclose(r.mean, 16, rtol=1e-6)
         self.assertTrue(r.sdev < 1e-6)
-        # def f(x):                         # doesn't always work;
-        #     return [1., 2.]               # problem is the svd cut
-        # I = Integrator([[-1, 1], [0, 4]]) # which can't diagnose
-        # r = I(f)                          # the issue correctly
-        # np_assert_allclose(r[0].mean, 8, rtol=5e-2)
-        # self.assertTrue(r[0].sdev < 1e-6)
-        # np_assert_allclose(r[1].mean, 16, rtol=5e-2)
-        # self.assertTrue(r[1].sdev < 1e-6)
+        def f(x):                         
+            return [-1., 2.]               
+        I = Integrator([[-1, 1], [0, 4]]) 
+        r = I(f)                          
+        np_assert_allclose(r[0].mean, -8, rtol=5e-2)
+        self.assertTrue(r[0].sdev < 1e-6)
+        np_assert_allclose(r[1].mean, 16, rtol=5e-2)
+        self.assertTrue(r[1].sdev < 1e-6)
 
     def test_scalar(self):
         " integrate scalar fcn "
@@ -498,11 +583,7 @@ class TestIntegrator(unittest.TestCase):
                 ratio = r[1] / r[0]
                 self.assertLess(abs(ratio.mean - 0.5), 5 * ratio.sdev)
                 self.assertLess(ratio.sdev, 1e-2)
-        else:
-            warnings.warn(
-                "no gvar module -- for better results try: pip install gvar"
-                )
-
+                
     def test_adaptive(self):
         " adaptive? "
         def f(x): 
@@ -520,7 +601,7 @@ class TestIntegrator(unittest.TestCase):
 
 
 class Testgvar(unittest.TestCase):
-    """ tests gvar and GVar since might be the vegas substitutes if no lsqfit """
+    """ tests gvar and GVar since might be the vegas substitutes if no gvar """
     def setUp(self):
         pass
 

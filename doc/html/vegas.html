@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vegas Module &mdash; vegas 2.0.1+ documentation</title>
+    <title>vegas Module &mdash; vegas 2.1 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '2.0.1+',
+        VERSION:     '2.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.0.1+ documentation" href="index.html" />
+    <link rel="top" title="vegas 2.1 documentation" href="index.html" />
     <link rel="prev" title="How vegas Works" href="background.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -47,7 +47,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.0.1+ documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -68,13 +68,13 @@ operator. These contain information about the integration volume,
 but also about optimal remappings of the integration variables based
 upon the last integral evaluated using the object.</li>
 <li><a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><tt class="xref py py-class docutils literal"><span class="pre">vegas.AdaptiveMap</span></tt></a> &#8212; an object describing the remappings used by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>.</li>
-<li><a class="reference internal" href="#vegas.RWAvg" title="vegas.RWAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RWAvg</span></tt></a> &#8212; an object describing the result of a <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> integration.
+<li><a class="reference internal" href="#vegas.RAvg" title="vegas.RAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RAvg</span></tt></a> &#8212; an object describing the result of a <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> integration.
 <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> returns the weighted average of the integral estimates
-from each <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> iteration as an object of class <a class="reference internal" href="#vegas.RWAvg" title="vegas.RWAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RWAvg</span></tt></a>. These are
+from each <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> iteration as an object of class <a class="reference internal" href="#vegas.RAvg" title="vegas.RAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RAvg</span></tt></a>. These are
 Gaussian random variables &#8212; that is, they have a
 mean and a standard deviation &#8212; but also contain information about the
 iterations <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> used in generating the result.</li>
-<li><a class="reference internal" href="#vegas.RWAvgArray" title="vegas.RWAvgArray"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RWAvgArray</span></tt></a> &#8212; an array version of <a class="reference internal" href="#vegas.RWAvg" title="vegas.RWAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RWAvg</span></tt></a> used when
+<li><a class="reference internal" href="#vegas.RAvgArray" title="vegas.RAvgArray"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RAvgArray</span></tt></a> &#8212; an array version of <a class="reference internal" href="#vegas.RAvg" title="vegas.RAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RAvg</span></tt></a> used when
 the integrand is array-valued.</li>
 </ul>
 </div></blockquote>
@@ -102,7 +102,7 @@ typically improve in accuracy until the integrator has fully
 adapted. The integrator returns the weighted average of all
 <tt class="docutils literal"><span class="pre">nitn</span></tt> estimates, together with an estimate of the statistical
 (Monte Carlo) uncertainty in that estimate of the integral. The
-result is an object of type <a class="reference internal" href="#vegas.RWAvg" title="vegas.RWAvg"><tt class="xref py py-class docutils literal"><span class="pre">RWAvg</span></tt></a> (which is derived
+result is an object of type <a class="reference internal" href="#vegas.RAvg" title="vegas.RAvg"><tt class="xref py py-class docutils literal"><span class="pre">RAvg</span></tt></a> (which is derived
 from <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>).</p>
 <p>Integrands can be array-valued, in which case <tt class="docutils literal"><span class="pre">f(x)</span></tt> 
 returns an array of values corresponding to different 
@@ -164,6 +164,13 @@ variables). Smaller values limit the amount of
 redistribution. The theoretically optimal value is 1;
 setting <tt class="docutils literal"><span class="pre">beta=0</span></tt> prevents any redistribution of 
 evaluations. The default value is 0.75.</li>
+<li><strong>adapt</strong> (<em>bool</em>) &#8211; Setting <tt class="docutils literal"><span class="pre">adapt=False</span></tt> prevents further 
+adaptation by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>. Typically this would be done 
+after training the <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> on an integrand, in order
+to stabilize the integral estimates. <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses 
+unweighted averages to combine results from different 
+iterations when <tt class="docutils literal"><span class="pre">adapt=False</span></tt>. The default setting 
+is <tt class="docutils literal"><span class="pre">adapt=True</span></tt>.</li>
 <li><strong>nhcube_vec</strong> (<em>positive int</em>) &#8211; The number of hypercubes (in y space)
 whose integration points are combined into a single
 vector to be passed to the integrand, all together,
@@ -498,24 +505,24 @@ is clear from the output:</p>
     grid[ 1] = [ 0.   0.2  0.4  0.6  0.8  1. ]
 
 iteration 0:
-    grid[ 0] = [ 0.     0.395  0.601  0.747  0.878  1.   ]
-    grid[ 1] = [ 0.     0.504  0.683  0.812  0.906  1.   ]
+    grid[ 0] = [ 0.     0.412  0.62   0.76   0.883  1.   ]
+    grid[ 1] = [ 0.     0.506  0.691  0.821  0.91   1.   ]
 
 iteration 1:
-    grid[ 0] = [ 0.     0.408  0.614  0.761  0.888  1.   ]
-    grid[ 1] = [ 0.     0.535  0.716  0.833  0.921  1.   ]
+    grid[ 0] = [ 0.     0.428  0.63   0.772  0.893  1.   ]
+    grid[ 1] = [ 0.     0.531  0.713  0.832  0.921  1.   ]
 
 iteration 2:
-    grid[ 0] = [ 0.     0.409  0.616  0.762  0.89   1.   ]
-    grid[ 1] = [ 0.     0.535  0.716  0.833  0.922  1.   ]
+    grid[ 0] = [ 0.     0.433  0.63   0.772  0.894  1.   ]
+    grid[ 1] = [ 0.     0.533  0.714  0.831  0.922  1.   ]
 
 iteration 3:
-    grid[ 0] = [ 0.     0.41   0.616  0.762  0.891  1.   ]
-    grid[ 1] = [ 0.     0.535  0.716  0.833  0.923  1.   ]
+    grid[ 0] = [ 0.     0.435  0.631  0.772  0.894  1.   ]
+    grid[ 1] = [ 0.     0.533  0.715  0.831  0.923  1.   ]
 
 iteration 4:
-    grid[ 0] = [ 0.     0.41   0.616  0.763  0.891  1.   ]
-    grid[ 1] = [ 0.     0.536  0.716  0.833  0.923  1.   ]
+    grid[ 0] = [ 0.     0.436  0.631  0.772  0.895  1.   ]
+    grid[ 1] = [ 0.     0.533  0.715  0.831  0.924  1.   ]
 
 </pre>
 </div>
@@ -791,108 +798,114 @@ in the map grid for each direction. Parameter
 <div class="section" id="other-objects-and-functions">
 <h2>Other Objects and Functions<a class="headerlink" href="#other-objects-and-functions" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="vegas.RWAvg">
-<em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">RWAvg</tt><a class="headerlink" href="#vegas.RWAvg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Running weighted average of Monte Carlo estimates.</p>
+<dt id="vegas.RAvg">
+<em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">RAvg</tt><a class="headerlink" href="#vegas.RAvg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Running average of Monte Carlo estimates.</p>
 <p>This class accumulates independent Monte Carlo 
 estimates (e.g., of an integral) and combines 
-them into a single weighted average. It 
+them into a single average. It 
 is derived from <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt> (from 
 the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module if it is present) and 
 represents a Gaussian random variable.</p>
+<p>Different estimates are weighted by their
+inverse variances if parameter <tt class="docutils literal"><span class="pre">weight=True</span></tt>;
+otherwise straight, unweighted averages are used.</p>
 <dl class="attribute">
-<dt id="vegas.RWAvg.mean">
-<tt class="descname">mean</tt><a class="headerlink" href="#vegas.RWAvg.mean" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvg.mean">
+<tt class="descname">mean</tt><a class="headerlink" href="#vegas.RAvg.mean" title="Permalink to this definition">¶</a></dt>
 <dd><p>The mean value of the weighted average.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="vegas.RWAvg.sdev">
-<tt class="descname">sdev</tt><a class="headerlink" href="#vegas.RWAvg.sdev" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvg.sdev">
+<tt class="descname">sdev</tt><a class="headerlink" href="#vegas.RAvg.sdev" title="Permalink to this definition">¶</a></dt>
 <dd><p>The standard deviation of the weighted average.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="vegas.RWAvg.chi2">
-<tt class="descname">chi2</tt><a class="headerlink" href="#vegas.RWAvg.chi2" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvg.chi2">
+<tt class="descname">chi2</tt><a class="headerlink" href="#vegas.RAvg.chi2" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>chi**2</em> of weighted average.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="vegas.RWAvg.dof">
-<tt class="descname">dof</tt><a class="headerlink" href="#vegas.RWAvg.dof" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvg.dof">
+<tt class="descname">dof</tt><a class="headerlink" href="#vegas.RAvg.dof" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of degrees of freedom in weighted average.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="vegas.RWAvg.Q">
-<tt class="descname">Q</tt><a class="headerlink" href="#vegas.RWAvg.Q" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvg.Q">
+<tt class="descname">Q</tt><a class="headerlink" href="#vegas.RAvg.Q" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Q</em> or <em>p-value</em> of weighted average&#8217;s <em>chi**2</em>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="vegas.RWAvg.itn_results">
-<tt class="descname">itn_results</tt><a class="headerlink" href="#vegas.RWAvg.itn_results" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvg.itn_results">
+<tt class="descname">itn_results</tt><a class="headerlink" href="#vegas.RAvg.itn_results" title="Permalink to this definition">¶</a></dt>
 <dd><p>A list of the results from each iteration.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="vegas.RWAvg.add">
-<tt class="descname">add</tt><big>(</big><em>g</em><big>)</big><a class="headerlink" href="#vegas.RWAvg.add" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvg.add">
+<tt class="descname">add</tt><big>(</big><em>g</em><big>)</big><a class="headerlink" href="#vegas.RAvg.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add estimate <tt class="docutils literal"><span class="pre">g</span></tt> to the running average.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="vegas.RWAvg.summary">
-<tt class="descname">summary</tt><big>(</big><big>)</big><a class="headerlink" href="#vegas.RWAvg.summary" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvg.summary">
+<tt class="descname">summary</tt><big>(</big><big>)</big><a class="headerlink" href="#vegas.RAvg.summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assemble summary of independent results into a string.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="vegas.RWAvgArray">
-<em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">RWAvgArray</tt><a class="headerlink" href="#vegas.RWAvgArray" title="Permalink to this definition">¶</a></dt>
-<dd><p>Running weighted average of array-valued Monte Carlo estimates.</p>
+<dt id="vegas.RAvgArray">
+<em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">RAvgArray</tt><a class="headerlink" href="#vegas.RAvgArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Running average of array-valued Monte Carlo estimates.</p>
 <p>This class accumulates independent arrays of Monte Carlo 
 estimates (e.g., of an integral) and combines 
-them into an array of weighted averages. It 
+them into an array of averages. It 
 is derived from <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt>. The array
 elements are <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s (from the <tt class="docutils literal"><span class="pre">gvar</span></tt> module if
 present) and represent Gaussian random variables.</p>
+<p>Different estimates are weighted by their
+inverse covariance matrices if parameter <tt class="docutils literal"><span class="pre">weight=True</span></tt>;
+otherwise straight, unweighted averages are used.</p>
 <dl class="attribute">
-<dt id="vegas.RWAvgArray.chi2">
-<tt class="descname">chi2</tt><a class="headerlink" href="#vegas.RWAvgArray.chi2" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvgArray.chi2">
+<tt class="descname">chi2</tt><a class="headerlink" href="#vegas.RAvgArray.chi2" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>chi**2</em> of weighted average.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="vegas.RWAvgArray.dof">
-<tt class="descname">dof</tt><a class="headerlink" href="#vegas.RWAvgArray.dof" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvgArray.dof">
+<tt class="descname">dof</tt><a class="headerlink" href="#vegas.RAvgArray.dof" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of degrees of freedom in weighted average.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="vegas.RWAvgArray.Q">
-<tt class="descname">Q</tt><a class="headerlink" href="#vegas.RWAvgArray.Q" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvgArray.Q">
+<tt class="descname">Q</tt><a class="headerlink" href="#vegas.RAvgArray.Q" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Q</em> or <em>p-value</em> of weighted average&#8217;s <em>chi**2</em>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="vegas.RWAvgArray.itn_results">
-<tt class="descname">itn_results</tt><a class="headerlink" href="#vegas.RWAvgArray.itn_results" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvgArray.itn_results">
+<tt class="descname">itn_results</tt><a class="headerlink" href="#vegas.RAvgArray.itn_results" title="Permalink to this definition">¶</a></dt>
 <dd><p>A list of the results from each iteration.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="vegas.RWAvgArray.add">
-<tt class="descname">add</tt><big>(</big><em>g</em><big>)</big><a class="headerlink" href="#vegas.RWAvgArray.add" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvgArray.add">
+<tt class="descname">add</tt><big>(</big><em>g</em><big>)</big><a class="headerlink" href="#vegas.RAvgArray.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add estimate <tt class="docutils literal"><span class="pre">g</span></tt> to the running average.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="vegas.RWAvgArray.summary">
-<tt class="descname">summary</tt><big>(</big><big>)</big><a class="headerlink" href="#vegas.RWAvgArray.summary" title="Permalink to this definition">¶</a></dt>
+<dt id="vegas.RAvgArray.summary">
+<tt class="descname">summary</tt><big>(</big><big>)</big><a class="headerlink" href="#vegas.RAvgArray.summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assemble summary of independent results into a string.</p>
 </dd></dl>
 
@@ -989,7 +1002,7 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.0.1+ documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
