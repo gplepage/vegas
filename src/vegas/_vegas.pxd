@@ -14,9 +14,11 @@
 ctypedef long INT_TYPE
 ctypedef ssize_t INTP_TYPE
 
-cdef class VecIntegrand:
+cdef class BatchIntegrand:
     cdef readonly object fcntype
     cdef public object fcn
+
+VecIntegrand = BatchIntegrand
 
 cdef class AdaptiveMap:
     # first index is direction, second is increment
@@ -32,7 +34,7 @@ cdef class Integrator:
     # inputs
     cdef readonly INT_TYPE neval
     cdef readonly INT_TYPE[::1] neval_hcube_range
-    cdef readonly INT_TYPE nhcube_vec
+    cdef readonly INT_TYPE nhcube_batch
     cdef readonly INT_TYPE maxinc_axis
     cdef readonly INT_TYPE max_nhcube
     cdef readonly INT_TYPE max_neval_hcube

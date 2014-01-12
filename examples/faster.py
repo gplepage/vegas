@@ -3,7 +3,7 @@ Three Gaussians spread along the diagonal of a  six-dimensional hypercube.
 
 This coding style for the integrand is more complicated than slow.py but
 leads to run times that are 20x shorter because the integrand is expressed
-in terms of numpy vectors and vector operations, thereby greatly reducing
+in terms of numpy arrays and whole-array operations, thereby greatly reducing
 the overhead from Python. 
 
 Compare performance with slow.py and fastest.py.
@@ -17,7 +17,7 @@ import numpy as np
 np.random.seed((1,2))   # causes reproducible random numbers
 
 
-class f_vec(vegas.VecIntegrand):
+class f_batch(vegas.BatchIntegrand):
     def __init__(self, dim):
         self.dim = dim
         self.norm_ac = 1. / 0.17720931990702889842 ** dim
@@ -33,9 +33,6 @@ class f_vec(vegas.VecIntegrand):
         dx2c = 0
         for d in range(self.dim):
             dx2c += (x[:, d] - 0.75) ** 2 
-        # make sure answer is copied into f (as opposed to
-        #    reassigning f to new space containing the answer
-        #    ---  so f[:] = ..., not f = ...)
         return (
             np.exp(- 100. * dx2a) * self.norm_ac
             + np.exp(-100. * dx2b) * self.norm_b
@@ -44,10 +41,10 @@ class f_vec(vegas.VecIntegrand):
 
 def main():
     # create integrand
-    f = f_vec(dim=6)
+    f = f_batch(dim=6)
 
-    # increase vector size (using nhcube_vec) to improve efficiency
-    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_vec=2000)
+    # increase batch size (using nhcube_batch) to improve efficiency
+    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_batch=2000)
     
     # adapt the grid; discard these results
     integ(f, neval=25000, nitn=10)

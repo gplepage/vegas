@@ -8,8 +8,12 @@ from __future__ import print_function   # makes this work for python2 and 3
 import vegas
 import math
 import numpy
+import sys
 
-SHOW_GRID = True   # display picture of grid
+if sys.argv[1:]:
+    SHOW_GRID = eval(sys.argv[1])   # display picture of grid ?
+else: 
+    SHOW_GRID = True
 
 def f(x):
     dx2 = 0

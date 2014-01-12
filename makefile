@@ -48,7 +48,10 @@ tests:
 	$(PYTHON) -m unittest discover
 
 run-examples:
-	$(MAKE) -C examples PYTHON=$(PYTHON) run
+	$(MAKE) -C examples PYTHON=$(PYTHON) PLOT=True run
+
+time:
+	time $(MAKE) -C examples PYTHON=$(PYTHON) PLOT=False run
 
 upload-pypi:
 	# python setup.py register   # used first time only

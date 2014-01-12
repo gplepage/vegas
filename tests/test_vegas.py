@@ -322,7 +322,7 @@ class TestIntegrator(unittest.TestCase):
             '    234 (max) integrand evaluations in each of 123 iterations',
             '    number of:  strata/axis = 7  increments/axis = 21',
             '                h-cubes = 49  evaluations/h-cube = 2 (min)',
-            '                h-cubes/vector = 1000',
+            '                h-cubes/batch = 1000',
             '    minimize_mem = False',           
             '    adapt_to_errors = False',
             '    damping parameters: alpha = 0.5  beta= 0.75',
@@ -341,7 +341,7 @@ class TestIntegrator(unittest.TestCase):
             '    1000 (max) integrand evaluations in each of 10 iterations',
             '    number of:  strata/axis = 15  increments/axis = 90',
             '                h-cubes = 225  evaluations/h-cube = 2 (min)',
-            '                h-cubes/vector = 1000',
+            '                h-cubes/batch = 1000',
             '    minimize_mem = True',
             '    adapt_to_errors = False',
             '    damping parameters: alpha = 0.5  beta= 0.75',
@@ -375,7 +375,7 @@ class TestIntegrator(unittest.TestCase):
             map=AdaptiveMap([[1,2],[0,1]]),
             neval=100,       # number of evaluations per iteration
             maxinc_axis=100,  # number of adaptive-map increments per axis
-            nhcube_vec=10,    # number of h-cubes per vector
+            nhcube_batch=10,    # number of h-cubes per batch
             max_nhcube=5e2,    # max number of h-cubes
             max_neval_hcube=1e1, # max number of evaluations per h-cube
             nitn=100,           # number of iterations
@@ -425,9 +425,9 @@ class TestIntegrator(unittest.TestCase):
         self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
         self.assertGreater(r.Q, 1e-3)
 
-    def test_vector(self):
-        " integrate vector fcn "
-        class f_vec(VecIntegrand):
+    def test_batch(self):
+        " integrate batch fcn "
+        class f_batch(BatchIntegrand):
             def __call__(self, x):
                 f = np.empty(x.shape[0], float)
                 for i in range(f.shape[0]):
@@ -436,14 +436,14 @@ class TestIntegrator(unittest.TestCase):
                         ) / math.pi ** 2
                 return f
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
-        r = I(f_vec(), neval=10000)
+        r = I(f_batch(), neval=10000)
         self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
         self.assertGreater(r.Q, 1e-3)
         self.assertLess(r.sdev, 1e-3)
 
     def test_min_sigf(self):
         " test minimize_mem=True mode "
-        class f_vec(VecIntegrand):
+        class f_batch(BatchIntegrand):
             def __call__(self, x):
                 f = np.empty(x.shape[0], float)
                 for i in range(f.shape[0]):
@@ -456,7 +456,7 @@ class TestIntegrator(unittest.TestCase):
             [-math.pi/2., math.pi/2.]],
             minimize_mem=True,
             )
-        r = I(f_vec(), neval=10000)
+        r = I(f_batch(), neval=10000)
         self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.sdev < 1e-3)
@@ -469,19 +469,19 @@ class TestIntegrator(unittest.TestCase):
         with self.assertRaises(ZeroDivisionError):
             I(f, neval=100)
 
-    def test_vector_exception(self):
-        " integrate vector fcn "
-        class f_vec(VecIntegrand):
+    def test_batch_exception(self):
+        " integrate batch fcn "
+        class f_batch(BatchIntegrand):
             def __call__(self, x):
                 f = 1/0.
                 return (np.sin(x[:, 0]) ** 2 + np.cos(x[:, 1]) ** 2) / f
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
         with self.assertRaises(ZeroDivisionError):
-            I(f_vec(), neval=100)
+            I(f_batch(), neval=100)
 
-    def test_vector_b0(self):
-        " integrate vector fcn beta=0 "
-        class f_vec(VecIntegrand):
+    def test_batch_b0(self):
+        " integrate batch fcn beta=0 "
+        class f_batch(BatchIntegrand):
             def __call__(self, x):
                 return (np.sin(x[:, 0]) ** 2 + np.cos(x[:, 1]) ** 2) / math.pi ** 2
                 # for i in range(nx):
@@ -489,7 +489,7 @@ class TestIntegrator(unittest.TestCase):
                 #         math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
                 #         ) / math.pi ** 2
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]], beta=0.0)
-        r = I(f_vec(), neval=10000)
+        r = I(f_batch(), neval=10000)
         self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.sdev < 1e-3)
@@ -521,8 +521,8 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.sdev < 1e-3)
 
-    def test_random_vec(self):
-        " random_vec "
+    def test_random_batch(self):
+        " random_batch "
         def f(x):
             dx2 = 0.
             for d in range(4):
@@ -537,7 +537,7 @@ class TestIntegrator(unittest.TestCase):
         warmup = integ(f, nitn=10, neval=1000)
         result = integ(f, nitn=1, neval=1000, adapt=False)
         integral = 0.0
-        for x, wgt in integ.random_vec():
+        for x, wgt in integ.random_batch():
             integral += wgt.dot(fv(x))
         self.assertLess(abs(result.mean-integral), 5 * result.sdev)
 
@@ -566,7 +566,7 @@ class TestIntegrator(unittest.TestCase):
                 dx2 += (x[d] - 0.5) ** 2
             f = math.exp(-100. * dx2)
             return [f, f * x[0]]
-        class f_multi_v(VecIntegrand):
+        class f_multi_v(BatchIntegrand):
             def __call__(self, x):
                 x = np.asarray(x)
                 f = np.empty((x.shape[0], 2), float)

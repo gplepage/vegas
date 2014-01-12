@@ -52,6 +52,8 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from ._vegas import RAvg, RAvgArray, AdaptiveMap, Integrator, VecIntegrand
-from ._vegas import reporter, gvar, have_gvar, vecintegrand
+from ._vegas import RAvg, RAvgArray, AdaptiveMap, Integrator, BatchIntegrand
+from ._vegas import reporter, gvar, have_gvar, batchintegrand
 from ._version import version as __version__
+# legacy names:
+from ._vegas import vecintegrand, VecIntegrand

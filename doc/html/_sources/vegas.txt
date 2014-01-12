@@ -55,7 +55,7 @@ The central component of the |vegas| package is the integrator class:
 
     .. automethod:: random(yield_hcube=False, yield_y=False)
 
-    .. automethod:: random_vec(yield_hcube=False, yield_y=False)
+    .. automethod:: random_batch(yield_hcube=False, yield_y=False)
 
 
 AdaptiveMap Objects
@@ -226,7 +226,7 @@ Other Objects and Functions
 
    .. automethod:: summary()
 
-.. autofunction:: vegas.vecintegrand
+.. autofunction:: vegas.batchintegrand
 
-.. autoclass:: vegas.VecIntegrand
+.. autoclass:: vegas.BatchIntegrand
 

@@ -32,11 +32,15 @@ import pyximport; pyximport.install()   # compiles path_integrand.pyx
 import vegas
 import numpy as np 
 import math
+import sys
 from path_integrand import Oscillator
 
 DO_WAVEFUNCTIONS = True
 
-SHOW_PLOT = True   # plot wavefunction ** 2
+if sys.argv[1:]:
+    SHOW_PLOT = eval(sys.argv[1])   # display picture of grid ?
+else: 
+    SHOW_PLOT = True
 
 def main():
     # seed random numbers so reproducible

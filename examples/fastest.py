@@ -8,10 +8,9 @@ Run times are 20x shorter than slow.py.
 Runtime is about the same for faster.py and fastest.py. This is because
 the cost of evaluating the integrand is almost negligible in both 
 cases; most of the time is taken by the Integrator as it generates
-random points and adapts the grid. The integrand itself is more than
-twice as fast in Cython compared with the numpy vectorized integrand.
-Also it does not have to be expressed in terms of vectors in Cython,
-which gives considerably more flexibility.
+random points and adapts the grid. The integrand by itself is more than
+twice as fast in Cython compared with the numpy-vectorized integrand 
+(in faster.py), and also much more flexible.
 """
 from __future__ import print_function   # makes this work for python2 and 3
 

@@ -454,7 +454,7 @@ There are several things to note here:
 
     The lack of systematic biases is *not* a strong reason for turning
     off adaptation, however, since the biases are 
-    usually negligible. Also, again,
+    usually negligible (see above). Also, again,
     errors tend to fall faster if the number of evaluations per iteration
     ``neval`` is increased rather than the number of iterations. Finally
     in practice it is difficult to know precisely when |vegas| is 
@@ -581,9 +581,8 @@ enough for problems where ``neval=1e3`` or ``neval=1e4`` gives
 enough precision. Some problems, however, require
 hundreds of thousands or millions of function evaluations, or more.
 
-The cost of evaluating the integrand can be reduced significantly
-by vectorizing it, if possible. For example,
-replacing ::
+We can significantly reduce the cost of evaluating the integrand
+by using |vegas|'s batch mode. For example, replacing ::
 
     import vegas
     import math
@@ -610,7 +609,7 @@ by ::
     import vegas
     import numpy as np
 
-    class f_vector(vegas.VecIntegrand):
+    class f_batch(vegas.BatchIntegrand):
         def __init__(self, dim):
             self.dim = dim
             self.norm = 1013.2118364296088 ** (dim / 4.)
@@ -622,27 +621,31 @@ by ::
                 dx2 += (x[:, d] - 0.5) ** 2
             return np.exp(-100. * dx2) * self.norm
 
-    f = f_vector(dim=4)
-    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_vec=1000)
+    f = f_batch(dim=4)
+    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_batch=1000)
 
     integ(f, nitn=10, neval=200000)
     result = integ(f, nitn=10, neval=200000)
     print('result = %s   Q = %.2f' % (result, result.Q))
 
-reduces the cost of the integral by about an order of magnitude. 
-An instance of class ``f_vector`` behaves like a function of
+reduces the cost of the integral by almost an order of magnitude. 
+Internally |vegas| processes integration points in batches, where 
+parameter ``nhcube_batch`` determines the number of points per
+batch (typically 1000s). 
+In batch mode, |vegas| presents all of the integration points
+from a batch together, in a single array, to the integrand
+function, rather than offering them one at a time. Here, for example,
+an instance ``f`` of class ``f_batch`` behaves like a function ``f(x)`` of
 an array of integration points --- ``x[i, d]`` where ``i=0...``
 labels the integration point and ``d=0...`` the direction --- and
-returns an array of integrand values corresponding these points.
+returns an array of integrand values corresponding  to these points.
 
-We derive class ``f_vector`` from :class:`vegas.VecIntegrand` to 
+We derive class ``f_batch`` from :class:`vegas.BatchIntegrand` to 
 signal to |vegas| that it should present integration points in 
-batches to the integrand function. Parameter ``nhcube_vec`` tells
-|vegas| how many hypercubes to put in a batch (or vector); the bigger 
-this parameter is, the larger the batches. 
+batches to the integrand function. 
 
-An alternative to deriving from :class:`vegas.VecIntegrand` is 
-to apply the :func:`vegas.vecintegrand` decorator to a (vectorized)
+An alternative to deriving from :class:`vegas.BatchIntegrand` is 
+to apply the :func:`vegas.batchintegrand` decorator to a batch
 function for the integrand: e.g., ::
 
     import vegas
@@ -651,7 +654,7 @@ function for the integrand: e.g., ::
     dim = 4
     norm = 1013.2118364296088 ** (dim / 4.)
 
-    @vegas.vecintegrand
+    @vegas.batchintegrand
     def f(x):
         # evaluate integrand at multiple points simultaneously
         dx2 = 0.0
@@ -659,7 +662,7 @@ function for the integrand: e.g., ::
             dx2 += (x[:, d] - 0.5) ** 2
         return np.exp(-100. * dx2) * norm
 
-    integ = vegas.Integrator(dim * [[0, 1]], nhcube_vec=1000)
+    integ = vegas.Integrator(dim * [[0, 1]], nhcube_batch=1000)
 
     integ(f, nitn=10, neval=200000)
     result = integ(f, nitn=10, neval=200000)
@@ -667,20 +670,19 @@ function for the integrand: e.g., ::
 
 
 
-Not every problem is easy to
-vectorize. The fastest option when vectorization is complicated (and actually
-in every case) is to write the integrand in Cython, which
+This batch integrand is fast because it is expressed in terms
+:mod:`numpy` operators that act on entire arrays. That is unnecessary
+(and the result is faster) if we write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
-of this code, which we put in a separate file we
-call ``cython_integrand.pyx``, is::
+of this code is::
 
-    cimport vegas                   # for VecIntegrand
+    cimport vegas                   # for BatchIntegrand
     from libc.math cimport exp      # use exp() from C library
 
     import vegas
     import numpy
 
-    cdef class f_cython(vegas.VecIntegrand):
+    cdef class f_cython(vegas.BatchIntegrand):
         cdef double norm
         cdef readonly int dim
 
@@ -699,7 +701,8 @@ call ``cython_integrand.pyx``, is::
                 f[i] = exp(-100. * dx2) * self.norm
             return f
 
-The main code is then ::
+We put this in a separate file called, say, 
+``cython_integrand.pyx``, and rewrite the main code as::
 
     import pyximport; pyximport.install()
 
@@ -707,18 +710,18 @@ The main code is then ::
     from cython_integrand import f_cython
 
     f = f_cython(dim=4)
-    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_vec=1000)
+    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_batch=1000)
 
     integ(f, nitn=10, neval=200000)
     result = integ(f, nitn=10, neval=200000)
     print('result = %s   Q = %.2f' % (result, result.Q))
 
-where the first line (``import pyximport; ...``) causes the Cython
+The first line (``import pyximport; ...``) causes the Cython
 module ``cython_integrand.pyx`` to be compiled the first time
 it is called. The compiled code is stored and used in subsequent 
 calls, so compilation occurs only once.
 
-Vectorization is also a good idea for array-valued integrands. 
+Batch mode is also a good idea for array-valued integrands. 
 The code from the previous section could have been written as::
 
     import vegas
@@ -727,7 +730,7 @@ The code from the previous section could have been written as::
 
     dim = 4
 
-    @vegas.vecintegrand
+    @vegas.batchintegrand
     def f(x):
         ans = np.empty((x.shape[0], 3), float)
         dx2 = 0.0
@@ -754,7 +757,7 @@ The code from the previous section could have been written as::
         )
     print('\ncorrelation matrix:\n', gv.evalcorr(result))
 
-Note that the vectorized index (here ``:``) always comes first.
+Note that the batch index (here ``:``) always comes first.
 
 Cython code can also link easily to compiled C or Fortran code, 
 so integrands written in these languages can be used as well (and
@@ -768,7 +771,7 @@ distribution that is optimized as it adapts to an integrand. It is
 possible to access integration points
 generated by |vegas|, together with
 the weights they carry in an integral, using the iterators
-:meth:`vegas.Iterator.random` and :meth:`vegas.Iterator.random_vec`.
+:meth:`vegas.Iterator.random` and :meth:`vegas.Iterator.random_batch`.
 For example, ::
 
     integ = vegas.iterator(...)
@@ -778,7 +781,7 @@ For example, ::
     for itn in range(10):
         # estimate integral of f()
         integral = 0.0
-        for x, wgt in integ.random_vec():
+        for x, wgt in integ.random_batch():
             for i in range(x.shape[0]):
                 integral += f(x[i, :]) * wgt[i]
         results.append(integral)
@@ -793,7 +796,7 @@ access is used inside |vegas|'s main integration loop.
 Implementation Notes
 ---------------------
 This implementation relies upon Cython for its speed and
-numpy for vector processing. It also uses matplotlib
+numpy for array processing. It also uses matplotlib
 for graphics, but graphics is optional. 
 
 |vegas| also uses the :mod:`gvar` module from the :mod:`lsqfit` 

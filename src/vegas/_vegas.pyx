@@ -459,8 +459,8 @@ class RAvgArray(numpy.ndarray):
 
     def _inv(self, matrix):
         " Invert matrix, with protection against singular matrices. "
-        if True:
-            return numpy.linalg.inv(matrix)
+        # if True:
+        #     return numpy.linalg.inv(matrix)
         if not have_gvar:
             return numpy.linalg.pinv(matrix, rcond=sys.float_info.epsilon * 10)
         svd = gvar.SVD(matrix, svdcut=sys.float_info.epsilon * 10, rescale=True)
@@ -1127,8 +1127,9 @@ cdef class Integrator(object):
     Integrands can be array-valued, in which case ``f(x)`` 
     returns an array of values corresponding to different 
     integrands. Also |vegas| can generate integration points
-    in batches (vectors) for integrands built from classes
-    derived from :class:`vegas.VecIntegrand`. Vectorized 
+    in batches for integrands built from classes
+    derived from :class:`vegas.BatchIntegrand`, or integrand
+    functions decorated by :func:`vegas.batchintegrand`. Batch 
     integrands are typically much faster, especially if they
     are coded in Cython.
 
@@ -1194,14 +1195,14 @@ cdef class Integrator(object):
         iterations when ``adapt=False``. The default setting 
         is ``adapt=True``.
     :type adapt: bool
-    :param nhcube_vec: The number of hypercubes (in |y| space)
+    :param nhcube_batch: The number of hypercubes (in |y| space)
         whose integration points are combined into a single
-        vector to be passed to the integrand, all together,
-        when using |vegas| in vector mode.
+        batch to be passed to the integrand, all together,
+        when using |vegas| in batch mode.
         The default value is 1000. Larger values may be
         lead to faster evaluations, but at the cost of 
         more memory for internal work arrays.
-    :type nhcube_vec: positive int 
+    :type nhcube_batch: positive int 
     :param minimize_mem: When ``True``, |vegas| minimizes 
         internal workspace at the cost of extra evaluations of
         the integrand. This can increase execution time by 
@@ -1287,7 +1288,7 @@ cdef class Integrator(object):
         map=None,
         neval=1000,       # number of evaluations per iteration
         maxinc_axis=1000,  # number of adaptive-map increments per axis
-        nhcube_vec=1000,    # number of h-cubes per vector
+        nhcube_batch=1000,    # number of h-cubes per batch
         max_nhcube=1e9,    # max number of h-cubes
         max_neval_hcube=1e7, # max number of evaluations per h-cube
         nitn=10,           # number of iterations
@@ -1358,15 +1359,19 @@ cdef class Integrator(object):
             if k == 'map':
                 old_val[k] = self.map
                 self.map = AdaptiveMap(kargs[k])
+            elif k == 'nhcube_vec':
+                # old name --- here for legacy reasons
+                old_val['nhcube_batch'] = self.nhcube_batch
+                self.nhcube_batch = kargs[k]
             elif k == 'neval':
                 old_val[k] = self.neval
                 self.neval = kargs[k]
             elif k == 'maxinc_axis':
                 old_val[k] = self.maxinc_axis
                 self.maxinc_axis = kargs[k]
-            elif k == 'nhcube_vec':
-                old_val[k] = self.nhcube_vec
-                self.nhcube_vec = kargs[k]
+            elif k == 'nhcube_batch':
+                old_val[k] = self.nhcube_batch
+                self.nhcube_batch = kargs[k]
             elif k == 'max_nhcube':
                 old_val[k] = self.max_nhcube
                 self.max_nhcube = kargs[k]
@@ -1448,9 +1453,9 @@ cdef class Integrator(object):
         # the Integrator so that the storage is held between
         # iterations, thereby minimizing the amount of allocating
         # that goes on
-        neval_vec = self.nhcube_vec * self.min_neval_hcube
+        neval_batch = self.nhcube_batch * self.min_neval_hcube
         nsigf = (
-            self.nhcube_vec if self.minimize_mem else
+            self.nhcube_batch if self.minimize_mem else
             self.nhcube
             )
         if self.beta > 0 and len(self.sigf) != nsigf:
@@ -1461,12 +1466,12 @@ cdef class Integrator(object):
                 self.sigf = numpy.ones(nsigf, float)
                 self.sum_sigf = nsigf
         self.neval_hcube = (
-            numpy.zeros(self.nhcube_vec, int) + self.min_neval_hcube 
+            numpy.zeros(self.nhcube_batch, int) + self.min_neval_hcube 
             )
-        self.y = numpy.empty((neval_vec, self.dim), float)
-        self.x = numpy.empty((neval_vec, self.dim), float)
-        self.jac = numpy.empty(neval_vec, float)
-        self.fdv2 = numpy.empty(neval_vec, float)
+        self.y = numpy.empty((neval_batch, self.dim), float)
+        self.x = numpy.empty((neval_batch, self.dim), float)
+        self.jac = numpy.empty(neval_batch, float)
+        self.fdv2 = numpy.empty(neval_batch, float)
         return old_val
 
     def settings(Integrator self not None, ngrid=0):
@@ -1507,7 +1512,7 @@ cdef class Integrator(object):
                     "                h-cubes = %d  evaluations/h-cube = %d\n"
                     % (nhcube, self.min_neval_hcube)
                     )
-        ans += "                h-cubes/vector = %d\n" % self.nhcube_vec
+        ans += "                h-cubes/batch = %d\n" % self.nhcube_batch
         ans = ans + (
             "    minimize_mem = %s\n" 
             % ('True' if self.minimize_mem else 'False') 
@@ -1535,27 +1540,27 @@ cdef class Integrator(object):
         return ans
 
     def _fill_sigf(
-        Integrator self not None, fcn,  INT_TYPE hcube_base, INT_TYPE nhcube_vec
+        Integrator self not None, fcn,  INT_TYPE hcube_base, INT_TYPE nhcube_batch
         ):
         cdef INT_TYPE i_start
         cdef INT_TYPE ihcube, hcube, tmp_hcube
         cdef INT_TYPE[::1] y0 = numpy.empty(self.dim, int)
         cdef INT_TYPE i, d
         cdef INT_TYPE neval_hcube = self.min_neval_hcube
-        cdef INT_TYPE neval_vec = nhcube_vec * neval_hcube
+        cdef INT_TYPE neval_batch = nhcube_batch * neval_hcube
         cdef double[:, ::1] yran = numpy.random.uniform(
-            0., 1., (neval_vec, self.dim)
+            0., 1., (neval_batch, self.dim)
             )
         cdef double dv_y = (1./self.nstrat) ** self.dim
         cdef double sum_fdv, sum_fdv2, sigf2, fdv
         cdef numpy.ndarray[numpy.double_t, ndim=1] fx
-        cdef double[:, ::1] y = self.y[:neval_vec, :]
-        cdef double[:, ::1] x = self.x[:neval_vec, :]
-        cdef double[::1] jac = self.jac[:neval_vec]
+        cdef double[:, ::1] y = self.y[:neval_batch, :]
+        cdef double[:, ::1] x = self.x[:neval_batch, :]
+        cdef double[::1] jac = self.jac[:neval_batch]
         cdef double[::1] sigf = self.sigf
         # generate random points
         i_start = 0
-        for ihcube in range(nhcube_vec):
+        for ihcube in range(nhcube_batch):
             hcube = hcube_base + ihcube
             tmp_hcube = hcube
             for d in range(self.dim):
@@ -1565,12 +1570,12 @@ cdef class Integrator(object):
                 for i in range(i_start, i_start + neval_hcube):
                     y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
             i_start += neval_hcube
-        self.map.map(y, x, jac, neval_vec)
+        self.map.map(y, x, jac, neval_batch)
         fx = fcn.ref_f(numpy.asarray(x))
 
         # accumulate sigf for each h-cube
         i_start = 0
-        for ihcube in range(nhcube_vec):
+        for ihcube in range(nhcube_batch):
             sum_fdv = 0.0
             sum_fdv2 = 0.0
             for i in range(i_start, i_start + neval_hcube):
@@ -1581,7 +1586,7 @@ cdef class Integrator(object):
             sigf2 = abs(sum_fdv2 / neval_hcube - mean * mean)
             sigf[ihcube] = sigf2 ** (self.beta / 2.)
 
-    def random_vec(
+    def random_batch(
         Integrator self not None, 
         bint yield_hcube=False,
         bint yield_y=False,
@@ -1593,17 +1598,17 @@ cdef class Integrator(object):
         points from |vegas|, and their corresponding weights in an 
         integral. The points are provided in arrays ``x[i, d]`` where 
         ``i=0...`` labels the integration points in a batch 
-        (or vector) and ``d=0...`` labels direction. The corresponding
+        and ``d=0...`` labels direction. The corresponding
         weights assigned by |vegas| to each point are provided
         in an array ``wgt[i]``. 
 
         Given an |Integrator| ``integ``, presumably trained on some
         integrand, the following code would create a Monte Carlo
         estimate of the integral of a possibly different 
-        (vector) integrand ``f(x)``::
+        (batch) integrand ``f(x)``::
 
             integral = 0.0
-            for x, wgt in integ.random_vec():
+            for x, wgt in integ.random_batch():
                 f_array = f(x)
                 integral += wgt.dot(f_array)
 
@@ -1611,7 +1616,7 @@ cdef class Integrator(object):
         to the integrand values for points ``x[i, d]``. The points and
         weights yielded by the iterator are :mod:`numpy` arrays.
 
-        ``integ.random_vec(yield_hcube=True)`` will yield the 
+        ``integ.random_batch(yield_hcube=True)`` will yield the 
         integration points ``x[i, d]``, the corresponding weights ``wgt[i]``, 
         and the corresponding indices ``hcube[i]`` of the |y|-space hypercubes 
         containing the  points (hypercubes are indexed by consecutive 
@@ -1620,7 +1625,7 @@ cdef class Integrator(object):
 
             integral = 0.0
             variance = 0.0
-            for x, wgt, hcube in integ.random_vec(yield_hcube=True):
+            for x, wgt, hcube in integ.random_batch(yield_hcube=True):
                 wgt_fx = wgt * f(x)
                 # iterate over hypercubes: compute variance for each,
                 # and accumulate for final result
@@ -1637,10 +1642,10 @@ cdef class Integrator(object):
         """
         cdef INT_TYPE nhcube = self.nstrat ** self.dim 
         cdef double dv_y = 1. / nhcube
-        cdef INT_TYPE nhcube_vec = min(self.nhcube_vec, nhcube)
-        cdef INT_TYPE neval_vec
+        cdef INT_TYPE nhcube_batch = min(self.nhcube_batch, nhcube)
+        cdef INT_TYPE neval_batch
         cdef INT_TYPE hcube_base 
-        cdef INT_TYPE i_start, ihcube, i, d
+        cdef INT_TYPE i_start, ihcube, i, d, tmp_hcube, hcube
         cdef INT_TYPE[::1] hcube_array
         cdef double neval_sigf = (
             self.neval / 2. / self.sum_sigf 
@@ -1658,21 +1663,21 @@ cdef class Integrator(object):
         self.neval_hcube_range = numpy.zeros(2, int) + self.min_neval_hcube        
         if yield_hcube:
             hcube_array = numpy.empty(self.y.shape[0], int)
-        for hcube_base in range(0, nhcube, nhcube_vec):
-            if (hcube_base + nhcube_vec) > nhcube:
-                nhcube_vec = nhcube - hcube_base 
+        for hcube_base in range(0, nhcube, nhcube_batch):
+            if (hcube_base + nhcube_batch) > nhcube:
+                nhcube_batch = nhcube - hcube_base 
 
             # determine number of evaluations per h-cube
             if self.beta > 0:
                 if self.minimize_mem:
                     self._fill_sigf(
-                        fcn=fcn, hcube_base=hcube_base, nhcube_vec=nhcube_vec,
+                        fcn=fcn, hcube_base=hcube_base, nhcube_batch=nhcube_batch,
                         )
                     sigf = self.sigf
                 else:
                     sigf = self.sigf[hcube_base:]
-                neval_vec = 0
-                for ihcube in range(nhcube_vec):
+                neval_batch = 0
+                for ihcube in range(nhcube_batch):
                     neval_hcube[ihcube] = <int> (sigf[ihcube] * neval_sigf)
                     if neval_hcube[ihcube] < self.min_neval_hcube:
                         neval_hcube[ihcube] = self.min_neval_hcube
@@ -1682,30 +1687,30 @@ cdef class Integrator(object):
                         self.neval_hcube_range[0] = neval_hcube[ihcube]
                     elif neval_hcube[ihcube] > self.neval_hcube_range[1]:
                         self.neval_hcube_range[1] = neval_hcube[ihcube]
-                    neval_vec += neval_hcube[ihcube]
+                    neval_batch += neval_hcube[ihcube]
             else:
                 neval_hcube[:] = self.min_neval_hcube
-                neval_vec = nhcube_vec * self.min_neval_hcube
-            self.last_neval += neval_vec
+                neval_batch = nhcube_batch * self.min_neval_hcube
+            self.last_neval += neval_batch
 
             # resize work arrays if needed
-            if neval_vec > self.y.shape[0]:
-                self.y = numpy.empty((neval_vec, self.dim), float)
-                self.x = numpy.empty((neval_vec, self.dim), float)
-                self.jac = numpy.empty(neval_vec, float)
-                self.fdv2 = numpy.empty(neval_vec, float)
+            if neval_batch > self.y.shape[0]:
+                self.y = numpy.empty((neval_batch, self.dim), float)
+                self.x = numpy.empty((neval_batch, self.dim), float)
+                self.jac = numpy.empty(neval_batch, float)
+                self.fdv2 = numpy.empty(neval_batch, float)
             y = self.y 
             x = self.x 
             jac = self.jac 
 
-            # self._resize_workareas(neval_vec)
-            if yield_hcube and neval_vec > hcube_array.shape[0]:
-                hcube_array = numpy.empty(neval_vec, int)
+            # self._resize_workareas(neval_batch)
+            if yield_hcube and neval_batch > hcube_array.shape[0]:
+                hcube_array = numpy.empty(neval_batch, int)
 
             # generate random points
-            yran = numpy.random.uniform(0., 1., (neval_vec, self.dim))
+            yran = numpy.random.uniform(0., 1., (neval_batch, self.dim))
             i_start = 0
-            for ihcube in range(nhcube_vec):
+            for ihcube in range(nhcube_batch):
                 hcube = hcube_base + ihcube
                 tmp_hcube = hcube
                 for d in range(self.dim):
@@ -1715,23 +1720,26 @@ cdef class Integrator(object):
                     for i in range(i_start, i_start + neval_hcube[ihcube]):
                         y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
                 i_start += neval_hcube[ihcube]
-            self.map.map(y, x, jac, neval_vec)
+            self.map.map(y, x, jac, neval_batch)
             
             # compute weights and yield answers
             i_start = 0
-            for ihcube in range(nhcube_vec):
+            for ihcube in range(nhcube_batch):
                 for i in range(i_start, i_start + neval_hcube[ihcube]):
                     jac[i] *= dv_y / neval_hcube[ihcube]
                     if yield_hcube:
                         hcube_array[i] = hcube_base + ihcube
                 i_start += neval_hcube[ihcube]
-            answer = (numpy.asarray(x[:neval_vec, :]),)
+            answer = (numpy.asarray(x[:neval_batch, :]),)
             if yield_y:
-                answer += (numpy.asarray(y[:neval_vec, :]),)
-            answer += (numpy.asarray(jac[:neval_vec]),)
+                answer += (numpy.asarray(y[:neval_batch, :]),)
+            answer += (numpy.asarray(jac[:neval_batch]),)
             if yield_hcube:
-                answer += (numpy.asarray(hcube_array[:neval_vec]),)
+                answer += (numpy.asarray(hcube_array[:neval_batch]),)
             yield answer
+
+    # old name --- for legacy code
+    random_vec = random_batch
 
     def random(
         Integrator self not None, bint yield_hcube=False, bint yield_y=False
@@ -1765,19 +1773,19 @@ cdef class Integrator(object):
         cdef double[:, ::1] y
         cdef INT_TYPE i
         if yield_hcube and yield_y:
-            for x, y, wgt, hcube in self.random_vec(yield_hcube=True, yield_y=True):
+            for x, y, wgt, hcube in self.random_batch(yield_hcube=True, yield_y=True):
                 for i in range(x.shape[0]):
                     yield (x[i], y[i], wgt[i], hcube[i])
         elif yield_y:
-            for x, y, wgt in self.random_vec(yield_y=True):
+            for x, y, wgt in self.random_batch(yield_y=True):
                 for i in range(x.shape[0]):
                     yield (x[i], y[i], wgt[i])
         elif yield_hcube:
-            for x, wgt, hcube in self.random_vec(yield_hcube=True):
+            for x, wgt, hcube in self.random_batch(yield_hcube=True):
                 for i in range(x.shape[0]):
                     yield (x[i], wgt[i], hcube[i])
         else:
-            for x,wgt in self.random_vec():
+            for x,wgt in self.random_batch():
                 for i in range(x.shape[0]):
                     yield (x[i], wgt[i])
 
@@ -1803,37 +1811,31 @@ cdef class Integrator(object):
         substantial reductions in the errors for ratios or 
         differences of the results.
 
-        It is usually much faster to use |vegas| in vector
+        It is usually much faster to use |vegas| in batch
         mode, where integration points are presented to the 
-        integrand in batches or vectors. Integrands for use in
-        vector mode are objects of classes derived from
-        :class:`vegas.VecIntegrand`: e.g., ::
+        integrand in batches. A simple batch integrand might
+        be, for example::
 
-            class vecf(vegas.VecIntegrand):
-                def __call__(self, x):
-                    return x[:, 0] ** 2 + x[:, 1] ** 4
+            @vegas.batchintegrand 
+            def f(x):
+                return x[:, 0] ** 2 + x[:, 1] ** 4
 
-        ``vecf()`` would be the integrand. Here ``x[i, d]`` 
+        where decorator ``@vegas.batchintegrand`` tells 
+        |vegas| that the integrand processes integration
+        points in batches. The array ``x[i, d]`` 
         represents a collection of different integration 
         points labeled by ``i=0...``. (The number is controlled
-        |Integrator| parameter ``nhcube_vec``.) The vector index 
+        |Integrator| parameter ``nhcube_batch``.) The batch index 
         is always first.
 
-        An array-valued integrand for vector mode would be 
-        an object of a type like: e.g., ::
-
-                class vecf(vegas.VecIntegrand):
-                def __call__(self, x):
-                    f = numpy.empty((x.shape[0], 2), float)
-                    f[:, 0] = x[:, 0] ** 2 
-                    f[:, 1] = x[:, 0] / x[:, 1]
-                    return f
+        Batch integrands can also be constructed from classes 
+        derived from :class:`vegas.BatchIntegrand`.
     
-        Vector mode is particularly useful when the class 
-        derived from :class:`vegas.VecIntegrand` is coded 
+        Batch mode is particularly useful (and fast) when the class 
+        derived from :class:`vegas.BatchIntegrand` is coded 
         in Cython. Then loops over the integration points
         can be coded explicitly, avoiding the need to use
-        :mod:`numpy`'s vector operators if they are not 
+        :mod:`numpy`'s whole-array operators if they are not 
         well suited to the integrand.
 
         Any |vegas| parameter can also be reset: e.g., 
@@ -1853,21 +1855,21 @@ cdef class Integrator(object):
         cdef double[:, ::1] sum_wf2 
         cdef double[::1] mean 
         cdef double[:, ::1] var 
-        cdef INT_TYPE itn, i, j, s, t, ns, neval, neval_vec
+        cdef INT_TYPE itn, i, j, s, t, ns, neval, neval_batch
         cdef bint firstpass = True
         cdef double sum_sigf, sigf2
 
         if kargs:
             self.set(kargs)
         
-        if isinstance(fcn, type(VecIntegrand)):
+        if isinstance(fcn, type(BatchIntegrand)):
             raise ValueError(
                 'integrand given is a class, not an object -- need parentheses?'
                 )
 
         fcntype = getattr(fcn, 'fcntype', 'scalar')
         if fcntype == 'scalar':
-            fcn = _VecIntegrand_from_NonVector(fcn)
+            fcn = _BatchIntegrand_from_NonBatch(fcn)
         
         sigf = self.sigf
         for itn in range(self.nitn):
@@ -1879,8 +1881,8 @@ cdef class Integrator(object):
                 var[:, :] = 0.0
             sum_sigf = 0.0
 
-            # iterate vector-slices of integration points
-            for x, y, wgt, hcube in self.random_vec(
+            # iterate batch-slices of integration points
+            for x, y, wgt, hcube in self.random_batch(
                 yield_hcube=True, yield_y=True, fcn=fcn
                 ):
                 fdv2 = self.fdv2        # must be inside loop
@@ -2001,17 +2003,17 @@ class reporter:
 ################
 # Classes for standarizing the interface for integrands.
 
-cdef class _VecIntegrand_from_NonVector:
+cdef class _BatchIntegrand_from_NonBatch:
     cdef object fcn
     cdef object fcntype
     cdef object shape
-    """ Vectorized integrand from non-vectorized integrand. 
+    """ Batch integrand from non-batch integrand. 
 
     This class is used internally by |vegas|. 
     """
     def __init__(self, fcn):
         self.fcn = fcn
-        self.fcntype = 'vector'
+        self.fcntype = 'batch'
         self.shape = None
 
     def ref_f(self, x):
@@ -2032,13 +2034,13 @@ cdef class _VecIntegrand_from_NonVector:
             f[i] = self.fcn(x[i, :])
         return f
 
-# preferred base class for vectorized integrands
-# vectorized integrands are typically faster
-# der
-cdef class VecIntegrand:
-    """ Base class for classes providing vectorized integrands.
+# preferred base class for batch integrands
+# batch integrands are typically faster
+# 
+cdef class BatchIntegrand:
+    """ Base class for classes providing batch integrands.
 
-    A class derived from :class:`vegas.VecInterand` will normally
+    A class derived from :class:`vegas.BatchIntegrand` will normally
     provide a ``__call__(self, x)`` method that returns an 
     array ``f`` where:
 
@@ -2053,14 +2055,27 @@ cdef class VecIntegrand:
         for multiple integrands (i.e., an 
         array-valued integrand).
 
-    Deriving from :class:`vegas.VecIntegrand` is the 
+    An example is ::
+
+        import vegas 
+        import numpy as np 
+        
+        class batchf(vegas.BatchIntegrand):
+            def __call__(x):
+                return np.exp(-x[:, 0] - x[:, 1])
+
+        f = batchf()      # the integrand
+
+    for the two-dimensional integrand :math:`\exp(-x_0 - x_1)`.
+
+    Deriving from :class:`vegas.BatchIntegrand` is the 
     easiest way to construct integrands in Cython, and
     gives the fastest results.
     """
     # cdef object fcntype
     # cdef public object fcn
     def __cinit__(self, *args, **kargs):
-        self.fcntype = 'vector'
+        self.fcntype = 'batch'
         self.fcn = None
     def ref_f(self, x):
         cdef numpy.ndarray fx = numpy.asarray(self(x))
@@ -2076,10 +2091,10 @@ cdef class VecIntegrand:
             return self.fcn(x)
         
 
-def vecintegrand(f):
-    """ Decorator for vector-mode integrand functions.
+def batchintegrand(f):
+    """ Decorator for batch integrand functions.
 
-    Applying :func:`vegas.vecintegrand` to a function ``fcn`` repackages
+    Applying :func:`vegas.batchintegrand` to a function ``fcn`` repackages
     the function in a format that |vegas| can understand. Appropriate 
     functions take a :mod:`numpy` array of integration points ``x[i, d]`` 
     as an argument, where ``i=0...`` labels the integration point and 
@@ -2088,14 +2103,27 @@ def vecintegrand(f):
     points. The meaning of ``fcn(x)`` is unchanged by the decorator, but 
     the type of ``fcn`` is changed.
 
+    An example is ::
+
+        import vegas 
+        import numpy as np 
+
+        @vegas.batchintegrand
+        def f(x):
+            return np.exp(-x[:, 0] - x[:, 1])
+
+    for the two-dimensional integrand :math:`\exp(-x_0 - x_1)`.
+
     This decorator provides an alternative to deriving an integrand
-    class from :class:`vegas.VecIntegrand`.
+    class from :class:`vegas.BatchIntegrand`.
     """
-    ans = VecIntegrand()
+    ans = BatchIntegrand()
     ans.fcn = f
     return ans
 
-
+# legacy names
+VecIntegrand = BatchIntegrand
+vecintegrand = batchintegrand
 
 
 

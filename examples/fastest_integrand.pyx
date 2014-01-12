@@ -3,8 +3,8 @@
 Cython code for the integrator used in fastest.py.      
 
 Note that this achieves better performance than the integrand in faster.py
-without the  complication of vectorization. Some problems do not vectorize
-well at all.  
+without the  complication of using numpy vectorization. 
+Some problems are not so simply coded using whole-array operators.
 """
 
 # import Cython description of vegas (to derive from vegas.VecIntegrand)
@@ -18,7 +18,7 @@ import vegas
 import math
 
 
-cdef class f_cython(vegas.VecIntegrand):
+cdef class f_cython(vegas.BatchIntegrand):
     cdef readonly int dim 
     cdef double norm_ac 
     cdef double norm_b

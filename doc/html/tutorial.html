@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; vegas 2.1 documentation</title>
+    <title>Tutorial &mdash; vegas 2.1.2 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '2.1',
+        VERSION:     '2.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.1 documentation" href="index.html" />
+    <link rel="top" title="vegas 2.1.2 documentation" href="index.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -51,7 +51,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -545,7 +545,7 @@ of the sort discussed above, and so give correct results even
 for very large numbers of iterations, <tt class="docutils literal"><span class="pre">nitn</span></tt>.</p>
 <p>The lack of systematic biases is <em>not</em> a strong reason for turning
 off adaptation, however, since the biases are
-usually negligible. Also, again,
+usually negligible (see above). Also, again,
 errors tend to fall faster if the number of evaluations per iteration
 <tt class="docutils literal"><span class="pre">neval</span></tt> is increased rather than the number of iterations. Finally
 in practice it is difficult to know precisely when <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> is
@@ -672,9 +672,8 @@ points. Integrands written in pure Python are probably fast
 enough for problems where <tt class="docutils literal"><span class="pre">neval=1e3</span></tt> or <tt class="docutils literal"><span class="pre">neval=1e4</span></tt> gives
 enough precision. Some problems, however, require
 hundreds of thousands or millions of function evaluations, or more.</p>
-<p>The cost of evaluating the integrand can be reduced significantly
-by vectorizing it, if possible. For example,
-replacing</p>
+<p>We can significantly reduce the cost of evaluating the integrand
+by using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>&#8216;s batch mode. For example, replacing</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">math</span>
 
@@ -698,7 +697,7 @@ replacing</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
-<span class="k">class</span> <span class="nc">f_vector</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">VecIntegrand</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">f_batch</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">BatchIntegrand</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span>
@@ -710,26 +709,30 @@ replacing</p>
             <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span>
 
-<span class="n">f</span> <span class="o">=</span> <span class="n">f_vector</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_vec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">f_batch</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_batch</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
 <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">   Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>reduces the cost of the integral by about an order of magnitude.
-An instance of class <tt class="docutils literal"><span class="pre">f_vector</span></tt> behaves like a function of
+<p>reduces the cost of the integral by almost an order of magnitude.
+Internally <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> processes integration points in batches, where
+parameter <tt class="docutils literal"><span class="pre">nhcube_batch</span></tt> determines the number of points per
+batch (typically 1000s).
+In batch mode, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> presents all of the integration points
+from a batch together, in a single array, to the integrand
+function, rather than offering them one at a time. Here, for example,
+an instance <tt class="docutils literal"><span class="pre">f</span></tt> of class <tt class="docutils literal"><span class="pre">f_batch</span></tt> behaves like a function <tt class="docutils literal"><span class="pre">f(x)</span></tt> of
 an array of integration points &#8212; <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> where <tt class="docutils literal"><span class="pre">i=0...</span></tt>
 labels the integration point and <tt class="docutils literal"><span class="pre">d=0...</span></tt> the direction &#8212; and
-returns an array of integrand values corresponding these points.</p>
-<p>We derive class <tt class="docutils literal"><span class="pre">f_vector</span></tt> from <a class="reference internal" href="vegas.html#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.VecIntegrand</span></tt></a> to
+returns an array of integrand values corresponding  to these points.</p>
+<p>We derive class <tt class="docutils literal"><span class="pre">f_batch</span></tt> from <a class="reference internal" href="vegas.html#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.BatchIntegrand</span></tt></a> to
 signal to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> that it should present integration points in
-batches to the integrand function. Parameter <tt class="docutils literal"><span class="pre">nhcube_vec</span></tt> tells
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> how many hypercubes to put in a batch (or vector); the bigger
-this parameter is, the larger the batches.</p>
-<p>An alternative to deriving from <a class="reference internal" href="vegas.html#vegas.VecIntegrand" title="vegas.VecIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.VecIntegrand</span></tt></a> is
-to apply the <a class="reference internal" href="vegas.html#vegas.vecintegrand" title="vegas.vecintegrand"><tt class="xref py py-func docutils literal"><span class="pre">vegas.vecintegrand()</span></tt></a> decorator to a (vectorized)
+batches to the integrand function.</p>
+<p>An alternative to deriving from <a class="reference internal" href="vegas.html#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.BatchIntegrand</span></tt></a> is
+to apply the <a class="reference internal" href="vegas.html#vegas.batchintegrand" title="vegas.batchintegrand"><tt class="xref py py-func docutils literal"><span class="pre">vegas.batchintegrand()</span></tt></a> decorator to a batch
 function for the integrand: e.g.,</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
@@ -737,7 +740,7 @@ function for the integrand: e.g.,</p>
 <span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
 <span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span>
 
-<span class="nd">@vegas.vecintegrand</span>
+<span class="nd">@vegas.batchintegrand</span>
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="c"># evaluate integrand at multiple points simultaneously</span>
     <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
@@ -745,26 +748,25 @@ function for the integrand: e.g.,</p>
         <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="n">norm</span>
 
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_vec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_batch</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
 <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">   Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Not every problem is easy to
-vectorize. The fastest option when vectorization is complicated (and actually
-in every case) is to write the integrand in Cython, which
+<p>This batch integrand is fast because it is expressed in terms
+<tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> operators that act on entire arrays. That is unnecessary
+(and the result is faster) if we write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
-of this code, which we put in a separate file we
-call <tt class="docutils literal"><span class="pre">cython_integrand.pyx</span></tt>, is:</p>
-<div class="highlight-python"><pre>cimport vegas                   # for VecIntegrand
+of this code is:</p>
+<div class="highlight-python"><pre>cimport vegas                   # for BatchIntegrand
 from libc.math cimport exp      # use exp() from C library
 
 import vegas
 import numpy
 
-cdef class f_cython(vegas.VecIntegrand):
+cdef class f_cython(vegas.BatchIntegrand):
     cdef double norm
     cdef readonly int dim
 
@@ -783,25 +785,26 @@ cdef class f_cython(vegas.VecIntegrand):
             f[i] = exp(-100. * dx2) * self.norm
         return f</pre>
 </div>
-<p>The main code is then</p>
+<p>We put this in a separate file called, say,
+<tt class="docutils literal"><span class="pre">cython_integrand.pyx</span></tt>, and rewrite the main code as:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyximport</span><span class="p">;</span> <span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>
 
 <span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">from</span> <span class="nn">cython_integrand</span> <span class="kn">import</span> <span class="n">f_cython</span>
 
 <span class="n">f</span> <span class="o">=</span> <span class="n">f_cython</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_vec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_batch</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
 <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">   Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>where the first line (<tt class="docutils literal"><span class="pre">import</span> <span class="pre">pyximport;</span> <span class="pre">...</span></tt>) causes the Cython
+<p>The first line (<tt class="docutils literal"><span class="pre">import</span> <span class="pre">pyximport;</span> <span class="pre">...</span></tt>) causes the Cython
 module <tt class="docutils literal"><span class="pre">cython_integrand.pyx</span></tt> to be compiled the first time
 it is called. The compiled code is stored and used in subsequent
 calls, so compilation occurs only once.</p>
-<p>Vectorization is also a good idea for array-valued integrands.
+<p>Batch mode is also a good idea for array-valued integrands.
 The code from the previous section could have been written as:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">gvar</span> <span class="kn">as</span> <span class="nn">gv</span>
@@ -809,7 +812,7 @@ The code from the previous section could have been written as:</p>
 
 <span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
 
-<span class="nd">@vegas.vecintegrand</span>
+<span class="nd">@vegas.batchintegrand</span>
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
     <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
@@ -837,7 +840,7 @@ The code from the previous section could have been written as:</p>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">correlation matrix:</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">gv</span><span class="o">.</span><span class="n">evalcorr</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Note that the vectorized index (here <tt class="docutils literal"><span class="pre">:</span></tt>) always comes first.</p>
+<p>Note that the batch index (here <tt class="docutils literal"><span class="pre">:</span></tt>) always comes first.</p>
 <p>Cython code can also link easily to compiled C or Fortran code,
 so integrands written in these languages can be used as well (and
 would be faster than pure Python).</p>
@@ -849,7 +852,7 @@ distribution that is optimized as it adapts to an integrand. It is
 possible to access integration points
 generated by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>, together with
 the weights they carry in an integral, using the iterators
-<tt class="xref py py-meth docutils literal"><span class="pre">vegas.Iterator.random()</span></tt> and <tt class="xref py py-meth docutils literal"><span class="pre">vegas.Iterator.random_vec()</span></tt>.
+<tt class="xref py py-meth docutils literal"><span class="pre">vegas.Iterator.random()</span></tt> and <tt class="xref py py-meth docutils literal"><span class="pre">vegas.Iterator.random_batch()</span></tt>.
 For example,</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">iterator</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="o">...</span>
@@ -858,7 +861,7 @@ For example,</p>
 <span class="k">for</span> <span class="n">itn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
     <span class="c"># estimate integral of f()</span>
     <span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_vec</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_batch</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
             <span class="n">integral</span> <span class="o">+=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span> <span class="o">*</span> <span class="n">wgt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
     <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">integral</span><span class="p">)</span>
@@ -873,7 +876,7 @@ access is used inside <a class="reference internal" href="vegas.html#module-vega
 <div class="section" id="implementation-notes">
 <h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h2>
 <p>This implementation relies upon Cython for its speed and
-numpy for vector processing. It also uses matplotlib
+numpy for array processing. It also uses matplotlib
 for graphics, but graphics is optional.</p>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> also uses the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module from the <tt class="xref py py-mod docutils literal"><span class="pre">lsqfit</span></tt>
 distribution if that package is installed (<tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">lsqfit</span></tt>
@@ -955,7 +958,7 @@ module is available.</p>
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

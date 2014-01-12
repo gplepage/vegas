@@ -1,3 +1,20 @@
+Version 2.1.2 - 2014-01-12
+============================
+Another very minor (backwards compatibile) modification. Internally vegas processes 
+integration points in batches. These were called vectors initially but this name
+has proven confusing, especially now that integrands can be array-valued.
+To remove the potential confusion, collections of integration points are 
+now called batches, and: VecIntegrand is now BatchIntegrand; vecintegrand is
+now batchintegrand; and nhcube_vec has become nhcube_batch. The old names 
+are still available, as aliases, to support legacy code.
+
+Version 2.1.1 - 2014-01-09
+==========================
+This is a very minor upgrade. Missed out a couple of variable declarations 
+in one of the cython routines that slowed the routine (and vegas) down
+significantly (eg, 20%) in some situations. These are now fixed. This 
+changes nothing other than the run time.
+
 Version 2.1 - 2014-01-08
 =========================
 vegas normally uses weighted averages to combine results from different 
