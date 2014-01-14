@@ -350,21 +350,20 @@ The default is 0.</td>
 <p>This method creates an iterator that returns integration
 points from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>, and their corresponding weights in an 
 integral. Each point <tt class="docutils literal"><span class="pre">x[d]</span></tt> is accompanied by the weight
-assigned to that point by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> when estimating an integral.</p>
-<p>Given an <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> <tt class="docutils literal"><span class="pre">integ</span></tt>, presumably trained on some
-integrand, the following code would create a Monte Carlo
-estimate of the integral of a possibly different integrand <tt class="docutils literal"><span class="pre">f(x)</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">():</span>
-    <span class="n">integral</span> <span class="o">+=</span> <span class="n">wgt</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-</pre></div>
+assigned to that point by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> when estimating an integral.
+Optionally it will also return the index of the hypercube 
+containing the integration point and/or the y-space 
+coordinates:</p>
+<div class="highlight-python"><pre>integ.random()  yields  x, wgt
+
+integ.random(yield_hcube=True) yields x, wgt, hcube 
+
+integ.random(yield_y=True) yields x, y, wgt
+
+integ.random(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube</pre>
 </div>
-<p>Here <tt class="docutils literal"><span class="pre">f(x)</span></tt> returns the integrand value for point <tt class="docutils literal"><span class="pre">x[d]</span></tt>.</p>
-<p><tt class="docutils literal"><span class="pre">integ.random(yield_hcube=True)</span></tt> will yield the 
-integration point <tt class="docutils literal"><span class="pre">x</span></tt>, the weight <tt class="docutils literal"><span class="pre">wgt</span></tt>, and the 
-index <tt class="docutils literal"><span class="pre">hcube</span></tt> of the y-space hypercube containing 
-this point (hypercubes are indexed by consecutive 
-integers, starting at 0).</p>
+<p>The number of integration points returned by the iterator 
+corresponds to a single iteration.</p>
 </dd></dl>
 
 <dl class="method">
@@ -378,43 +377,20 @@ integral. The points are provided in arrays <tt class="docutils literal"><span c
 and <tt class="docutils literal"><span class="pre">d=0...</span></tt> labels direction. The corresponding
 weights assigned by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to each point are provided
 in an array <tt class="docutils literal"><span class="pre">wgt[i]</span></tt>.</p>
-<p>Given an <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> <tt class="docutils literal"><span class="pre">integ</span></tt>, presumably trained on some
-integrand, the following code would create a Monte Carlo
-estimate of the integral of a possibly different 
-(batch) integrand <tt class="docutils literal"><span class="pre">f(x)</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_batch</span><span class="p">():</span>
-    <span class="n">f_array</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">integral</span> <span class="o">+=</span> <span class="n">wgt</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">f_array</span><span class="p">)</span>
-</pre></div>
+<p>Optionally the integrator will also return the indices of 
+the hypercubes containing the integration points and/or the y-space 
+coordinates of those points:</p>
+<div class="highlight-python"><pre>integ.random()  yields  x, wgt
+
+integ.random(yield_hcube=True) yields x, wgt, hcube 
+
+integ.random(yield_y=True) yields x, y, wgt
+
+integ.random(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube</pre>
 </div>
-<p>Here <tt class="docutils literal"><span class="pre">f(x)</span></tt> returns an array <tt class="docutils literal"><span class="pre">f_array[i]</span></tt> corresponding
-to the integrand values for points <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt>. The points and
-weights yielded by the iterator are <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> arrays.</p>
-<p><tt class="docutils literal"><span class="pre">integ.random_batch(yield_hcube=True)</span></tt> will yield the 
-integration points <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt>, the corresponding weights <tt class="docutils literal"><span class="pre">wgt[i]</span></tt>, 
-and the corresponding indices <tt class="docutils literal"><span class="pre">hcube[i]</span></tt> of the y-space hypercubes 
-containing the  points (hypercubes are indexed by consecutive 
-integers, starting at 0). This information makes it possible
-to estimate the variance of an integral estimate:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="n">variance</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_batch</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-    <span class="n">wgt_fx</span> <span class="o">=</span> <span class="n">wgt</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="c"># iterate over hypercubes: compute variance for each,</span>
-    <span class="c"># and accumulate for final result</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">hcube</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">hcube</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">hcube</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span>      <span class="c"># select array items for h-cube i</span>
-        <span class="n">nwf</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
-        <span class="n">wf</span> <span class="o">=</span> <span class="n">wgt_fx</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-        <span class="n">sum_wf</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">wf</span><span class="p">)</span>
-        <span class="n">sum_wf2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">wf</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">integral</span> <span class="o">+=</span> <span class="n">sum_wf</span>
-        <span class="n">variance</span> <span class="o">+=</span> <span class="p">(</span><span class="n">sum_wf2</span> <span class="o">*</span> <span class="n">nwf</span> <span class="o">-</span> <span class="n">sum_wf</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">nwf</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span>
-<span class="c"># answer = integral;   standard deviation = variance ** 0.5</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">gvar</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="n">integral</span><span class="p">,</span> <span class="n">variance</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span>
-</pre></div>
-</div>
+<p>The number of integration points returned by the iterator 
+corresponds to a single iteration. The number in a batch
+is controlled by parameter <tt class="docutils literal"><span class="pre">nhcube_batch</span></tt>.</p>
 </dd></dl>
 
 </dd></dl>

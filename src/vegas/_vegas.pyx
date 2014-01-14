@@ -1602,43 +1602,21 @@ cdef class Integrator(object):
         weights assigned by |vegas| to each point are provided
         in an array ``wgt[i]``. 
 
-        Given an |Integrator| ``integ``, presumably trained on some
-        integrand, the following code would create a Monte Carlo
-        estimate of the integral of a possibly different 
-        (batch) integrand ``f(x)``::
+        Optionally the integrator will also return the indices of 
+        the hypercubes containing the integration points and/or the |y|-space 
+        coordinates of those points::
 
-            integral = 0.0
-            for x, wgt in integ.random_batch():
-                f_array = f(x)
-                integral += wgt.dot(f_array)
+            integ.random()  yields  x, wgt
 
-        Here ``f(x)`` returns an array ``f_array[i]`` corresponding
-        to the integrand values for points ``x[i, d]``. The points and
-        weights yielded by the iterator are :mod:`numpy` arrays.
+            integ.random(yield_hcube=True) yields x, wgt, hcube 
 
-        ``integ.random_batch(yield_hcube=True)`` will yield the 
-        integration points ``x[i, d]``, the corresponding weights ``wgt[i]``, 
-        and the corresponding indices ``hcube[i]`` of the |y|-space hypercubes 
-        containing the  points (hypercubes are indexed by consecutive 
-        integers, starting at 0). This information makes it possible
-        to estimate the variance of an integral estimate::
+            integ.random(yield_y=True) yields x, y, wgt
 
-            integral = 0.0
-            variance = 0.0
-            for x, wgt, hcube in integ.random_batch(yield_hcube=True):
-                wgt_fx = wgt * f(x)
-                # iterate over hypercubes: compute variance for each,
-                # and accumulate for final result
-                for i in range(hcube[0], hcube[-1] + 1):
-                    idx = (hcube == i)      # select array items for h-cube i
-                    nwf = numpy.sum(idx)
-                    wf = wgt_fx[idx]
-                    sum_wf = numpy.sum(wf)
-                    sum_wf2 = numpy.sum(wf ** 2)
-                    integral += sum_wf
-                    variance += (sum_wf2 * nwf - sum_wf ** 2) / (nwf - 1.)
-            # answer = integral;   standard deviation = variance ** 0.5
-            result = gvar.gvar(integral, variance ** 0.5)
+            integ.random(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube
+        
+        The number of integration points returned by the iterator 
+        corresponds to a single iteration. The number in a batch
+        is controlled by parameter ``nhcube_batch``.
         """
         cdef INT_TYPE nhcube = self.nstrat ** self.dim 
         cdef double dv_y = 1. / nhcube
@@ -1750,22 +1728,20 @@ cdef class Integrator(object):
         points from |vegas|, and their corresponding weights in an 
         integral. Each point ``x[d]`` is accompanied by the weight
         assigned to that point by |vegas| when estimating an integral.
+        Optionally it will also return the index of the hypercube 
+        containing the integration point and/or the |y|-space 
+        coordinates::
 
-        Given an |Integrator| ``integ``, presumably trained on some
-        integrand, the following code would create a Monte Carlo
-        estimate of the integral of a possibly different integrand ``f(x)``::
+            integ.random()  yields  x, wgt
 
-            integral = 0.0
-            for x, wgt in integ.random():
-                integral += wgt * f(x)
+            integ.random(yield_hcube=True) yields x, wgt, hcube 
 
-        Here ``f(x)`` returns the integrand value for point ``x[d]``.
+            integ.random(yield_y=True) yields x, y, wgt
 
-        ``integ.random(yield_hcube=True)`` will yield the 
-        integration point ``x``, the weight ``wgt``, and the 
-        index ``hcube`` of the |y|-space hypercube containing 
-        this point (hypercubes are indexed by consecutive 
-        integers, starting at 0).
+            integ.random(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube
+        
+        The number of integration points returned by the iterator 
+        corresponds to a single iteration.
         """
         cdef double[:, ::1] x 
         cdef double[::1] wgt

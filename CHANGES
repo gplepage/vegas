@@ -6,6 +6,8 @@ showing how to use multiple CPUs to evaluate costly integrands in parallel.
 There is also a new section on how to use vegas to do multi-dimensional sums,
 rather than integrals.
 
+Also fixed errors in the documentation for random and random_batch generators.
+
 Version 2.1.2 - 2014-01-12
 ============================
 Another very minor (backwards compatibile) modification. Internally vegas processes 
