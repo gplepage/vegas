@@ -19,8 +19,8 @@ Introduction
 The key Python objects supported by the |vegas| module are:
 
    * |Integrator| --- an object describing a multidimensional integration
-     operator. These contain information about the integration volume,
-     but also about optimal remappings of the integration variables based
+     operator. Such objects contain information about the integration volume,
+     and also about optimal remappings of the integration variables based
      upon the last integral evaluated using the object.
 
    * |AdaptiveMap| --- an object describing the remappings used by |vegas|.

@@ -1116,7 +1116,7 @@ cdef class Integrator(object):
 
     The integator makes ``nitn`` estimates of the integral,  each
     using at most ``neval`` samples of the integrand, as it adapts to
-    the specific features of the integrand. Successive estimates
+    the specific features of the integrand. Successive estimates (iterations)
     typically improve in accuracy until the integrator has fully
     adapted. The integrator returns the weighted average of all
     ``nitn`` estimates, together with an estimate of the statistical
@@ -1139,7 +1139,7 @@ cdef class Integrator(object):
     the maximum number ``neval`` of integrand evaluations per
     iteration; and the damping parameter ``alpha``, which is used
     to slow down the adaptive algorithms when they would otherwise
-    be unstable (e.g., very peaky integrands). Setting parameter
+    be unstable (e.g., with very peaky integrands). Setting parameter
     ``analyzer=vegas.reporter()`` is sometimes useful, as well,
     since it causes |vegas| to print (on ``sys.stdout``) 
     intermediate results from each iteration, as they are 
@@ -1190,14 +1190,14 @@ cdef class Integrator(object):
     :param adapt: Setting ``adapt=False`` prevents further 
         adaptation by |vegas|. Typically this would be done 
         after training the |Integrator| on an integrand, in order
-        to stabilize the integral estimates. |vegas| uses 
+        to stabilize further estimates of the integral. |vegas| uses 
         unweighted averages to combine results from different 
         iterations when ``adapt=False``. The default setting 
         is ``adapt=True``.
     :type adapt: bool
     :param nhcube_batch: The number of hypercubes (in |y| space)
         whose integration points are combined into a single
-        batch to be passed to the integrand, all together,
+        batch to be passed to the integrand, together,
         when using |vegas| in batch mode.
         The default value is 1000. Larger values may be
         lead to faster evaluations, but at the cost of 
@@ -1571,7 +1571,7 @@ cdef class Integrator(object):
                     y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
             i_start += neval_hcube
         self.map.map(y, x, jac, neval_batch)
-        fx = fcn.ref_f(numpy.asarray(x))
+        fx = fcn.training_f(numpy.asarray(x))
 
         # accumulate sigf for each h-cube
         i_start = 0
@@ -1798,7 +1798,8 @@ cdef class Integrator(object):
                 return x[0] ** 2 + x[1] ** 4
 
         The argument ``x[d]`` is an integration point, where 
-        index ``d=0...`` represents direction.
+        index ``d=0...`` represents direction within the 
+        integration volume.
 
         Integrands can be array-valued, representing multiple 
         integrands: e.g., ::
@@ -1806,10 +1807,11 @@ cdef class Integrator(object):
             def f(x):
                 return [x[0] ** 2, x[0] / x[1]]
 
-        The return arrays can have any shape. This is useful for
-        integrands that are closely related, and can lead to 
-        substantial reductions in the errors for ratios or 
-        differences of the results.
+        The return arrays can have any shape. Array-valued 
+        integrands are useful for integrands that 
+        are closely related, and can lead to 
+        substantial reductions in the errors for 
+        ratios or differences of the results.
 
         It is usually much faster to use |vegas| in batch
         mode, where integration points are presented to the 
@@ -1824,7 +1826,7 @@ cdef class Integrator(object):
         |vegas| that the integrand processes integration
         points in batches. The array ``x[i, d]`` 
         represents a collection of different integration 
-        points labeled by ``i=0...``. (The number is controlled
+        points labeled by ``i=0...``. (The number of points is controlled
         |Integrator| parameter ``nhcube_batch``.) The batch index 
         is always first.
 
@@ -2016,7 +2018,7 @@ cdef class _BatchIntegrand_from_NonBatch:
         self.fcntype = 'batch'
         self.shape = None
 
-    def ref_f(self, x):
+    def training_f(self, x):
         cdef numpy.ndarray fx = numpy.asarray(self(x))
         if fx.ndim == 1:
             return fx
@@ -2077,7 +2079,7 @@ cdef class BatchIntegrand:
     def __cinit__(self, *args, **kargs):
         self.fcntype = 'batch'
         self.fcn = None
-    def ref_f(self, x):
+    def training_f(self, x):
         cdef numpy.ndarray fx = numpy.asarray(self(x))
         if fx.ndim == 1:
             return fx

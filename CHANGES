@@ -1,3 +1,11 @@
+Version 2.1.3 - 2014-01-13
+=============================
+The last (probably) in a series of very minor changes. Here only the 
+documentation has been changed. There is a new section in the Tutorial 
+showing how to use multiple CPUs to evaluate costly integrands in parallel. 
+There is also a new section on how to use vegas to do multi-dimensional sums,
+rather than integrals.
+
 Version 2.1.2 - 2014-01-12
 ============================
 Another very minor (backwards compatibile) modification. Internally vegas processes 

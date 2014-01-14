@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vegas Module &mdash; vegas 2.1.2 documentation</title>
+    <title>vegas Module &mdash; vegas 2.1.3 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '2.1.2',
+        VERSION:     '2.1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.1.2 documentation" href="index.html" />
+    <link rel="top" title="vegas 2.1.3 documentation" href="index.html" />
     <link rel="prev" title="How vegas Works" href="background.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -47,7 +47,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -64,8 +64,8 @@
 <blockquote>
 <div><ul class="simple">
 <li><a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> &#8212; an object describing a multidimensional integration
-operator. These contain information about the integration volume,
-but also about optimal remappings of the integration variables based
+operator. Such objects contain information about the integration volume,
+and also about optimal remappings of the integration variables based
 upon the last integral evaluated using the object.</li>
 <li><a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><tt class="xref py py-class docutils literal"><span class="pre">vegas.AdaptiveMap</span></tt></a> &#8212; an object describing the remappings used by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>.</li>
 <li><a class="reference internal" href="#vegas.RAvg" title="vegas.RAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RAvg</span></tt></a> &#8212; an object describing the result of a <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> integration.
@@ -97,7 +97,7 @@ where <tt class="docutils literal"><span class="pre">x[d]</span></tt> is a point
 </div>
 <p>The integator makes <tt class="docutils literal"><span class="pre">nitn</span></tt> estimates of the integral,  each
 using at most <tt class="docutils literal"><span class="pre">neval</span></tt> samples of the integrand, as it adapts to
-the specific features of the integrand. Successive estimates
+the specific features of the integrand. Successive estimates (iterations)
 typically improve in accuracy until the integrator has fully
 adapted. The integrator returns the weighted average of all
 <tt class="docutils literal"><span class="pre">nitn</span></tt> estimates, together with an estimate of the statistical
@@ -118,7 +118,7 @@ number <tt class="docutils literal"><span class="pre">nitn</span></tt> of iterat
 the maximum number <tt class="docutils literal"><span class="pre">neval</span></tt> of integrand evaluations per
 iteration; and the damping parameter <tt class="docutils literal"><span class="pre">alpha</span></tt>, which is used
 to slow down the adaptive algorithms when they would otherwise
-be unstable (e.g., very peaky integrands). Setting parameter
+be unstable (e.g., with very peaky integrands). Setting parameter
 <tt class="docutils literal"><span class="pre">analyzer=vegas.reporter()</span></tt> is sometimes useful, as well,
 since it causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to print (on <tt class="docutils literal"><span class="pre">sys.stdout</span></tt>) 
 intermediate results from each iteration, as they are 
@@ -168,13 +168,13 @@ evaluations. The default value is 0.75.</li>
 <li><strong>adapt</strong> (<em>bool</em>) &#8211; Setting <tt class="docutils literal"><span class="pre">adapt=False</span></tt> prevents further 
 adaptation by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>. Typically this would be done 
 after training the <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> on an integrand, in order
-to stabilize the integral estimates. <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses 
+to stabilize further estimates of the integral. <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses 
 unweighted averages to combine results from different 
 iterations when <tt class="docutils literal"><span class="pre">adapt=False</span></tt>. The default setting 
 is <tt class="docutils literal"><span class="pre">adapt=True</span></tt>.</li>
 <li><strong>nhcube_batch</strong> (<em>positive int</em>) &#8211; The number of hypercubes (in y space)
 whose integration points are combined into a single
-batch to be passed to the integrand, all together,
+batch to be passed to the integrand, together,
 when using <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> in batch mode.
 The default value is 1000. Larger values may be
 lead to faster evaluations, but at the cost of 
@@ -266,17 +266,19 @@ In addition they have the following methods:</p>
 </pre></div>
 </div>
 <p>The argument <tt class="docutils literal"><span class="pre">x[d]</span></tt> is an integration point, where 
-index <tt class="docutils literal"><span class="pre">d=0...</span></tt> represents direction.</p>
+index <tt class="docutils literal"><span class="pre">d=0...</span></tt> represents direction within the 
+integration volume.</p>
 <p>Integrands can be array-valued, representing multiple 
 integrands: e.g.,</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
 </pre></div>
 </div>
-<p>The return arrays can have any shape. This is useful for
-integrands that are closely related, and can lead to 
-substantial reductions in the errors for ratios or 
-differences of the results.</p>
+<p>The return arrays can have any shape. Array-valued 
+integrands are useful for integrands that 
+are closely related, and can lead to 
+substantial reductions in the errors for 
+ratios or differences of the results.</p>
 <p>It is usually much faster to use <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> in batch
 mode, where integration points are presented to the 
 integrand in batches. A simple batch integrand might
@@ -290,7 +292,7 @@ be, for example:</p>
 <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> that the integrand processes integration
 points in batches. The array <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> 
 represents a collection of different integration 
-points labeled by <tt class="docutils literal"><span class="pre">i=0...</span></tt>. (The number is controlled
+points labeled by <tt class="docutils literal"><span class="pre">i=0...</span></tt>. (The number of points is controlled
 <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> parameter <tt class="docutils literal"><span class="pre">nhcube_batch</span></tt>.) The batch index 
 is always first.</p>
 <p>Batch integrands can also be constructed from classes 
@@ -1019,7 +1021,7 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

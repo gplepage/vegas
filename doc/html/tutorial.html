@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; vegas 2.1.2 documentation</title>
+    <title>Tutorial &mdash; vegas 2.1.3 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '2.1.2',
+        VERSION:     '2.1.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.1.2 documentation" href="index.html" />
+    <link rel="top" title="vegas 2.1.3 documentation" href="index.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -51,7 +51,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -90,20 +90,24 @@ estimate of an integral is a random number from a distribution
 whose mean is the correct value of the integral. This distribution is
 Gaussian or normal provided
 the number of integrand samples is sufficiently large.
-In practive one generates multiple
+In practive we generate multiple
 estimates of the integral
 in order to verify that the distribution is indeed Gaussian.
 Error analysis is straightforward if the
 integral estimates are Gaussian.</p>
 <p>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm has been in use for decades and implementations are
-available in may programming languages, including Fortran (the original
+available in many programming languages, including Fortran (the original
 version), C and C++. The algorithm used here is significantly improved over
 the original implementation, and that used in most other implementations.
 It uses two adaptive strategies: importance sampling, as in the original
 implementation, and adaptive stratified sampling, which is new.</p>
-<p>This module is written in Cython, so it is almost as fast as optimized Fortran or
+<p>This module is written in Cython, so it is almost as fast as compiled Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.</p>
+<p>The following sections describe how to use <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>. Almost every
+example shown is a complete code, which can be copied into a file
+and run with python. It is worthwhile playing with the parameters to see how
+things change.</p>
 <p><em>About Printing:</em> The examples in this tutorial use the print function as it is
 used in Python 3. Drop the outermost parenthesis in each print statement if
 using Python 2, or add</p>
@@ -129,7 +133,7 @@ The following code shows how this can be done:</p>
         <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
     <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dx2</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1013.2118364296088</span>
 
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([[</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
@@ -318,9 +322,7 @@ the correct answer with highly unreliable error estimates. For
 example, the integral above becomes more
 difficult if we double the length of each side of the
 integration volume by redefining <tt class="docutils literal"><span class="pre">integ</span></tt> as:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span>
-  <span class="p">[[</span><span class="o">-</span><span class="mf">2.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">]],</span>
-  <span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
 </pre></div>
 </div>
 <p>The code above then gives:</p>
@@ -688,8 +690,8 @@ by using <a class="reference internal" href="vegas.html#module-vegas" title="veg
 
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 
-<span class="n">integ</span><span class="p">(</span><span class="n">f_scalar</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f_scalar</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
+<span class="n">integ</span><span class="p">(</span><span class="n">f_scalar</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f_scalar</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">   Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -712,8 +714,8 @@ by using <a class="reference internal" href="vegas.html#module-vegas" title="veg
 <span class="n">f</span> <span class="o">=</span> <span class="n">f_batch</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nhcube_batch</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
-<span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">200000</span><span class="p">)</span>
+<span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">   Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -760,7 +762,9 @@ function for the integrand: e.g.,</p>
 (and the result is faster) if we write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
 of this code is:</p>
-<div class="highlight-python"><pre>cimport vegas                   # for BatchIntegrand
+<div class="highlight-python"><pre># file: cython_integrand.pyx
+
+cimport vegas                   # for BatchIntegrand
 from libc.math cimport exp      # use exp() from C library
 
 import vegas
@@ -845,6 +849,172 @@ The code from the previous section could have been written as:</p>
 so integrands written in these languages can be used as well (and
 would be faster than pure Python).</p>
 </div>
+<div class="section" id="multiple-processors">
+<h2>Multiple Processors<a class="headerlink" href="#multiple-processors" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> code normally runs in a single thread on
+a single CPU. We can distribute the evaluation of the integrand
+over multiple CPUs, however, by using the batch mode described in
+the previous section. This is worthwhile when the integrand
+is expensive to evaluate.</p>
+<p>To illustrate, consider an integrand consisting
+of 1000 narrow Gaussians distributed evenly along the diagonal of
+a 4-dimensional unit hypercube. To maximize speed, we implement
+the integrand in Cython, putting the result in a file <tt class="docutils literal"><span class="pre">ridge.pyx</span></tt>:</p>
+<div class="highlight-python"><pre># file: ridge.pyx
+
+from libc.math cimport exp      # use exp() from C library
+import numpy as np
+
+def f(double[:, ::1] x):
+    cdef double dx2, x0
+    cdef int d, i, j
+    cdef int dim=4
+    cdef int N=1000
+    cdef double[::1] ans = np.zeros(x.shape[0], float)
+    for i in range(x.shape[0]):
+        for j in range(N):
+            x0 = j / (N - 1.)
+            dx2 = 0.0
+            for d in range(dim):
+                dx2 += (x[i, d] - x0) ** 2
+            ans[i] += exp(-100. * dx2)
+        ans[i] *= (100. / np.pi) ** 2 / N
+    # make sure result is a numpy array (for pickle)
+    return np.asarray(ans)</pre>
+</div>
+<p>The main integration code then uses Python&#8217;s <tt class="xref py py-mod docutils literal"><span class="pre">multiprocessing</span></tt> module to
+distribute evaluation of the integrand over 4 CPUs:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyximport</span><span class="p">;</span> <span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>
+
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">ridge</span>
+
+<span class="k">class</span> <span class="nc">parallelintegrand</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">BatchIntegrand</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Convert (batch) integrand into multiprocessor integrand. &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fcn</span><span class="p">):</span>
+        <span class="s">&quot; Save integrand; create pool of 4 processes. &quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fcn</span> <span class="o">=</span> <span class="n">fcn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s">&quot; Standard cleanup. &quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="s">&quot; Divide x into 4 chunks, feeding one to each process. &quot;</span>
+        <span class="n">nx</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="c"># launch evaluation of self.fcn for each chunk, in parallel</span>
+        <span class="n">po</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">map_async</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fcn</span><span class="p">,</span>
+            <span class="p">[</span><span class="n">x</span><span class="p">[:</span><span class="n">nx</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">nx</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">nx</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">nx</span><span class="p">:</span><span class="mi">3</span><span class="o">*</span><span class="n">nx</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="o">*</span><span class="n">nx</span><span class="p">:]],</span>
+            <span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="c"># harvest the results</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="c"># convert list of results into a single numpy array</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+    <span class="c"># convert ridge.f into a multiprocessor integrand</span>
+    <span class="n">fparallel</span> <span class="o">=</span> <span class="n">parallelintegrand</span><span class="p">(</span><span class="n">ridge</span><span class="o">.</span><span class="n">f</span><span class="p">)</span>
+    <span class="c"># adapt</span>
+    <span class="n">integ</span><span class="p">(</span><span class="n">fparallel</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e5</span><span class="p">)</span>
+    <span class="c"># final results</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">fparallel</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e5</span><span class="p">)</span>
+    <span class="c"># result should be approximately 0.851</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">    Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This code runs about 2.8x faster than the single-processor version of
+the same code, where <tt class="docutils literal"><span class="pre">fparallel</span></tt> is replaced by:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">fbatch</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">batchintegrand</span><span class="p">(</span><span class="n">ridge</span><span class="o">.</span><span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>One might expect the multiprocessor code to be 4x faster, since it uses
+4 CPUs, but it isn&#8217;t quite that fast because
+of the time needed to transfer
+integration points to the other processes and then to bring back the
+corresponding integrand values. Multiple processors are efficient only
+for costly integrands.</p>
+<p>Note that <tt class="docutils literal"><span class="pre">parallelintegrand()</span></tt> is completely
+generic; it can be applied to any (batch) integrand function.
+(The function has to be
+pickleable because of the way <tt class="docutils literal"><span class="pre">multiprocessing</span></tt> manages inter-process
+communication.)
+There are many other ways to implement multiprocessing for <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>, including
+using Cython&#8217;s parallel processing constructs. All methods work with
+<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> in batch mode, and distribute different integration points to
+different CPUs.</p>
+</div>
+<div class="section" id="sums-with-vegas">
+<h2>Sums with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a><a class="headerlink" href="#sums-with-vegas" title="Permalink to this headline">¶</a></h2>
+<p>The code in the previous sections is inefficient in the way it
+handles the sum over 1000 Gaussians. It is not necessary to include every
+term in the sum for every integration point. Rather we can sample the sum,
+using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to do the sampling. The trick is to replace the sum with
+an equivalent integral:</p>
+<div class="math">
+<p><img src="_images/math/997f784f1694d8912390435e70db5c9202a74b90.png" alt="\sum_{i=0}^{N-1} f(i) = N \int_0^1 dx \; f(\mathrm{floor}(x N))"/></p>
+</div><p>where <img class="math" src="_images/math/8e433a78c12f7c20feacecb63f2bf7f32a78e05e.png" alt="\mathrm{floor}(x)" style="vertical-align: -3px"/> is the largest
+integer smaller than <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x" style="vertical-align: -1px"/>. The
+resulting integral can then be handed to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>. Using this trick,
+the integral in the previous section can be re-cast as a 5-dimensional
+integral (again in Cython),</p>
+<div class="highlight-python"><pre># file: ridge.pyx
+
+from libc.math cimport exp, floor
+import numpy as np
+
+def fsum(double[:, ::1] x):
+    cdef double dx2, x0, j
+    cdef int d, i
+    cdef int dim=4
+    cdef int N=1000
+    cdef double[::1] ans = np.zeros(x.shape[0], float)
+    for i in range(x.shape[0]):
+        j = floor(x[i, -1] * N)
+        x0 = j / (N - 1.)
+        dx2 = 0.0
+        for d in range(dim):
+            dx2 += (x[i, d] - x0) ** 2
+        ans[i] += exp(-100. * dx2)
+        # drop 1/N because multiplying by N
+        ans[i] *= (100. / np.pi) ** 2
+    return np.asarray(ans)</pre>
+</div>
+<p>and the main program becomes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyximport</span><span class="p">;</span> <span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">ridge</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">batchintegrand</span><span class="p">(</span><span class="n">ridge</span><span class="o">.</span><span class="n">fsum</span><span class="p">)</span>
+    <span class="c"># adapt</span>
+    <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">5e5</span><span class="p">)</span>
+    <span class="c"># final results</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">5e5</span><span class="p">)</span>
+    <span class="c"># result should be approximately 0.851</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">    Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This gives about the same precision but is 3x faster (on a laptop in 2014)
+than the code in the previous section.</p>
+<p>The same trick can be generalized to sums over multiple indices, including sums
+to infinity. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> will provide Monte Carlo estimates of the sums, emphasizing
+the more important terms.</p>
+</div>
 <div class="section" id="vegas-as-a-random-number-generator">
 <h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> as a Random Number Generator<a class="headerlink" href="#vegas-as-a-random-number-generator" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> generates random points in the integration volume from a
@@ -914,6 +1084,8 @@ module is available.</p>
 <li><a class="reference internal" href="#basic-integrals">Basic Integrals</a></li>
 <li><a class="reference internal" href="#multiple-integrands-simultaneously">Multiple Integrands Simultaneously</a></li>
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>
+<li><a class="reference internal" href="#multiple-processors">Multiple Processors</a></li>
+<li><a class="reference internal" href="#sums-with-vegas">Sums with <tt class="docutils literal"><span class="pre">vegas</span></tt></a></li>
 <li><a class="reference internal" href="#vegas-as-a-random-number-generator"><tt class="docutils literal"><span class="pre">vegas</span></tt> as a Random Number Generator</a></li>
 <li><a class="reference internal" href="#implementation-notes">Implementation Notes</a></li>
 </ul>
@@ -958,7 +1130,7 @@ module is available.</p>
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.1.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

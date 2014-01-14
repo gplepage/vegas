@@ -42,22 +42,27 @@ estimate of an integral is a random number from a distribution
 whose mean is the correct value of the integral. This distribution is
 Gaussian or normal provided 
 the number of integrand samples is sufficiently large. 
-In practive one generates multiple
+In practive we generate multiple
 estimates of the integral
 in order to verify that the distribution is indeed Gaussian. 
 Error analysis is straightforward if the
 integral estimates are Gaussian.
 
 The |vegas| algorithm has been in use for decades and implementations are
-available in may programming languages, including Fortran (the original
+available in many programming languages, including Fortran (the original
 version), C and C++. The algorithm used here is significantly improved over
 the original implementation, and that used in most other implementations.
 It uses two adaptive strategies: importance sampling, as in the original
 implementation, and adaptive stratified sampling, which is new.
 
-This module is written in Cython, so it is almost as fast as optimized Fortran or
+This module is written in Cython, so it is almost as fast as compiled Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.
+
+The following sections describe how to use |vegas|. Almost every 
+example shown is a complete code, which can be copied into a file 
+and run with python. It is worthwhile playing with the parameters to see how
+things change.
 
 *About Printing:* The examples in this tutorial use the print function as it is
 used in Python 3. Drop the outermost parenthesis in each print statement if
@@ -89,7 +94,7 @@ The following code shows how this can be done::
             dx2 += (x[d] - 0.5) ** 2
         return math.exp(-dx2 * 100.) * 1013.2118364296088
 
-    integ = vegas.Integrator([[-1., 1.], [0., 1.], [0., 1.], [0., 1.]])
+    integ = vegas.Integrator([[-1, 1], [0, 1], [0, 1], [0, 1]])
 
     result = integ(f, nitn=10, neval=1000)
     print(result.summary())
@@ -282,9 +287,7 @@ There are several things to note here:
     difficult if we double the length of each side of the 
     integration volume by redefining ``integ`` as::
 
-      integ = vegas.Integrator(
-        [[-2., 2.], [0, 2.], [0, 2.], [0., 2.]],
-        )
+      integ = vegas.Integrator([[-2, 2], [0, 2], [0, 2], [0., 2]])
 
     The code above then gives:
 
@@ -598,8 +601,8 @@ by using |vegas|'s batch mode. For example, replacing ::
 
     integ = vegas.Integrator(dim * [[0, 1]])
 
-    integ(f_scalar, nitn=10, neval=200000)
-    result = integ(f_scalar, nitn=10, neval=200000)
+    integ(f_scalar, nitn=10, neval=2e5)
+    result = integ(f_scalar, nitn=10, neval=2e5)
     print('result = %s   Q = %.2f' % (result, result.Q))
 
 
@@ -624,8 +627,8 @@ by ::
     f = f_batch(dim=4)
     integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_batch=1000)
 
-    integ(f, nitn=10, neval=200000)
-    result = integ(f, nitn=10, neval=200000)
+    integ(f, nitn=10, neval=2e5)
+    result = integ(f, nitn=10, neval=2e5)
     print('result = %s   Q = %.2f' % (result, result.Q))
 
 reduces the cost of the integral by almost an order of magnitude. 
@@ -675,6 +678,8 @@ This batch integrand is fast because it is expressed in terms
 (and the result is faster) if we write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
 of this code is::
+
+    # file: cython_integrand.pyx
 
     cimport vegas                   # for BatchIntegrand
     from libc.math cimport exp      # use exp() from C library
@@ -762,6 +767,180 @@ Note that the batch index (here ``:``) always comes first.
 Cython code can also link easily to compiled C or Fortran code, 
 so integrands written in these languages can be used as well (and
 would be faster than pure Python).
+
+Multiple Processors
+---------------------------
+|vegas| code normally runs in a single thread on 
+a single CPU. We can distribute the evaluation of the integrand
+over multiple CPUs, however, by using the batch mode described in 
+the previous section. This is worthwhile when the integrand 
+is expensive to evaluate. 
+
+To illustrate, consider an integrand consisting
+of 1000 narrow Gaussians distributed evenly along the diagonal of 
+a 4-dimensional unit hypercube. To maximize speed, we implement
+the integrand in Cython, putting the result in a file ``ridge.pyx``::
+
+    # file: ridge.pyx
+    
+    from libc.math cimport exp      # use exp() from C library
+    import numpy as np
+
+    def f(double[:, ::1] x): 
+        cdef double dx2, x0
+        cdef int d, i, j
+        cdef int dim=4
+        cdef int N=1000
+        cdef double[::1] ans = np.zeros(x.shape[0], float)
+        for i in range(x.shape[0]):
+            for j in range(N):
+                x0 = j / (N - 1.)
+                dx2 = 0.0
+                for d in range(dim):
+                    dx2 += (x[i, d] - x0) ** 2
+                ans[i] += exp(-100. * dx2)
+            ans[i] *= (100. / np.pi) ** 2 / N
+        # make sure result is a numpy array (for pickle)
+        return np.asarray(ans)
+    
+The main integration code then uses Python's :mod:`multiprocessing` module to
+distribute evaluation of the integrand over 4 CPUs::
+
+    import pyximport; pyximport.install()
+
+    import multiprocessing 
+    import numpy as np
+    import vegas
+    import ridge
+
+    class parallelintegrand(vegas.BatchIntegrand):
+        """ Convert (batch) integrand into multiprocessor integrand. """
+        def __init__(self, fcn):
+            " Save integrand; create pool of 4 processes. "
+            self.fcn = fcn
+            self.pool = multiprocessing.Pool(processes=4)
+        def __del__(self):
+            " Standard cleanup. "
+            self.pool.close()
+            self.pool.join()
+        def __call__(self, x):
+            " Divide x into 4 chunks, feeding one to each process. "
+            nx = x.shape[0] // 4 + 1
+            # launch evaluation of self.fcn for each chunk, in parallel
+            po = self.pool.map_async(
+                self.fcn, 
+                [x[:nx], x[nx:2*nx], x[2*nx:3*nx], x[3*nx:]],
+                1,
+                )
+            # harvest the results
+            results = po.get()
+            # convert list of results into a single numpy array
+            return np.concatenate(results)
+
+
+    def main():
+        integ = vegas.Integrator(4 * [[0, 1]])
+        # convert ridge.f into a multiprocessor integrand
+        fparallel = parallelintegrand(ridge.f)
+        # adapt
+        integ(fparallel, nitn=10, neval=1e5)
+        # final results
+        result = integ(fparallel, nitn=10, neval=1e5)
+        # result should be approximately 0.851
+        print('result = %s    Q = %.2f' % (result, result.Q))
+
+    if __name__ == '__main__':
+        main()
+
+This code runs about 2.8x faster than the single-processor version of 
+the same code, where ``fparallel`` is replaced by::
+
+     fbatch = vegas.batchintegrand(ridge.f)
+
+One might expect the multiprocessor code to be 4x faster, since it uses 
+4 CPUs, but it isn't quite that fast because
+of the time needed to transfer
+integration points to the other processes and then to bring back the 
+corresponding integrand values. Multiple processors are efficient only
+for costly integrands. 
+
+Note that ``parallelintegrand()`` is completely
+generic; it can be applied to any (batch) integrand function. 
+(The function has to be 
+pickleable because of the way ``multiprocessing`` manages inter-process 
+communication.)
+There are many other ways to implement multiprocessing for |vegas|, including
+using Cython's parallel processing constructs. All methods work with 
+|vegas| in batch mode, and distribute different integration points to 
+different CPUs. 
+
+Sums with |vegas|
+-------------------
+The code in the previous sections is inefficient in the way it
+handles the sum over 1000 Gaussians. It is not necessary to include every
+term in the sum for every integration point. Rather we can sample the sum,
+using |vegas| to do the sampling. The trick is to replace the sum with 
+an equivalent integral:
+
+.. math::
+
+    \sum_{i=0}^{N-1} f(i) = N \int_0^1 dx \; f(\mathrm{floor}(x N))
+
+where :math:`\mathrm{floor}(x)` is the largest 
+integer smaller than :math:`x`. The 
+resulting integral can then be handed to |vegas|. Using this trick,
+the integral in the previous section can be re-cast as a 5-dimensional
+integral (again in Cython), ::
+
+    # file: ridge.pyx
+
+    from libc.math cimport exp, floor
+    import numpy as np
+
+    def fsum(double[:, ::1] x): 
+        cdef double dx2, x0, j
+        cdef int d, i
+        cdef int dim=4
+        cdef int N=1000
+        cdef double[::1] ans = np.zeros(x.shape[0], float)
+        for i in range(x.shape[0]):
+            j = floor(x[i, -1] * N)
+            x0 = j / (N - 1.)
+            dx2 = 0.0
+            for d in range(dim):
+                dx2 += (x[i, d] - x0) ** 2
+            ans[i] += exp(-100. * dx2)
+            # drop 1/N because multiplying by N
+            ans[i] *= (100. / np.pi) ** 2 
+        return np.asarray(ans)
+
+and the main program becomes::
+
+    import pyximport; pyximport.install()
+
+    import numpy as np
+    import vegas
+    import ridge
+
+    def main():
+        integ = vegas.Integrator(5 * [[0, 1]])
+        f = vegas.batchintegrand(ridge.fsum)
+        # adapt
+        integ(f, nitn=10, neval=5e5)
+        # final results
+        result = integ(f, nitn=10, neval=5e5)
+        # result should be approximately 0.851
+        print('result = %s    Q = %.2f' % (result, result.Q))
+
+    if __name__ == '__main__':
+        main()
+
+This gives about the same precision but is 3x faster (on a laptop in 2014) 
+than the code in the previous section.
+
+The same trick can be generalized to sums over multiple indices, including sums
+to infinity. |vegas| will provide Monte Carlo estimates of the sums, emphasizing
+the more important terms.
 
 
 |vegas| as a Random Number Generator

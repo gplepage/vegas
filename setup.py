@@ -19,7 +19,7 @@ from Cython.Build import cythonize
 import sys
 import numpy
 
-VEGAS_VERSION = '2.1.2'
+VEGAS_VERSION = '2.1.3'
 
 # create vegas/version.py so vegas knows its version number 
 with open("src/vegas/_version.py","w") as version_file:
@@ -53,7 +53,7 @@ setup(
     url="https://github.com/gplepage/vegas.git",
     license='GPLv3+',
     platforms='Any',
-    long_description="""\
+    long_description="""
     This package provides tools evaluating multidimensional 
     integrals numerically using an enhanced version of 
 	the adaptive Monte Carlo vegas algorithm (G. P. Lepage, 
