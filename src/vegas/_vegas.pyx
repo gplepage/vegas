@@ -707,9 +707,9 @@ cdef class AdaptiveMap:
     def random(self, n=None):
         " Create ``n`` random points in |x| space. "
         if n is None:
-            y = numpy.random.uniform(0., 1., self.dim)
+            y = numpy.random.random(self.dim)
         else:
-            y = numpy.random.uniform(0., 1., (n, self.dim))
+            y = numpy.random.random((n, self.dim))
         return self(y)
 
     def make_uniform(self, ninc=None):
@@ -1281,6 +1281,12 @@ cdef class Integrator(object):
         example, causes vegas to print out a running report
         of its results as they are produced. The default 
         is ``analyzer=None``.
+    :param ran_array_generator: Function that generates 
+        :mod:`numpy` arrays of random numbers distributed uniformly 
+        between 0 and 1. ``ran_array_generator(shape)`` should 
+        create an array whose dimensions are specified by the 
+        integer-valued tuple ``shape``. The default generator
+        is ``ran_array_generator=numpy.random.random``.
     """
 
     # Settings accessible via the constructor and Integrator.set
@@ -1300,6 +1306,7 @@ cdef class Integrator(object):
         rtol=0,
         atol=0,
         analyzer=None,
+        ran_array_generator=numpy.random.random,
         )
 
     def __init__(Integrator self not None, map, **kargs):
@@ -1405,6 +1412,9 @@ cdef class Integrator(object):
             elif k == 'atol':
                 old_val[k] = self.atol
                 self.atol = kargs[k]
+            elif k == 'ran_array_generator':
+                old_val[k] = self.ran_array_generator
+                self.ran_array_generator = kargs[k]
             else:
                 raise AttributeError('no attribute named "%s"' % str(k))
 
@@ -1548,9 +1558,7 @@ cdef class Integrator(object):
         cdef INT_TYPE i, d
         cdef INT_TYPE neval_hcube = self.min_neval_hcube
         cdef INT_TYPE neval_batch = nhcube_batch * neval_hcube
-        cdef double[:, ::1] yran = numpy.random.uniform(
-            0., 1., (neval_batch, self.dim)
-            )
+        cdef double[:, ::1] yran = self.ran_array_generator((neval_batch, self.dim))
         cdef double dv_y = (1./self.nstrat) ** self.dim
         cdef double sum_fdv, sum_fdv2, sigf2, fdv
         cdef numpy.ndarray[numpy.double_t, ndim=1] fx
@@ -1686,7 +1694,7 @@ cdef class Integrator(object):
                 hcube_array = numpy.empty(neval_batch, int)
 
             # generate random points
-            yran = numpy.random.uniform(0., 1., (neval_batch, self.dim))
+            yran = self.ran_array_generator((neval_batch, self.dim))
             i_start = 0
             for ihcube in range(nhcube_batch):
                 hcube = hcube_base + ihcube
@@ -1981,36 +1989,6 @@ class reporter:
 ################
 # Classes for standarizing the interface for integrands.
 
-cdef class _BatchIntegrand_from_NonBatch:
-    cdef object fcn
-    cdef object fcntype
-    cdef object shape
-    """ Batch integrand from non-batch integrand. 
-
-    This class is used internally by |vegas|. 
-    """
-    def __init__(self, fcn):
-        self.fcn = fcn
-        self.fcntype = 'batch'
-        self.shape = None
-
-    def training_f(self, x):
-        cdef numpy.ndarray fx = numpy.asarray(self(x))
-        if fx.ndim == 1:
-            return fx
-        else:
-            fx = fx.reshape((x.shape[0], -1))
-            return fx[:, 0]
-
-    def __call__(self, double[:, ::1] x):
-        cdef INT_TYPE i 
-        cdef numpy.ndarray f
-        if self.shape is None:
-            self.shape = numpy.asarray(self.fcn(x[0, :])).shape
-        f = numpy.empty((x.shape[0],) + self.shape, float)
-        for i in range(x.shape[0]):
-            f[i] = self.fcn(x[i, :])
-        return f
 
 # preferred base class for batch integrands
 # batch integrands are typically faster
@@ -2099,8 +2077,30 @@ def batchintegrand(f):
     ans.fcn = f
     return ans
 
+
+cdef class _BatchIntegrand_from_NonBatch(BatchIntegrand):
+    cdef object shape
+    """ Batch integrand from non-batch integrand. 
+
+    This class is used internally by |vegas|. 
+    """
+    def __init__(self, fcn):
+        self.fcn = fcn
+        self.shape = None
+
+    def __call__(self, double[:, ::1] x):
+        cdef INT_TYPE i 
+        cdef numpy.ndarray f
+        if self.shape is None:
+            self.shape = numpy.asarray(self.fcn(x[0, :])).shape
+        f = numpy.empty((x.shape[0],) + self.shape, float)
+        for i in range(x.shape[0]):
+            f[i] = self.fcn(x[i, :])
+        return f
+
+
+
 # legacy names
-VecIntegrand = BatchIntegrand
 vecintegrand = batchintegrand
 
 

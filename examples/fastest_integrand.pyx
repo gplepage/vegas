@@ -7,7 +7,7 @@ without the  complication of using numpy vectorization.
 Some problems are not so simply coded using whole-array operators.
 """
 
-# import Cython description of vegas (to derive from vegas.VecIntegrand)
+# import Cython description of vegas (to derive from vegas.BatchIntegrand)
 cimport vegas
 
 # import exp() from C

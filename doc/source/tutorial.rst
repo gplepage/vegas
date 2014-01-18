@@ -372,7 +372,7 @@ There are several things to note here:
             else:
                 return 0.0
 
-        integ = vegas.Integrator([[-1., 1.], [0., 1.], [0., 1.], [0., 1.]])
+        integ = vegas.Integrator([[-1, 1], [0, 1], [0, 1], [0, 1]])
 
         integ(f_sph, nitn=10, neval=1000)           # adapt the grid
         result = integ(f_sph, nitn=10, neval=1000)  # estimate the integral
@@ -397,7 +397,9 @@ There are several things to note here:
     integrand evaluations per iteration to have any chance of 
     finding the region of non-zero integrand, because the volume of 
     the 20-dimensional sphere is a tiny fraction of the total 
-    integration volume. 
+    integration volume. The final error in the example above would have
+    been cut in half had we used the integration volume
+    ``4 * [[0.3, 0.7]]`` instead of ``[[-1, 1], [0, 1], [0, 1], [0, 1]]``.
 
     Note, finally, that integration to infinity is also possible:
     map the relevant variable into a different variable
@@ -674,7 +676,8 @@ function for the integrand: e.g., ::
 
 
 This batch integrand is fast because it is expressed in terms
-:mod:`numpy` operators that act on entire arrays. That is unnecessary
+:mod:`numpy` operators that act on entire arrays. That optimization 
+is unnecessary
 (and the result is faster) if we write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
 of this code is::

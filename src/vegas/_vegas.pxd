@@ -18,7 +18,9 @@ cdef class BatchIntegrand:
     cdef readonly object fcntype
     cdef public object fcn
 
-VecIntegrand = BatchIntegrand
+# legacy name
+cdef class VecIntegrand(BatchIntegrand):
+    pass
 
 cdef class AdaptiveMap:
     # first index is direction, second is increment
@@ -47,6 +49,7 @@ cdef class Integrator:
     cdef readonly double beta 
     cdef readonly bint adapt
     cdef readonly object analyzer
+    cdef readonly object ran_array_generator
     # generated
     cdef readonly AdaptiveMap map 
     cdef readonly double sum_sigf

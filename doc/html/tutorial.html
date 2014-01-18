@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; vegas 2.1.3 documentation</title>
+    <title>Tutorial &mdash; vegas 2.1.4 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '2.1.3',
+        VERSION:     '2.1.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.1.3 documentation" href="index.html" />
+    <link rel="top" title="vegas 2.1.4 documentation" href="index.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -51,7 +51,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.1.3 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1.4 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -442,7 +442,7 @@ centered on the Gaussian:</p>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="mf">0.0</span>
 
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([[</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 
 <span class="n">integ</span><span class="p">(</span><span class="n">f_sph</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>           <span class="c"># adapt the grid</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f_sph</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>  <span class="c"># estimate the integral</span>
@@ -480,7 +480,9 @@ would require <tt class="docutils literal"><span class="pre">neval=1e16</span></
 integrand evaluations per iteration to have any chance of
 finding the region of non-zero integrand, because the volume of
 the 20-dimensional sphere is a tiny fraction of the total
-integration volume.</p>
+integration volume. The final error in the example above would have
+been cut in half had we used the integration volume
+<tt class="docutils literal"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">[[0.3,</span> <span class="pre">0.7]]</span></tt> instead of <tt class="docutils literal"><span class="pre">[[-1,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1]]</span></tt>.</p>
 <p>Note, finally, that integration to infinity is also possible:
 map the relevant variable into a different variable
 of finite range. For example,  an integral over <img class="math" src="_images/math/e3c6fcc1a4b75f1f88beaa73c12a7bdcd4bd098b.png" alt="x\equiv\tan(\theta)" style="vertical-align: -3px"/>
@@ -758,7 +760,8 @@ function for the integrand: e.g.,</p>
 </pre></div>
 </div>
 <p>This batch integrand is fast because it is expressed in terms
-<tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> operators that act on entire arrays. That is unnecessary
+<tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> operators that act on entire arrays. That optimization
+is unnecessary
 (and the result is faster) if we write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
 of this code is:</p>
@@ -1161,7 +1164,7 @@ module is available.</p>
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.1.3 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.1.4 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

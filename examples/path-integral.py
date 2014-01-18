@@ -14,8 +14,8 @@ at http://arxiv.org/abs/hep-lat/0506036 (June 2005).
 
 The code here uses a Cython integrand, path_integrand.pyx (for speed), and
 extracts the ground state energies and wavefunctions for a regular harmonic
-oscillator, and also one with a small amount of anharmonicity --- just for
-fun. The results are not exactly  correct because we are using a coarse grid,
+oscillator, and also one with a small amount of anharmonicity. 
+The results are not exactly  correct because we are using a coarse grid,
 and also not taking T to infinity.
 
 Using numerical path integration to solve these  problems has got to be one of
@@ -49,10 +49,11 @@ def main():
     # initialize path integral
     T = 4.
     ndT = 8
-    neval = 25000
+    neval = 30000
+    nitn = 15
 
     # Harmonic oscillator: V = x ** 2 / 2
-    pathint = Oscillator(T=T, ndT=ndT, neval=neval)
+    pathint = Oscillator(T=T, ndT=ndT, neval=neval, nitn=nitn)
     print('Harmonic Oscillator')
     print('===================')
 
@@ -81,7 +82,7 @@ def main():
         plot_results(E0, x0, psi2_hosc, T)
 
     # Anharmonic oscillator: V = x ** 2 / 2 + 0.2 * x ** 4
-    pathint = Oscillator(c=0.2, T=T, ndT=ndT, neval=neval)
+    pathint = Oscillator(c=0.2, T=T, ndT=ndT, neval=neval, nitn=nitn)
     print('\n\nAnharmonic Oscillator')
     print(    '=====================')
     

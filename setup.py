@@ -19,7 +19,7 @@ from Cython.Build import cythonize
 import sys
 import numpy
 
-VEGAS_VERSION = '2.1.3'
+VEGAS_VERSION = '2.1.4'
 
 # create vegas/version.py so vegas knows its version number 
 with open("src/vegas/_version.py","w") as version_file:
@@ -49,7 +49,7 @@ setup(
     package_dir=package_dir,
     package_data=package_data,
     ext_modules=ext_modules,
-    requires=["cython (>=0.17)","numpy (>=1.7)", "lsqfit"],
+    requires=["cython (>=0.17)","numpy (>=1.7)", "gvar"],
     url="https://github.com/gplepage/vegas.git",
     license='GPLv3+',
     platforms='Any',

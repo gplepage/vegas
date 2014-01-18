@@ -9,17 +9,15 @@ is derived from it and specifies a specific potential.
 
 # import Cython description of vegas
 cimport vegas
-cimport cython
-import cython
 
-# import exp() from C
+# import exp(), tan() from C
 from libc.math cimport exp, tan
 
 import numpy as np
 import vegas
 import math
 
-cdef class PathIntegral(vegas.VecIntegrand):
+cdef class PathIntegral(vegas.BatchIntegrand): 
     """ Computes < x0 | exp(-H*T) | x0 > 
 
     Parameters:
@@ -51,15 +49,6 @@ cdef class PathIntegral(vegas.VecIntegrand):
         self.x = np.empty(self.ndT + 1, float)
         self.norm = (self.m * self.ndT / 2. / math.pi / T) ** (self.ndT / 2.)
 
-    def set_region(self, x0=None):
-        """ Create appropriate integration region; initialize self.x """
-        if x0 is None:
-            return self.ndT * [[-math.pi/2, math.pi/2]]
-        else:
-            self.x[0] = x0
-            self.x[-1] = x0
-            return (self.ndT - 1) * [[-math.pi/2, math.pi/2]]
-
     cdef double V(self, double x):
         """ Derived classes needs to fill this in. """
         raise NotImplementedError('need to define V')
@@ -72,7 +61,7 @@ cdef class PathIntegral(vegas.VecIntegrand):
         cdef double m_2a = self.m / 2. / a
         cdef double[::1] f = np.empty(theta.shape[0], float)
         for i in range(len(f)):
-            # map back to range -oo to +oo
+            # map back to range -oo to +oo; compute Jacobian
             jac = self.norm
             for j in range(theta.shape[1]):
                 self.x[j + 1] = self.xscale * tan(theta[i, j])
@@ -96,19 +85,28 @@ cdef class PathIntegral(vegas.VecIntegrand):
         If x0 is None, integrate over x0.
         """
         if x0 is None or len(x0) == 0:
-            self.integ = vegas.Integrator(self.set_region())
+            # integrate over endpoints -> exp(-E0*T)
+            self.integ = vegas.Integrator(self.ndT * [[-math.pi/2, math.pi/2]])
+            # train integrator
             self.integ(self, neval=self.neval, nitn=self.nitn)
+            # final integral
             return self.integ(self, neval=self.neval, nitn=self.nitn, alpha=0.1)
         else:
+            # set endpoints equal to x0[i] -> wavefunction(x0[i]) ** 2 * exp(-E0*T)
             ans = []
+            self.integ = vegas.Integrator((self.ndT - 1) * [[-math.pi/2, math.pi/2]])
+            # train integrator
+            self.x[0] = x0[0]
+            self.x[-1] = x0[0]
+            self.integ(self, neval=self.neval, nitn=self.nitn)
+            # do final integrals
             for x0i in x0:
-                self.integ = vegas.Integrator(self.set_region(x0i))
-                self.integ(self, neval=self.neval, nitn=self.nitn)
+                self.x[0] = x0i
+                self.x[-1] = x0i
                 ans.append(
                     self.integ(self, neval=self.neval, nitn=self.nitn, alpha=0.1)
                     )
             return np.array(ans)
-
 
 
 cdef class Oscillator(PathIntegral):
