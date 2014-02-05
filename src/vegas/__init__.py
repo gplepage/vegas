@@ -25,10 +25,14 @@ code sequence for a D-dimensional integral has the structure::
     print(result)
 
 The algorithm iteratively adapts to the integrand over
-``nitn`` iterations, each of which uses at most ``neval``
-integrand samples to generate a Monte Carlo estimate 
-of the integral. The final result is the weighted 
-average of the results fom all iterations.
+``nitn`` iterations, each of which uses at most ``neval`` 
+integrand samples to generate a Monte Carlo estimate of 
+the integral. The final result is the weighted average 
+of the results from all iterations. Increase ``neval`` 
+to increase the precision of the result. Typically 
+``nitn`` is between 10 and 20. ``neval`` can be
+1000s to millions, or more, depending upon
+the integrand and the precision desired.
 
 The integrator remembers how it adapted to ``f(x)``
 and uses this information as its starting point if it is reapplied 

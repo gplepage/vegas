@@ -278,8 +278,8 @@ where the integrand actually is large. This grid gives
 much better results
 than using a uniform grid, but it obviously 
 wastes integration resources.
-It is a consequence
-of the fact that |vegas| remaps the integration variables in
+The waste occurs because
+|vegas| remaps the integration variables in
 each direction separately. Projected on the ``x[0]`` axis, for example,
 this integrand appears to have two peaks and so |vegas| will
 focus on both regions of ``x[0]``, independently of what it does
@@ -334,8 +334,7 @@ stratifications on each axis. With ``neval=4e4``,
 statistical errors for the two-Gaussian
 integral are reduced by more than a factor of 3 relative to what older
 versions of |vegas| give. This is a relatively easy integral; 
-the difference can be more 
-than an order of magnitude for more difficult (and realistic)
+the difference can be much larger for more difficult (and realistic)
 integrals.
 
 
