@@ -19,7 +19,7 @@ from libc.math cimport floor, log, abs, tanh, erf, exp, sqrt, lgamma
 
 import sys
 import numpy 
-import math
+import math 
 import warnings
 try:
     import mpi4py
@@ -2196,11 +2196,10 @@ cdef class MPIintegrand(BatchIntegrand):
         self.nproc = self.comm.Get_size()
         # synchronize random number generators
         if self.rank == 0:
-            seed = tuple(numpy.random.randint(1, sys.maxint, size=3))
+            seed = tuple(numpy.random.randint(1, sys.maxsize, size=3))
         else:
             seed = None
-        seed = self.comm.bcast(seed, root=0)
-        self.seed = seed
+        self.seed = self.comm.bcast(seed, root=0)
         numpy.random.seed(self.seed)
         self.fcn_shape = None
 

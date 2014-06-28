@@ -21,9 +21,9 @@ and also not taking T to infinity.
 Using numerical path integration to solve these  problems has got to be one of
 the most inefficient numerical approaches there is. One does it for the fun of
 experiencing the path integral as an actual integral (as opposed to a formal
-construct). Numerical path integration *is* the method of  choice, however,
+construct). Numerical path integration *is* the method of choice, however,
 for solving really complicated, highly nonlinear problems like QCD; but one
-doesn't   use vegas to do this --- see the paper above.
+doesn't use vegas to do this --- see the paper above.
 """
 from __future__ import print_function   # makes this work for python2 and 3
 

@@ -372,6 +372,8 @@ class TestIntegrator(unittest.TestCase):
             if k == 'map':
                 np_assert_allclose(I1.map.grid, I2.map.grid)
                 np_assert_allclose(I1.map.inc, I2.map.inc)
+            elif k in ['ran_array_generator']:
+                continue
             else:
                 self.assertEqual(getattr(I1, k), getattr(I2, k))
 

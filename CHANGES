@@ -1,8 +1,8 @@
 Version 2.2 - 2014-06-28
 =========================
-Added a decorator vegas.MPIintegrand that makes it trivial to evaluate
-integrands on mupliple processors using MPI. See the tutorial section
-on Multiple Processors for more discussion. This is only useful for 
+There is a new decorator, vegas.MPIintegrand, that makes it trivial to
+evaluate integrands on mupliple processors using MPI. See the tutorial section
+on Multiple Processors for more discussion. This is only useful for
 integrands that are expensive to evaluate.
 
 Beginning with this version of vegas, version numbers will be consistent
