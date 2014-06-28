@@ -185,7 +185,6 @@ fashion, for use in subsequent iterations of the algorithm.
 
 Other Objects and Functions
 ----------------------------
-
 .. autoclass:: vegas.RAvg
 
    .. attribute:: mean
@@ -229,4 +228,7 @@ Other Objects and Functions
 .. autofunction:: vegas.batchintegrand
 
 .. autoclass:: vegas.BatchIntegrand
+
+.. autoclass:: MPIintegrand
+
 

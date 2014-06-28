@@ -19,6 +19,12 @@ from numpy.testing import assert_allclose as np_assert_allclose
 import unittest
 import warnings
 
+try:
+    import mpi4py
+    import mpi4py.MPI 
+except ImportError:
+    mpi4py = None 
+
 if have_gvar:
     import gvar as gv
 
@@ -599,6 +605,53 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(r1.itn_results[-1].sdev < 0.01)
         self.assertTrue(r1.Q > 1e-3)
 
+class TestMPIintegrand(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_scalar(self):
+        " integrate scalar-valued MPIintegrand  "
+        if mpi4py is None:
+            return
+        @MPIintegrand
+        def fcn(x):
+            f = np.empty(x.shape[0], float)
+            for i in range(f.shape[0]):
+                f[i] = (
+                    math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
+                    ) / math.pi ** 2
+            return f
+        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
+        r = I(fcn, neval=10000)
+        self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
+        self.assertGreater(r.Q, 1e-3)
+        self.assertLess(r.sdev, 1e-3)
+
+    def test_array(self):
+        " integrate array-valued MPIintegrand  "
+        if mpi4py is None:
+            return
+        @MPIintegrand
+        def fcn(x):
+            f = np.empty((x.shape[0],2), float)
+            for i in range(f.shape[0]):
+                f[i, 0] = (
+                    math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
+                    ) / math.pi ** 2
+                f[i, 1] = (
+                    math.sin(x[i, 0]) ** 2 - math.cos(x[i, 1]) ** 2
+                    ) / math.pi ** 2
+            return f
+        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
+        r = I(fcn, neval=10000)
+        self.assertLess(abs(r[0].mean - 1.), 5 * r[0].sdev)
+        self.assertLess(r[0].sdev, 1e-3)
+        self.assertLess(abs(r[1].mean - 0.), 5 * r[0].sdev)
+        self.assertLess(r[1].sdev, 1e-3)
+        self.assertGreater(r.Q, 1e-3)
 
 class Testgvar(unittest.TestCase):
     """ tests gvar and GVar since might be the vegas substitutes if no gvar """

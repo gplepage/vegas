@@ -21,6 +21,11 @@ import sys
 import numpy 
 import math
 import warnings
+try:
+    import mpi4py
+    import mpi4py.MPI 
+except ImportError:
+    mpi4py = None
 
 cdef double TINY = 10 ** (sys.float_info.min_10_exp + 50)  # smallest and biggest
 cdef double HUGE = 10 ** (sys.float_info.max_10_exp - 50)  # with extra headroom
@@ -93,7 +98,7 @@ try:
     import gvar
     have_gvar = True
 except ImportError:
-    have_gvar = False
+    have_gvar = False 
 
     # fake version of gvar.gvar
     # for use if gvar module not available
@@ -115,6 +120,7 @@ except ImportError:
             self.sdev = abs(float(sdev))
             self.var = self.sdev ** 2
             self.internaldata = (self.mean, self.sdev)
+        
         def __add__(self, double a):
             return GVar(a + self.mean, self.sdev)
 
@@ -1286,7 +1292,7 @@ cdef class Integrator(object):
         between 0 and 1. ``ran_array_generator(shape)`` should 
         create an array whose dimensions are specified by the 
         integer-valued tuple ``shape``. The default generator
-        is ``ran_array_generator=numpy.random.random``.
+        is ``numpy.random.random``.
     """
 
     # Settings accessible via the constructor and Integrator.set
@@ -2098,6 +2104,124 @@ cdef class _BatchIntegrand_from_NonBatch(BatchIntegrand):
             f[i] = self.fcn(x[i, :])
         return f
 
+cdef class MPIintegrand(BatchIntegrand):
+    """ Convert (batch) integrand into an MPI multiprocessor integrand. 
+
+    Applying decorator :class:`vegas.MPIintegrand` to  a function
+    repackages the function as a  batch |vegas| integrand that can
+    execute in parallel on multiple processors. Appropriate  functions
+    take a :mod:`numpy` array of integration points ``x[i, d]`` as an
+    argument, where ``i=0...`` labels the integration point and
+    ``d=0...`` labels direction, and return an array ``f[i]`` of
+    integrand values (or arrays  f[i,...] of integrand values) for the
+    corresponding  points.
+
+    An example is ::
+
+        import vegas 
+        import numpy as np 
+
+        @vegas.MPIintegrand
+        def f(x):
+            return np.exp(-x[:, 0] - x[:, 1])
+
+    for the two-dimensional integrand :math:`\exp(-x_0 - x_1)`.  Of
+    course, one could write ``f = vegas.MPIintegrand(f)`` instead of
+    using the decorator.
+
+    Message passing between processors uses MPI via Python  module
+    :mod:`mpi4py`, which must be installed in Python.  To run an MPI
+    integration code ``mpi-integral.py`` on 4 processors,  for
+    example, one might execute::
+        
+        mpirun -np 4 python mpi-integral.py
+
+    Executing ``python mpi-integral.py``, without the ``mpirun``, causes
+    it to run on a single processor, in more or less the same  way an
+    integral with a batch integrand runs.
+
+    An object of type :class:`vegas.MPIintegrand` contains information
+    about the MPI processes in the following attributes:
+
+    .. attribute:: comm
+
+        MPI intracommunicator --- :class:`mpi4py.MPI.Intracomm` object
+        ``mpi4py.MPI.COMM_WORLD``.
+
+    .. attribute:: nproc
+
+        Number of processors used.
+
+    .. attribute:: rank
+
+        MPI rank of current process. Each process has a unique  rank,
+        ranging from ``0`` to ``nproc-1``. The rank is used  to make
+        different processes do different things (for example, one
+        generally wants only one of the processes to report out  final
+        results).
+
+    .. attribute:: seed 
+
+        The random number see used to reset ``numpy.random.random``
+        in all the processes.
+
+    The implementation used here has the entire integration code run
+    on every processor. It is only when evaluating the integrand that
+    the processes do different  things. This is efficient provided
+    most of the time is spent evaluating the integrand, which, in any
+    case, is the only situation where it might make sense to use multiple
+    processors.
+
+    Note that :class:`vegas.MPIintegrand` assumes that
+    :class:`vegas.Integrator` is using the default random  number
+    generator (``numpy.random.random``). If this  is not the case, it
+    is important to seed the other random  number generator so that all
+    processes use the same random numbers.
+
+    The approach used here to make |vegas| parallel is  based on a
+    strategy used by R. Horgan and Q. Mason  with the original Fortran
+    version of |vegas|.
+    """
+    #cdef readonly object comm 
+    #cdef readonly INTP_TYPE rank 
+    #cdef readonly INTP_TYPE nproc 
+    #cdef readonly object seed
+
+    def __init__(self, fcn):
+        if mpi4py is None:
+            raise ImportError("MPIintegrand couldn't fine module mpi4py.")
+        self.fcn = fcn
+        self.comm = mpi4py.MPI.COMM_WORLD
+        self.rank = self.comm.Get_rank()
+        self.nproc = self.comm.Get_size()
+        # synchronize random number generators
+        if self.rank == 0:
+            seed = tuple(numpy.random.randint(1, sys.maxint, size=3))
+        else:
+            seed = None
+        seed = self.comm.bcast(seed, root=0)
+        self.seed = seed
+        numpy.random.seed(self.seed)
+        self.fcn_shape = None
+
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+        """ Divide x into self.nproc chunks, feeding one to each processor. """
+        # Note that the last chunk needs to be padded out to the same 
+        # length as the others so that Allgather doesn't get upset. The 
+        # size of the pad is smaller than ``self.nproc``.
+        cdef numpy.ndarray results, f
+        cdef INTP_TYPE nx, i0, i1
+        if self.fcn_shape is None:
+            # use a trial evaluation with the first x to get fcn_shape
+            self.fcn_shape = numpy.shape(self.fcn(x[:1]))[1:]
+        nx = x.shape[0] // self.nproc + 1
+        i0 = self.rank * nx 
+        i1 = min(i0 + nx, x.shape[0])
+        f = numpy.empty((nx,) + self.fcn_shape, numpy.double)
+        f[:(i1-i0)] = self.fcn(x[i0:i1])
+        results = numpy.empty((self.nproc * nx,) + self.fcn_shape, numpy.double)
+        self.comm.Allgather(f, results)
+        return results[:x.shape[0]]
 
 
 # legacy names

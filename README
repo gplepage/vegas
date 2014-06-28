@@ -12,7 +12,13 @@ evaluation). The algorithm in this package is significantly
 improved over the original vegas implementation. In particular 
 a second adaptive strategy has been added.  
 
+See the INSTALLATION file for installation directions. 
 Test :mod:`vegas` using 'make tests.' Some simple examples are
 in the examples directory.
 
-Installation instructions are in the INSTALLATION file.
+Versioning: Version numbers for lsqfit are now (2.2 and later) based upon
+*semantic  versioning* (http://semver.org). Incompatible changes will be
+signaled by incrementing the major version number, where version numbers have
+the form major.minor.patch. The minor number signals new features, and the
+patch number bug fixes.
+

@@ -773,16 +773,19 @@ would be faster than pure Python).
 
 Multiple Processors
 ---------------------------
-|vegas| code normally runs in a single thread on 
-a single CPU. We can distribute the evaluation of the integrand
-over multiple CPUs, however, by using the batch mode described in 
-the previous section. This is worthwhile when the integrand 
-is expensive to evaluate. 
+|vegas| code normally runs on a single CPU. It is possible 
+to distribute the evaluation of the integrand over multiple processors
+by using the batch mode described in the previous section. This 
+becomes worthwhile when the integrand becomes more expensive to 
+evaluate.
 
-To illustrate, consider an integrand consisting
-of 1000 narrow Gaussians distributed evenly along the diagonal of 
-a 4-dimensional unit hypercube. To maximize speed, we implement
-the integrand in Cython, putting the result in a file ``ridge.pyx``::
+|vegas| comes with a decorator, :class:`vegas.MPIintegrand`, that  adapts
+batch integrands for multiprocessor use through MPI. It assumes that Python
+module :mod:`mpi4py` is installed (and MPI, of course). To illustrate its use
+consider an integrand consisting of 1000 narrow Gaussians distributed evenly
+along the diagonal of a 4-dimensional unit hypercube. To maximize speed, we
+implement the integrand in Cython (it could have been done almost as easily in 
+Fortran or C, or in Python), putting the result in a file ``ridge.pyx``::
 
     # file: ridge.pyx
     
@@ -803,36 +806,79 @@ the integrand in Cython, putting the result in a file ``ridge.pyx``::
                     dx2 += (x[i, d] - x0) ** 2
                 ans[i] += exp(-100. * dx2)
             ans[i] *= (100. / np.pi) ** 2 / N
-        # make sure result is a numpy array (for pickle)
-        return np.asarray(ans)
+        return ans
     
-The main integration code then uses Python's :mod:`multiprocessing` module to
-distribute evaluation of the integrand over 4 CPUs::
+This is a standard batch integrand. The main integration code,
+in file ``mpi-integral.py``, is then::
 
-    import pyximport; pyximport.install()
+    # file: mpi-integral.py
 
-    import multiprocessing 
+    import pyximport; pyximport.install()  # compiles ridge.pyx
+
     import numpy as np
     import vegas
     import ridge
 
+    def main():
+        integ = vegas.Integrator(4 * [[0, 1]])
+        # convert ridge.f into an MPI integrand
+        fparallel = vegas.MPIintegrand(ridge.f)
+        # adapt
+        integ(fparallel, nitn=10, neval=1e5)
+        # final results
+        result = integ(fparallel, nitn=10, neval=1e5)
+        if fparrallel.rank == 0:
+            # result should be approximately 0.851
+            print('result = %s    Q = %.2f' % (result, result.Q))
+
+    if __name__ == '__main__':
+        main()
+
+The integrand and main program are identical to what one would use for 
+a batch integral except that ``vegas.MPIintegrand(ridge.f)`` is used
+in place of ``vegas.batchintegrand(ridge.f)``, and we check the MPI
+rank of the process to avoid printing out multiple copies of the result,
+after the integration. To run this code on 4 CPUs, we might execute::
+
+    mpirun -np 4 python mpi-integral.py 
+
+This code runs 2.5--3 times faster on 4 CPUs than a single CPU. 
+One might have hoped that 4 CPUs would be 4x faster, but they aren't
+quite that fast because of the time needed to transfer integration 
+information between the processes on the different CPUs. 
+Multiple CPUs are efficient only for costly integrands. 
+
+There are many other ways to implement multiprocessing for |vegas|. 
+All methods work with |vegas| in batch mode, and distribute different 
+integration points to different CPUs. For example, a class similar
+in function to :class:`vegas.MPIintegrand`, but where Python's 
+:mod:`multiprocessing` module replaces MPI, is::
+
+    import multiprocessing 
+    import numpy as np
+    import vegas
+
     class parallelintegrand(vegas.BatchIntegrand):
-        """ Convert (batch) integrand into multiprocessor integrand. """
-        def __init__(self, fcn):
-            " Save integrand; create pool of 4 processes. "
+        """ Convert (batch) integrand into multiprocessor integrand. 
+
+        Integrand should return a numpy array.
+        """
+        def __init__(self, fcn, nproc=4):
+            " Save integrand; create pool of nproc processes. "
             self.fcn = fcn
-            self.pool = multiprocessing.Pool(processes=4)
+            self.nproc = nproc
+            self.pool = multiprocessing.Pool(processes=nproc)
         def __del__(self):
             " Standard cleanup. "
             self.pool.close()
             self.pool.join()
         def __call__(self, x):
-            " Divide x into 4 chunks, feeding one to each process. "
-            nx = x.shape[0] // 4 + 1
+            " Divide x into self.nproc chunks, feeding one to each process. "
+            nx = x.shape[0] // self.nproc + 1
             # launch evaluation of self.fcn for each chunk, in parallel
             po = self.pool.map_async(
                 self.fcn, 
-                [x[:nx], x[nx:2*nx], x[2*nx:3*nx], x[3*nx:]],
+                [x[i*nx : (i+1)*nx] for i in range(self.nproc)],
                 1,
                 )
             # harvest the results
@@ -840,42 +886,10 @@ distribute evaluation of the integrand over 4 CPUs::
             # convert list of results into a single numpy array
             return np.concatenate(results)
 
-
-    def main():
-        integ = vegas.Integrator(4 * [[0, 1]])
-        # convert ridge.f into a multiprocessor integrand
-        fparallel = parallelintegrand(ridge.f)
-        # adapt
-        integ(fparallel, nitn=10, neval=1e5)
-        # final results
-        result = integ(fparallel, nitn=10, neval=1e5)
-        # result should be approximately 0.851
-        print('result = %s    Q = %.2f' % (result, result.Q))
-
-    if __name__ == '__main__':
-        main()
-
-This code runs about 2.8x faster than the single-processor version of 
-the same code, where ``fparallel`` is replaced by::
-
-     fbatch = vegas.batchintegrand(ridge.f)
-
-One might expect the multiprocessor code to be 4x faster, since it uses 
-4 CPUs, but it isn't quite that fast because
-of the time needed to transfer
-integration points to the other processes and then to bring back the 
-corresponding integrand values. Multiple processors are efficient only
-for costly integrands. 
-
-Note that ``parallelintegrand()`` is completely
-generic; it can be applied to any (batch) integrand function. 
-(The function has to be 
-pickleable because of the way ``multiprocessing`` manages inter-process 
-communication.)
-There are many other ways to implement multiprocessing for |vegas|, including
-using Cython's parallel processing constructs. All methods work with 
-|vegas| in batch mode, and distribute different integration points to 
-different CPUs. 
+Then ``fparallel = parallelintegrand(f, 4)``, for example, will create a 
+new integrand ``fparallel(x)`` that uses 4 CPUs. This particular 
+implementation of parallelism is not as efficient as the 
+:class:`vegas.MPIintegrand`.
 
 Sums with |vegas|
 -------------------

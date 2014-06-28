@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -7,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vegas Module &mdash; vegas 2.1.4 documentation</title>
+    <title>vegas Module &mdash; vegas 2.2 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '2.1.4',
+        URL_ROOT:    './',
+        VERSION:     '2.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.1.4 documentation" href="index.html" />
+    <link rel="top" title="vegas 2.2 documentation" href="index.html" />
     <link rel="prev" title="How vegas Works" href="background.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -47,7 +46,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.1.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -254,7 +253,7 @@ is <tt class="docutils literal"><span class="pre">analyzer=None</span></tt>.</p>
 between 0 and 1. <tt class="docutils literal"><span class="pre">ran_array_generator(shape)</span></tt> should 
 create an array whose dimensions are specified by the 
 integer-valued tuple <tt class="docutils literal"><span class="pre">shape</span></tt>. The default generator
-is <tt class="docutils literal"><span class="pre">ran_array_generator=numpy.random.random</span></tt>.</li>
+is <tt class="docutils literal"><span class="pre">numpy.random.random</span></tt>.</li>
 </ul>
 </td>
 </tr>
@@ -360,13 +359,14 @@ assigned to that point by <a class="reference internal" href="#module-vegas" tit
 Optionally it will also return the index of the hypercube 
 containing the integration point and/or the y-space 
 coordinates:</p>
-<div class="highlight-python"><pre>integ.random()  yields  x, wgt
+<div class="highlight-python"><div class="highlight"><pre>integ.random()  yields  x, wgt
 
 integ.random(yield_hcube=True) yields x, wgt, hcube 
 
 integ.random(yield_y=True) yields x, y, wgt
 
-integ.random(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube</pre>
+integ.random(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube
+</pre></div>
 </div>
 <p>The number of integration points returned by the iterator 
 corresponds to a single iteration.</p>
@@ -386,13 +386,14 @@ in an array <tt class="docutils literal"><span class="pre">wgt[i]</span></tt>.</
 <p>Optionally the integrator will also return the indices of 
 the hypercubes containing the integration points and/or the y-space 
 coordinates of those points:</p>
-<div class="highlight-python"><pre>integ.random()  yields  x, wgt
+<div class="highlight-python"><div class="highlight"><pre>integ.random()  yields  x, wgt
 
 integ.random(yield_hcube=True) yields x, wgt, hcube 
 
 integ.random(yield_y=True) yields x, y, wgt
 
-integ.random(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube</pre>
+integ.random(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube
+</pre></div>
 </div>
 <p>The number of integration points returned by the iterator 
 corresponds to a single iteration. The number in a batch
@@ -410,24 +411,24 @@ integration variables x into new variables y in a unit hypercube.
 Each direction has its own map specified by a grid in x space:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/077fc49276c2b66f7e124f08dc65028b373fd263.png" alt="x_0 &amp;= a \\
+<p><img src="_images/math/2a7eadcb86c993e7d22a45371f1169fe156eb4e5.png" alt="x_0 &amp;= a \\
 x_1 &amp;= x_0 + \Delta x_0 \\
 x_2 &amp;= x_1 + \Delta x_1 \\
 \cdots \\
 x_N &amp;= x_{N-1} + \Delta x_{N-1} = b"/></p>
 </div></div></blockquote>
-<p>where <img class="math" src="_images/math/c7d457e388298246adb06c587bccd419ea67f7e8.png" alt="a" style="vertical-align: -1px"/> and <img class="math" src="_images/math/8136a7ef6a03334a7246df9097e5bcc31ba33fd2.png" alt="b" style="vertical-align: 0px"/> are the limits of integration.
+<p>where <img class="math" src="_images/math/12638a92eff0af5d559a80407fce6d21dcd444af.png" alt="a" style="vertical-align: -1px"/> and <img class="math" src="_images/math/b036fa9b6a64726cfe4920840bd290c39021976a.png" alt="b" style="vertical-align: 0px"/> are the limits of integration.
 The grid specifies the transformation function at the points
-<img class="math" src="_images/math/389b75c77cae997103a92c2f87b4df54980ef6cb.png" alt="y=i/N" style="vertical-align: -3px"/> for <img class="math" src="_images/math/ea2bda8abaf30faa60fe32cd8a1ba7700492c05a.png" alt="i=0,1\ldots N" style="vertical-align: -2px"/>:</p>
+<img class="math" src="_images/math/ba6506fa1f3c113f3b2c9f6ecdd294fb79fa6d8f.png" alt="y=i/N" style="vertical-align: -3px"/> for <img class="math" src="_images/math/a22bb1955f608382d024d9f250d6477aebe05877.png" alt="i=0,1\ldots N" style="vertical-align: -2px"/>:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/6b9509edd258585c850b9800d6765072ac0f8d90.png" alt="x(y\!=\!i/N) = x_i"/></p>
+<p><img src="_images/math/d3d6093fa11478f0942ef809fd9336caa579fe83.png" alt="x(y\!=\!i/N) = x_i"/></p>
 </div></div></blockquote>
 <p>Linear interpolation is used between those points. The Jacobian
 for this transformation is:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/f41a2bac182dbef90d7938db505cd4348a3ae642.png" alt="J(y) = J_i = N \Delta x_i"/></p>
+<p><img src="_images/math/951630f7031030d54eed84dde9883538f38f9f6d.png" alt="J(y) = J_i = N \Delta x_i"/></p>
 </div></div></blockquote>
 <p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> adjusts the increments sizes to optimize its Monte Carlo
 estimates of the integral. This involves training the grid. To
@@ -479,7 +480,7 @@ map, making increments smaller where <tt class="docutils literal"><span class="p
 larger where <tt class="docutils literal"><span class="pre">f2</span></tt> is smaller.
 The map converges after only 2 or 3 iterations, as
 is clear from the output:</p>
-<div class="highlight-python"><pre>initial grid:
+<div class="highlight-python"><div class="highlight"><pre>initial grid:
     grid[ 0] = [ 0.   0.2  0.4  0.6  0.8  1. ]
     grid[ 1] = [ 0.   0.2  0.4  0.6  0.8  1. ]
 
@@ -502,8 +503,7 @@ iteration 3:
 iteration 4:
     grid[ 0] = [ 0.     0.436  0.631  0.772  0.895  1.   ]
     grid[ 1] = [ 0.     0.533  0.715  0.831  0.924  1.   ]
-
-</pre>
+</pre></div>
 </div>
 <p>The grid increments along direction 0 shrink at larger
 values <tt class="docutils literal"><span class="pre">x[0]</span></tt>, varying as <tt class="docutils literal"><span class="pre">1/x[0]</span></tt>. Along direction 1
@@ -525,7 +525,8 @@ the grid are specified by <tt class="docutils literal"><span class="pre">grid[d,
 direction (<tt class="docutils literal"><span class="pre">d=0,1...dim-1</span></tt>) and <tt class="docutils literal"><span class="pre">i</span></tt> labels the grid point
 (<tt class="docutils literal"><span class="pre">i=0,1...N</span></tt>). The mapping for a specific point <tt class="docutils literal"><span class="pre">y</span></tt> into
 <tt class="docutils literal"><span class="pre">x</span></tt> space is:</p>
-<div class="highlight-python"><pre>y[d] -&gt; x[d] = grid[d, i(y[d])] + inc[d, i(y[d])] * delta(y[d])</pre>
+<div class="highlight-python"><div class="highlight"><pre>y[d] -&gt; x[d] = grid[d, i(y[d])] + inc[d, i(y[d])] * delta(y[d])
+</pre></div>
 </div>
 <p>where <tt class="docutils literal"><span class="pre">i(y)=floor(y*N</span></tt>), <tt class="docutils literal"><span class="pre">delta(y)=y*N</span> <span class="pre">-</span> <span class="pre">i(y)</span></tt>, and
 <tt class="docutils literal"><span class="pre">inc[d,</span> <span class="pre">i]</span> <span class="pre">=</span> <span class="pre">grid[d,</span> <span class="pre">i+1]</span> <span class="pre">-</span> <span class="pre">grid[d,</span> <span class="pre">i]</span></tt>. The Jacobian for this map,</p>
@@ -911,7 +912,7 @@ the type of <tt class="docutils literal"><span class="pre">fcn</span></tt> is ch
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>for the two-dimensional integrand <img class="math" src="_images/math/0cd7e0d57a64e96f3ee475d056c980a3c9d557e0.png" alt="\exp(-x_0 - x_1)" style="vertical-align: -3px"/>.</p>
+<p>for the two-dimensional integrand <img class="math" src="_images/math/f3d2e2952c5287b08304f19892d3bb323eb1b153.png" alt="\exp(-x_0 - x_1)" style="vertical-align: -3px"/>.</p>
 <p>This decorator provides an alternative to deriving an integrand
 class from <a class="reference internal" href="#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.BatchIntegrand</span></tt></a>.</p>
 </dd></dl>
@@ -945,10 +946,92 @@ array-valued integrand).</p>
 <span class="n">f</span> <span class="o">=</span> <span class="n">batchf</span><span class="p">()</span>      <span class="c"># the integrand</span>
 </pre></div>
 </div>
-<p>for the two-dimensional integrand <img class="math" src="_images/math/0cd7e0d57a64e96f3ee475d056c980a3c9d557e0.png" alt="\exp(-x_0 - x_1)" style="vertical-align: -3px"/>.</p>
+<p>for the two-dimensional integrand <img class="math" src="_images/math/f3d2e2952c5287b08304f19892d3bb323eb1b153.png" alt="\exp(-x_0 - x_1)" style="vertical-align: -3px"/>.</p>
 <p>Deriving from <a class="reference internal" href="#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.BatchIntegrand</span></tt></a> is the 
 easiest way to construct integrands in Cython, and
 gives the fastest results.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="vegas.MPIintegrand">
+<em class="property">class </em><tt class="descclassname">vegas.</tt><tt class="descname">MPIintegrand</tt><a class="headerlink" href="#vegas.MPIintegrand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert (batch) integrand into an MPI multiprocessor integrand.</p>
+<p>Applying decorator <a class="reference internal" href="#vegas.MPIintegrand" title="vegas.MPIintegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></tt></a> to  a function
+repackages the function as a  batch <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> integrand that can
+execute in parallel on multiple processors. Appropriate  functions
+take a <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> array of integration points <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> as an
+argument, where <tt class="docutils literal"><span class="pre">i=0...</span></tt> labels the integration point and
+<tt class="docutils literal"><span class="pre">d=0...</span></tt> labels direction, and return an array <tt class="docutils literal"><span class="pre">f[i]</span></tt> of
+integrand values (or arrays  f[i,...] of integrand values) for the
+corresponding  points.</p>
+<p>An example is</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span> 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span> 
+
+<span class="nd">@vegas.MPIintegrand</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>for the two-dimensional integrand <img class="math" src="_images/math/f3d2e2952c5287b08304f19892d3bb323eb1b153.png" alt="\exp(-x_0 - x_1)" style="vertical-align: -3px"/>.  Of
+course, one could write <tt class="docutils literal"><span class="pre">f</span> <span class="pre">=</span> <span class="pre">vegas.MPIintegrand(f)</span></tt> instead of
+using the decorator.</p>
+<p>Message passing between processors uses MPI via Python  module
+<tt class="xref py py-mod docutils literal"><span class="pre">mpi4py</span></tt>, which must be installed in Python.  To run an MPI
+integration code <tt class="docutils literal"><span class="pre">mpi-integral.py</span></tt> on 4 processors,  for
+example, one might execute:</p>
+<div class="highlight-python"><div class="highlight"><pre>mpirun -np 4 python mpi-integral.py
+</pre></div>
+</div>
+<p>Executing <tt class="docutils literal"><span class="pre">python</span> <span class="pre">mpi-integral.py</span></tt>, without the <tt class="docutils literal"><span class="pre">mpirun</span></tt>, causes
+it to run on a single processor, in more or less the same  way an
+integral with a batch integrand runs.</p>
+<p>An object of type <a class="reference internal" href="#vegas.MPIintegrand" title="vegas.MPIintegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></tt></a> contains information
+about the MPI processes in the following attributes:</p>
+<dl class="attribute">
+<dt id="vegas.MPIintegrand.comm">
+<tt class="descname">comm</tt><a class="headerlink" href="#vegas.MPIintegrand.comm" title="Permalink to this definition">¶</a></dt>
+<dd><p>MPI intracommunicator &#8212; <tt class="xref py py-class docutils literal"><span class="pre">mpi4py.MPI.Intracomm</span></tt> object
+<tt class="docutils literal"><span class="pre">mpi4py.MPI.COMM_WORLD</span></tt>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.MPIintegrand.nproc">
+<tt class="descname">nproc</tt><a class="headerlink" href="#vegas.MPIintegrand.nproc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of processors used.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.MPIintegrand.rank">
+<tt class="descname">rank</tt><a class="headerlink" href="#vegas.MPIintegrand.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>MPI rank of current process. Each process has a unique  rank,
+ranging from <tt class="docutils literal"><span class="pre">0</span></tt> to <tt class="docutils literal"><span class="pre">nproc-1</span></tt>. The rank is used  to make
+different processes do different things (for example, one
+generally wants only one of the processes to report out  final
+results).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.MPIintegrand.seed">
+<tt class="descname">seed</tt><a class="headerlink" href="#vegas.MPIintegrand.seed" title="Permalink to this definition">¶</a></dt>
+<dd><p>The random number see used to reset <tt class="docutils literal"><span class="pre">numpy.random.random</span></tt>
+in all the processes.</p>
+</dd></dl>
+
+<p>The implementation used here has the entire integration code run
+on every processor. It is only when evaluating the integrand that
+the processes do different  things. This is efficient provided
+most of the time is spent evaluating the integrand, which, in any
+case, is the only situation where it might make sense to use multiple
+processors.</p>
+<p>Note that <a class="reference internal" href="#vegas.MPIintegrand" title="vegas.MPIintegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></tt></a> assumes that
+<a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> is using the default random  number
+generator (<tt class="docutils literal"><span class="pre">numpy.random.random</span></tt>). If this  is not the case, it
+is important to seed the other random  number generator so that all
+processes use the same random numbers.</p>
+<p>The approach used here to make <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> parallel is  based on a
+strategy used by R. Horgan and Q. Mason  with the original Fortran
+version of <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>.</p>
 </dd></dl>
 
 </div>
@@ -1003,12 +1086,12 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.1.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013-14, G.P. Lepage.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

@@ -22,6 +22,14 @@ cdef class BatchIntegrand:
 cdef class VecIntegrand(BatchIntegrand):
     pass
 
+cdef class MPIintegrand(BatchIntegrand):
+    #cdef public object fcn  from BatchIntegrand
+    cdef readonly object comm 
+    cdef readonly INTP_TYPE rank 
+    cdef readonly INTP_TYPE nproc 
+    cdef readonly object seed
+    cdef readonly object fcn_shape
+
 cdef class AdaptiveMap:
     # first index is direction, second is increment
     cdef readonly double[:, ::1] grid

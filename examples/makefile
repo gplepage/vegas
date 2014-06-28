@@ -24,7 +24,10 @@ run:
 	- diff -w fastest.out fastest.tmp
 	$(PYTHON) path-integral.py $(PLOT) > path-integral.tmp  # about 16s
 	- diff -w path-integral.out path-integral.tmp
-
+	- $(PYTHON) parallel-pools.py > parallel-pools.tmp
+	- diff -w parallel-pools.out parallel-pools.tmp
+	- mpirun -np 4 $(PYTHON) parallel-mpi.py > parallel-mpi.tmp
+	- diff -w parallel-mpi.out parallel-mpi.tmp
 time:
 	time $(MAKE) PYTHON=$(PYTHON) PLOT=False run
 
@@ -33,6 +36,8 @@ update-all:
 	$(PYTHON) slow.py > slow.out
 	$(PYTHON) faster.py > faster.out
 	$(PYTHON) fastest.py > fastest.out
+	$(PYTHON) parallel-pools.py > parallel-pools.out 
+	- mpirun -np 4 parallel-pools.py > parallel-pools.out 
 
 clean:
 	rm -f *.pyc *.tmp *.p *.prof

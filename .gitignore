@@ -3,11 +3,17 @@
 build/
 __pycache__/
 *.c
+miscellaneous/
+tmp/
+old/
+papers/
+examples/vegas.prof
 examples/*.c
 examples/*.tmp
 MANIFEST
 dist/
 doc/source/_build/
+doc/latex
 .coverage
 src/vegas/_version.py
 files-*.python*
@@ -15,6 +21,7 @@ vegas.todo
 nose-uncovered.py
 yyy*
 xxx*
+zzz*
 git-instructions
 *.sublime-*
 references/

@@ -1,3 +1,22 @@
+Version 2.2 - 2014-06-28
+=========================
+Added a decorator vegas.MPIintegrand that makes it trivial to evaluate
+integrands on mupliple processors using MPI. See the tutorial section
+on Multiple Processors for more discussion. This is only useful for 
+integrands that are expensive to evaluate.
+
+Beginning with this version of vegas, version numbers will be consistent
+with the rules of "semantic versioning" (http://semver.org). The most
+important consequence is that any change that is *not* backwards compatible
+with the current interface (as defined by the documentation) will be signaled
+by a change in the major version number, where the full version number has the
+format major.minor.patch (so the major version number is 2 for version 2.1.4).
+A side effect of this policy is that increases in the major version number can be
+triggered by relatively obscure changes in the interface that have no
+effect whatsoever on almost all existing codes. The minor component increased
+for this version because it adds new functionality; but it remains compatible 
+with the previous version.
+
 Version 2.1.4 - 2014-02-05
 ============================
 More small changes (all backwards compatible).

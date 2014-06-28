@@ -19,7 +19,7 @@ from Cython.Build import cythonize
 import sys
 import numpy
 
-VEGAS_VERSION = '2.1.4'
+VEGAS_VERSION = '2.2'
 
 # create vegas/version.py so vegas knows its version number 
 with open("src/vegas/_version.py","w") as version_file:
@@ -32,7 +32,7 @@ with open("src/vegas/_version.py","w") as version_file:
 include_dirs = [numpy.get_include()]
 data_files = [('vegas_include', ['vegas.pxd'])]
 
-ext_modules = cythonize('src/vegas/_vegas.pyx') + cythonize('examples/kinoshita/kinoshita.pyx')
+ext_modules = cythonize('src/vegas/_vegas.pyx') # + cythonize('examples/kinoshita/kinoshita.pyx')
 
 packages = ['vegas']
 package_dir = dict(vegas='src/vegas')
