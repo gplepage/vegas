@@ -998,7 +998,7 @@ cdef class AdaptiveMap:
         :param ngrid: The number of grid nodes in each 
             direction to include in the plot. The default is 40.
         :type ngrid: int 
-        :nparam axes: List of pairs of directions to use in 
+        :param axes: List of pairs of directions to use in 
             different views of the grid. Using ``None`` in 
             place of a direction plots the grid for only one
             direction. Omitting ``axes`` causes a default 
