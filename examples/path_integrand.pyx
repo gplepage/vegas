@@ -15,20 +15,38 @@ from libc.math cimport exp, tan
 
 import numpy as np
 import vegas
-import math
 
-cdef class PathIntegral(vegas.BatchIntegrand): 
-    """ Computes < x0 | exp(-H*T) | x0 > 
+
+cdef class PathIntegrand(vegas.BatchIntegrand): 
+    """ Integrand for path integral corresponding to < x0 | exp(-H*T) | x0 > 
+
+    This class creates a vegas integrand whose integrals correspond to 
+    the quantum mechanical expectation values < x0 | exp(-H*T) | x0 >
+    where H = p**2/2m + V(x) is a 1-d Hamiltonian for a particle with 
+    mass m, moving in potential V(x). Values are given for a list of
+    x0 values, as well as for the integral over all x0.
+
+    Typical usage is:
+
+        integrand = PathIntegrand(V, x0list=[0.0, 0.2], T=4, ndT=6)
+        integ = vegas.Integrator(integrand.region)
+        results = integ(integrand, neval=100000, nitn=10)
+
+    Then results[0] is the integral over all values of x0 (and therefore
+    equals exp(-E0*T) if T is big enough), while results[i+1] is the 
+    value of the expectation value corresponding to x0 = x0list[i]
+    (and therefore results[i+1] / results[0] is the wavefunction squared
+    at x0, provided again that T is big enough).
 
     Parameters:
-        T ...... (Euclidean) time 
-        x0 ..... starting and ending position (if None => integrate over x0)
+        V ...... potential energy (function of x)
+        T ...... (Euclidean) time
+        x0list . list of x0 values
         ndT .... total number of time steps
         m ...... mass
         xscale . typical length scale for ground state wavefunction
-        neval .. number of evaluations per iteration (vegas)
-        nitn ... number of iterations (vegas)
     """
+    cdef readonly object V
     cdef readonly int ndT 
     cdef readonly double T
     cdef readonly int neval 
@@ -36,104 +54,71 @@ cdef class PathIntegral(vegas.BatchIntegrand):
     cdef readonly double m
     cdef readonly double xscale
     cdef readonly double norm
-    cdef readonly double[::1] x
-    cdef readonly object integ
+    cdef readonly double norm_x0
+    cdef readonly double[::1] x0list
+    cdef readonly double[::1] Vx0list
+    cdef readonly object region
 
-    def __init__(self, T, ndT=10, m=1, xscale=1., neval=25000, nitn=10):
+    def __init__(self, V, T, x0list=[], ndT=10, m=1, xscale=1.):
+        self.V = V
         self.ndT = ndT
         self.T = T 
-        self.neval = neval 
-        self.nitn = nitn
         self.m = m
         self.xscale = xscale
-        self.x = np.empty(self.ndT + 1, float)
-        self.norm = (self.m * self.ndT / 2. / math.pi / T) ** (self.ndT / 2.)
-
-    cdef double V(self, double x):
-        """ Derived classes needs to fill this in. """
-        raise NotImplementedError('need to define V')
+        self.x0list = np.array(x0list)
+        self.Vx0list = self.V(np.asarray(self.x0list))
+        self.norm = (self.m * self.ndT / 2. / np.pi / T) ** (self.ndT / 2.)
+        self.norm_x0 = self.norm / np.pi
+        self.region = self.ndT * [[-np.pi/2, np.pi/2]]
 
     def __call__(self, theta):
         """ integrand for the path integral """
         cdef int i, j 
-        cdef double S, jac
+        cdef double S, Smiddle, jac, jfac, jac_x0
         cdef double a = self.T / self.ndT
         cdef double m_2a = self.m / 2. / a
-        cdef double[::1] f = np.empty(theta.shape[0], float)
-        for i in range(len(f)):
-            # map back to range -oo to +oo; compute Jacobian
-            jac = self.norm
+        cdef double[:, ::1] x = np.empty(theta.shape, float)
+        cdef double[:, ::1] Vx
+        cdef double[::1] x0list = np.empty(len(self.x0list) + 1, float)
+        cdef double[::1] Vx0list = np.empty(len(x0list), float)
+        cdef double[:, ::1] f = np.empty((theta.shape[0], len(x0list)), float)
+        
+        # set up non-changing part of x0list
+        x0list[1:] = self.x0list
+        Vx0list[1:] = self.Vx0list
+
+        # map back to range -oo to +oo and compute V(x)
+        #
+        # create and store all x values at same time
+        # so can call self.V with very large number of x values
+        for i in range(theta.shape[0]):
             for j in range(theta.shape[1]):
-                self.x[j + 1] = self.xscale * tan(theta[i, j])
-                jac *= (self.xscale + self.x[j + 1] ** 2 / self.xscale)
-            
-            # enforce periodic boundary condition
-            # N.B. self.x[-1] is integrated over if x0=None
-            #      but otherwise is set equal to x0 (by set_region)
-            self.x[0] = self.x[-1]
-            
-            # compute the action
-            S = 0.
+                x[i, j] = self.xscale * tan(theta[i, j])
+        Vx = self.V(np.asarray(x))
+
+        # loop on integration points
+        for i in range(theta.shape[0]):
+            jac = self.norm
+            jac_x0 = self.norm_x0
             for j in range(self.ndT):
-                S += m_2a * (self.x[j + 1] - self.x[j]) ** 2 + a * self.V(self.x[j])
-            f[i] = exp(-S) * jac
+                jfac = (self.xscale + x[i, j] ** 2 / self.xscale)
+                jac *= jfac
+                if j > 0:
+                    jac_x0 *= jfac
+
+            # compute the action for central points
+            Smiddle = a * Vx[i, -1]
+            for j in range(1, self.ndT-1):
+                Smiddle += m_2a * (x[i, j + 1] - x[i, j]) ** 2 + a * Vx[i, j]
+
+            # add in end points, with periodic BCs
+            x0list[0] = x[i, 0]
+            Vx0list[0] = Vx[i, 0]
+            for j in range(len(x0list)): 
+                S = Smiddle + (
+                    m_2a * ( (x[i, 1] - x0list[j])**2 + (x0list[j] - x[i, -1])**2 ) 
+                    + a * Vx0list[j]
+                    )
+                f[i, j] = (jac if j == 0 else jac_x0) * exp(-S)
         return f
 
-    def correlator(self, x0=None):
-        """ Compute < x0 | exp(-H*T) | x0 > for array of x0 values.
-
-        If x0 is None, integrate over x0.
-        """
-        if x0 is None or len(x0) == 0:
-            # integrate over endpoints -> exp(-E0*T)
-            self.integ = vegas.Integrator(self.ndT * [[-math.pi/2, math.pi/2]])
-            # train integrator
-            self.integ(self, neval=self.neval, nitn=self.nitn)
-            # final integral
-            return self.integ(self, neval=self.neval, nitn=self.nitn, alpha=0.1)
-        else:
-            # set endpoints equal to x0[i] -> wavefunction(x0[i]) ** 2 * exp(-E0*T)
-            ans = []
-            self.integ = vegas.Integrator((self.ndT - 1) * [[-math.pi/2, math.pi/2]])
-            # train integrator
-            self.x[0] = x0[0]
-            self.x[-1] = x0[0]
-            self.integ(self, neval=self.neval, nitn=self.nitn)
-            # do final integrals
-            for x0i in x0:
-                self.x[0] = x0i
-                self.x[-1] = x0i
-                ans.append(
-                    self.integ(self, neval=self.neval, nitn=self.nitn, alpha=0.1)
-                    )
-            return np.array(ans)
-
-
-cdef class Oscillator(PathIntegral):
-    """ V(x) = x**2 / 2. + c * x**4 
-
-    Exact E0 is 0.5 for c=0; 0.602405 for c=0.2.
-    """
-    cdef double c
-
-    def __init__(self, c=0.0, *args, **kargs):
-        super(Oscillator, self).__init__(*args, **kargs)
-        self.c = c
-
-    cdef double V(self, double x):
-        return x * x / 2. + self.c * x * x * x * x 
-
-
-
-# Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-14 G. Peter Lepage. 
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# any later version (see <http://www.gnu.org/licenses/>).
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.

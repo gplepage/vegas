@@ -784,8 +784,7 @@ batch integrands for multiprocessor use through MPI. It assumes that Python
 module :mod:`mpi4py` is installed (and MPI, of course). To illustrate its use
 consider an integrand consisting of 1000 narrow Gaussians distributed evenly
 along the diagonal of a 4-dimensional unit hypercube. To maximize speed, we
-implement the integrand in Cython (it could have been done almost as easily in 
-Fortran or C, or in Python), putting the result in a file ``ridge.pyx``::
+implement the integrand in Cython, putting the result in a file ``ridge.pyx``::
 
     # file: ridge.pyx
     
@@ -808,7 +807,8 @@ Fortran or C, or in Python), putting the result in a file ``ridge.pyx``::
             ans[i] *= (100. / np.pi) ** 2 / N
         return ans
     
-This is a standard batch integrand. The main integration code,
+This is a standard batch integrand; it could have been written in Fortran
+or C almost as easily, or in Python. The main integration code,
 in file ``mpi-integral.py``, is then::
 
     # file: mpi-integral.py
@@ -842,7 +842,7 @@ after the integration. To run this code on 4 CPUs, we might execute::
 
     mpirun -np 4 python mpi-integral.py 
 
-This code runs 2.5--3 times faster on 4 CPUs than a single CPU. 
+This code runs 2.5--3 times faster on 4 CPUs than on a single CPU. 
 One might have hoped that 4 CPUs would be 4x faster, but they aren't
 quite that fast because of the time needed to transfer integration 
 information between the processes on the different CPUs. 

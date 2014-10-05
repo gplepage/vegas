@@ -1905,6 +1905,7 @@ cdef class Integrator(object):
                 fx = _fx.reshape((x.shape[0], ns))
                 
                 # compute integral and variance for each h-cube
+                # j is index of hcube within batch, i is absolute index
                 j = 0
                 for i in range(hcube[0], hcube[-1] + 1):
                     # iterate over h-cubes
@@ -1928,13 +1929,14 @@ cdef class Integrator(object):
                                 ) / (neval - 1.)
                         if var[s, s] <= 0:
                             var[s, s] = mean[s] ** 2 * 1e-15 + TINY
+                    sigf2 = abs(sum_wf2[0, 0] * neval - sum_wf[0] * sum_wf[0])
                     if self.beta > 0 and self.adapt:
-                        sigf2 = abs(sum_wf2[0, 0] * neval - sum_wf[0] * sum_wf[0])
                         if not self.minimize_mem:
                             sigf[i] = sigf2 ** (self.beta / 2.)
                         sum_sigf += sigf2 ** (self.beta / 2.)
                     if self.adapt_to_errors and self.adapt:
-                        fdv2[j - 1] = var[0, 0]
+                        # replace fdv2 with variance
+                        fdv2[j - 1] = sigf2
                         self.map.add_training_data(
                             self.y[j - 1:, :], fdv2[j - 1:], 1
                             )
@@ -2179,7 +2181,7 @@ cdef class MPIintegrand(BatchIntegrand):
     processes use the same random numbers.
 
     The approach used here to make |vegas| parallel is  based on a
-    strategy used by R. Horgan and Q. Mason  with the original Fortran
+    strategy developed by R. Horgan and Q. Mason for the original Fortran
     version of |vegas|.
     """
     #cdef readonly object comm 

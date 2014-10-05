@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; vegas 2.2 documentation</title>
+    <title>Tutorial &mdash; vegas 2.2.1 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.2',
+        VERSION:     '2.2.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.2 documentation" href="index.html" />
+    <link rel="top" title="vegas 2.2.1 documentation" href="index.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -50,7 +50,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.2.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -864,8 +864,7 @@ batch integrands for multiprocessor use through MPI. It assumes that Python
 module <tt class="xref py py-mod docutils literal"><span class="pre">mpi4py</span></tt> is installed (and MPI, of course). To illustrate its use
 consider an integrand consisting of 1000 narrow Gaussians distributed evenly
 along the diagonal of a 4-dimensional unit hypercube. To maximize speed, we
-implement the integrand in Cython (it could have been done almost as easily in
-Fortran or C, or in Python), putting the result in a file <tt class="docutils literal"><span class="pre">ridge.pyx</span></tt>:</p>
+implement the integrand in Cython, putting the result in a file <tt class="docutils literal"><span class="pre">ridge.pyx</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre># file: ridge.pyx
 
 from libc.math cimport exp      # use exp() from C library
@@ -888,7 +887,8 @@ def f(double[:, ::1] x):
     return ans
 </pre></div>
 </div>
-<p>This is a standard batch integrand. The main integration code,
+<p>This is a standard batch integrand; it could have been written in Fortran
+or C almost as easily, or in Python. The main integration code,
 in file <tt class="docutils literal"><span class="pre">mpi-integral.py</span></tt>, is then:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c"># file: mpi-integral.py</span>
 
@@ -922,7 +922,7 @@ after the integration. To run this code on 4 CPUs, we might execute:</p>
 <div class="highlight-python"><div class="highlight"><pre>mpirun -np 4 python mpi-integral.py
 </pre></div>
 </div>
-<p>This code runs 2.5&#8211;3 times faster on 4 CPUs than a single CPU.
+<p>This code runs 2.5&#8211;3 times faster on 4 CPUs than on a single CPU.
 One might have hoped that 4 CPUs would be 4x faster, but they aren&#8217;t
 quite that fast because of the time needed to transfer integration
 information between the processes on the different CPUs.
@@ -1182,7 +1182,7 @@ module is available.</p>
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">vegas 2.2.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

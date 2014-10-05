@@ -1,3 +1,13 @@
+Version 2.2.1 - 2014-10-4
+=========================
+This is a minor bug fix release.
+
+- Fixed a bug that caused option adapt_to_errors to malfunction. The 
+  malfunction caused the integral to be less than optimal, although 
+  still correct.
+
+- Cleaner implementation of the (Feynman) path integral example.
+
 Version 2.2 - 2014-06-28
 =========================
 There is a new decorator, vegas.MPIintegrand, that makes it trivial to

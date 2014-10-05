@@ -19,7 +19,7 @@ from Cython.Build import cythonize
 import sys
 import numpy
 
-VEGAS_VERSION = '2.2'
+VEGAS_VERSION = '2.2.1'
 
 # create vegas/version.py so vegas knows its version number 
 with open("src/vegas/_version.py","w") as version_file:

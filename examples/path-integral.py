@@ -7,7 +7,7 @@ something like vegas. For a 1-d system, like the harmonic oscillator, however,
 it is feasible.
 
 The path integral has to be discretized (put on time lattice). A description
-of how this is done can be found in:
+of how this is done can be found in (try googling hep-lat/0506036):
 
 G.P. Lepage, "Lattice QCD for Novices",  
 at http://arxiv.org/abs/hep-lat/0506036 (June 2005).
@@ -33,75 +33,83 @@ import vegas
 import numpy as np 
 import math
 import sys
-from path_integrand import Oscillator
+import gvar as gv
+from path_integrand import PathIntegrand
 
-DO_WAVEFUNCTIONS = True
 
 if sys.argv[1:]:
     SHOW_PLOT = eval(sys.argv[1])   # display picture of grid ?
 else: 
     SHOW_PLOT = True
 
+
 def main():
     # seed random numbers so reproducible
-    np.random.seed((1, 2))
-    
-    # initialize path integral
-    T = 4.
-    ndT = 8
-    neval = 30000
-    nitn = 15
+    np.random.seed((1,))
 
     # Harmonic oscillator: V = x ** 2 / 2
-    pathint = Oscillator(T=T, ndT=ndT, neval=neval, nitn=nitn)
     print('Harmonic Oscillator')
     print('===================')
+    E0_sho = analyze_theory(V_sho, x0list=np.linspace(0, 2., 6), plot=True)
+    print('\n')
 
-    # compute groundstate energy
-    exp_E0T = pathint.correlator()
-    # print(exp_E0T.summary())
-    E0 = - np.log(exp_E0T) / T
-    print('Ground-state energy = %s    Q = %.2f\n' % (E0, exp_E0T.Q))
-    
-    # pathint.integ.map.show_grid(50)
+    # Anharmonic oscillator: V = x**2 /2 + 0.2 * x ** 4
+    print('Anharmonic Oscillator')
+    print('=====================')
+    E0_aho = analyze_theory(V_aho, x0list=[], plot=False)
 
-    if DO_WAVEFUNCTIONS:
-        # compute wavefunction ** 2 at points x0
-        x0 = np.linspace(0., 2., 6)
-        psi2_hosc = pathint.correlator(x0=x0) / exp_E0T.mean
-        exact_hosc = np.empty(psi2_hosc.shape, float)
+    print(
+        'E0(aho)/E0(sho) =', E0_aho / E0_sho, 
+        '    exact =', 0.602405 / 0.5, '\n'
+        )
 
-        print('%5s  %-12s %-10s' % ('x', 'psi**2', 'exact'))
-        print(30 * '-')
-        for i, (x0i, psi2i) in enumerate(zip(x0, psi2_hosc)):
-            exact_hosc[i] = np.exp(- x0i ** 2) / np.sqrt(np.pi) #* np.exp(-T / 2.)
-            print(
-                "%5.1f  %-12s %-10.5f"
-                % (x0i, psi2i, exact_hosc[i])
-                )
-        plot_results(E0, x0, psi2_hosc, T)
+def V_sho(x):
+    """ Harmonic oscillator potential => E0 = 0.5. """
+    return x ** 2 / 2.
 
-    # Anharmonic oscillator: V = x ** 2 / 2 + 0.2 * x ** 4
-    pathint = Oscillator(c=0.2, T=T, ndT=ndT, neval=neval, nitn=nitn)
-    print('\n\nAnharmonic Oscillator')
-    print(    '=====================')
-    
-    # compute groundstate energy
-    exp_E0T = pathint.correlator()
-    E0 = - np.log(exp_E0T) / T
-    print('Ground-state energy = %s    Q = %.2f\n' % (E0, exp_E0T.Q))
-    
 
-    if DO_WAVEFUNCTIONS:
-        # compute wavefunction ** 2 at points x0
-        x0 = np.linspace(0., 2., 6)
-        psi2_ahosc = pathint.correlator(x0=x0) / exp_E0T.mean
+def V_aho(x):
+    """ Slightly anharmonic oscillator potential => E0 =  0.602405. """
+    return x ** 2 / 2. + 0.2 * x ** 4
 
-        print('%5s  %-12s' % ('x', 'psi**2'))
-        print(19 * '-')
-        for x0i, psi2i in zip(x0, psi2_ahosc):
-            print("%5.1f  %-12s" % (x0i, psi2i))
-        print()
+
+def analyze_theory(V, x0list=[], plot=False):
+    """ Extract ground-state energy E0 and psi**2 for potential V. """
+    # initialize path integral
+    T = 4
+    ndT = 8         # use larger ndT to reduce discretization error (goes like 1/ndT**2)
+    neval = 3e5   # should probably use more evaluations (10x?)
+    nitn = 6
+    alpha = 0.1     # damp adaptation
+
+    # create integrator and train it (no x0list)
+    integrand = PathIntegrand(V=V, T=T, ndT=ndT)
+    integ = vegas.Integrator(integrand.region, alpha=alpha)
+    integ(integrand, neval=neval, nitn=nitn / 2, alpha=2 * alpha)
+
+    # evaluate path integral with trained integrator and x0list
+    integrand = PathIntegrand(V=V, x0list=x0list, T=T, ndT=ndT)
+    results = integ(integrand, neval=neval, nitn=nitn, alpha=alpha)
+    print(results.summary())
+    exp_E0T = results[0]
+    E0 = -np.log(exp_E0T) / T
+    print('Ground-state energy = %s    Q = %.2f\n' % (E0, results.Q))
+
+    if len(x0list) <= 0:
+        return E0
+    psi2 = results[1:] / exp_E0T
+    print('%5s  %-12s %-10s' % ('x', 'psi**2', 'sho-exact'))
+    print(27 * '-')
+    for i, (x0i, psi2i) in enumerate(zip(x0list, psi2)):
+        exact = np.exp(- x0i ** 2) / np.sqrt(np.pi) #* np.exp(-T / 2.)
+        print(
+            "%5.1f  %-12s %-10.5f"
+            % (x0i, psi2i, exact)
+            )
+    if plot:
+        plot_results(E0, x0list, psi2, T)
+    return E0
+
 
 def plot_results(E0, x0, corr, T):
     if not SHOW_PLOT:
@@ -131,21 +139,5 @@ def plot_results(E0, x0, corr, T):
     make_plot()
     plt.show()
 
-
 if __name__ == '__main__':
     main()
-
-
-
-# Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-14 G. Peter Lepage. 
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# any later version (see <http://www.gnu.org/licenses/>).
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.

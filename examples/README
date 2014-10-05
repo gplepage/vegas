@@ -14,4 +14,8 @@ starts at doc/html/index.html):
     fastest.py - An integrand coded in Cython, for even greater speed.
 
     path-integral.py - Quantum mechanics using Feynman's path integral.
+
+    parallel-mpi.py - Parallel processing using MPI
+
+    parallel-pools.py - Parallel processing using Python's multiprocessing module
     

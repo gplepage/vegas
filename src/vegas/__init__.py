@@ -58,7 +58,7 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 
 from ._vegas import RAvg, RAvgArray, AdaptiveMap, Integrator, BatchIntegrand
 from ._vegas import reporter, gvar, have_gvar, batchintegrand
-from ._vegas import MPIintegrand 
+from ._vegas import MPIintegrand
 from ._version import version as __version__
 # legacy names:
 from ._vegas import vecintegrand, VecIntegrand
