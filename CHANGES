@@ -1,3 +1,8 @@
+Version 2.2.2 - 2014-11-25
+==========================
+Very minor fix: changes in numpy v1.9 broke MPIintegrand. It is now
+fixed.
+
 Version 2.2.1 - 2014-10-4
 =========================
 This is a minor bug fix release.

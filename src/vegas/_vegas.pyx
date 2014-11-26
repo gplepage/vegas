@@ -2198,7 +2198,7 @@ cdef class MPIintegrand(BatchIntegrand):
         self.nproc = self.comm.Get_size()
         # synchronize random number generators
         if self.rank == 0:
-            seed = tuple(numpy.random.randint(1, sys.maxsize, size=3))
+            seed = tuple(numpy.random.randint(1, min(2**32,sys.maxsize), size=3))
         else:
             seed = None
         self.seed = self.comm.bcast(seed, root=0)
