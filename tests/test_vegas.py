@@ -1,32 +1,31 @@
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-14 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # any later version (see <http://www.gnu.org/licenses/>).
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from vegas import * 
 import math
 import pickle
-import numpy as np
-from numpy.testing import assert_allclose as np_assert_allclose
 import unittest
 import warnings
 
+import gvar as gv
 try:
     import mpi4py
-    import mpi4py.MPI 
+    import mpi4py.MPI
 except ImportError:
-    mpi4py = None 
+    mpi4py = None
+import numpy as np
+from numpy.testing import assert_allclose as np_assert_allclose
+from vegas import *
 
-if have_gvar:
-    import gvar as gv
 
 class TestAdaptiveMap(unittest.TestCase):
     def setUp(self):
@@ -47,7 +46,7 @@ class TestAdaptiveMap(unittest.TestCase):
         self.assertEqual(m.ninc, 2)
         m = AdaptiveMap([[0, 0.4, 1], [-2, 0., 4]], ninc=4)
         np_assert_allclose(
-            m.grid, 
+            m.grid,
             [[0, 0.2, 0.4, 0.7, 1.], [-2., -1., 0., 2., 4.]]
             )
         np_assert_allclose(m.inc, [[0.2, 0.2, 0.3, 0.3], [1, 1, 2, 2]])
@@ -123,13 +122,13 @@ class TestAdaptiveMap(unittest.TestCase):
 
         # Adapt to functions:
         # Place y values at 2-pt Gaussian quadrature
-        # abscissas so training is equivalent to 
+        # abscissas so training is equivalent to
         # an integral for functions that are linear
         # or quadratic (or a superposition). This
         # simulates random y's spread uniformly
         # over space. ygauss below is for ninc=2,
         # with two abscissas per increment.
-        g = 1. /3.**0.5 
+        g = 1. /3.**0.5
         ygauss = [(1-g)/4., (1+g)/4, (3-g)/4, (3+g)/4.]
 
         m = AdaptiveMap([[0, 2]], ninc=2)
@@ -151,7 +150,7 @@ class TestAdaptiveMap(unittest.TestCase):
             m.add_training_data(y, f)
             m.adapt(alpha=2.)
         np_assert_allclose(
-            m.grid, 
+            m.grid,
             [[0, 2. * 2.**(-0.5), 2.], [0, 4. * 2**(-1./3.), 4.]]
             )
 
@@ -165,16 +164,16 @@ class TestAdaptiveMap(unittest.TestCase):
             m.add_training_data(y, f)
             m.adapt(alpha=-2.)
         np_assert_allclose(
-            m.grid, 
+            m.grid,
             [[0, 2. * 2.**(-0.5), 2.], [0, 4. * 2**(-1./3.), 4.]]
             )
 
 class TestRAvg(unittest.TestCase):
     def setUp(self):
-        pass 
+        pass
 
     def tearDown(self):
-        pass 
+        pass
 
     def test_all(self):
         " RWavg "
@@ -197,11 +196,11 @@ class TestRAvg(unittest.TestCase):
             ""
             ]
         self.assertEqual(a.summary(), '\n'.join(s))
-    
+
     def test_ravg_wgtd(self):
         " weighted RAvg "
-        if not have_gvar:
-            return
+        # if not have_gvar:
+        #     return
         mean = np.random.uniform(-10., 10.)
         xbig = gv.gvar(mean, 1.)
         xsmall = gv.gvar(mean, 0.1)
@@ -211,7 +210,7 @@ class TestRAvg(unittest.TestCase):
             ravg.add(gv.gvar(xbig(), xbig.sdev))
             ravg.add(gv.gvar(xsmall(), xsmall.sdev))
         np_assert_allclose(
-            ravg.sdev, 1/ (N * ( 1. / xbig.var + 1. / xsmall.var)) ** 0.5 
+            ravg.sdev, 1/ (N * ( 1. / xbig.var + 1. / xsmall.var)) ** 0.5
             )
         self.assertLess(abs(ravg.mean - mean), 5 * ravg.sdev)
         self.assertGreater(ravg.Q, 1e-3)
@@ -219,8 +218,8 @@ class TestRAvg(unittest.TestCase):
 
     def test_ravg_unwgtd(self):
         " unweighted RAvg "
-        if not have_gvar:
-            return
+        # if not have_gvar:
+        #     return
         mean = np.random.uniform(-10., 10.)
         x = gv.gvar(mean, 0.1)
         ravg = RAvg(weighted=False)
@@ -234,8 +233,8 @@ class TestRAvg(unittest.TestCase):
 
     def test_ravgarray_wgtd(self):
         " weighted RAvgArray "
-        if not have_gvar:
-            return
+        # if not have_gvar:
+        #     return
         mean = np.random.uniform(-10., 10., (2,))
         cov = np.array([[1., 0.5], [0.5, 2.]])
         invcov = np.linalg.inv(cov)
@@ -256,8 +255,8 @@ class TestRAvg(unittest.TestCase):
 
     def test_ravgarray_unwgtd(self):
         " unweighted RAvgArray "
-        if not have_gvar:
-            return
+        # if not have_gvar:
+        #     return
         gv.ranseed((1,2))
         mean = np.random.uniform(-10., 10., (2,))
         cov = np.array([[1., 0.5], [0.5, 2.]]) / 10.
@@ -265,7 +264,7 @@ class TestRAvg(unittest.TestCase):
         x = gv.gvar(mean, cov)
         r = gv.raniter(x, N)
         ravg = RAvgArray(2, weighted=False)
-        for ri in r: 
+        for ri in r:
             ravg.add(gv.gvar(ri, cov))
         np_assert_allclose(gv.evalcov(ravg), cov / N)
         for i in range(2):
@@ -299,17 +298,17 @@ class TestRAvg(unittest.TestCase):
 
 class TestIntegrator(unittest.TestCase):
     def setUp(self):
-        pass 
+        pass
 
     def tearDown(self):
-        pass 
+        pass
 
-    def test_have_gvar(self):
-        " have gvar module? "
-        if not have_gvar:
-            warnings.warn(
-                "no gvar module -- for better results try: pip install gvar"
-                )
+    # def test_have_gvar(self):
+    #     " have gvar module? "
+    #     if not have_gvar:
+    #         warnings.warn(
+    #             "no gvar module -- for better results try: pip install gvar"
+    #             )
 
     def test_init(self):
         " Integrator "
@@ -329,7 +328,7 @@ class TestIntegrator(unittest.TestCase):
             '    number of:  strata/axis = 7  increments/axis = 21',
             '                h-cubes = 49  evaluations/h-cube = 2 (min)',
             '                h-cubes/batch = 1000',
-            '    minimize_mem = False',           
+            '    minimize_mem = False',
             '    adapt_to_errors = False',
             '    damping parameters: alpha = 0.5  beta= 0.75',
             '    limits: h-cubes < 1e+09  evaluations/h-cube < 1e+07',
@@ -400,9 +399,9 @@ class TestIntegrator(unittest.TestCase):
             if k == 'map':
                 np_assert_allclose(
                     [
-                        [I.map.grid[0, 0], I.map.grid[0, -1]], 
+                        [I.map.grid[0, 0], I.map.grid[0, -1]],
                         [I.map.grid[1, 0], I.map.grid[1, -1]]
-                    ], 
+                    ],
                     new_defaults['map'].grid)
             else:
                 self.assertEqual(getattr(I,k), new_defaults[k])
@@ -415,10 +414,10 @@ class TestIntegrator(unittest.TestCase):
         r = I(f)
         np_assert_allclose(r.mean, 16, rtol=1e-6)
         self.assertTrue(r.sdev < 1e-6)
-        def f(x):                         
-            return [-1., 2.]               
-        I = Integrator([[-1, 1], [0, 4]]) 
-        r = I(f)                          
+        def f(x):
+            return [-1., 2.]
+        I = Integrator([[-1, 1], [0, 4]])
+        r = I(f)
         np_assert_allclose(r[0].mean, -8, rtol=5e-2)
         self.assertTrue(r[0].sdev < 1e-6)
         np_assert_allclose(r[1].mean, 16, rtol=5e-2)
@@ -460,7 +459,7 @@ class TestIntegrator(unittest.TestCase):
                         ) / math.pi ** 2
                 return f
         I = Integrator(
-            [[0, math.pi], 
+            [[0, math.pi],
             [-math.pi/2., math.pi/2.]],
             minimize_mem=True,
             )
@@ -507,7 +506,7 @@ class TestIntegrator(unittest.TestCase):
         def f(x):
             return (math.sin(x[0]) ** 2 + math.cos(x[1]) ** 2) / math.pi ** 2
         I = Integrator(
-            [[0, math.pi], [-math.pi/2., math.pi/2.]], 
+            [[0, math.pi], [-math.pi/2., math.pi/2.]],
             adapt_to_errors=True,
             )
         r = I(f, neval=10000)
@@ -520,7 +519,7 @@ class TestIntegrator(unittest.TestCase):
         def f(x):
             return (math.sin(x[0]) ** 2 + math.cos(x[1]) ** 2) / math.pi ** 2
         I = Integrator(
-            [[0, math.pi], [-math.pi/2., math.pi/2.]], 
+            [[0, math.pi], [-math.pi/2., math.pi/2.]],
             adapt_to_errors=True,
             beta=0.0,
             )
@@ -586,17 +585,17 @@ class TestIntegrator(unittest.TestCase):
                 return f
         I = Integrator(4 * [[0, 1]])
         warmup = I(f_s, neval=1000, nitn=10)
-        if have_gvar:
-            for r in [I(f_multi_v(), nitn=10), I(f_multi_s, nitn=10)]:
-                ratio = r[1] / r[0]
-                self.assertLess(abs(ratio.mean - 0.5), 5 * ratio.sdev)
-                self.assertLess(ratio.sdev, 1e-2)
-                
+        # if have_gvar:
+        for r in [I(f_multi_v(), nitn=10), I(f_multi_s, nitn=10)]:
+            ratio = r[1] / r[0]
+            self.assertLess(abs(ratio.mean - 0.5), 5 * ratio.sdev)
+            self.assertLess(ratio.sdev, 1e-2)
+
     def test_adaptive(self):
         " adaptive? "
-        def f(x): 
-            dx2 = 0 
-            for i in range(4): 
+        def f(x):
+            dx2 = 0
+            for i in range(4):
                 dx2 += (x[i] - 0.5) ** 2
             return math.exp(-dx2 * 100.) * 1013.2118364296088
         I = Integrator(4 * [[0, 1]])

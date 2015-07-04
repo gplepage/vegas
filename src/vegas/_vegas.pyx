@@ -1,13 +1,13 @@
 # c#ython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-14 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # any later version (see <http://www.gnu.org/licenses/>).
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -17,290 +17,29 @@ cimport cython
 cimport numpy
 from libc.math cimport floor, log, abs, tanh, erf, exp, sqrt, lgamma
 
+import math
 import sys
-import numpy 
-import math 
 import warnings
+
+import gvar
 try:
     import mpi4py
-    import mpi4py.MPI 
+    import mpi4py.MPI
 except ImportError:
     mpi4py = None
+import numpy
 
 cdef double TINY = 10 ** (sys.float_info.min_10_exp + 50)  # smallest and biggest
 cdef double HUGE = 10 ** (sys.float_info.max_10_exp - 50)  # with extra headroom
 
-# following two functions are here in case gvar (from lsqfit distribution)
-# is not available --- see _gvar_standin
-
-cdef double gammaP_ser(double a, double x, double rtol, int itmax):
-    """ Power series expansion for P(a, x) (for x < a+1).
-
-    P(a, x) = 1/Gamma(a) * \int_0^x dt exp(-t) t ** (a-1) = 1 - Q(a, x)
-    """
-    cdef int n
-    cdef double ans, term 
-    if x == 0:
-        return 0.
-    ans = 0.
-    term = 1. / x
-    for n in range(itmax):
-        term *= x / float(a + n)
-        ans += term
-        if abs(term) < rtol * abs(ans):
-            break
-    else:
-        warnings.warn(
-            'gammaP convergence not complete -- want: %.3g << %.3g' 
-            % (abs(term), rtol * abs(ans))
-            )
-    log_ans = math.log(ans) - x + a * math.log(x) - math.lgamma(a)
-    return math.exp(log_ans)
-
-cdef double gammaQ_cf(double a, double x, double rtol, int itmax):
-    """ Continuing fraction expansion for Q(a, x) (for x > a+1).
-
-    Q(a, x) = 1/Gamma(a) * \int_x^\infty dt exp(-t) t ** (a-1) = 1 - P(a, x)
-    Uses Lentz's algorithm for continued fractions.
-    """
-    cdef double tiny = 1e-30 
-    cdef double den, Cj, Dj, fj
-    cdef int j
-    den = x + 1. - a
-    if abs(den) < tiny:
-        den = tiny
-    Cj = x + 1. - a + 1. / tiny
-    Dj = 1 / den 
-    fj = Cj * Dj * tiny
-    for j in range(1, itmax):
-        aj = - j * (j - a) 
-        bj = x + 2 * j + 1. - a
-        Dj = bj + aj * Dj
-        if abs(Dj) < tiny:
-            Dj = tiny
-        Dj = 1. / Dj
-        Cj = bj + aj / Cj
-        if abs(Cj) < tiny:
-            Cj = tiny
-        fac = Cj * Dj
-        fj = fac * fj
-        if abs(fac-1) < rtol:
-            break
-    else:
-        warnings.warn(
-            'gammaQ convergence not complete -- want: %.3g << %.3g' 
-            % (abs(fac-1), rtol)
-            )
-    return math.exp(math.log(fj) - x + a * math.log(x) - math.lgamma(a))
-
-
-try:
-    import gvar
-    have_gvar = True
-except ImportError:
-    have_gvar = False 
-
-    # fake version of gvar.gvar
-    # for use if gvar module not available
-    class GVar(object):
-        """ Poor substitute for GVar in the gvar package.
-
-        This supports arithmetic involving GVars and numbers 
-        but not arithmetic involving GVars and GVars. For
-        the latter, you need to install the gvar module
-        (either as part of the lsqfit distribution or 
-        on its own: pip install gvar).
-
-        This also supports log, sqrt, and exp, but not
-        trig functions etc --- again install gvar if 
-        these are needed.
-        """
-        def __init__(self, mean, sdev):
-            self.mean = float(mean)
-            self.sdev = abs(float(sdev))
-            self.var = self.sdev ** 2
-            self.internaldata = (self.mean, self.sdev)
-        
-        def __add__(self, double a):
-            return GVar(a + self.mean, self.sdev)
-
-        def __radd__(self, double a):
-            return GVar(a + self.mean, self.sdev)
-            
-        def __sub__(self, double a):
-            return GVar(self.mean - a, self.sdev)
-
-        def __rsub__(self, double a):
-            return GVar(a - self.mean, self.sdev)
-            
-        def __mul__(self, double a):
-            return GVar(self.mean * a, self.sdev * a)
-
-        def __rmul__(self, double a):
-            return GVar(self.mean * a, self.sdev * a)
-
-        def __div__(self, double a):
-            return GVar(self.mean / a, self.sdev / a)
-
-        def __truediv__(self, double a):  # for python3
-            return GVar(self.mean / a, self.sdev / a)
-
-        def __rdiv__(self, double a):
-            return (a / self.mean) * GVar(1., self.sdev / self.mean)
-    
-        def __rtruediv__(self, double a):
-            return (a / self.mean) * GVar(1., self.sdev / self.mean)
-    
-
-        def __neg__(self):
-            return GVar(-self.mean, self.sdev)
-
-        def __pos__(self):
-            return self
-
-        def __pow__(self, double a):
-            return (self.mean ** a) * GVar(1, a * self.sdev / self.mean)
-
-        def __rpow__(self, double a):
-            return (a ** self.mean) * GVar(1., self.sdev * math.log(a))
-
-        def log(self):
-            return GVar(math.log(self.mean), self.sdev / self.mean)
-
-        def exp(self):
-            return math.exp(self.mean) * GVar(1., self.sdev)
-
-        def sqrt(self):
-            return math.sqrt(self.mean) * GVar(1., self.sdev / 2. / self.mean)
-
-        def __str__(self):
-            """ Return string representation of ``self``.
-
-            The representation is designed to show at least
-            one digit of the mean and two digits of the standard deviation. 
-            For cases where mean and standard deviation are not 
-            too different in magnitude, the representation is of the
-            form ``'mean(sdev)'``. When this is not possible, the string
-            has the form ``'mean +- sdev'``.
-            """
-            # taken from gvar.GVar in gvar module (lsqfit distribution)
-            def ndec(x, offset=2):
-                ans = offset - numpy.log10(x)
-                ans = int(ans)
-                if ans > 0 and x * 10. ** ans >= [0.5, 9.5, 99.5][offset]:
-                    ans -= 1
-                return 0 if ans < 0 else ans
-            dv = abs(self.sdev)
-            v = self.mean
-            
-            # special cases 
-            if dv == float('inf'):
-                return '%g +- inf' % v
-            elif v == 0 and (dv >= 1e5 or dv < 1e-4):
-                if dv == 0:
-                    return '0(0)'
-                else:
-                    ans = ("%.1e" % dv).split('e')
-                    return "0.0(" + ans[0] + ")e" + ans[1]
-            elif v == 0:
-                if dv >= 9.95:
-                    return '0(%.0f)' % dv
-                elif dv >= 0.995:
-                    return '0.0(%.1f)' % dv
-                else:
-                    ndecimal = ndec(dv)
-                    return '%.*f(%.0f)' % (ndecimal, v, dv * 10. ** ndecimal)
-            elif dv == 0:
-                ans = ('%g' % v).split('e')
-                if len(ans) == 2:
-                    return ans[0] + "(0)e" + ans[1]
-                else:
-                    return ans[0] + "(0)"
-            elif dv < 1e-6 * abs(v) or dv > 1e4 * abs(v):
-                return '%g +- %.2g' % (v, dv)
-            elif abs(v) >= 1e6 or abs(v) < 1e-5:
-                # exponential notation for large |self.mean| 
-                exponent = numpy.floor(numpy.log10(abs(v)))
-                fac = 10.**exponent
-                mantissa = str(self/fac)
-                exponent = "e" + ("%.0e" % fac).split("e")[-1]
-                return mantissa + exponent
-
-            # normal cases
-            if dv >= 9.95:
-                if abs(v) >= 9.5:
-                    return '%.0f(%.0f)' % (v, dv)
-                else:
-                    ndecimal = ndec(abs(v), offset=1)
-                    return '%.*f(%.*f)' % (ndecimal, v, ndecimal, dv)
-            if dv >= 0.995:
-                if abs(v) >= 0.95:
-                    return '%.1f(%.1f)' % (v, dv)
-                else:
-                    ndecimal = ndec(abs(v), offset=1)
-                    return '%.*f(%.*f)' % (ndecimal, v, ndecimal, dv)
-            else:
-                ndecimal = max(ndec(abs(v), offset=1), ndec(dv))
-                return '%.*f(%.0f)' % (ndecimal, v, dv * 10. ** ndecimal)
-
-    class _gvar_standin:
-        def __init__(self):
-            pass
-        def gvar(self, mean, sdev):
-            if numpy.shape(mean) == ():
-                return GVar(mean, sdev)
-            else:
-                mean = numpy.asarray(mean)
-                var = numpy.asarray(sdev)
-                assert mean.ndim == 1 and var.ndim == 2, 'vectors only'
-                ans = numpy.empty(mean.shape, object)
-                for i in range(len(mean)):
-                    ans[i] = GVar(mean[i], var[i, i] ** 0.5)
-                return ans
-        def mean(self, glist):
-            return numpy.array([g.mean for g in glist])            
-        def var(self, glist):
-            return numpy.array([g.sdev ** 2 for g in glist])
-        def evalcov(self, glist):
-            ans = numpy.zeros((len(glist), len(glist)), float)
-            for i in range(len(glist)):
-                ans[i, i] = glist[i].sdev ** 2
-            return ans
-        def gammaQ(self, double a, double x, double rtol=1e-5, int itmax=10000):
-            " complement of normalized incomplete gamma function: Q(a,x) "
-            if x < 0 or a < 0:
-                raise ValueError('negative argument: %g, %g' % (a, x))
-            if x == 0:
-                return 1.
-            elif a == 0:
-                return 0.
-            if x < a + 1.:
-                return 1. - gammaP_ser(a, x, rtol=rtol, itmax=itmax)
-            else:
-                return gammaQ_cf(a, x, rtol=rtol, itmax=itmax)
-        def gammaP(self, double a, double x, double rtol=1e-5, itmax=10000):
-            " normalized incomplete gamma function: P(a,x) "
-            if x < 0 or a < 0:
-                raise ValueError('negative argument: %g, %g' % (a, x))
-            if x == 0:
-                return 0.
-            elif a == 0:
-                return 1.
-            if x < a + 1.:
-                return gammaP_ser(a, x, rtol=rtol, itmax=itmax)
-            else:
-                return 1. - gammaQ_cf(a, x, rtol=rtol, itmax=itmax)
-    gvar = _gvar_standin()
-    gvar.GVar = GVar
-
 class RAvg(gvar.GVar):
     """ Running average of Monte Carlo estimates.
 
-    This class accumulates independent Monte Carlo 
-    estimates (e.g., of an integral) and combines 
-    them into a single average. It 
-    is derived from :class:`gvar.GVar` (from 
-    the :mod:`gvar` module if it is present) and 
+    This class accumulates independent Monte Carlo
+    estimates (e.g., of an integral) and combines
+    them into a single average. It
+    is derived from :class:`gvar.GVar` (from
+    the :mod:`gvar` module if it is present) and
     represents a Gaussian random variable.
 
     Different estimates are weighted by their
@@ -336,9 +75,9 @@ class RAvg(gvar.GVar):
     def _dof(self):
         return len(self.itn_results) - 1
     dof = property(
-        _dof, 
-        None, 
-        None, 
+        _dof,
+        None,
+        None,
         "Number of degrees of freedom in weighted average."
         )
 
@@ -349,9 +88,9 @@ class RAvg(gvar.GVar):
             else 1
             )
     Q = property(
-        _Q, 
-        None, 
-        None, 
+        _Q,
+        None,
+        None,
         "*Q* or *p-value* of weighted average's *chi**2*.",
         )
 
@@ -369,7 +108,7 @@ class RAvg(gvar.GVar):
                 sqrt(1. / self._1_s2),
                 ).internaldata)
         else:
-            self._v += g.mean 
+            self._v += g.mean
             self._v2 += g.mean ** 2
             self._s2 += g.var + tiny
             self._n += 1
@@ -386,7 +125,7 @@ class RAvg(gvar.GVar):
         for i, res in enumerate(self.itn_results):
             acc.add(res)
             if i > 0:
-                chi2_dof = acc.chi2 / acc.dof 
+                chi2_dof = acc.chi2 / acc.dof
                 Q = acc.Q
             else:
                 chi2_dof = 0.0
@@ -412,9 +151,9 @@ class RAvg(gvar.GVar):
 class RAvgArray(numpy.ndarray):
     """ Running average of array-valued Monte Carlo estimates.
 
-    This class accumulates independent arrays of Monte Carlo 
-    estimates (e.g., of an integral) and combines 
-    them into an array of averages. It 
+    This class accumulates independent arrays of Monte Carlo
+    estimates (e.g., of an integral) and combines
+    them into an array of averages. It
     is derived from :class:`numpy.ndarray`. The array
     elements are :class:`gvar.GVar`\s (from the ``gvar`` module if
     present) and represent Gaussian random variables.
@@ -428,7 +167,7 @@ class RAvgArray(numpy.ndarray):
         dtype=object, buffer=None, offset=0, strides=None, order=None
         ):
         obj = numpy.ndarray.__new__(
-            subtype, shape=shape, dtype=object, buffer=buffer, offset=offset, 
+            subtype, shape=shape, dtype=object, buffer=buffer, offset=offset,
             strides=strides, order=order
             )
         if buffer is None:
@@ -446,7 +185,7 @@ class RAvgArray(numpy.ndarray):
             obj._n = 0
             obj.weighted = False
         return obj
-    
+
     def __array_finalize__(self, obj):
         if obj is None:
             return
@@ -465,16 +204,13 @@ class RAvgArray(numpy.ndarray):
 
     def _inv(self, matrix):
         " Invert matrix, with protection against singular matrices. "
-        # if True:
-        #     return numpy.linalg.inv(matrix)
-        if not have_gvar:
-            return numpy.linalg.pinv(matrix, rcond=sys.float_info.epsilon * 10)
-        svd = gvar.SVD(matrix, svdcut=sys.float_info.epsilon * 10, rescale=True)
-        w = svd.decomp(-1)
-        return numpy.sum(
-            [numpy.outer(wi, wi) for wi in reversed(svd.decomp(-1))], 
-            axis=0
-            )
+        return numpy.linalg.pinv(matrix, rcond=sys.float_info.epsilon * 10)
+        # svd = gvar.SVD(matrix, svdcut=sys.float_info.epsilon * 10, rescale=True)
+        # w = svd.decomp(-1)
+        # return numpy.sum(
+        #     [numpy.outer(wi, wi) for wi in reversed(svd.decomp(-1))],
+        #     axis=0
+        #     )
 
     def _chi2(self):
         if len(self.itn_results) <= 1:
@@ -494,7 +230,7 @@ class RAvgArray(numpy.ndarray):
             return 0
         return (len(self.itn_results) - 1) * self.itn_results[0].size
     dof = property(
-        _dof, None, None, 
+        _dof, None, None,
         "Number of degrees of freedom in weighted average."
         )
 
@@ -503,7 +239,7 @@ class RAvgArray(numpy.ndarray):
             return 1.
         return gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
     Q = property(
-        _Q, None, None, 
+        _Q, None, None,
         "*Q* or *p-value* of weighted average's *chi**2*.",
         )
 
@@ -514,7 +250,7 @@ class RAvgArray(numpy.ndarray):
         g = g.reshape((-1,))
         gmean = gvar.mean(g)
         tiny = sys.float_info.epsilon * 10
-        gcov = gvar.evalcov(g) 
+        gcov = gvar.evalcov(g)
         gcov[numpy.diag_indices_from(gcov)] = (
             abs(gcov[numpy.diag_indices_from(gcov)])
             + tiny * gmean ** 2 + TINY
@@ -524,7 +260,7 @@ class RAvgArray(numpy.ndarray):
             v = gvar.mean(g)
             u = invcov.dot(v)
             self._invcov += invcov
-            self._invcov_v += u 
+            self._invcov_v += u
             self._v_invcov_v += v.dot(u)
             cov = self._inv(self._invcov)
             mean = cov.dot(self._invcov_v)
@@ -535,10 +271,10 @@ class RAvgArray(numpy.ndarray):
             self._v += gmean
             self._cov += gcov
             self._n += 1
-            mean = self._v / self._n 
+            mean = self._v / self._n
             cov = self._cov / (self._n ** 2)
-            self[:] = gvar.gvar(mean, cov).reshape(self.shape)            
-   
+            self[:] = gvar.gvar(mean, cov).reshape(self.shape)
+
     def summary(self):
         """ Assemble summary of independent results into a string. """
         acc = RAvgArray(self.shape)
@@ -547,7 +283,7 @@ class RAvgArray(numpy.ndarray):
         for i, res in enumerate(self.itn_results):
             acc.add(res)
             if i > 0:
-                chi2_dof = acc.chi2 / acc.dof 
+                chi2_dof = acc.chi2 / acc.dof
                 Q = acc.Q
             else:
                 chi2_dof = 0.0
@@ -571,32 +307,32 @@ class RAvgArray(numpy.ndarray):
         return ans
 
 
-# AdaptiveMap is used by Integrator 
+# AdaptiveMap is used by Integrator
 cdef class AdaptiveMap:
     """ Adaptive map ``y->x(y)`` for multidimensional ``y`` and ``x``.
 
-    An :class:`AdaptiveMap` defines a multidimensional map ``y -> x(y)`` 
+    An :class:`AdaptiveMap` defines a multidimensional map ``y -> x(y)``
     from the unit hypercube, with ``0 <= y[d] <= 1``, to an arbitrary
-    hypercube in ``x`` space. Each direction is mapped independently 
+    hypercube in ``x`` space. Each direction is mapped independently
     with a Jacobian that is tunable (i.e., "adaptive").
 
-    The map is specified by a grid in ``x``-space that, by definition, 
-    maps into a uniformly spaced grid in ``y``-space. The nodes of 
-    the grid are specified by ``grid[d, i]`` where d is the 
+    The map is specified by a grid in ``x``-space that, by definition,
+    maps into a uniformly spaced grid in ``y``-space. The nodes of
+    the grid are specified by ``grid[d, i]`` where d is the
     direction (``d=0,1...dim-1``) and ``i`` labels the grid point
     (``i=0,1...N``). The mapping for a specific point ``y`` into
-    ``x`` space is:: 
+    ``x`` space is::
 
         y[d] -> x[d] = grid[d, i(y[d])] + inc[d, i(y[d])] * delta(y[d])
 
     where ``i(y)=floor(y*N``), ``delta(y)=y*N - i(y)``, and
-    ``inc[d, i] = grid[d, i+1] - grid[d, i]``. The Jacobian for this map, :: 
+    ``inc[d, i] = grid[d, i+1] - grid[d, i]``. The Jacobian for this map, ::
 
         dx[d]/dy[d] = inc[d, i(y[d])] * N,
 
-    is piece-wise constant and proportional to the ``x``-space grid 
-    spacing. Each increment in the ``x``-space grid maps into an increment of 
-    size ``1/N`` in the corresponding ``y`` space. So regions in 
+    is piece-wise constant and proportional to the ``x``-space grid
+    spacing. Each increment in the ``x``-space grid maps into an increment of
+    size ``1/N`` in the corresponding ``y`` space. So regions in
     ``x`` space where ``inc[d, i]`` is small are stretched out
     in ``y`` space, while larger increments are compressed.
 
@@ -606,22 +342,22 @@ cdef class AdaptiveMap:
         m = AdaptiveMap([[0, 0.1, 1], [-1, 0, 1]])
 
     creates a two-dimensional map where the ``x[0]`` interval ``(0,0.1)``
-    and ``(0.1,1)`` map into the ``y[0]`` intervals ``(0,0.5)`` and 
-    ``(0.5,1)`` respectively, while ``x[1]`` intervals ``(-1,0)`` 
+    and ``(0.1,1)`` map into the ``y[0]`` intervals ``(0,0.5)`` and
+    ``(0.5,1)`` respectively, while ``x[1]`` intervals ``(-1,0)``
     and ``(0,1)`` map into ``y[1]`` intervals ``(0,0.5)`` and  ``(0.5,1)``.
 
-    More typically an initially uniform map is trained with data 
+    More typically an initially uniform map is trained with data
     ``f[j]`` corresponding to ``ny`` points ``y[j, d]``,
-    with ``j=0...ny-1``, uniformly distributed in |y| space: 
+    with ``j=0...ny-1``, uniformly distributed in |y| space:
     for example, ::
 
         m.add_training_data(y, f)
         m.adapt(alpha=1.5)
 
     ``m.adapt(alpha=1.5)`` shrinks grid increments where ``f[j]``
-    is large, and expands them where ``f[j]`` is small. Typically 
-    one has to iterate over several sets of ``y``\s and ``f``\s 
-    before the grid has fully adapted. 
+    is large, and expands them where ``f[j]`` is small. Typically
+    one has to iterate over several sets of ``y``\s and ``f``\s
+    before the grid has fully adapted.
 
     The speed with which the grid adapts is determined by parameter ``alpha``.
     Large (positive) values imply rapid adaptation, while small values (much
@@ -629,13 +365,13 @@ cdef class AdaptiveMap:
     usually a good idea to slow adaptation down in order to avoid
     instabilities.
 
-    :param grid: Initial ``x`` grid, where ``grid[d, i]`` is the ``i``-th 
+    :param grid: Initial ``x`` grid, where ``grid[d, i]`` is the ``i``-th
         node in direction ``d``.
     :type x: 2-d array of floats
-    :param ninc: Number of increments along each axis of the ``x`` grid. 
+    :param ninc: Number of increments along each axis of the ``x`` grid.
         A new grid is generated if ``ninc`` differs from ``grid.shape[1]``.
         The new grid is designed to give the same Jacobian ``dx(y)/dy``
-        as the original grid. The default value, ``ninc=None``,  leaves 
+        as the original grid. The default value, ``ninc=None``,  leaves
         the grid unchanged.
     :type ninc: ``int`` or ``None``
     """
@@ -648,7 +384,7 @@ cdef class AdaptiveMap:
             if grid.ndim != 2:
                 raise ValueError('grid must be 2-d array not %d-d' % grid.ndim)
             grid.sort(axis=1)
-            if grid.shape[1] < 2: 
+            if grid.shape[1] < 2:
                 raise ValueError("grid.shape[1] smaller than 2: " % grid.shape[1])
             self._init_grid(grid, initinc=True)
         self.sum_f = None
@@ -662,7 +398,7 @@ cdef class AdaptiveMap:
     property ninc:
         " Number of increments along each grid axis."
         def __get__(self):
-            return self.inc.shape[1] 
+            return self.inc.shape[1]
     property  dim:
         " Number of dimensions."
         def __get__(self):
@@ -687,7 +423,7 @@ cdef class AdaptiveMap:
         """ Create string with information about grid nodes.
 
         Creates a string containing the locations of the nodes
-        in the map grid for each direction. Parameter 
+        in the map grid for each direction. Parameter
         ``ngrid`` specifies the maximum number of nodes to print
         (spread evenly over the grid).
         """
@@ -700,9 +436,9 @@ cdef class AdaptiveMap:
             start = nskip // 2
             for d in range(self.dim):
                 ans += [
-                    "    grid[%2d] = %s" 
+                    "    grid[%2d] = %s"
                     % (
-                        d, 
+                        d,
                         numpy.array2string(
                             grid[d, start::nskip],precision=3,
                             prefix='    grid[xx] = ')
@@ -721,8 +457,8 @@ cdef class AdaptiveMap:
     def make_uniform(self, ninc=None):
         """ Replace the grid with a uniform grid.
 
-        The new grid has ``ninc`` increments along each direction if 
-        ``ninc`` is specified. Otherwise it has the same number of 
+        The new grid has ``ninc`` increments along each direction if
+        ``ninc`` is specified. Otherwise it has the same number of
         increments as the old grid.
         """
         cdef INT_TYPE i, d
@@ -734,7 +470,7 @@ cdef class AdaptiveMap:
         ninc = int(ninc)
         if ninc < 1:
             raise ValueError(
-                "no of increments < 1 in AdaptiveMap -- %d" 
+                "no of increments < 1 in AdaptiveMap -- %d"
                 % ninc
                 )
         new_grid = numpy.empty((dim, ninc + 1), float)
@@ -747,7 +483,7 @@ cdef class AdaptiveMap:
     def _init_grid(self, new_grid, initinc=False):
         " Set the grid equal to new_grid. "
         cdef INT_TYPE dim = new_grid.shape[0]
-        cdef INT_TYPE ninc = new_grid.shape[1] - 1 
+        cdef INT_TYPE ninc = new_grid.shape[1] - 1
         cdef INT_TYPE d, i
         self.grid = new_grid
         if initinc or self.inc.shape[0] != dim or self.inc.shape[1] != ninc:
@@ -757,9 +493,9 @@ cdef class AdaptiveMap:
                 self.inc[d, i] = self.grid[d, i + 1] - self.grid[d, i]
 
     def __call__(self, y):
-        """ Return ``x`` values corresponding to ``y``. 
+        """ Return ``x`` values corresponding to ``y``.
 
-        ``y`` can be a single ``dim``-dimensional point, or it 
+        ``y`` can be a single ``dim``-dimensional point, or it
         can be an array ``y[i,j, ..., d]`` of such points (``d=0..dim-1``).
         """
         y = numpy.asarray(y, float)
@@ -772,9 +508,9 @@ cdef class AdaptiveMap:
         return x
 
     def jac(self, y):
-        """ Return the map's Jacobian at ``y``. 
+        """ Return the map's Jacobian at ``y``.
 
-        ``y`` can be a single ``dim``-dimensional point, or it 
+        ``y`` can be a single ``dim``-dimensional point, or it
         can be an array ``y[d,i,j,...]`` of such points (``d=0..dim-1``).
         """
         y = numpy.asarray(y)
@@ -788,17 +524,17 @@ cdef class AdaptiveMap:
     # @cython.boundscheck(False)
     # @cython.wraparound(False)
     cpdef map(
-        self, 
-        double[:, ::1] y, 
-        double[:, ::1] x, 
-        double[::1] jac, 
+        self,
+        double[:, ::1] y,
+        double[:, ::1] x,
+        double[::1] jac,
         INT_TYPE ny=-1
         ):
         """ Map y to x, where jac is the Jacobian.
 
         ``y[j, d]`` is an array of ``ny`` ``y``-values for direction ``d``.
         ``x[j, d]`` is filled with the corresponding ``x`` values,
-        and ``jac[j]`` is filled with the corresponding Jacobian 
+        and ``jac[j]`` is filled with the corresponding Jacobian
         values. ``x`` and ``jac`` must be preallocated: for example, ::
 
             x = numpy.empty(y.shape, float)
@@ -818,7 +554,7 @@ cdef class AdaptiveMap:
         """
         cdef INT_TYPE ninc = self.inc.shape[1]
         cdef INT_TYPE dim = self.inc.shape[0]
-        cdef INT_TYPE i, iy, d  
+        cdef INT_TYPE i, iy, d
         cdef double y_ninc, dy_ninc, tmp_jac
         if ny < 0:
             ny = y.shape[0]
@@ -841,24 +577,24 @@ cdef class AdaptiveMap:
     # @cython.boundscheck(False)
     # @cython.wraparound(False)
     cpdef add_training_data(
-        self, 
-        double[:, ::1] y, 
-        double[::1] f, 
+        self,
+        double[:, ::1] y,
+        double[::1] f,
         INT_TYPE ny=-1,
         ):
         """ Add training data ``f`` for ``y``-space points ``y``.
 
         Accumulates training data for later use by ``self.adapt()``.
         Grid increments will be made smaller in regions where
-        ``f`` is larger than average, and larger where ``f`` 
+        ``f`` is larger than average, and larger where ``f``
         is smaller than average. The grid is unchanged (converged?)
         when ``f`` is constant across the grid.
 
-        :param y: ``y`` values corresponding to the training data. 
-            ``y`` is a contiguous 2-d array, where ``y[j, d]`` 
+        :param y: ``y`` values corresponding to the training data.
+            ``y`` is a contiguous 2-d array, where ``y[j, d]``
             is for points along direction ``d``.
         :type y: contiguous 2-d array of floats
-        :param f: Training function values. ``f[j]`` corresponds to 
+        :param f: Training function values. ``f[j]`` corresponds to
             point ``y[j, d]`` in ``y``-space.
         :type f: contiguous 2-d array of floats
         :param ny: Number of ``y`` points: ``y[j, d]`` for ``d=0...dim-1``
@@ -868,7 +604,7 @@ cdef class AdaptiveMap:
         """
         cdef INT_TYPE ninc = self.inc.shape[1]
         cdef INT_TYPE dim = self.inc.shape[0]
-        cdef INT_TYPE iy 
+        cdef INT_TYPE iy
         cdef INT_TYPE i, d
         if self.sum_f is None:
             self.sum_f = numpy.zeros((dim, ninc), float)
@@ -883,7 +619,7 @@ cdef class AdaptiveMap:
                 self.sum_f[d, iy] += abs(f[i])
                 self.n_f[d, iy] += 1
         return
-        
+
     # @cython.boundscheck(False)
     def adapt(self, double alpha=0.0, ninc=None):
         """ Adapt grid to accumulated training data.
@@ -892,26 +628,26 @@ cdef class AdaptiveMap:
         each axis independently and maps it into ``x`` space.
         It shrinks ``x``-grid increments in regions where the
         projected training data is large, and grows increments
-        where the projected data is small. The grid along 
-        any direction is unchanged if the training data 
+        where the projected data is small. The grid along
+        any direction is unchanged if the training data
         is constant along that direction.
 
-        The number of increments along a direction can be 
-        changed by setting parameter ``ninc``. 
+        The number of increments along a direction can be
+        changed by setting parameter ``ninc``.
 
-        The grid does not change if no training data has 
-        been accumulated, unless ``ninc`` is specified, in 
-        which case the number of increments is adjusted 
-        while preserving the relative density of increments 
+        The grid does not change if no training data has
+        been accumulated, unless ``ninc`` is specified, in
+        which case the number of increments is adjusted
+        while preserving the relative density of increments
         at different values of ``x``.
 
-        :parameter alpha: Determines the speed with which the grid adapts to 
-            training data. Large (postive) values imply rapid evolution; 
-            small values (much less than one) imply slow evolution. Typical 
+        :parameter alpha: Determines the speed with which the grid adapts to
+            training data. Large (postive) values imply rapid evolution;
+            small values (much less than one) imply slow evolution. Typical
             values are of order one. Choosing ``alpha<0`` causes adaptation
             to the unmodified training data (usually not a good idea).
         :type alpha: double or None
-        :parameter ninc: Number of increments along each direction in the 
+        :parameter ninc: Number of increments along each direction in the
             new grid. The number is unchanged from the old grid if ``ninc``
             is omitted (or equals ``None``).
         :type ninc: int or None
@@ -922,7 +658,7 @@ cdef class AdaptiveMap:
         cdef INT_TYPE old_ninc = self.grid.shape[1] - 1
         cdef INT_TYPE dim = self.grid.shape[0]
         cdef INT_TYPE i, j, new_ninc
-        
+
         # initialization
         if ninc is None:
             new_ninc = old_ninc
@@ -937,7 +673,7 @@ cdef class AdaptiveMap:
                 new_grid[d, 1] = self.grid[d, -1]
             self._init_grid(new_grid)
             return
-        
+
         # smoothing
         new_grid = numpy.empty((dim, new_ninc + 1), float)
         avg_f = numpy.ones(old_ninc, float) # default = uniform
@@ -962,7 +698,7 @@ cdef class AdaptiveMap:
                         avg_f[i] = TINY
                 for i in range(old_ninc):
                     avg_f[i] = (-(1 - avg_f[i]) / log(avg_f[i])) ** alpha
-            
+
             # regrid
             new_grid[d, 0] = self.grid[d, 0]
             new_grid[d, -1] = self.grid[d, -1]
@@ -983,7 +719,7 @@ cdef class AdaptiveMap:
                 else:
                     acc_f -= f_ninc
                     new_grid[d, i] = (
-                        self.grid[d, j+1] 
+                        self.grid[d, j+1]
                         - (acc_f / avg_f[j]) * self.inc[d, j]
                         )
                     continue
@@ -993,23 +729,23 @@ cdef class AdaptiveMap:
         self.n_f = None
 
     def show_grid(self, ngrid=40, axes=None, shrink=False):
-        """ Display plots showing the current grid. 
+        """ Display plots showing the current grid.
 
-        :param ngrid: The number of grid nodes in each 
+        :param ngrid: The number of grid nodes in each
             direction to include in the plot. The default is 40.
-        :type ngrid: int 
-        :param axes: List of pairs of directions to use in 
-            different views of the grid. Using ``None`` in 
+        :type ngrid: int
+        :param axes: List of pairs of directions to use in
+            different views of the grid. Using ``None`` in
             place of a direction plots the grid for only one
-            direction. Omitting ``axes`` causes a default 
+            direction. Omitting ``axes`` causes a default
             set of pairings to be used.
         :param shrink: Display entire range of each axis
             if ``False``; otherwise shrink range to include
             just the nodes being displayed. The default is
-            ``False``. 
+            ``False``.
         """
         try:
-            import matplotlib.pyplot as plt 
+            import matplotlib.pyplot as plt
         except ImportError:
             warnings.warn('matplotlib not installed; cannot show_grid')
             return
@@ -1040,7 +776,7 @@ cdef class AdaptiveMap:
                 xrange = [self.grid[dx, 0], self.grid[dx, -1]]
                 xgrid = grid[dx, start::nskip]
                 nnode = len(xgrid)
-                xlabel = 'x[%d]' % dx 
+                xlabel = 'x[%d]' % dx
             else:
                 xrange = [0., 1.]
                 xgrid = None
@@ -1062,9 +798,9 @@ cdef class AdaptiveMap:
             if None not in [dx, dy]:
                 fig_caption = 'axes %d, %d' % (dx, dy)
             elif dx is None and dy is not None:
-                fig_caption = 'axis %d' % dy 
+                fig_caption = 'axis %d' % dy
             elif dx is not None and dy is None:
-                fig_caption = 'axis %d' % dx 
+                fig_caption = 'axis %d' % dx
             else:
                 return
             fig.clear()
@@ -1084,7 +820,7 @@ cdef class AdaptiveMap:
 
             plt.draw()
 
-        idx = [0]        
+        idx = [0]
         def onpress(event, idx=idx):
             try:    # digit?
                 idx[0] = int(event.key)
@@ -1103,16 +839,16 @@ cdef class AdaptiveMap:
                 else:
                     return
             plotdata(idx)
-        
+
         fig.canvas.mpl_connect('key_press_event', onpress)
         plotdata(idx)
-        plt.show()       
+        plt.show()
 
 
 cdef class Integrator(object):
     """ Adaptive multidimensional Monte Carlo integration.
 
-    :class:`vegas.Integrator` objects make Monte Carlo 
+    :class:`vegas.Integrator` objects make Monte Carlo
     estimates of multidimensional functions ``f(x)``
     where ``x[d]`` is a point in the integration volume::
 
@@ -1130,16 +866,16 @@ cdef class Integrator(object):
     result is an object of type :class:`RAvg` (which is derived
     from :class:`gvar.GVar`).
 
-    Integrands can be array-valued, in which case ``f(x)`` 
-    returns an array of values corresponding to different 
+    Integrands can be array-valued, in which case ``f(x)``
+    returns an array of values corresponding to different
     integrands. Also |vegas| can generate integration points
     in batches for integrands built from classes
     derived from :class:`vegas.BatchIntegrand`, or integrand
-    functions decorated by :func:`vegas.batchintegrand`. Batch 
+    functions decorated by :func:`vegas.batchintegrand`. Batch
     integrands are typically much faster, especially if they
     are coded in Cython.
 
-    |Integrator|\s have a large number of parameters but the 
+    |Integrator|\s have a large number of parameters but the
     only ones that most people will care about are: the
     number ``nitn`` of iterations of the |vegas| algorithm;
     the maximum number ``neval`` of integrand evaluations per
@@ -1147,24 +883,24 @@ cdef class Integrator(object):
     to slow down the adaptive algorithms when they would otherwise
     be unstable (e.g., with very peaky integrands). Setting parameter
     ``analyzer=vegas.reporter()`` is sometimes useful, as well,
-    since it causes |vegas| to print (on ``sys.stdout``) 
-    intermediate results from each iteration, as they are 
-    produced. This helps when each iteration takes a long time 
-    to complete (e.g., an hour) because it allows you to 
+    since it causes |vegas| to print (on ``sys.stdout``)
+    intermediate results from each iteration, as they are
+    produced. This helps when each iteration takes a long time
+    to complete (e.g., an hour) because it allows you to
     monitor progress as it is being made (or not).
 
-    :param map: The integration region as specified by 
-        an array ``map[d, i]`` where ``d`` is the 
+    :param map: The integration region as specified by
+        an array ``map[d, i]`` where ``d`` is the
         direction and ``i=0,1`` specify the lower
         and upper limits of integration in direction ``d``.
 
-        ``map`` could also be the integration map from 
+        ``map`` could also be the integration map from
         another |Integrator|, or that |Integrator|
-        itself. In this case the grid is copied from the 
+        itself. In this case the grid is copied from the
         existing integrator.
-    :type map: array or :class:`vegas.AdaptiveMap` 
+    :type map: array or :class:`vegas.AdaptiveMap`
         or :class:`vegas.Integrator`
-    :param nitn: The maximum number of iterations used to 
+    :param nitn: The maximum number of iterations used to
         adapt to the integrand and estimate its value. The
         default value is 10; typical values range from 10
         to 20.
@@ -1176,29 +912,29 @@ cdef class Integrator(object):
         fall much faster. The default value is 1000; real
         problems often require 10--1000 times more evaluations
         than this.
-    :type neval: positive int 
+    :type neval: positive int
     :param alpha: Damping parameter controlling the remapping
         of the integration variables as |vegas| adapts to the
         integrand. Smaller values slow adaptation, which may be
-        desirable for difficult integrands. Small or zero ``alpha``\s 
+        desirable for difficult integrands. Small or zero ``alpha``\s
         are also sometimes useful after the grid has adapted,
         to minimize fluctuations away from the optimal grid.
         The default value is 0.5.
-    :type alpha: float 
+    :type alpha: float
     :param beta: Damping parameter controlling the redistribution
-        of integrand evaluations across hypercubes in the 
+        of integrand evaluations across hypercubes in the
         stratified sampling of the integral (over transformed
-        variables). Smaller values limit the amount of 
+        variables). Smaller values limit the amount of
         redistribution. The theoretically optimal value is 1;
-        setting ``beta=0`` prevents any redistribution of 
+        setting ``beta=0`` prevents any redistribution of
         evaluations. The default value is 0.75.
-    :type beta: float 
-    :param adapt: Setting ``adapt=False`` prevents further 
-        adaptation by |vegas|. Typically this would be done 
+    :type beta: float
+    :param adapt: Setting ``adapt=False`` prevents further
+        adaptation by |vegas|. Typically this would be done
         after training the |Integrator| on an integrand, in order
-        to stabilize further estimates of the integral. |vegas| uses 
-        unweighted averages to combine results from different 
-        iterations when ``adapt=False``. The default setting 
+        to stabilize further estimates of the integral. |vegas| uses
+        unweighted averages to combine results from different
+        iterations when ``adapt=False``. The default setting
         is ``adapt=True``.
     :type adapt: bool
     :param nhcube_batch: The number of hypercubes (in |y| space)
@@ -1206,91 +942,91 @@ cdef class Integrator(object):
         batch to be passed to the integrand, together,
         when using |vegas| in batch mode.
         The default value is 1000. Larger values may be
-        lead to faster evaluations, but at the cost of 
+        lead to faster evaluations, but at the cost of
         more memory for internal work arrays.
-    :type nhcube_batch: positive int 
-    :param minimize_mem: When ``True``, |vegas| minimizes 
+    :type nhcube_batch: positive int
+    :param minimize_mem: When ``True``, |vegas| minimizes
         internal workspace at the cost of extra evaluations of
-        the integrand. This can increase execution time by 
-        50--100% but might be desirable when the number of 
+        the integrand. This can increase execution time by
+        50--100% but might be desirable when the number of
         evaluations is very large (e.g., ``neval=1e9``). Normally
-        |vegas| uses internal work space that grows in 
+        |vegas| uses internal work space that grows in
         proportion to ``neval``. If that work space exceeds
         the size of the RAM available to the processor,
         |vegas| runs much more slowly. Setting ``minimize_mem=True``
-        greatly reduces the internal storage used by |vegas|; in 
+        greatly reduces the internal storage used by |vegas|; in
         particular memory becomes independent of ``neval``. The default
-        setting (``minimize_mem=False``), however, is much superior 
-        unless memory becomes a problem. (The large memory is needed 
-        for adaptive stratified sampling, so memory is not 
+        setting (``minimize_mem=False``), however, is much superior
+        unless memory becomes a problem. (The large memory is needed
+        for adaptive stratified sampling, so memory is not
         an issue if ``beta=0``.)
     :type minimize_mem: bool
-    :param adapt_to_errors: ``adapt_to_errors=False`` causes 
+    :param adapt_to_errors: ``adapt_to_errors=False`` causes
         |vegas| to remap the integration variables to emphasize
-        regions where ``|f(x)|`` is largest. This is 
+        regions where ``|f(x)|`` is largest. This is
         the default mode.
 
-        ``adapt_to_errors=True`` causes |vegas| to remap 
+        ``adapt_to_errors=True`` causes |vegas| to remap
         variables to emphasize regions where the Monte Carlo
-        error is largest. This might be superior when 
+        error is largest. This might be superior when
         the number of the number of stratifications (``self.nstrat``)
-        in the |y| grid is large (> 50?). It is typically 
+        in the |y| grid is large (> 50?). It is typically
         useful only in one or two dimensions.
     :type adapt_to_errors: bool
     :param maxinc_axis: The maximum number of increments
-        per axis allowed for the |x|-space grid. The default 
+        per axis allowed for the |x|-space grid. The default
         value is 1000; there is probably little need to use
         other values.
-    :type maxinc_axis: positive int 
-    :param max_nhcube: Maximum number of |y|-space hypercubes 
+    :type maxinc_axis: positive int
+    :param max_nhcube: Maximum number of |y|-space hypercubes
         used for stratified sampling. Setting ``max_nhcube=1``
-        turns stratified sampling off, which is probably never 
-        a good idea. The default setting (1e9) was chosen to 
-        correspond to the point where internal work arrays 
-        become comparable in size to the typical amount of RAM 
-        available to a processor (in a laptop in 2014). 
+        turns stratified sampling off, which is probably never
+        a good idea. The default setting (1e9) was chosen to
+        correspond to the point where internal work arrays
+        become comparable in size to the typical amount of RAM
+        available to a processor (in a laptop in 2014).
         Internal memory usage is large only when ``beta>0``
-        and ``minimize_mem=False``; therefore ``max_nhcube`` is 
+        and ``minimize_mem=False``; therefore ``max_nhcube`` is
         ignored if ``beta=0`` or ``minimize_mem=True``.
-    :type max_nhcube: positive int 
-    :param max_neval_hcube: Maximum number of integrand evaluations 
-        per hypercube in the stratification. The default value 
+    :type max_nhcube: positive int
+    :param max_neval_hcube: Maximum number of integrand evaluations
+        per hypercube in the stratification. The default value
         is 1e7. Larger values might allow for more adaptation
         (when ``neval`` is larger than ``2 * max_neval_hcube``),
         but also can result in very large internal work arrays.
     :type max_neval_hcube: positive int
-    :param rtol: Relative error in the integral estimate 
+    :param rtol: Relative error in the integral estimate
         at which point the integrator can stop. The default
         value is 0.0 which means that the integrator will
         complete all iterations specified by ``nitn``.
     :type rtol: float less than 1
-    :param atol: Absolute error in the integral estimate 
+    :param atol: Absolute error in the integral estimate
         at which point the integrator can stop. The default
         value is 0.0 which means that the integrator will
         complete all iterations specified by ``nitn``.
-    :type atol: float 
-    :param analyzer: An object with methods 
+    :type atol: float
+    :param analyzer: An object with methods
 
             ``analyzer.begin(itn, integrator)``
 
             ``analyzer.end(itn_result, result)``
 
         where: ``begin(itn, integrator)`` is called at the start
-        of each |vegas| iteration with ``itn`` equal to the 
-        iteration number and ``integrator`` equal to the 
+        of each |vegas| iteration with ``itn`` equal to the
+        iteration number and ``integrator`` equal to the
         integrator itself; and ``end(itn_result, result)``
-        is called at the end of each iteration with 
-        ``itn_result`` equal to the result for that 
+        is called at the end of each iteration with
+        ``itn_result`` equal to the result for that
         iteration and ``result`` equal to the cummulative
-        result of all iterations so far. 
-        Setting ``analyzer=vegas.reporter()``, for 
+        result of all iterations so far.
+        Setting ``analyzer=vegas.reporter()``, for
         example, causes vegas to print out a running report
-        of its results as they are produced. The default 
+        of its results as they are produced. The default
         is ``analyzer=None``.
-    :param ran_array_generator: Function that generates 
-        :mod:`numpy` arrays of random numbers distributed uniformly 
-        between 0 and 1. ``ran_array_generator(shape)`` should 
-        create an array whose dimensions are specified by the 
+    :param ran_array_generator: Function that generates
+        :mod:`numpy` arrays of random numbers distributed uniformly
+        between 0 and 1. ``ran_array_generator(shape)`` should
+        create an array whose dimensions are specified by the
         integer-valued tuple ``shape``. The default generator
         is ``numpy.random.random``.
     """
@@ -1351,13 +1087,13 @@ cdef class Integrator(object):
         """ Reset default parameters in integrator.
 
         Usage is analogous to the constructor
-        for |Integrator|: for example, :: 
-        
+        for |Integrator|: for example, ::
+
             old_defaults = integ.set(neval=1e6, nitn=20)
 
         resets the default values for ``neval`` and ``nitn``
         in |Integrator| ``integ``. A dictionary, here
-        ``old_defaults``, is returned. It can be used 
+        ``old_defaults``, is returned. It can be used
         to restore the old defaults using, for example::
 
             integ.set(old_defaults)
@@ -1367,7 +1103,7 @@ cdef class Integrator(object):
             kargs.update(ka)
         else:
             kargs = ka
-        old_val = dict() 
+        old_val = dict()
         for k in kargs:
             if k == 'map':
                 old_val[k] = self.map
@@ -1432,7 +1168,7 @@ cdef class Integrator(object):
         if ns < 1:
             ns = 1
         elif (
-            self.beta > 0 
+            self.beta > 0
             and ns ** self.dim > self.max_nhcube
             and not self.minimize_mem
             ):
@@ -1441,7 +1177,7 @@ cdef class Integrator(object):
             ni = 1
         elif ni  > self.maxinc_axis:
             ni = self.maxinc_axis
-        # want even number increments in each stratification 
+        # want even number increments in each stratification
         # or vise versa
         if ns > ni:
             if ns < self.maxinc_axis:
@@ -1456,7 +1192,7 @@ cdef class Integrator(object):
                 ni = ns
 
         # rebuild map with correct number of increments
-        self.map.adapt(ninc=ni)    
+        self.map.adapt(ninc=ni)
 
         # determine min number of evaluations per h-cube
         self.nstrat = ns
@@ -1465,7 +1201,7 @@ cdef class Integrator(object):
         if self.min_neval_hcube < 2:
             self.min_neval_hcube = 2
 
-        # allocate work arrays -- these are stored in the 
+        # allocate work arrays -- these are stored in the
         # the Integrator so that the storage is held between
         # iterations, thereby minimizing the amount of allocating
         # that goes on
@@ -1482,7 +1218,7 @@ cdef class Integrator(object):
                 self.sigf = numpy.ones(nsigf, float)
                 self.sum_sigf = nsigf
         self.neval_hcube = (
-            numpy.zeros(self.nhcube_batch, int) + self.min_neval_hcube 
+            numpy.zeros(self.nhcube_batch, int) + self.min_neval_hcube
             )
         self.y = numpy.empty((neval_batch, self.dim), float)
         self.x = numpy.empty((neval_batch, self.dim), float)
@@ -1493,7 +1229,7 @@ cdef class Integrator(object):
     def settings(Integrator self not None, ngrid=0):
         """ Assemble summary of integrator settings into string.
 
-        :param ngrid: Number of grid nodes in each direction 
+        :param ngrid: Number of grid nodes in each direction
             to include in summary.
             The default is 0.
         :type ngrid: int
@@ -1530,15 +1266,15 @@ cdef class Integrator(object):
                     )
         ans += "                h-cubes/batch = %d\n" % self.nhcube_batch
         ans = ans + (
-            "    minimize_mem = %s\n" 
-            % ('True' if self.minimize_mem else 'False') 
+            "    minimize_mem = %s\n"
+            % ('True' if self.minimize_mem else 'False')
             )
         ans = ans + (
-            "    adapt_to_errors = %s\n" 
-            % ('True' if self.adapt_to_errors else 'False') 
+            "    adapt_to_errors = %s\n"
+            % ('True' if self.adapt_to_errors else 'False')
             )
         ans = ans + (
-            "    damping parameters: alpha = %g  beta= %g\n" 
+            "    damping parameters: alpha = %g  beta= %g\n"
             % (self.alpha, self.beta)
             )
         ans += (
@@ -1601,7 +1337,7 @@ cdef class Integrator(object):
             sigf[ihcube] = sigf2 ** (self.beta / 2.)
 
     def random_batch(
-        Integrator self not None, 
+        Integrator self not None,
         bint yield_hcube=False,
         bint yield_y=False,
         fcn = None,
@@ -1609,39 +1345,39 @@ cdef class Integrator(object):
         """ Iterator over integration points and weights.
 
         This method creates an iterator that returns integration
-        points from |vegas|, and their corresponding weights in an 
-        integral. The points are provided in arrays ``x[i, d]`` where 
-        ``i=0...`` labels the integration points in a batch 
+        points from |vegas|, and their corresponding weights in an
+        integral. The points are provided in arrays ``x[i, d]`` where
+        ``i=0...`` labels the integration points in a batch
         and ``d=0...`` labels direction. The corresponding
         weights assigned by |vegas| to each point are provided
-        in an array ``wgt[i]``. 
+        in an array ``wgt[i]``.
 
-        Optionally the integrator will also return the indices of 
-        the hypercubes containing the integration points and/or the |y|-space 
+        Optionally the integrator will also return the indices of
+        the hypercubes containing the integration points and/or the |y|-space
         coordinates of those points::
 
             integ.random()  yields  x, wgt
 
-            integ.random(yield_hcube=True) yields x, wgt, hcube 
+            integ.random(yield_hcube=True) yields x, wgt, hcube
 
             integ.random(yield_y=True) yields x, y, wgt
 
             integ.random(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube
-        
-        The number of integration points returned by the iterator 
+
+        The number of integration points returned by the iterator
         corresponds to a single iteration. The number in a batch
         is controlled by parameter ``nhcube_batch``.
         """
-        cdef INT_TYPE nhcube = self.nstrat ** self.dim 
+        cdef INT_TYPE nhcube = self.nstrat ** self.dim
         cdef double dv_y = 1. / nhcube
         cdef INT_TYPE nhcube_batch = min(self.nhcube_batch, nhcube)
         cdef INT_TYPE neval_batch
-        cdef INT_TYPE hcube_base 
+        cdef INT_TYPE hcube_base
         cdef INT_TYPE i_start, ihcube, i, d, tmp_hcube, hcube
         cdef INT_TYPE[::1] hcube_array
         cdef double neval_sigf = (
-            self.neval / 2. / self.sum_sigf 
-            if self.beta > 0 and self.sum_sigf > 0 
+            self.neval / 2. / self.sum_sigf
+            if self.beta > 0 and self.sum_sigf > 0
             else HUGE
             )
         cdef INT_TYPE[::1] neval_hcube = self.neval_hcube
@@ -1652,12 +1388,12 @@ cdef class Integrator(object):
         cdef double[:, ::1] x
         cdef double[::1] jac
         self.last_neval = 0
-        self.neval_hcube_range = numpy.zeros(2, int) + self.min_neval_hcube        
+        self.neval_hcube_range = numpy.zeros(2, int) + self.min_neval_hcube
         if yield_hcube:
             hcube_array = numpy.empty(self.y.shape[0], int)
         for hcube_base in range(0, nhcube, nhcube_batch):
             if (hcube_base + nhcube_batch) > nhcube:
-                nhcube_batch = nhcube - hcube_base 
+                nhcube_batch = nhcube - hcube_base
 
             # determine number of evaluations per h-cube
             if self.beta > 0:
@@ -1691,9 +1427,9 @@ cdef class Integrator(object):
                 self.x = numpy.empty((neval_batch, self.dim), float)
                 self.jac = numpy.empty(neval_batch, float)
                 self.fdv2 = numpy.empty(neval_batch, float)
-            y = self.y 
-            x = self.x 
-            jac = self.jac 
+            y = self.y
+            x = self.x
+            jac = self.jac
 
             # self._resize_workareas(neval_batch)
             if yield_hcube and neval_batch > hcube_array.shape[0]:
@@ -1713,7 +1449,7 @@ cdef class Integrator(object):
                         y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
                 i_start += neval_hcube[ihcube]
             self.map.map(y, x, jac, neval_batch)
-            
+
             # compute weights and yield answers
             i_start = 0
             for ihcube in range(nhcube_batch):
@@ -1739,25 +1475,25 @@ cdef class Integrator(object):
         """ Iterator over integration points and weights.
 
         This method creates an iterator that returns integration
-        points from |vegas|, and their corresponding weights in an 
+        points from |vegas|, and their corresponding weights in an
         integral. Each point ``x[d]`` is accompanied by the weight
         assigned to that point by |vegas| when estimating an integral.
-        Optionally it will also return the index of the hypercube 
-        containing the integration point and/or the |y|-space 
+        Optionally it will also return the index of the hypercube
+        containing the integration point and/or the |y|-space
         coordinates::
 
             integ.random()  yields  x, wgt
 
-            integ.random(yield_hcube=True) yields x, wgt, hcube 
+            integ.random(yield_hcube=True) yields x, wgt, hcube
 
             integ.random(yield_y=True) yields x, y, wgt
 
             integ.random(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube
-        
-        The number of integration points returned by the iterator 
+
+        The number of integration points returned by the iterator
         corresponds to a single iteration.
         """
-        cdef double[:, ::1] x 
+        cdef double[:, ::1] x
         cdef double[::1] wgt
         cdef INT_TYPE[::1] hcube
         cdef double[:, ::1] y
@@ -1787,54 +1523,54 @@ cdef class Integrator(object):
             def f(x):
                 return x[0] ** 2 + x[1] ** 4
 
-        The argument ``x[d]`` is an integration point, where 
-        index ``d=0...`` represents direction within the 
+        The argument ``x[d]`` is an integration point, where
+        index ``d=0...`` represents direction within the
         integration volume.
 
-        Integrands can be array-valued, representing multiple 
+        Integrands can be array-valued, representing multiple
         integrands: e.g., ::
 
             def f(x):
                 return [x[0] ** 2, x[0] / x[1]]
 
-        The return arrays can have any shape. Array-valued 
-        integrands are useful for integrands that 
-        are closely related, and can lead to 
-        substantial reductions in the errors for 
+        The return arrays can have any shape. Array-valued
+        integrands are useful for integrands that
+        are closely related, and can lead to
+        substantial reductions in the errors for
         ratios or differences of the results.
 
         It is usually much faster to use |vegas| in batch
-        mode, where integration points are presented to the 
+        mode, where integration points are presented to the
         integrand in batches. A simple batch integrand might
         be, for example::
 
-            @vegas.batchintegrand 
+            @vegas.batchintegrand
             def f(x):
                 return x[:, 0] ** 2 + x[:, 1] ** 4
 
-        where decorator ``@vegas.batchintegrand`` tells 
+        where decorator ``@vegas.batchintegrand`` tells
         |vegas| that the integrand processes integration
-        points in batches. The array ``x[i, d]`` 
-        represents a collection of different integration 
+        points in batches. The array ``x[i, d]``
+        represents a collection of different integration
         points labeled by ``i=0...``. (The number of points is controlled
-        |Integrator| parameter ``nhcube_batch``.) The batch index 
+        |Integrator| parameter ``nhcube_batch``.) The batch index
         is always first.
 
-        Batch integrands can also be constructed from classes 
+        Batch integrands can also be constructed from classes
         derived from :class:`vegas.BatchIntegrand`.
-    
-        Batch mode is particularly useful (and fast) when the class 
-        derived from :class:`vegas.BatchIntegrand` is coded 
+
+        Batch mode is particularly useful (and fast) when the class
+        derived from :class:`vegas.BatchIntegrand` is coded
         in Cython. Then loops over the integration points
         can be coded explicitly, avoiding the need to use
-        :mod:`numpy`'s whole-array operators if they are not 
+        :mod:`numpy`'s whole-array operators if they are not
         well suited to the integrand.
 
-        Any |vegas| parameter can also be reset: e.g., 
+        Any |vegas| parameter can also be reset: e.g.,
         ``self(fcn, nitn=20, neval=1e6)``.
         """
         # cdef double[::1] wgt
-        cdef numpy.ndarray[numpy.double_t, ndim=2] x 
+        cdef numpy.ndarray[numpy.double_t, ndim=2] x
         cdef numpy.ndarray[numpy.double_t, ndim=1] wgt
         cdef numpy.ndarray[numpy.int_t, ndim=1] hcube
         cdef double[::1] sigf
@@ -1843,17 +1579,17 @@ cdef class Integrator(object):
         cdef numpy.ndarray _fx
         cdef double[:, ::1] fx
         cdef double[::1] wf
-        cdef double[::1] sum_wf 
-        cdef double[:, ::1] sum_wf2 
-        cdef double[::1] mean 
-        cdef double[:, ::1] var 
+        cdef double[::1] sum_wf
+        cdef double[:, ::1] sum_wf2
+        cdef double[::1] mean
+        cdef double[:, ::1] var
         cdef INT_TYPE itn, i, j, s, t, ns, neval, neval_batch
         cdef bint firstpass = True
         cdef double sum_sigf, sigf2
 
         if kargs:
             self.set(kargs)
-        
+
         if isinstance(fcn, type(BatchIntegrand)):
             raise ValueError(
                 'integrand given is a class, not an object -- need parentheses?'
@@ -1862,12 +1598,12 @@ cdef class Integrator(object):
         fcntype = getattr(fcn, 'fcntype', 'scalar')
         if fcntype == 'scalar':
             fcn = _BatchIntegrand_from_NonBatch(fcn)
-        
+
         sigf = self.sigf
         for itn in range(self.nitn):
             if self.analyzer is not None:
                 self.analyzer.begin(itn, self)
-            
+
             if not firstpass:
                 mean[:] = 0.0
                 var[:, :] = 0.0
@@ -1878,7 +1614,7 @@ cdef class Integrator(object):
                 yield_hcube=True, yield_y=True, fcn=fcn
                 ):
                 fdv2 = self.fdv2        # must be inside loop
-                
+
                 # evaluate integrand at all points in x
                 _fx = numpy.asarray(fcn(x))
                 if firstpass:
@@ -1903,7 +1639,7 @@ cdef class Integrator(object):
 
                 # repackage in simpler (uniform) format
                 fx = _fx.reshape((x.shape[0], ns))
-                
+
                 # compute integral and variance for each h-cube
                 # j is index of hcube within batch, i is absolute index
                 j = 0
@@ -1942,7 +1678,7 @@ cdef class Integrator(object):
                             )
                 if (not self.adapt_to_errors) and self.adapt and self.alpha > 0:
                     self.map.add_training_data(y, fdv2, y.shape[0])
-            
+
             for s in range(var.shape[0]):
                 for t in range(s):
                     var[t, s] = var[s, t]
@@ -1951,7 +1687,7 @@ cdef class Integrator(object):
                 result.add(gvar.gvar(mean[0], var[0,0] ** 0.5))
             else:
                 result.add(gvar.gvar(mean, var).reshape(integrand_shape))
-            
+
             if self.beta > 0 and self.adapt:
                 self.sum_sigf = sum_sigf
             if self.alpha > 0 and self.adapt:
@@ -1966,9 +1702,9 @@ class reporter:
     specifies how many x[i]'s to print out from the maps
     for each axis.
 
-    :param ngrid: Number of grid nodes printed out for 
+    :param ngrid: Number of grid nodes printed out for
         each direction. Default is 0.
-    :type ngrid: int 
+    :type ngrid: int
     """
     def __init__(self, ngrid=0):
         self.ngrid = ngrid
@@ -1982,9 +1718,9 @@ class reporter:
     def end(self, itn_ans, ans):
         print "    itn %2d: %s\n all itn's: %s"%(self.itn+1, itn_ans, ans)
         print(
-            '    neval = %d  neval/h-cube = %s\n    chi2/dof = %.2f  Q = %.2f' 
+            '    neval = %d  neval/h-cube = %s\n    chi2/dof = %.2f  Q = %.2f'
             % (
-                self.integrator.last_neval, 
+                self.integrator.last_neval,
                 tuple(self.integrator.neval_hcube_range),
                 ans.chi2 / ans.dof if ans.dof > 0 else 0,
                 ans.Q if ans.dof > 0 else 1.,
@@ -2000,12 +1736,12 @@ class reporter:
 
 # preferred base class for batch integrands
 # batch integrands are typically faster
-# 
+#
 cdef class BatchIntegrand:
     """ Base class for classes providing batch integrands.
 
     A class derived from :class:`vegas.BatchIntegrand` will normally
-    provide a ``__call__(self, x)`` method that returns an 
+    provide a ``__call__(self, x)`` method that returns an
     array ``f`` where:
 
         ``x[i, d]`` is a contiguous :mod:`numpy` array where ``i=0...``
@@ -2013,17 +1749,17 @@ cdef class BatchIntegrand:
         different directions in the integration space.
 
         ``f[i]`` is a contiguous array containing the integrand
-        values corresponding to the integration 
-        points ``x[i, :]``. ``f[i]`` is either a number, 
-        for a single integrand, or an array (of any shape) 
-        for multiple integrands (i.e., an 
+        values corresponding to the integration
+        points ``x[i, :]``. ``f[i]`` is either a number,
+        for a single integrand, or an array (of any shape)
+        for multiple integrands (i.e., an
         array-valued integrand).
 
     An example is ::
 
-        import vegas 
-        import numpy as np 
-        
+        import vegas
+        import numpy as np
+
         class batchf(vegas.BatchIntegrand):
             def __call__(x):
                 return np.exp(-x[:, 0] - x[:, 1])
@@ -2032,7 +1768,7 @@ cdef class BatchIntegrand:
 
     for the two-dimensional integrand :math:`\exp(-x_0 - x_1)`.
 
-    Deriving from :class:`vegas.BatchIntegrand` is the 
+    Deriving from :class:`vegas.BatchIntegrand` is the
     easiest way to construct integrands in Cython, and
     gives the fastest results.
     """
@@ -2053,24 +1789,24 @@ cdef class BatchIntegrand:
             raise TypeError('no __call__ method defined')
         else:
             return self.fcn(x)
-        
+
 
 def batchintegrand(f):
     """ Decorator for batch integrand functions.
 
     Applying :func:`vegas.batchintegrand` to a function ``fcn`` repackages
-    the function in a format that |vegas| can understand. Appropriate 
-    functions take a :mod:`numpy` array of integration points ``x[i, d]`` 
-    as an argument, where ``i=0...`` labels the integration point and 
-    ``d=0...`` labels direction, and return an array ``f[i]`` of 
-    integrand values (or arrays of integrand values) for the corresponding 
-    points. The meaning of ``fcn(x)`` is unchanged by the decorator, but 
+    the function in a format that |vegas| can understand. Appropriate
+    functions take a :mod:`numpy` array of integration points ``x[i, d]``
+    as an argument, where ``i=0...`` labels the integration point and
+    ``d=0...`` labels direction, and return an array ``f[i]`` of
+    integrand values (or arrays of integrand values) for the corresponding
+    points. The meaning of ``fcn(x)`` is unchanged by the decorator, but
     the type of ``fcn`` is changed.
 
     An example is ::
 
-        import vegas 
-        import numpy as np 
+        import vegas
+        import numpy as np
 
         @vegas.batchintegrand
         def f(x):
@@ -2088,16 +1824,16 @@ def batchintegrand(f):
 
 cdef class _BatchIntegrand_from_NonBatch(BatchIntegrand):
     cdef object shape
-    """ Batch integrand from non-batch integrand. 
+    """ Batch integrand from non-batch integrand.
 
-    This class is used internally by |vegas|. 
+    This class is used internally by |vegas|.
     """
     def __init__(self, fcn):
         self.fcn = fcn
         self.shape = None
 
     def __call__(self, double[:, ::1] x):
-        cdef INT_TYPE i 
+        cdef INT_TYPE i
         cdef numpy.ndarray f
         if self.shape is None:
             self.shape = numpy.asarray(self.fcn(x[0, :])).shape
@@ -2107,7 +1843,7 @@ cdef class _BatchIntegrand_from_NonBatch(BatchIntegrand):
         return f
 
 cdef class MPIintegrand(BatchIntegrand):
-    """ Convert (batch) integrand into an MPI multiprocessor integrand. 
+    """ Convert (batch) integrand into an MPI multiprocessor integrand.
 
     Applying decorator :class:`vegas.MPIintegrand` to  a function
     repackages the function as a  batch |vegas| integrand that can
@@ -2120,8 +1856,8 @@ cdef class MPIintegrand(BatchIntegrand):
 
     An example is ::
 
-        import vegas 
-        import numpy as np 
+        import vegas
+        import numpy as np
 
         @vegas.MPIintegrand
         def f(x):
@@ -2135,7 +1871,7 @@ cdef class MPIintegrand(BatchIntegrand):
     :mod:`mpi4py`, which must be installed in Python.  To run an MPI
     integration code ``mpi-integral.py`` on 4 processors,  for
     example, one might execute::
-        
+
         mpirun -np 4 python mpi-integral.py
 
     Executing ``python mpi-integral.py``, without the ``mpirun``, causes
@@ -2162,7 +1898,7 @@ cdef class MPIintegrand(BatchIntegrand):
         generally wants only one of the processes to report out  final
         results).
 
-    .. attribute:: seed 
+    .. attribute:: seed
 
         The random number see used to reset ``numpy.random.random``
         in all the processes.
@@ -2184,9 +1920,9 @@ cdef class MPIintegrand(BatchIntegrand):
     strategy developed by R. Horgan and Q. Mason for the original Fortran
     version of |vegas|.
     """
-    #cdef readonly object comm 
-    #cdef readonly INTP_TYPE rank 
-    #cdef readonly INTP_TYPE nproc 
+    #cdef readonly object comm
+    #cdef readonly INTP_TYPE rank
+    #cdef readonly INTP_TYPE nproc
     #cdef readonly object seed
 
     def __init__(self, fcn):
@@ -2207,8 +1943,8 @@ cdef class MPIintegrand(BatchIntegrand):
 
     def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
         """ Divide x into self.nproc chunks, feeding one to each processor. """
-        # Note that the last chunk needs to be padded out to the same 
-        # length as the others so that Allgather doesn't get upset. The 
+        # Note that the last chunk needs to be padded out to the same
+        # length as the others so that Allgather doesn't get upset. The
         # size of the pad is smaller than ``self.nproc``.
         cdef numpy.ndarray results, f
         cdef INTP_TYPE nx, i0, i1
@@ -2216,7 +1952,7 @@ cdef class MPIintegrand(BatchIntegrand):
             # use a trial evaluation with the first x to get fcn_shape
             self.fcn_shape = numpy.shape(self.fcn(x[:1]))[1:]
         nx = x.shape[0] // self.nproc + 1
-        i0 = self.rank * nx 
+        i0 = self.rank * nx
         i1 = min(i0 + nx, x.shape[0])
         f = numpy.empty((nx,) + self.fcn_shape, numpy.double)
         f[:(i1-i0)] = self.fcn(x[i0:i1])
