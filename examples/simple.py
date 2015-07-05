@@ -1,6 +1,6 @@
 """
 vegas example from the Basic Integrals section
-of the Tutorial and Overview section of the 
+of the Tutorial and Overview section of the
 vegas documentation.
 """
 from __future__ import print_function   # makes this work for python2 and 3
@@ -12,7 +12,7 @@ import sys
 
 if sys.argv[1:]:
     SHOW_GRID = eval(sys.argv[1])   # display picture of grid ?
-else: 
+else:
     SHOW_GRID = True
 
 def f(x):
@@ -42,13 +42,13 @@ if __name__ == '__main__':
     main()
 
 
-# Copyright (c) 2013-14 G. Peter Lepage. 
+# Copyright (c) 2013-14 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # any later version (see <http://www.gnu.org/licenses/>).
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
