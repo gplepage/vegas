@@ -1,4 +1,4 @@
-""" to build modules in module_list:   python setup.py build_ext --inplace 
+""" to build modules in module_list:   python setup.py build_ext --inplace
 
 Created by G. Peter Lepage (Cornell University) in 12/2013.
 Copyright (c) 2013-14 G. Peter Lepage.
@@ -19,12 +19,12 @@ from Cython.Build import cythonize
 import sys
 import numpy
 
-VEGAS_VERSION = '2.2.2'
+VEGAS_VERSION = '3.0'
 
-# create vegas/version.py so vegas knows its version number 
+# create vegas/version.py so vegas knows its version number
 with open("src/vegas/_version.py","w") as version_file:
     version_file.write(
-        "# File created by vegas setup.py\nversion = '%s'\n" 
+        "# File created by vegas setup.py\nversion = '%s'\n"
         % VEGAS_VERSION
         )
 
@@ -54,9 +54,9 @@ setup(
     license='GPLv3+',
     platforms='Any',
     long_description="""
-    This package provides tools evaluating multidimensional 
-    integrals numerically using an enhanced version of 
-	the adaptive Monte Carlo vegas algorithm (G. P. Lepage, 
+    This package provides tools evaluating multidimensional
+    integrals numerically using an enhanced version of
+	the adaptive Monte Carlo vegas algorithm (G. P. Lepage,
 	J. Comput. Phys. 27(1978) 192).
     """,
     classifiers = [                     #
