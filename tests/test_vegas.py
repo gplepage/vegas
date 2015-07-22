@@ -257,7 +257,6 @@ class TestRAvg(unittest.TestCase):
         " unweighted RAvgArray "
         # if not have_gvar:
         #     return
-        gv.ranseed((1,2))
         mean = np.random.uniform(-10., 10., (2,))
         cov = np.array([[1., 0.5], [0.5, 2.]]) / 10.
         N = 30
@@ -295,6 +294,104 @@ class TestRAvg(unittest.TestCase):
             ""
             ]
         self.assertEqual(a.summary(), '\n'.join(s))
+
+    def test_ravgdict(self):
+        " RAvgDict "
+        a = RAvgDict(dict(s=1.0, a=[2.0, 3.0]))
+        a.add(dict(s=gv.gvar(1, 1), a=[gvar.gvar(1, 1), gvar.gvar(10,10)]))
+        a.add(dict(s=gv.gvar(2, 2), a=[gvar.gvar(2, 2), gvar.gvar(20,20)]))
+        a.add(dict(s=gv.gvar(3, 3), a=[gvar.gvar(3, 3), gvar.gvar(30,30)]))
+        self.assertEqual(a['a'].shape, (2,))
+        np_assert_allclose(a['a'][0].mean, 1.346938775510204)
+        np_assert_allclose(a['a'][0].sdev, 0.8571428571428571)
+        self.assertEqual(str(a['a'][0]), '1.35(86)')
+        self.assertEqual(str(a['a'][1]), '13.5(8.6)')
+        np_assert_allclose(a['s'].mean, 1.346938775510204)
+        np_assert_allclose(a['s'].sdev, 0.8571428571428571)
+        self.assertEqual(str(a['s']), '1.35(86)')
+        self.assertEqual(a.dof, 6)
+        np_assert_allclose(a.chi2, 3*0.5306122448979592)
+        np_assert_allclose(a.Q, 0.953162484587)
+        s = [
+            "itn   integral        wgt average     chi2/dof        Q",
+            "-------------------------------------------------------",
+            "  1   1.0(1.0)        1.0(1.0)            0.00     1.00",
+            "  2   2.0(2.0)        1.20(89)            0.20     0.90",
+            "  3   3.0(3.0)        1.35(86)            0.27     0.95",
+            ""
+            ]
+        self.assertEqual(a.summary(), '\n'.join(s))
+
+    def test_ravgdict_unwgtd(self):
+        " unweighted RAvgDict "
+        # scalar
+        mean_s = np.random.uniform(-10., 10.)
+        sdev_s = 0.1
+        x_s = gv.gvar(mean_s, sdev_s)
+        # array
+        mean_a = np.random.uniform(-10., 10., (2,))
+        cov_a = np.array([[1., 0.5], [0.5, 2.]]) / 10.
+        x_a = gv.gvar(mean_a, cov_a)
+        N = 30
+        r_a = gv.raniter(x_a, N)
+        ravg = RAvgDict(dict(scalar=1.0, array=[2., 3.]), weighted=False)
+        for ri in r_a:
+            ravg.add(dict(
+                scalar=gv.gvar(x_s(), sdev_s), array=gv.gvar(ri, cov_a)
+                ))
+        np_assert_allclose( ravg['scalar'].sdev, x_s.sdev / (N ** 0.5))
+        self.assertLess(
+            abs(ravg['scalar'].mean - mean_s),
+            5 * ravg['scalar'].sdev
+            )
+        np_assert_allclose(gv.evalcov(ravg['array']), cov_a / N)
+        for i in range(2):
+            self.assertLess(
+                abs(mean_a[i] - ravg['array'][i].mean),
+                5 * ravg['array'][i].sdev
+                )
+        self.assertEqual(ravg.dof, 2 * N - 2 + N - 1)
+        self.assertGreater(ravg.Q, 1e-3)
+
+    def test_ravgdict_wgtd(self):
+        " weighted RAvgDict "
+        # scalar
+        mean_s = np.random.uniform(-10., 10.)
+        xbig_s = gv.gvar(mean_s, 1.)
+        xsmall_s = gv.gvar(mean_s, 0.1)
+        # array
+        mean_a = np.random.uniform(-10., 10., (2,))
+        cov_a = np.array([[1., 0.5], [0.5, 2.]])
+        invcov = np.linalg.inv(cov_a)
+        N = 30
+        xbig_a = gv.gvar(mean_a, cov_a)
+        rbig_a = gv.raniter(xbig_a, N)
+        xsmall_a = gv.gvar(mean_a, cov_a / 10.)
+        rsmall_a = gv.raniter(xsmall_a, N)
+
+        ravg = RAvgDict(dict(scalar=1.0, array=[2., 3.]))
+        for rb, rw in zip(rbig_a, rsmall_a):
+            ravg.add(dict(
+                scalar=gv.gvar(xbig_s(), 1.), array=gv.gvar(rb, cov_a)
+                ))
+            ravg.add(dict(
+                scalar=gv.gvar(xsmall_s(), 0.1), array=gv.gvar(rw, cov_a / 10.)
+                ))
+        np_assert_allclose(
+            ravg['scalar'].sdev,
+            1/ (N * ( 1. / xbig_s.var + 1. / xsmall_s.var)) ** 0.5
+            )
+        self.assertLess(
+            abs(ravg['scalar'].mean - mean_s), 5 * ravg['scalar'].sdev
+            )
+        np_assert_allclose(gv.evalcov(ravg['array']), cov_a / (10. + 1.) / N)
+        for i in range(2):
+            self.assertLess(
+                abs(mean_a[i] - ravg['array'][i].mean),
+                5 * ravg['array'][i].sdev
+                )
+        self.assertEqual(ravg.dof, 4 * N - 2 + 2 * N - 1)
+        self.assertGreater(ravg.Q, 1e-3)
 
 class TestIntegrator(unittest.TestCase):
     def setUp(self):
@@ -605,6 +702,41 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(r0.itn_results[0].sdev < 1.)
         self.assertTrue(r1.itn_results[-1].sdev < 0.01)
         self.assertTrue(r1.Q > 1e-3)
+
+    def test_dictintegrand(self):
+        " dictionary-valued integrand "
+        def f(x):
+            return dict(a=x[0] + x[1], b=[x[0] ** 2 * 3., x[1] ** 3 * 4.])
+        I = Integrator(2 * [[0, 1]])
+        r = I(f, neval=1000)
+        self.assertTrue(abs(r['a'].mean - 1.) < 5. * r['a'].sdev)
+        self.assertTrue(abs(r['b'][0].mean - 1.) < 5. * r['b'][0].sdev)
+        self.assertTrue(abs(r['b'][1].mean - 1.) < 5. * r['b'][1].sdev)
+        self.assertTrue(r['a'].sdev < 1e-2)
+        self.assertTrue(r['b'][0].sdev < 1e-2)
+        self.assertTrue(r['b'][1].sdev < 1e-2)
+        self.assertTrue(r.Q > 1e-3)
+        self.assertTrue(r.dof == 27)
+        @batchintegrand
+        def f(x):
+            ans = dict(
+                a=np.empty(x.shape[0], float),
+                b=np.empty((x.shape[0], 2), float)
+                )
+            ans['a'] = x[:, 0] + x[:, 1]
+            ans['b'][:, 0] = x[:, 0] ** 2 * 3.
+            ans['b'][:, 1] = x[:, 1] ** 3 * 4.
+            return ans
+        I = Integrator(2 * [[0, 1]])
+        r = I(f, neval=1000)
+        self.assertTrue(abs(r['a'].mean - 1.) < 5. * r['a'].sdev)
+        self.assertTrue(abs(r['b'][0].mean - 1.) < 5. * r['b'][0].sdev)
+        self.assertTrue(abs(r['b'][1].mean - 1.) < 5. * r['b'][1].sdev)
+        self.assertTrue(r['a'].sdev < 1e-2)
+        self.assertTrue(r['b'][0].sdev < 1e-2)
+        self.assertTrue(r['b'][1].sdev < 1e-2)
+        self.assertTrue(r.Q > 1e-3)
+        self.assertTrue(r.dof == 27)
 
 class TestMPIintegrand(unittest.TestCase):
     def setUp(self):

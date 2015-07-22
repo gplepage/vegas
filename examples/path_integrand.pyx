@@ -1,10 +1,10 @@
-# c#ython: profile=True 
+# c#ython: profile=True
 """
-Cython code for the integrand used in path-integral.py.  
+Cython code for the integrand used in path-integral.py.
 
-class PathIntegral is a base class for classes that    
-do path integrals for 1-d systems. class Oscillator 
-is derived from it and specifies a specific potential.  
+class PathIntegral is a base class for classes that
+do path integrals for 1-d systems. class Oscillator
+is derived from it and specifies a specific potential.
 """
 
 # import Cython description of vegas
@@ -17,12 +17,12 @@ import numpy as np
 import vegas
 
 
-cdef class PathIntegrand(vegas.BatchIntegrand): 
-    """ Integrand for path integral corresponding to < x0 | exp(-H*T) | x0 > 
+cdef class PathIntegrand(vegas.BatchIntegrand):
+    """ Integrand for path integral corresponding to < x0 | exp(-H*T) | x0 >
 
-    This class creates a vegas integrand whose integrals correspond to 
+    This class creates a vegas integrand whose integrals correspond to
     the quantum mechanical expectation values < x0 | exp(-H*T) | x0 >
-    where H = p**2/2m + V(x) is a 1-d Hamiltonian for a particle with 
+    where H = p**2/2m + V(x) is a 1-d Hamiltonian for a particle with
     mass m, moving in potential V(x). Values are given for a list of
     x0 values, as well as for the integral over all x0.
 
@@ -32,11 +32,22 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
         integ = vegas.Integrator(integrand.region)
         results = integ(integrand, neval=100000, nitn=10)
 
-    Then results[0] is the integral over all values of x0 (and therefore
-    equals exp(-E0*T) if T is big enough), while results[i+1] is the 
-    value of the expectation value corresponding to x0 = x0list[i]
-    (and therefore results[i+1] / results[0] is the wavefunction squared
-    at x0, provided again that T is big enough).
+    Then
+
+        results['exp(-E0*T)']
+
+    is the integral over all values of x0 (and therefore equals exp(-E0*T) if
+    T is big enough), while
+
+        results['exp(-E0*T) * psi(x0)**2']
+
+    is the value of the expectation value corresponding to the x0 values in
+    x0list (and therefore
+
+        results['exp(-E0*T) * psi(x0)**2'] / results['exp(-E0*T)']
+
+    gives the wavefunction squared at each x0, provided again that T is big
+    enough).
 
     Parameters:
         V ...... potential energy (function of x)
@@ -47,9 +58,9 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
         xscale . typical length scale for ground state wavefunction
     """
     cdef readonly object V
-    cdef readonly int ndT 
+    cdef readonly int ndT
     cdef readonly double T
-    cdef readonly int neval 
+    cdef readonly int neval
     cdef readonly int nitn
     cdef readonly double m
     cdef readonly double xscale
@@ -62,7 +73,7 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
     def __init__(self, V, T, x0list=[], ndT=10, m=1, xscale=1.):
         self.V = V
         self.ndT = ndT
-        self.T = T 
+        self.T = T
         self.m = m
         self.xscale = xscale
         self.x0list = np.array(x0list)
@@ -73,7 +84,7 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
 
     def __call__(self, theta):
         """ integrand for the path integral """
-        cdef int i, j 
+        cdef int i, j
         cdef double S, Smiddle, jac, jfac, jac_x0
         cdef double a = self.T / self.ndT
         cdef double m_2a = self.m / 2. / a
@@ -82,7 +93,7 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
         cdef double[::1] x0list = np.empty(len(self.x0list) + 1, float)
         cdef double[::1] Vx0list = np.empty(len(x0list), float)
         cdef double[:, ::1] f = np.empty((theta.shape[0], len(x0list)), float)
-        
+
         # set up non-changing part of x0list
         x0list[1:] = self.x0list
         Vx0list[1:] = self.Vx0list
@@ -114,11 +125,15 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
             # add in end points, with periodic BCs
             x0list[0] = x[i, 0]
             Vx0list[0] = Vx[i, 0]
-            for j in range(len(x0list)): 
+            for j in range(len(x0list)):
                 S = Smiddle + (
-                    m_2a * ( (x[i, 1] - x0list[j])**2 + (x0list[j] - x[i, -1])**2 ) 
+                    m_2a * ( (x[i, 1] - x0list[j])**2 + (x0list[j] - x[i, -1])**2 )
                     + a * Vx0list[j]
                     )
                 f[i, j] = (jac if j == 0 else jac_x0) * exp(-S)
-        return f
+        # repackage as dictionary
+        ans = {
+            'exp(-E0*T)':f[:, 0], 'exp(-E0*T) * psi(x0)**2':f[:,1:]
+            }
+        return ans
 

@@ -56,7 +56,8 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from ._vegas import RAvg, RAvgArray, AdaptiveMap, Integrator, BatchIntegrand
+from ._vegas import RAvg, RAvgArray, RAvgDict
+from ._vegas import AdaptiveMap, Integrator, BatchIntegrand
 from ._vegas import reporter, gvar, batchintegrand
 from ._vegas import MPIintegrand
 from ._version import version as __version__

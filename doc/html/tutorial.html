@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; vegas 2.2.2 documentation</title>
+    <title>Tutorial &mdash; vegas 3.0 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.2.2',
+        VERSION:     '3.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 2.2.2 documentation" href="index.html" />
+    <link rel="top" title="vegas 3.0 documentation" href="index.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -33,9 +33,9 @@
 <![endif]-->
 
   </head>
-  <body>
+  <body role="document">
 
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -50,20 +50,20 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">vegas 2.2.2 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="tutorial">
 <h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>Class <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a> gives Monte Carlo estimates of arbitrary
+<p>Class <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></code></a> gives Monte Carlo estimates of arbitrary
 multidimensional integrals using the <em>vegas</em> algorithm
 (G. P. Lepage, J. Comput. Phys. 27 (1978) 192).
 The algorithm has two components.
@@ -94,7 +94,7 @@ estimates of the integral
 in order to verify that the distribution is indeed Gaussian.
 Error analysis is straightforward if the
 integral estimates are Gaussian.</p>
-<p>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm has been in use for decades and implementations are
+<p>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> algorithm has been in use for decades and implementations are
 available in many programming languages, including Fortran (the original
 version), C and C++. The algorithm used here is significantly improved over
 the original implementation, and that used in most other implementations.
@@ -103,7 +103,7 @@ implementation, and adaptive stratified sampling, which is new.</p>
 <p>This module is written in Cython, so it is almost as fast as compiled Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.</p>
-<p>The following sections describe how to use <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>. Almost every
+<p>The following sections describe how to use <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>. Almost every
 example shown is a complete code, which can be copied into a file
 and run with python. It is worthwhile playing with the parameters to see how
 things change.</p>
@@ -117,7 +117,7 @@ using Python 2, or add</p>
 </div>
 <div class="section" id="basic-integrals">
 <h2>Basic Integrals<a class="headerlink" href="#basic-integrals" title="Permalink to this headline">¶</a></h2>
-<p>Here we illustrate the use of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> by estimating the integral</p>
+<p>Here we illustrate the use of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> by estimating the integral</p>
 <div class="math">
 <p><img src="_images/math/6244294f0d3f5b3d277be2ce990e79ab6b0d36bd.png" alt="C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
 \,\,\mathrm{e}^{- 100 \sum_{d}(x_d-0.5)^2}  ,"/></p>
@@ -139,17 +139,17 @@ The following code shows how this can be done:</p>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">    Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>First we define the integrand <tt class="docutils literal"><span class="pre">f(x)</span></tt> where <tt class="docutils literal"><span class="pre">x[d]</span></tt> specifies a  point in the
-4-dimensional space. We then create an  integrator, <tt class="docutils literal"><span class="pre">integ</span></tt>, which is an
+<p>First we define the integrand <code class="docutils literal"><span class="pre">f(x)</span></code> where <code class="docutils literal"><span class="pre">x[d]</span></code> specifies a  point in the
+4-dimensional space. We then create an  integrator, <code class="docutils literal"><span class="pre">integ</span></code>, which is an
 integration operator  that can be applied to any 4-dimensional function. It is
 where we specify the integration volume.
-Finally we apply <tt class="docutils literal"><span class="pre">integ</span></tt> to our integrand <tt class="docutils literal"><span class="pre">f(x)</span></tt>,
-telling the integrator to estimate  the integral using <tt class="docutils literal"><span class="pre">nitn=10</span></tt> iterations
-of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm, each of which uses no more than <tt class="docutils literal"><span class="pre">neval=1000</span></tt>
+Finally we apply <code class="docutils literal"><span class="pre">integ</span></code> to our integrand <code class="docutils literal"><span class="pre">f(x)</span></code>,
+telling the integrator to estimate  the integral using <code class="docutils literal"><span class="pre">nitn=10</span></code> iterations
+of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> algorithm, each of which uses no more than <code class="docutils literal"><span class="pre">neval=1000</span></code>
 evaluations of the integrand. Each iteration produces an independent
 estimate of the integral. The final estimate is the weighted average of
-the results from all 10 iterations, and is returned by <tt class="docutils literal"><span class="pre">integ(f</span> <span class="pre">...)</span></tt>.
-The call <tt class="docutils literal"><span class="pre">result.summary()</span></tt> returns
+the results from all 10 iterations, and is returned by <code class="docutils literal"><span class="pre">integ(f</span> <span class="pre">...)</span></code>.
+The call <code class="docutils literal"><span class="pre">result.summary()</span></code> returns
 a summary of results from each iteration.</p>
 <p>This code produces the following output:</p>
 <div class="highlight-python"><div class="highlight"><pre>itn   integral        wgt average     chi2/dof        Q
@@ -176,7 +176,7 @@ giving both the estimate from just that iteration, and the weighted
 average of results from all iterations up to that point. The
 estimates from the first two iterations are not accurate at
 all, with errors equal to 30&#8211;190% of the final result.
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> initially has no information about the integrand
+<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> initially has no information about the integrand
 and so does a relatively poor job of estimating the integral.
 It uses information from the samples in one iteration, however,
 to remap the integration variables for subsequent iterations,
@@ -186,7 +186,7 @@ As a result, the per-iteration error
 is reduced to 4.3% by the fifth iteration, and below 2% by
 the end &#8212; an improvement by almost two orders of
 magnitude from the start. Eventually the per-iteration error
-stops decreasing because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> has found the optimal remapping,
+stops decreasing because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> has found the optimal remapping,
 at which point
 it has fully adapted to the integrand.</p>
 <p><strong>Weighted Average:</strong> The final result, 1.0015 ± 0.0091,
@@ -200,7 +200,7 @@ is a random number drawn from a distribution whose mean
 equals the correct value of the integral, and the errors
 quoted are estimates of the standard deviations of those
 distributions. The distributions are Gaussian provided
-the number of integrand evaluations per iteration (<tt class="docutils literal"><span class="pre">neval</span></tt>)
+the number of integrand evaluations per iteration (<code class="docutils literal"><span class="pre">neval</span></code>)
 is sufficiently large, in which case the standard deviation
 is a reliable estimate of the error.
 The weighted average <img class="math" src="_images/math/a9728d3ad96d53f09eb3d4304f3a5addca90fdb2.png" alt="\overline I" style="vertical-align: 0px"/>  minimizes</p>
@@ -222,40 +222,40 @@ fluctuations. A very small <em>Q</em> (less than 0.05-0.1) indicates
 that the <img class="math" src="_images/math/7d2384c3884c89853f86abe7c46ec2bb4ff36d8e.png" alt="\chi^2" style="vertical-align: -3px"/> is too large to be accounted for by
 statistical fluctuations &#8212; that is, the estimates of the integral
 from different iterations do not agree with each other to
-within errors. This means that <tt class="docutils literal"><span class="pre">neval</span></tt> is not sufficiently
+within errors. This means that <code class="docutils literal"><span class="pre">neval</span></code> is not sufficiently
 large to guarantee Gaussian behavior, and must be increased
 if the error estimates are to be trusted.</p>
-<p><tt class="docutils literal"><span class="pre">integ(f...)</span></tt> returns a weighted-average object,
-of type <a class="reference internal" href="vegas.html#vegas.RAvg" title="vegas.RAvg"><tt class="xref py py-class docutils literal"><span class="pre">vegas.RAvg</span></tt></a>, that has the following
+<p><code class="docutils literal"><span class="pre">integ(f...)</span></code> returns a weighted-average object,
+of type <a class="reference internal" href="vegas.html#vegas.RAvg" title="vegas.RAvg"><code class="xref py py-class docutils literal"><span class="pre">vegas.RAvg</span></code></a>, that has the following
 attributes:</p>
 <blockquote>
-<div><p><tt class="docutils literal"><span class="pre">result.mean</span></tt> &#8212; weighted average of all estimates of the integral;</p>
-<p><tt class="docutils literal"><span class="pre">result.sdev</span></tt> &#8212; standard deviation of the weighted average;</p>
-<p><tt class="docutils literal"><span class="pre">result.chi2</span></tt> &#8212; <img class="math" src="_images/math/7d2384c3884c89853f86abe7c46ec2bb4ff36d8e.png" alt="\chi^2" style="vertical-align: -3px"/> of the weighted average;</p>
-<p><tt class="docutils literal"><span class="pre">result.dof</span></tt> &#8212; number of degrees of freedom;</p>
-<p><tt class="docutils literal"><span class="pre">result.Q</span></tt> &#8212; <em>Q</em> or <em>p-value</em> of the weighted average&#8217;s <img class="math" src="_images/math/7d2384c3884c89853f86abe7c46ec2bb4ff36d8e.png" alt="\chi^2" style="vertical-align: -3px"/>;</p>
-<p><tt class="docutils literal"><span class="pre">result.itn_results</span></tt> &#8212; list of the integral estimates
+<div><p><code class="docutils literal"><span class="pre">result.mean</span></code> &#8212; weighted average of all estimates of the integral;</p>
+<p><code class="docutils literal"><span class="pre">result.sdev</span></code> &#8212; standard deviation of the weighted average;</p>
+<p><code class="docutils literal"><span class="pre">result.chi2</span></code> &#8212; <img class="math" src="_images/math/7d2384c3884c89853f86abe7c46ec2bb4ff36d8e.png" alt="\chi^2" style="vertical-align: -3px"/> of the weighted average;</p>
+<p><code class="docutils literal"><span class="pre">result.dof</span></code> &#8212; number of degrees of freedom;</p>
+<p><code class="docutils literal"><span class="pre">result.Q</span></code> &#8212; <em>Q</em> or <em>p-value</em> of the weighted average&#8217;s <img class="math" src="_images/math/7d2384c3884c89853f86abe7c46ec2bb4ff36d8e.png" alt="\chi^2" style="vertical-align: -3px"/>;</p>
+<p><code class="docutils literal"><span class="pre">result.itn_results</span></code> &#8212; list of the integral estimates
 from each iteration.</p>
 </div></blockquote>
 <p>In this example the final <em>Q</em> is 0.42, indicating that the
 <img class="math" src="_images/math/7d2384c3884c89853f86abe7c46ec2bb4ff36d8e.png" alt="\chi^2" style="vertical-align: -3px"/> for this average is not particularly unlikely and
 thus the error estimate is most likely reliable.</p>
-<p><strong>Precision:</strong> The precision of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> estimates is
-determined by <tt class="docutils literal"><span class="pre">nitn</span></tt>, the number of iterations
-of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm,
-and by <tt class="docutils literal"><span class="pre">neval</span></tt>, the maximum number of integrand evaluation
+<p><strong>Precision:</strong> The precision of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> estimates is
+determined by <code class="docutils literal"><span class="pre">nitn</span></code>, the number of iterations
+of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> algorithm,
+and by <code class="docutils literal"><span class="pre">neval</span></code>, the maximum number of integrand evaluation
 made per iteration.
 The computing cost is typically proportional to the
-product of <tt class="docutils literal"><span class="pre">nitn</span></tt> and <tt class="docutils literal"><span class="pre">neval</span></tt>.
+product of <code class="docutils literal"><span class="pre">nitn</span></code> and <code class="docutils literal"><span class="pre">neval</span></code>.
 The number of integrand
 evaluations per iteration
 varies from iteration to iteration,
-here between 486 and 959. Typically <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> needs more
+here between 486 and 959. Typically <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> needs more
 integration points in early iterations, before it has fully
 adapted to the integrand.</p>
-<p>We can increase precision by increasing either <tt class="docutils literal"><span class="pre">nitn</span></tt> or <tt class="docutils literal"><span class="pre">neval</span></tt>,
+<p>We can increase precision by increasing either <code class="docutils literal"><span class="pre">nitn</span></code> or <code class="docutils literal"><span class="pre">neval</span></code>,
 but it is
-generally far better to increase <tt class="docutils literal"><span class="pre">neval</span></tt>. For example,
+generally far better to increase <code class="docutils literal"><span class="pre">neval</span></code>. For example,
 adding the following lines to the code above</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;larger nitn  =&gt; </span><span class="si">%s</span><span class="s">    Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
@@ -269,58 +269,58 @@ adding the following lines to the code above</p>
 larger neval =&gt; 0.99978(67)    Q = 0.42
 </pre></div>
 </div>
-<p>The total number of integrand evaluations, <tt class="docutils literal"><span class="pre">nitn</span> <span class="pre">*</span> <span class="pre">neval</span></tt>, is
-about the same in both cases, but increasing <tt class="docutils literal"><span class="pre">neval</span></tt> is more
-than twice as accurate as increasing <tt class="docutils literal"><span class="pre">nitn</span></tt>. Typically you
+<p>The total number of integrand evaluations, <code class="docutils literal"><span class="pre">nitn</span> <span class="pre">*</span> <span class="pre">neval</span></code>, is
+about the same in both cases, but increasing <code class="docutils literal"><span class="pre">neval</span></code> is more
+than twice as accurate as increasing <code class="docutils literal"><span class="pre">nitn</span></code>. Typically you
 want to use no more than 10 or 20 iterations beyond the
-point where <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> has fully adapted. You want some number of
+point where <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> has fully adapted. You want some number of
 iterations so that you can verify Gaussian behavior by
 checking the <img class="math" src="_images/math/7d2384c3884c89853f86abe7c46ec2bb4ff36d8e.png" alt="\chi^2" style="vertical-align: -3px"/> and <em>Q</em>, but not too many.</p>
 <p>It is also generally useful to compare two or more
-results from values of <tt class="docutils literal"><span class="pre">neval</span></tt> that differ by a
+results from values of <code class="docutils literal"><span class="pre">neval</span></code> that differ by a
 significant factor (4&#8211;10, say). These should agree within
 errors. If they do not, it could be due to non-Gaussian
-artifacts caused by a small <tt class="docutils literal"><span class="pre">neval</span></tt>. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>
+artifacts caused by a small <code class="docutils literal"><span class="pre">neval</span></code>. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>
 estimates have two sources of error. One is the statistical
-error, which is what is quoted by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>. The other is
+error, which is what is quoted by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>. The other is
 a systematic error due to residual non-Gaussian
 effects. The systematic error vanishes like
-<tt class="docutils literal"><span class="pre">1/neval</span></tt> and so becomes negligible compared with
-the statistical error as <tt class="docutils literal"><span class="pre">neval</span></tt> increases.
+<code class="docutils literal"><span class="pre">1/neval</span></code> and so becomes negligible compared with
+the statistical error as <code class="docutils literal"><span class="pre">neval</span></code> increases.
 The systematic error can bias the Monte Carlo estimate, however,
-if <tt class="docutils literal"><span class="pre">neval</span></tt> is insufficiently large. This usually
+if <code class="docutils literal"><span class="pre">neval</span></code> is insufficiently large. This usually
 results in a large <img class="math" src="_images/math/7d2384c3884c89853f86abe7c46ec2bb4ff36d8e.png" alt="\chi^2" style="vertical-align: -3px"/> (and small <em>Q</em>), but a
 more reliable check is to compare
-results that use signficantly different values of <tt class="docutils literal"><span class="pre">neval</span></tt>.
+results that use signficantly different values of <code class="docutils literal"><span class="pre">neval</span></code>.
 The systematic errors due to non-Gaussian behavior are
 likely negligible if the different estimates agree to
 within the statistical errors.</p>
 <p>The possibility of systematic biases
-is another reason for increasing <tt class="docutils literal"><span class="pre">neval</span></tt>
-rather than <tt class="docutils literal"><span class="pre">nitn</span></tt> to obtain more precision.
-Making <tt class="docutils literal"><span class="pre">neval</span></tt> larger and larger is guaranteed
+is another reason for increasing <code class="docutils literal"><span class="pre">neval</span></code>
+rather than <code class="docutils literal"><span class="pre">nitn</span></code> to obtain more precision.
+Making <code class="docutils literal"><span class="pre">neval</span></code> larger and larger is guaranteed
 to improve the Monte Carlo estimate, as the statistical
-error decreases (at least as fast as <tt class="docutils literal"><span class="pre">sqrt(1/neval)</span></tt>
+error decreases (at least as fast as <code class="docutils literal"><span class="pre">sqrt(1/neval)</span></code>
 and often faster) and the
 systematic error decreases even more quickly (like
-<tt class="docutils literal"><span class="pre">1/neval</span></tt>).
-Making <tt class="docutils literal"><span class="pre">nitn</span></tt> larger and larger, on the other hand,
+<code class="docutils literal"><span class="pre">1/neval</span></code>).
+Making <code class="docutils literal"><span class="pre">nitn</span></code> larger and larger, on the other hand,
 is guaranteed eventually to give the wrong
 answer. This is because at some point the statistical error
-(which falls as <tt class="docutils literal"><span class="pre">sqrt(1/nitn)</span></tt>) will no longer
-mask the systematic error (which is unaffected by <tt class="docutils literal"><span class="pre">nitn</span></tt>).
+(which falls as <code class="docutils literal"><span class="pre">sqrt(1/nitn)</span></code>) will no longer
+mask the systematic error (which is unaffected by <code class="docutils literal"><span class="pre">nitn</span></code>).
 The systematic error for the integral
-above (with <tt class="docutils literal"><span class="pre">neval=1000</span></tt>) is about -0.0008(1), which
+above (with <code class="docutils literal"><span class="pre">neval=1000</span></code>) is about -0.0008(1), which
 is negligible compared to the statistical error unless
-<tt class="docutils literal"><span class="pre">nitn</span></tt> is of order 1500 or larger &#8212; so systematic errors
-aren&#8217;t a problem with <tt class="docutils literal"><span class="pre">nitn=10</span></tt>.</p>
+<code class="docutils literal"><span class="pre">nitn</span></code> is of order 1500 or larger &#8212; so systematic errors
+aren&#8217;t a problem with <code class="docutils literal"><span class="pre">nitn=10</span></code>.</p>
 <p><strong>Early Iterations:</strong> Integral estimates from early iterations,
-before <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> has adapted, can be quite
+before <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> has adapted, can be quite
 crude. With very peaky integrands, these are often far from
 the correct answer with highly unreliable error estimates. For
 example, the integral above becomes more
 difficult if we double the length of each side of the
-integration volume by redefining <tt class="docutils literal"><span class="pre">integ</span></tt> as:</p>
+integration volume by redefining <code class="docutils literal"><span class="pre">integ</span></code> as:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
 </pre></div>
 </div>
@@ -341,19 +341,19 @@ integration volume by redefining <tt class="docutils literal"><span class="pre">
 result = 0.2026(60)    Q = 0.00
 </pre></div>
 </div>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> misses the peak completely in the first two iterations,
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> misses the peak completely in the first two iterations,
 giving estimates that are completely
 wrong (by 76 and 123 standard deviations!).
-Some of its samples hit the peak&#8217;s shoulders, so <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> is
+Some of its samples hit the peak&#8217;s shoulders, so <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> is
 eventually able to find the peak (by iterations 5&#8211;6), but
 the integrand estimates are wildly non-Gaussian before that
 point. This results in a non-sensical final result, as
-indicated by the <tt class="docutils literal"><span class="pre">Q</span> <span class="pre">=</span> <span class="pre">0.00</span></tt>.</p>
-<p>It is common practice in using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to discard
+indicated by the <code class="docutils literal"><span class="pre">Q</span> <span class="pre">=</span> <span class="pre">0.00</span></code>.</p>
+<p>It is common practice in using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> to discard
 estimates from the first several iterations, before the
 algorithm has adapted, in order to avoid ruining the
 final result in this way. This is done by replacing the
-single call to <tt class="docutils literal"><span class="pre">integ(f...)</span></tt> in the original code
+single call to <code class="docutils literal"><span class="pre">integ(f...)</span></code> in the original code
 with two calls:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c"># step 1 -- adapt to f; discard results</span>
 <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
@@ -384,7 +384,7 @@ result = 0.9961(50)    Q = 0.40
 </pre></div>
 </div>
 <p>The final result is now reliable.</p>
-<p><strong>Other Integrands:</strong> Once <tt class="docutils literal"><span class="pre">integ</span></tt> has been trained on <tt class="docutils literal"><span class="pre">f(x)</span></tt>,
+<p><strong>Other Integrands:</strong> Once <code class="docutils literal"><span class="pre">integ</span></code> has been trained on <code class="docutils literal"><span class="pre">f(x)</span></code>,
 it can be usefully applied
 to other functions with similar structure. For example, adding
 the following at the end of the original code,</p>
@@ -413,19 +413,19 @@ the following at the end of the original code,</p>
 result = 0.5021(23)    Q = 0.54
 </pre></div>
 </div>
-<p>Again the grid is almost optimal for <tt class="docutils literal"><span class="pre">g(x)</span></tt> from the start,
-because <tt class="docutils literal"><span class="pre">g(x)</span></tt> peaks in the same region as <tt class="docutils literal"><span class="pre">f(x)</span></tt>.
+<p>Again the grid is almost optimal for <code class="docutils literal"><span class="pre">g(x)</span></code> from the start,
+because <code class="docutils literal"><span class="pre">g(x)</span></code> peaks in the same region as <code class="docutils literal"><span class="pre">f(x)</span></code>.
 The exact value for this integral is very close to 0.5.</p>
-<p>Note that <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><tt class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></tt></a>s can be saved in files and reloaded later using
-Python&#8217;s <tt class="xref py py-mod docutils literal"><span class="pre">pickle</span></tt> module: for example,
-<tt class="docutils literal"><span class="pre">pickle.dump(integ,</span> <span class="pre">openfile)</span></tt> saves integrator <tt class="docutils literal"><span class="pre">integ</span></tt>
-in file <tt class="docutils literal"><span class="pre">openfile</span></tt>, and
-<tt class="docutils literal"><span class="pre">integ</span> <span class="pre">=</span> <span class="pre">pickle.load(openfile)</span></tt> reloads it. The is useful for costly
+<p>Note that <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></code></a>s can be saved in files and reloaded later using
+Python&#8217;s <code class="xref py py-mod docutils literal"><span class="pre">pickle</span></code> module: for example,
+<code class="docutils literal"><span class="pre">pickle.dump(integ,</span> <span class="pre">openfile)</span></code> saves integrator <code class="docutils literal"><span class="pre">integ</span></code>
+in file <code class="docutils literal"><span class="pre">openfile</span></code>, and
+<code class="docutils literal"><span class="pre">integ</span> <span class="pre">=</span> <span class="pre">pickle.load(openfile)</span></code> reloads it. The is useful for costly
 integrations that might need to be reanalyzed later since the integrator
 remembers the variable transformations made to minimize errors, and
 so need not be readapted to the integrand when used later.</p>
-<p><strong>Non-Rectangular Volumes:</strong> <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> can integrate over volumes of
-non-rectangular shape. For example, we can replace integrand <tt class="docutils literal"><span class="pre">f(x)</span></tt>
+<p><strong>Non-Rectangular Volumes:</strong> <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> can integrate over volumes of
+non-rectangular shape. For example, we can replace integrand <code class="docutils literal"><span class="pre">f(x)</span></code>
 above
 by the same Gaussian, but restricted to a 4-sphere of radius 0.2,
 centered on the Gaussian:</p>
@@ -468,20 +468,20 @@ result = 1.0049(97)    Q = 0.48
 </pre></div>
 </div>
 <p>It is a good idea to make the actual integration volume as large a
-fraction as possible of the total volume used by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> &#8212;
+fraction as possible of the total volume used by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> &#8212;
 by choosing integration variables properly &#8212; so
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> doesn&#8217;t spend lots of effort on regions where the integrand
-is exactly 0. Also, it can be challenging for <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>
+<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> doesn&#8217;t spend lots of effort on regions where the integrand
+is exactly 0. Also, it can be challenging for <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>
 to find the region of
-non-zero integrand in high dimensions: integrating <tt class="docutils literal"><span class="pre">f_sph(x)</span></tt>
+non-zero integrand in high dimensions: integrating <code class="docutils literal"><span class="pre">f_sph(x)</span></code>
 in 20 dimensions instead of 4, for example,
-would require <tt class="docutils literal"><span class="pre">neval=1e16</span></tt>
+would require <code class="docutils literal"><span class="pre">neval=1e16</span></code>
 integrand evaluations per iteration to have any chance of
 finding the region of non-zero integrand, because the volume of
 the 20-dimensional sphere is a tiny fraction of the total
 integration volume. The final error in the example above would have
 been cut in half had we used the integration volume
-<tt class="docutils literal"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">[[0.3,</span> <span class="pre">0.7]]</span></tt> instead of <tt class="docutils literal"><span class="pre">[[-1,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1]]</span></tt>.</p>
+<code class="docutils literal"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">[[0.3,</span> <span class="pre">0.7]]</span></code> instead of <code class="docutils literal"><span class="pre">[[-1,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1]]</span></code>.</p>
 <p>Note, finally, that integration to infinity is also possible:
 map the relevant variable into a different variable
 of finite range. For example,  an integral over <img class="math" src="_images/math/692b23ea1ed0554e7230c49a4d1cd70f6737c7d1.png" alt="x\equiv\tan(\theta)" style="vertical-align: -3px"/>
@@ -489,16 +489,16 @@ from 0 to infinity is easily reexpressed as
 an integral over <img class="math" src="_images/math/c4e7f88efa6ee900acb57baf4b4855de8a56d495.png" alt="\theta" style="vertical-align: 0px"/> from 0 to <img class="math" src="_images/math/b633076aee7c1f897fc65a97ff10ea5e184d78fd.png" alt="\pi/2" style="vertical-align: -1px"/>.</p>
 <p><strong>Damping:</strong> This result in the previous section
 can be improved somewhat by slowing down
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>’s adaptation:</p>
+<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>’s adaptation:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="o">...</span>
 <span class="n">integ</span><span class="p">(</span><span class="n">f_sph</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f_sph</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 <span class="o">...</span>
 </pre></div>
 </div>
-<p>Parameter <tt class="docutils literal"><span class="pre">alpha</span></tt> controls the speed with which <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>
-adapts, with smaller <tt class="docutils literal"><span class="pre">alpha</span></tt>s giving slower adaptation.
-Here we reduce <tt class="docutils literal"><span class="pre">alpha</span></tt> to 0.1, from its default value of 0.5, and get
+<p>Parameter <code class="docutils literal"><span class="pre">alpha</span></code> controls the speed with which <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>
+adapts, with smaller <code class="docutils literal"><span class="pre">alpha</span></code>s giving slower adaptation.
+Here we reduce <code class="docutils literal"><span class="pre">alpha</span></code> to 0.1, from its default value of 0.5, and get
 the following output:</p>
 <div class="highlight-python"><div class="highlight"><pre>itn   integral        wgt average     chi2/dof        Q
 -------------------------------------------------------
@@ -517,18 +517,18 @@ result = 1.0031(72)    Q = 0.14
 </pre></div>
 </div>
 <p>Notice how the errors fluctuate less from iteration to iteration
-with the smaller <tt class="docutils literal"><span class="pre">alpha</span></tt> in this case.
+with the smaller <code class="docutils literal"><span class="pre">alpha</span></code> in this case.
 Persistent, large fluctuations in the size
-of the per-iteration errors is often a signal that <tt class="docutils literal"><span class="pre">alpha</span></tt> should
-be reduced. With larger <tt class="docutils literal"><span class="pre">alpha</span></tt>s, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> can over-react
+of the per-iteration errors is often a signal that <code class="docutils literal"><span class="pre">alpha</span></code> should
+be reduced. With larger <code class="docutils literal"><span class="pre">alpha</span></code>s, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> can over-react
 to random fluctuations it encounters as it samples the integrand.</p>
-<p>In general, we want <tt class="docutils literal"><span class="pre">alpha</span></tt> to be large enough so that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> adapts
+<p>In general, we want <code class="docutils literal"><span class="pre">alpha</span></code> to be large enough so that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> adapts
 quickly to the integrand, but not so large that it has difficulty
 holding on to the optimal tuning once it has found it. The best value
 depends upon the integrand.</p>
 <p><strong>adapt=False:</strong> Adaptation can be turned off completely
-by setting parameter <tt class="docutils literal"><span class="pre">adapt=False</span></tt>. There are three reasons one
-might do this. The first is if <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> is exhibiting the
+by setting parameter <code class="docutils literal"><span class="pre">adapt=False</span></code>. There are three reasons one
+might do this. The first is if <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> is exhibiting the
 kind of instability discussed in the previous section &#8212; one might
 use the following code, instead of that presented there:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="o">...</span>
@@ -537,35 +537,35 @@ use the following code, instead of that presented there:</p>
 <span class="o">...</span>
 </pre></div>
 </div>
-<p>The second reason is that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> runs slightly faster when it is
+<p>The second reason is that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> runs slightly faster when it is
 no longer adapting to the integrand. The difference is not signficant
 for complicated integrands, but is noticable in simpler cases.</p>
-<p>The third reason for turning off adaptation is that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses
+<p>The third reason for turning off adaptation is that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> uses
 unweighted averages, rather than weighted averages, to combine
-results from different iterations when <tt class="docutils literal"><span class="pre">adapt=False</span></tt>.
+results from different iterations when <code class="docutils literal"><span class="pre">adapt=False</span></code>.
 Unweighted averages are not biased. They have no systematic error
 of the sort discussed above, and so give correct results even
-for very large numbers of iterations, <tt class="docutils literal"><span class="pre">nitn</span></tt>.</p>
+for very large numbers of iterations, <code class="docutils literal"><span class="pre">nitn</span></code>.</p>
 <p>The lack of systematic biases is <em>not</em> a strong reason for turning
 off adaptation, however, since the biases are
 usually negligible (see above). Also, again,
 errors tend to fall faster if the number of evaluations per iteration
-<tt class="docutils literal"><span class="pre">neval</span></tt> is increased rather than the number of iterations. Finally
-in practice it is difficult to know precisely when <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> is
+<code class="docutils literal"><span class="pre">neval</span></code> is increased rather than the number of iterations. Finally
+in practice it is difficult to know precisely when <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> is
 finished adapting. One often finds (modest) continued improvement after
 the training step, leading to more accurate final results.</p>
-<p>Training the integrator and then setting <tt class="docutils literal"><span class="pre">adapt=False</span></tt> for the
+<p>Training the integrator and then setting <code class="docutils literal"><span class="pre">adapt=False</span></code> for the
 final results works best if the number of evaluations per iteration
-(<tt class="docutils literal"><span class="pre">neval</span></tt>) is the same in both steps. This is because the second
-of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>&#8216;s adaptation strategies (adaptive stratified sampling) is
-usually reinitialized when <tt class="docutils literal"><span class="pre">neval</span></tt> changes, and so is not
-used at all when <tt class="docutils literal"><span class="pre">neval</span></tt> is changed at the same time <tt class="docutils literal"><span class="pre">adapt=False</span></tt>
+(<code class="docutils literal"><span class="pre">neval</span></code>) is the same in both steps. This is because the second
+of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>&#8216;s adaptation strategies (adaptive stratified sampling) is
+usually reinitialized when <code class="docutils literal"><span class="pre">neval</span></code> changes, and so is not
+used at all when <code class="docutils literal"><span class="pre">neval</span></code> is changed at the same time <code class="docutils literal"><span class="pre">adapt=False</span></code>
 is set.</p>
 </div></blockquote>
 </div>
 <div class="section" id="multiple-integrands-simultaneously">
 <h2>Multiple Integrands Simultaneously<a class="headerlink" href="#multiple-integrands-simultaneously" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> can be used to integrate multiple integrands simultaneously, using
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> can be used to integrate multiple integrands simultaneously, using
 the same integration points for each of the integrands. This is useful
 in situations where the integrands have similar structure, with peaks in
 the same locations. There can be  signficant advantages in sampling
@@ -620,10 +620,10 @@ projected onto one of the axes:</p>
 </pre></div>
 </div>
 <p>The code is very similar to that used in the previous section. The
-main difference is that the integrand function and <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>
+main difference is that the integrand function and <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>
 return arrays of results &#8212; in
-both cases, one result for each of the three integrals. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> always adapts to
-the first integrand in the array. The <tt class="docutils literal"><span class="pre">Q</span></tt> value is for all three
+both cases, one result for each of the three integrals. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> always adapts to
+the first integrand in the array. The <code class="docutils literal"><span class="pre">Q</span></code> value is for all three
 of the integrals, taken together.</p>
 <p>The code produces the following output:</p>
 <div class="highlight-python"><div class="highlight"><pre>I[0] = 0.00024686(26)   I[1] = 0.00012347(13)   I[2] = 0.000062372(72)
@@ -651,20 +651,15 @@ The estimate for the variance <img class="math" src="_images/math/580763986e6b9a
 is 45x more accurate than we would
 have obtained had the integrals been evaluated separately. Both estimates
 are correct to within the quoted errors.</p>
-<p>The individual results are objects of type <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>, which
+<p>The individual results are objects of type <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>, which
 represent Gaussian random variables. Such objects have means
-(<tt class="docutils literal"><span class="pre">result[i].mean</span></tt>) and standard deviations (<tt class="docutils literal"><span class="pre">result[i].sdev</span></tt>), but
-also can be statistically correlated with other <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s.
-Such correlations are handled automatically by <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> when
-<tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s are combined with each other or with numbers in
-arithmetical expressions. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> provides a simplified implementation
-of <tt class="docutils literal"><span class="pre">GVar</span></tt>s for use if the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module is not installed, but that
-version does <em>not</em> handle correlations at all (and, therefore, won&#8217;t
-allow a statement like <tt class="docutils literal"><span class="pre">result[1]</span> <span class="pre">/</span> <span class="pre">result[0]</span></tt> above). To make full
-use of this <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> feature install the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module. It can be
-installed as part of the <tt class="docutils literal"><span class="pre">lsqfit</span></tt> distribution (e.g., <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">lsqfit</span></tt>)
-or by itself (e.g., <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gvar</span></tt>); source code can be found at
-<a class="reference external" href="https://github.com/gplepage/lsqfit.git">https://github.com/gplepage/lsqfit.git</a>.</p>
+(<code class="docutils literal"><span class="pre">result[i].mean</span></code>) and standard deviations (<code class="docutils literal"><span class="pre">result[i].sdev</span></code>), but
+also can be statistically correlated with other <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s.
+Such correlations are handled automatically by <code class="xref py py-mod docutils literal"><span class="pre">gvar</span></code> when
+<code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s are combined with each other or with numbers in
+arithmetical expressions. (<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> requires that the <code class="xref py py-mod docutils literal"><span class="pre">gvar</span></code> module
+which can be installed using <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gvar</span></code> or downloaded from
+<a class="reference external" href="https://github.com/gplepage/gvar.git">https://github.com/gplepage/gvar.git</a>.)</p>
 </div>
 <div class="section" id="faster-integrands">
 <h2>Faster Integrands<a class="headerlink" href="#faster-integrands" title="Permalink to this headline">¶</a></h2>
@@ -672,11 +667,11 @@ or by itself (e.g., <tt class="docutils literal"><span class="pre">pip</span> <s
 comes mostly from
 the cost of evaluating the integrand at the Monte Carlo sample
 points. Integrands written in pure Python are probably fast
-enough for problems where <tt class="docutils literal"><span class="pre">neval=1e3</span></tt> or <tt class="docutils literal"><span class="pre">neval=1e4</span></tt> gives
+enough for problems where <code class="docutils literal"><span class="pre">neval=1e3</span></code> or <code class="docutils literal"><span class="pre">neval=1e4</span></code> gives
 enough precision. Some problems, however, require
 hundreds of thousands or millions of function evaluations, or more.</p>
 <p>We can significantly reduce the cost of evaluating the integrand
-by using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>&#8216;s batch mode. For example, replacing</p>
+by using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>&#8216;s batch mode. For example, replacing</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">math</span>
 
@@ -721,21 +716,21 @@ by using <a class="reference internal" href="vegas.html#module-vegas" title="veg
 </pre></div>
 </div>
 <p>reduces the cost of the integral by almost an order of magnitude.
-Internally <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> processes integration points in batches, where
-parameter <tt class="docutils literal"><span class="pre">nhcube_batch</span></tt> determines the number of points per
+Internally <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> processes integration points in batches, where
+parameter <code class="docutils literal"><span class="pre">nhcube_batch</span></code> determines the number of points per
 batch (typically 1000s).
-In batch mode, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> presents all of the integration points
+In batch mode, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> presents all of the integration points
 from a batch together, in a single array, to the integrand
 function, rather than offering them one at a time. Here, for example,
-an instance <tt class="docutils literal"><span class="pre">f</span></tt> of class <tt class="docutils literal"><span class="pre">f_batch</span></tt> behaves like a function <tt class="docutils literal"><span class="pre">f(x)</span></tt> of
-an array of integration points &#8212; <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> where <tt class="docutils literal"><span class="pre">i=0...</span></tt>
-labels the integration point and <tt class="docutils literal"><span class="pre">d=0...</span></tt> the direction &#8212; and
+an instance <code class="docutils literal"><span class="pre">f</span></code> of class <code class="docutils literal"><span class="pre">f_batch</span></code> behaves like a function <code class="docutils literal"><span class="pre">f(x)</span></code> of
+an array of integration points &#8212; <code class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></code> where <code class="docutils literal"><span class="pre">i=0...</span></code>
+labels the integration point and <code class="docutils literal"><span class="pre">d=0...</span></code> the direction &#8212; and
 returns an array of integrand values corresponding  to these points.</p>
-<p>We derive class <tt class="docutils literal"><span class="pre">f_batch</span></tt> from <a class="reference internal" href="vegas.html#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.BatchIntegrand</span></tt></a> to
-signal to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> that it should present integration points in
+<p>We derive class <code class="docutils literal"><span class="pre">f_batch</span></code> from <a class="reference internal" href="vegas.html#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.BatchIntegrand</span></code></a> to
+signal to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> that it should present integration points in
 batches to the integrand function.</p>
-<p>An alternative to deriving from <a class="reference internal" href="vegas.html#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.BatchIntegrand</span></tt></a> is
-to apply the <a class="reference internal" href="vegas.html#vegas.batchintegrand" title="vegas.batchintegrand"><tt class="xref py py-func docutils literal"><span class="pre">vegas.batchintegrand()</span></tt></a> decorator to a batch
+<p>An alternative to deriving from <a class="reference internal" href="vegas.html#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.BatchIntegrand</span></code></a> is
+to apply the <a class="reference internal" href="vegas.html#vegas.batchintegrand" title="vegas.batchintegrand"><code class="xref py py-func docutils literal"><span class="pre">vegas.batchintegrand()</span></code></a> decorator to a batch
 function for the integrand: e.g.,</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
@@ -759,7 +754,7 @@ function for the integrand: e.g.,</p>
 </pre></div>
 </div>
 <p>This batch integrand is fast because it is expressed in terms
-<tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> operators that act on entire arrays. That optimization
+<code class="xref py py-mod docutils literal"><span class="pre">numpy</span></code> operators that act on entire arrays. That optimization
 is unnecessary
 (and the result is faster) if we write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
@@ -793,7 +788,7 @@ cdef class f_cython(vegas.BatchIntegrand):
 </pre></div>
 </div>
 <p>We put this in a separate file called, say,
-<tt class="docutils literal"><span class="pre">cython_integrand.pyx</span></tt>, and rewrite the main code as:</p>
+<code class="docutils literal"><span class="pre">cython_integrand.pyx</span></code>, and rewrite the main code as:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyximport</span><span class="p">;</span> <span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>
 
 <span class="kn">import</span> <span class="nn">vegas</span>
@@ -807,8 +802,8 @@ cdef class f_cython(vegas.BatchIntegrand):
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">   Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>The first line (<tt class="docutils literal"><span class="pre">import</span> <span class="pre">pyximport;</span> <span class="pre">...</span></tt>) causes the Cython
-module <tt class="docutils literal"><span class="pre">cython_integrand.pyx</span></tt> to be compiled the first time
+<p>The first line (<code class="docutils literal"><span class="pre">import</span> <span class="pre">pyximport;</span> <span class="pre">...</span></code>) causes the Cython
+module <code class="docutils literal"><span class="pre">cython_integrand.pyx</span></code> to be compiled the first time
 it is called. The compiled code is stored and used in subsequent
 calls, so compilation occurs only once.</p>
 <p>Batch mode is also a good idea for array-valued integrands.
@@ -847,24 +842,24 @@ The code from the previous section could have been written as:</p>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">correlation matrix:</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">gv</span><span class="o">.</span><span class="n">evalcorr</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Note that the batch index (here <tt class="docutils literal"><span class="pre">:</span></tt>) always comes first.</p>
+<p>Note that the batch index (here <code class="docutils literal"><span class="pre">:</span></code>) always comes first.</p>
 <p>Cython code can also link easily to compiled C or Fortran code,
 so integrands written in these languages can be used as well (and
 would be faster than pure Python).</p>
 </div>
 <div class="section" id="multiple-processors">
 <h2>Multiple Processors<a class="headerlink" href="#multiple-processors" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> code normally runs on a single CPU. It is possible
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> code normally runs on a single CPU. It is possible
 to distribute the evaluation of the integrand over multiple processors
 by using the batch mode described in the previous section. This
 becomes worthwhile when the integrand becomes more expensive to
 evaluate.</p>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> comes with a decorator, <a class="reference internal" href="vegas.html#vegas.MPIintegrand" title="vegas.MPIintegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></tt></a>, that  adapts
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> comes with a decorator, <a class="reference internal" href="vegas.html#vegas.MPIintegrand" title="vegas.MPIintegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></code></a>, that  adapts
 batch integrands for multiprocessor use through MPI. It assumes that Python
-module <tt class="xref py py-mod docutils literal"><span class="pre">mpi4py</span></tt> is installed (and MPI, of course). To illustrate its use
+module <code class="xref py py-mod docutils literal"><span class="pre">mpi4py</span></code> is installed (and MPI, of course). To illustrate its use
 consider an integrand consisting of 1000 narrow Gaussians distributed evenly
 along the diagonal of a 4-dimensional unit hypercube. To maximize speed, we
-implement the integrand in Cython, putting the result in a file <tt class="docutils literal"><span class="pre">ridge.pyx</span></tt>:</p>
+implement the integrand in Cython, putting the result in a file <code class="docutils literal"><span class="pre">ridge.pyx</span></code>:</p>
 <div class="highlight-python"><div class="highlight"><pre># file: ridge.pyx
 
 from libc.math cimport exp      # use exp() from C library
@@ -889,7 +884,7 @@ def f(double[:, ::1] x):
 </div>
 <p>This is a standard batch integrand; it could have been written in Fortran
 or C almost as easily, or in Python. The main integration code,
-in file <tt class="docutils literal"><span class="pre">mpi-integral.py</span></tt>, is then:</p>
+in file <code class="docutils literal"><span class="pre">mpi-integral.py</span></code>, is then:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c"># file: mpi-integral.py</span>
 
 <span class="kn">import</span> <span class="nn">pyximport</span><span class="p">;</span> <span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>  <span class="c"># compiles ridge.pyx</span>
@@ -915,8 +910,8 @@ in file <tt class="docutils literal"><span class="pre">mpi-integral.py</span></t
 </pre></div>
 </div>
 <p>The integrand and main program are identical to what one would use for
-a batch integral except that <tt class="docutils literal"><span class="pre">vegas.MPIintegrand(ridge.f)</span></tt> is used
-in place of <tt class="docutils literal"><span class="pre">vegas.batchintegrand(ridge.f)</span></tt>, and we check the MPI
+a batch integral except that <code class="docutils literal"><span class="pre">vegas.MPIintegrand(ridge.f)</span></code> is used
+in place of <code class="docutils literal"><span class="pre">vegas.batchintegrand(ridge.f)</span></code>, and we check the MPI
 rank of the process to avoid printing out multiple copies of the result,
 after the integration. To run this code on 4 CPUs, we might execute:</p>
 <div class="highlight-python"><div class="highlight"><pre>mpirun -np 4 python mpi-integral.py
@@ -927,11 +922,11 @@ One might have hoped that 4 CPUs would be 4x faster, but they aren&#8217;t
 quite that fast because of the time needed to transfer integration
 information between the processes on the different CPUs.
 Multiple CPUs are efficient only for costly integrands.</p>
-<p>There are many other ways to implement multiprocessing for <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>.
-All methods work with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> in batch mode, and distribute different
+<p>There are many other ways to implement multiprocessing for <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>.
+All methods work with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> in batch mode, and distribute different
 integration points to different CPUs. For example, a class similar
-in function to <a class="reference internal" href="vegas.html#vegas.MPIintegrand" title="vegas.MPIintegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></tt></a>, but where Python&#8217;s
-<tt class="xref py py-mod docutils literal"><span class="pre">multiprocessing</span></tt> module replaces MPI, is:</p>
+in function to <a class="reference internal" href="vegas.html#vegas.MPIintegrand" title="vegas.MPIintegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></code></a>, but where Python&#8217;s
+<code class="xref py py-mod docutils literal"><span class="pre">multiprocessing</span></code> module replaces MPI, is:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">multiprocessing</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">vegas</span>
@@ -965,23 +960,23 @@ in function to <a class="reference internal" href="vegas.html#vegas.MPIintegrand
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Then <tt class="docutils literal"><span class="pre">fparallel</span> <span class="pre">=</span> <span class="pre">parallelintegrand(f,</span> <span class="pre">4)</span></tt>, for example, will create a
-new integrand <tt class="docutils literal"><span class="pre">fparallel(x)</span></tt> that uses 4 CPUs. This particular
+<p>Then <code class="docutils literal"><span class="pre">fparallel</span> <span class="pre">=</span> <span class="pre">parallelintegrand(f,</span> <span class="pre">4)</span></code>, for example, will create a
+new integrand <code class="docutils literal"><span class="pre">fparallel(x)</span></code> that uses 4 CPUs. This particular
 implementation of parallelism is not as efficient as the
-<a class="reference internal" href="vegas.html#vegas.MPIintegrand" title="vegas.MPIintegrand"><tt class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></tt></a>.</p>
+<a class="reference internal" href="vegas.html#vegas.MPIintegrand" title="vegas.MPIintegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></code></a>.</p>
 </div>
 <div class="section" id="sums-with-vegas">
-<h2>Sums with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a><a class="headerlink" href="#sums-with-vegas" title="Permalink to this headline">¶</a></h2>
+<h2>Sums with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a><a class="headerlink" href="#sums-with-vegas" title="Permalink to this headline">¶</a></h2>
 <p>The code in the previous sections is inefficient in the way it
 handles the sum over 1000 Gaussians. It is not necessary to include every
 term in the sum for every integration point. Rather we can sample the sum,
-using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> to do the sampling. The trick is to replace the sum with
+using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> to do the sampling. The trick is to replace the sum with
 an equivalent integral:</p>
 <div class="math">
 <p><img src="_images/math/f2ebd8f90502cba3ffd86bfbd66ee5a5023ab011.png" alt="\sum_{i=0}^{N-1} f(i) = N \int_0^1 dx \; f(\mathrm{floor}(x N))"/></p>
 </div><p>where <img class="math" src="_images/math/2be12ba603f33ecca023f6092bed262ccd5d162c.png" alt="\mathrm{floor}(x)" style="vertical-align: -3px"/> is the largest
 integer smaller than <img class="math" src="_images/math/6ae387606cd8532c2be4273520d87f3cd863cf42.png" alt="x" style="vertical-align: -1px"/>. The
-resulting integral can then be handed to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>. Using this trick,
+resulting integral can then be handed to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>. Using this trick,
 the integral in the previous section can be re-cast as a 5-dimensional
 integral (again in Cython),</p>
 <div class="highlight-python"><div class="highlight"><pre># file: ridge.pyx
@@ -1031,48 +1026,48 @@ def fsum(double[:, ::1] x):
 <p>This gives about the same precision but is 3x faster (on a laptop in 2014)
 than the code in the previous section.</p>
 <p>The same trick can be generalized to sums over multiple indices, including sums
-to infinity. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> will provide Monte Carlo estimates of the sums, emphasizing
+to infinity. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> will provide Monte Carlo estimates of the sums, emphasizing
 the more important terms.</p>
 </div>
 <div class="section" id="vegas-as-a-random-number-generator">
-<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> as a Random Number Generator<a class="headerlink" href="#vegas-as-a-random-number-generator" title="Permalink to this headline">¶</a></h2>
-<p>A <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> integrator generates random points in its integration volume from a
+<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> as a Random Number Generator<a class="headerlink" href="#vegas-as-a-random-number-generator" title="Permalink to this headline">¶</a></h2>
+<p>A <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> integrator generates random points in its integration volume from a
 distribution that is optimized for integrals of whatever function it
 was trained on. The integrator
 provides low-level access to the random-point generator
-through the iterators <a class="reference internal" href="vegas.html#vegas.Integrator.random" title="vegas.Integrator.random"><tt class="xref py py-meth docutils literal"><span class="pre">vegas.Integrator.random()</span></tt></a> and
-<a class="reference internal" href="vegas.html#vegas.Integrator.random_batch" title="vegas.Integrator.random_batch"><tt class="xref py py-meth docutils literal"><span class="pre">vegas.Integrator.random_batch()</span></tt></a>.</p>
+through the iterators <a class="reference internal" href="vegas.html#vegas.Integrator.random" title="vegas.Integrator.random"><code class="xref py py-meth docutils literal"><span class="pre">vegas.Integrator.random()</span></code></a> and
+<a class="reference internal" href="vegas.html#vegas.Integrator.random_batch" title="vegas.Integrator.random_batch"><code class="xref py py-meth docutils literal"><span class="pre">vegas.Integrator.random_batch()</span></code></a>.</p>
 <p>To illustrate, the following code snippet estimates the integral of function
-<tt class="docutils literal"><span class="pre">f(x)</span></tt> using integrator <tt class="docutils literal"><span class="pre">integ</span></tt>:</p>
+<code class="docutils literal"><span class="pre">f(x)</span></code> using integrator <code class="docutils literal"><span class="pre">integ</span></code>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
 <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">():</span>
     <span class="n">integral</span> <span class="o">+=</span> <span class="n">wgt</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Here <tt class="docutils literal"><span class="pre">x[d]</span></tt> is a random point in the integration volume and <tt class="docutils literal"><span class="pre">wgt</span></tt> is the
-weight <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> assigns to that point in an integration. The iterator generates
+<p>Here <code class="docutils literal"><span class="pre">x[d]</span></code> is a random point in the integration volume and <code class="docutils literal"><span class="pre">wgt</span></code> is the
+weight <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> assigns to that point in an integration. The iterator generates
 integration points and weights corresponding to a single iteration of the
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> algorithm. In practice, we would train <tt class="docutils literal"><span class="pre">integ</span></tt> on a function whose
-shape is similar to that of <tt class="docutils literal"><span class="pre">f(x)</span></tt> before using it to estimate the integral
-of <tt class="docutils literal"><span class="pre">f(x)</span></tt>.</p>
+<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> algorithm. In practice, we would train <code class="docutils literal"><span class="pre">integ</span></code> on a function whose
+shape is similar to that of <code class="docutils literal"><span class="pre">f(x)</span></code> before using it to estimate the integral
+of <code class="docutils literal"><span class="pre">f(x)</span></code>.</p>
 <p>It is usually more efficient to generate and use integration points in
-batches. The <a class="reference internal" href="vegas.html#vegas.Integrator.random_batch" title="vegas.Integrator.random_batch"><tt class="xref py py-meth docutils literal"><span class="pre">vegas.Integrator.random_batch()</span></tt></a> iterator does just
+batches. The <a class="reference internal" href="vegas.html#vegas.Integrator.random_batch" title="vegas.Integrator.random_batch"><code class="xref py py-meth docutils literal"><span class="pre">vegas.Integrator.random_batch()</span></code></a> iterator does just
 this:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
 <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_batch</span><span class="p">():</span>
     <span class="n">integral</span> <span class="o">+=</span> <span class="n">wgt</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">batch_f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Here <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt> is an array of integration points, <tt class="docutils literal"><span class="pre">wgt[i]</span></tt> contains the
-corresponding weights, and <tt class="docutils literal"><span class="pre">batch_f(x)</span></tt> returns an array containing the
+<p>Here <code class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></code> is an array of integration points, <code class="docutils literal"><span class="pre">wgt[i]</span></code> contains the
+corresponding weights, and <code class="docutils literal"><span class="pre">batch_f(x)</span></code> returns an array containing the
 corresponding integrand values.</p>
-<p>The random points generated by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> are stratified into hypercubes: <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a>
+<p>The random points generated by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> are stratified into hypercubes: <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>
 uses transformed integration variables to improve its Monte Carlo
 estimates. It further improves those estimates by subdividing the
 integration volume in the transformed variables into a large number of
 hypercubes, and doing a Monte Carlo integral in each hypercube separately.
 The final result is the sum of the results from all the hypercubes.
-To mimic a full <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> integral estimate using the iterators above, we need
+To mimic a full <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> integral estimate using the iterators above, we need
 to know which points belong to which hypercubes. The following code
 shows how this is done:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
@@ -1093,33 +1088,22 @@ shows how this is done:</p>
 <span class="n">result</span> <span class="o">=</span> <span class="n">gvar</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="n">integral</span><span class="p">,</span> <span class="n">variance</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Here <tt class="docutils literal"><span class="pre">hcube[i]</span></tt> identifies the hypercube containing <tt class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></tt>.</p>
+<p>Here <code class="docutils literal"><span class="pre">hcube[i]</span></code> identifies the hypercube containing <code class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></code>.</p>
 </div>
 <div class="section" id="implementation-notes">
 <h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h2>
 <p>This implementation relies upon Cython for its speed and
 numpy for array processing. It also uses matplotlib
 for graphics, but graphics is optional.</p>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> also uses the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> module from the <tt class="xref py py-mod docutils literal"><span class="pre">lsqfit</span></tt>
-distribution if that package is installed (<tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">lsqfit</span></tt>
-or <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gvar</span></tt> for just <tt class="docutils literal"><span class="pre">gvar</span></tt>).
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> also uses the <code class="xref py py-mod docutils literal"><span class="pre">gvar</span></code> module (<code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gvar</span></code>).
 Integration results are returned as objects of type
-<tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>, which is a class representing Gaussian
+<code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>, which is a class representing Gaussian
 random variables (i.e., something with a mean and standard
 deviation). These objects can be combined with numbers and
 with each other in arbitrary arithmetic expressions to
-get new <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s with the correct standard
+get new <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s with the correct standard
 deviations, and properly correlated with other
-<tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s &#8212; that is the tricky part.</p>
-<p>If <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt> is not installed, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> uses a limited substitute
-that supports arithmetic between <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s
-and numbers, but not between <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s and other
-<tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s. It also supports <tt class="docutils literal"><span class="pre">log</span></tt>, <tt class="docutils literal"><span class="pre">sqrt</span></tt>
-and <tt class="docutils literal"><span class="pre">exp</span></tt> of <tt class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></tt>s, but not trig functions
-&#8212; for these install the <tt class="docutils literal"><span class="pre">gvar</span></tt> module. Most importantly
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><tt class="xref py py-mod docutils literal"><span class="pre">vegas</span></tt></a> will not provide correlation information for
-integrals of array-valued integrands unless the <tt class="xref py py-mod docutils literal"><span class="pre">gvar</span></tt>
-module is available.</p>
+<code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s &#8212; that is the tricky part.</p>
 </div>
 </div>
 
@@ -1127,7 +1111,7 @@ module is available.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
@@ -1137,8 +1121,8 @@ module is available.</p>
 <li><a class="reference internal" href="#multiple-integrands-simultaneously">Multiple Integrands Simultaneously</a></li>
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>
 <li><a class="reference internal" href="#multiple-processors">Multiple Processors</a></li>
-<li><a class="reference internal" href="#sums-with-vegas">Sums with <tt class="docutils literal"><span class="pre">vegas</span></tt></a></li>
-<li><a class="reference internal" href="#vegas-as-a-random-number-generator"><tt class="docutils literal"><span class="pre">vegas</span></tt> as a Random Number Generator</a></li>
+<li><a class="reference internal" href="#sums-with-vegas">Sums with <code class="docutils literal"><span class="pre">vegas</span></code></a></li>
+<li><a class="reference internal" href="#vegas-as-a-random-number-generator"><code class="docutils literal"><span class="pre">vegas</span></code> as a Random Number Generator</a></li>
 <li><a class="reference internal" href="#implementation-notes">Implementation Notes</a></li>
 </ul>
 </li>
@@ -1149,8 +1133,8 @@ module is available.</p>
                         title="previous chapter">vegas Documentation</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="background.html"
-                        title="next chapter">How <tt class="docutils literal"><span class="pre">vegas</span></tt> Works</a></p>
-<div id="searchbox" style="display: none">
+                        title="next chapter">How <code class="docutils literal"><span class="pre">vegas</span></code> Works</a></p>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -1167,7 +1151,7 @@ module is available.</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -1182,12 +1166,12 @@ module is available.</p>
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li><a href="index.html">vegas 2.2.2 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2013-14, G.P. Lepage.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
   </body>
 </html>

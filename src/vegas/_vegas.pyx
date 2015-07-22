@@ -1,7 +1,7 @@
 # c#ython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-14 G. Peter Lepage.
+# Copyright (c) 2013-15 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,281 +31,6 @@ import numpy
 
 cdef double TINY = 10 ** (sys.float_info.min_10_exp + 50)  # smallest and biggest
 cdef double HUGE = 10 ** (sys.float_info.max_10_exp - 50)  # with extra headroom
-
-class RAvg(gvar.GVar):
-    """ Running average of Monte Carlo estimates.
-
-    This class accumulates independent Monte Carlo
-    estimates (e.g., of an integral) and combines
-    them into a single average. It
-    is derived from :class:`gvar.GVar` (from
-    the :mod:`gvar` module if it is present) and
-    represents a Gaussian random variable.
-
-    Different estimates are weighted by their
-    inverse variances if parameter ``weight=True``;
-    otherwise straight, unweighted averages are used.
-    """
-    def __init__(self, weighted=True):
-        if weighted:
-            self._v_s2 = 0.
-            self._v2_s2 = 0.
-            self._1_s2 = 0.
-            self.weighted = True
-        else:
-            self._v = 0.
-            self._v2 = 0.
-            self._s2 = 0.
-            self._n = 0
-            self.weighted = False
-        self.itn_results = []
-        super(RAvg, self).__init__(
-            *gvar.gvar(0., 0.).internaldata,
-           )
-
-    def _chi2(self):
-        if len(self.itn_results) <= 1:
-            return 0.0
-        if self.weighted:
-            return self._v2_s2 - self._v_s2 ** 2 / self._1_s2
-        else:
-            return (self._v2 - self.mean ** 2 * self._n) * self._n / self._s2
-    chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
-
-    def _dof(self):
-        return len(self.itn_results) - 1
-    dof = property(
-        _dof,
-        None,
-        None,
-        "Number of degrees of freedom in weighted average."
-        )
-
-    def _Q(self):
-        return (
-            gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
-            if self.dof > 0 and self.chi2 > 0
-            else 1
-            )
-    Q = property(
-        _Q,
-        None,
-        None,
-        "*Q* or *p-value* of weighted average's *chi**2*.",
-        )
-
-    def add(self, g):
-        """ Add estimate ``g`` to the running average. """
-        self.itn_results.append(g)
-        tiny = sys.float_info.epsilon * 10 * g.mean ** 2 + TINY
-        if self.weighted:
-            var = g.sdev ** 2 + tiny
-            self._v_s2 +=   g.mean / var
-            self._v2_s2 +=  g.mean ** 2 / var
-            self._1_s2 +=  1. / var
-            super(RAvg, self).__init__(*gvar.gvar(
-                self._v_s2 / self._1_s2,
-                sqrt(1. / self._1_s2),
-                ).internaldata)
-        else:
-            self._v += g.mean
-            self._v2 += g.mean ** 2
-            self._s2 += g.var + tiny
-            self._n += 1
-            super(RAvg, self).__init__(*gvar.gvar(
-                self._v / self._n,
-                sqrt(self._s2) / self._n,
-                ).internaldata)
-
-
-    def summary(self):
-        """ Assemble summary of independent results into a string. """
-        acc = RAvg()
-        linedata = []
-        for i, res in enumerate(self.itn_results):
-            acc.add(res)
-            if i > 0:
-                chi2_dof = acc.chi2 / acc.dof
-                Q = acc.Q
-            else:
-                chi2_dof = 0.0
-                Q = 1.0
-            itn = '%3d' % (i + 1)
-            integral = '%-15s' % res
-            wgtavg = '%-15s' % acc
-            chi2dof = '%8.2f' % (acc.chi2 / acc.dof if i != 0 else 0.0)
-            Q = '%8.2f' % (acc.Q if i != 0 else 1.0)
-            linedata.append((itn, integral, wgtavg, chi2dof, Q))
-        nchar = 5 * [0]
-        for data in linedata:
-            for i, d in enumerate(data):
-                if len(d) > nchar[i]:
-                    nchar[i] = len(d)
-        fmt = '%%%ds   %%-%ds %%-%ds %%%ds %%%ds\n' % tuple(nchar)
-        ans = fmt % ('itn', 'integral', 'wgt average', 'chi2/dof', 'Q')
-        ans += len(ans[:-1]) * '-' + '\n'
-        for data in linedata:
-            ans += fmt % data
-        return ans
-
-class RAvgArray(numpy.ndarray):
-    """ Running average of array-valued Monte Carlo estimates.
-
-    This class accumulates independent arrays of Monte Carlo
-    estimates (e.g., of an integral) and combines
-    them into an array of averages. It
-    is derived from :class:`numpy.ndarray`. The array
-    elements are :class:`gvar.GVar`\s (from the ``gvar`` module if
-    present) and represent Gaussian random variables.
-
-    Different estimates are weighted by their
-    inverse covariance matrices if parameter ``weight=True``;
-    otherwise straight, unweighted averages are used.
-    """
-    def __new__(
-        subtype, shape, weighted=True,
-        dtype=object, buffer=None, offset=0, strides=None, order=None
-        ):
-        obj = numpy.ndarray.__new__(
-            subtype, shape=shape, dtype=object, buffer=buffer, offset=offset,
-            strides=strides, order=order
-            )
-        if buffer is None:
-            obj.flat = numpy.array(obj.size * [gvar.gvar(0,0)])
-        obj.itn_results = []
-        if weighted:
-            obj._invcov_v = 0.
-            obj._v_invcov_v = 0.
-            obj._invcov = 0.
-            obj.weighted = True
-        else:
-            obj._v = 0.
-            obj._v2 = 0.
-            obj._cov = 0.
-            obj._n = 0
-            obj.weighted = False
-        return obj
-
-    def __array_finalize__(self, obj):
-        if obj is None:
-            return
-        self.itn_results = getattr(obj, 'itn_results', [])
-        if obj.weighted:
-            self._invcov_v = getattr(obj, '_invcov_v', 0.0)
-            self._v_invcov_v = getattr(obj, '_v_invcov_v', 0.0)
-            self._invcov = getattr(obj, '_invcov', 0.0)
-            self.weighted = getattr(obj, 'weighted', True)
-        else:
-            self._v = getattr(obj, '_v', 0.)
-            self._v2 = getattr(obj, '_v2', 0.)
-            self._cov = getattr(obj, '_cov', 0.)
-            self._n = getattr(obj, '_n', 0.)
-            self.weighted = getattr(obj, 'weighted', False)
-
-    def _inv(self, matrix):
-        " Invert matrix, with protection against singular matrices. "
-        return numpy.linalg.pinv(matrix, rcond=sys.float_info.epsilon * 10)
-        # svd = gvar.SVD(matrix, svdcut=sys.float_info.epsilon * 10, rescale=True)
-        # w = svd.decomp(-1)
-        # return numpy.sum(
-        #     [numpy.outer(wi, wi) for wi in reversed(svd.decomp(-1))],
-        #     axis=0
-        #     )
-
-    def _chi2(self):
-        if len(self.itn_results) <= 1:
-            return 0.0
-        if self.weighted:
-            cov = self._inv(self._invcov)
-            return self._v_invcov_v - self._invcov_v.dot(cov.dot(self._invcov_v))
-        else:
-            invcov = self._inv(self._cov / self._n)
-            return numpy.trace(   # inefficient -- fix at some point
-                (self._v2 - numpy.outer(self._v, self._v) / self._n).dot(invcov)
-                )
-    chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
-
-    def _dof(self):
-        if len(self.itn_results) <= 1:
-            return 0
-        return (len(self.itn_results) - 1) * self.itn_results[0].size
-    dof = property(
-        _dof, None, None,
-        "Number of degrees of freedom in weighted average."
-        )
-
-    def _Q(self):
-        if self.dof <= 0 or self.chi2 <= 0:
-            return 1.
-        return gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
-    Q = property(
-        _Q, None, None,
-        "*Q* or *p-value* of weighted average's *chi**2*.",
-        )
-
-    def add(self, g):
-        """ Add estimate ``g`` to the running average. """
-        g = numpy.asarray(g)
-        self.itn_results.append(g)
-        g = g.reshape((-1,))
-        gmean = gvar.mean(g)
-        tiny = sys.float_info.epsilon * 10
-        gcov = gvar.evalcov(g)
-        gcov[numpy.diag_indices_from(gcov)] = (
-            abs(gcov[numpy.diag_indices_from(gcov)])
-            + tiny * gmean ** 2 + TINY
-            )
-        if self.weighted:
-            invcov = self._inv(gcov)
-            v = gvar.mean(g)
-            u = invcov.dot(v)
-            self._invcov += invcov
-            self._invcov_v += u
-            self._v_invcov_v += v.dot(u)
-            cov = self._inv(self._invcov)
-            mean = cov.dot(self._invcov_v)
-            self[:] = gvar.gvar(mean, cov).reshape(self.shape)
-        else:
-            gmean = gvar.mean(g)
-            self._v2 += numpy.outer(gmean, gmean)
-            self._v += gmean
-            self._cov += gcov
-            self._n += 1
-            mean = self._v / self._n
-            cov = self._cov / (self._n ** 2)
-            self[:] = gvar.gvar(mean, cov).reshape(self.shape)
-
-    def summary(self):
-        """ Assemble summary of independent results into a string. """
-        acc = RAvgArray(self.shape)
-
-        linedata = []
-        for i, res in enumerate(self.itn_results):
-            acc.add(res)
-            if i > 0:
-                chi2_dof = acc.chi2 / acc.dof
-                Q = acc.Q
-            else:
-                chi2_dof = 0.0
-                Q = 1.0
-            itn = '%3d' % (i + 1)
-            integral = '%-15s' % res.flat[0]
-            wgtavg = '%-15s' % acc.flat[0]
-            chi2dof = '%8.2f' % (acc.chi2 / acc.dof if i != 0 else 0.0)
-            Q = '%8.2f' % (acc.Q if i != 0 else 1.0)
-            linedata.append((itn, integral, wgtavg, chi2dof, Q))
-        nchar = 5 * [0]
-        for data in linedata:
-            for i, d in enumerate(data):
-                if len(d) > nchar[i]:
-                    nchar[i] = len(d)
-        fmt = '%%%ds   %%-%ds %%-%ds %%%ds %%%ds\n' % tuple(nchar)
-        ans = fmt % ('itn', 'integral', 'wgt average', 'chi2/dof', 'Q')
-        ans += len(ans[:-1]) * '-' + '\n'
-        for data in linedata:
-            ans += fmt % data
-        return ans
-
 
 # AdaptiveMap is used by Integrator
 cdef class AdaptiveMap:
@@ -492,13 +217,19 @@ cdef class AdaptiveMap:
             for i in range(ninc):
                 self.inc[d, i] = self.grid[d, i + 1] - self.grid[d, i]
 
-    def __call__(self, y):
+    def __call__(self, y=None):
         """ Return ``x`` values corresponding to ``y``.
 
         ``y`` can be a single ``dim``-dimensional point, or it
         can be an array ``y[i,j, ..., d]`` of such points (``d=0..dim-1``).
+
+        If ``y=None`` (default), ``y`` is set equal to a (uniform) random point
+        in the volume.
         """
-        y = numpy.asarray(y, float)
+        if y is None:
+            y = numpy.random.uniform(size=self.dim)
+        else:
+            y = numpy.asarray(y, float)
         y_shape = y.shape
         y.shape = -1, y.shape[-1]
         x = 0 * y
@@ -1321,7 +1052,7 @@ cdef class Integrator(object):
                     y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
             i_start += neval_hcube
         self.map.map(y, x, jac, neval_batch)
-        fx = fcn.training_f(numpy.asarray(x))
+        fx = fcn.training(numpy.asarray(x))
 
         # accumulate sigf for each h-cube
         i_start = 0
@@ -1430,8 +1161,6 @@ cdef class Integrator(object):
             y = self.y
             x = self.x
             jac = self.jac
-
-            # self._resize_workareas(neval_batch)
             if yield_hcube and neval_batch > hcube_array.shape[0]:
                 hcube_array = numpy.empty(neval_batch, int)
 
@@ -1576,69 +1305,47 @@ cdef class Integrator(object):
         cdef double[::1] sigf
         cdef double[:, ::1] y
         cdef double[::1] fdv2
-        cdef numpy.ndarray _fx
         cdef double[:, ::1] fx
         cdef double[::1] wf
         cdef double[::1] sum_wf
         cdef double[:, ::1] sum_wf2
         cdef double[::1] mean
         cdef double[:, ::1] var
-        cdef INT_TYPE itn, i, j, s, t, ns, neval, neval_batch
-        cdef bint firstpass = True
+        cdef INT_TYPE itn, i, j, s, t, neval, neval_batch
         cdef double sum_sigf, sigf2
 
         if kargs:
             self.set(kargs)
 
-        if isinstance(fcn, type(BatchIntegrand)):
-            raise ValueError(
-                'integrand given is a class, not an object -- need parentheses?'
-                )
+        # Put integrand into standard form
+        fcn = VegasIntegrand(fcn, map=self.map)
 
-        fcntype = getattr(fcn, 'fcntype', 'scalar')
-        if fcntype == 'scalar':
-            fcn = _BatchIntegrand_from_NonBatch(fcn)
+        # Allocate work arrays
+        wf = numpy.empty(fcn.size, float)
+        sum_wf = numpy.empty(fcn.size, float)
+        sum_wf2 = numpy.empty((fcn.size, fcn.size), float)
+        mean = numpy.empty(fcn.size, float)
+        var = numpy.empty((fcn.size, fcn.size), float)
+        result = VegasResult(fcn, weighted=self.adapt)
 
         sigf = self.sigf
         for itn in range(self.nitn):
             if self.analyzer is not None:
                 self.analyzer.begin(itn, self)
 
-            if not firstpass:
-                mean[:] = 0.0
-                var[:, :] = 0.0
+            # initalize arrays that accumulate results for a single iteration
+            mean[:] = 0.0
+            var[:, :] = 0.0
             sum_sigf = 0.0
 
             # iterate batch-slices of integration points
             for x, y, wgt, hcube in self.random_batch(
                 yield_hcube=True, yield_y=True, fcn=fcn
                 ):
-                fdv2 = self.fdv2        # must be inside loop
+                fdv2 = self.fdv2        # must be ifcn.sizeide loop
 
                 # evaluate integrand at all points in x
-                _fx = numpy.asarray(fcn(x))
-                if firstpass:
-                    # figure out integrand shape, initialize workareas
-                    firstpass = False
-                    integrand_shape = tuple(
-                        [_fx.shape[s] for s in range(1, _fx.ndim)]
-                        )
-                    ns = _fx.size / _fx.shape[0]
-                    wf = numpy.empty(ns, float)
-                    sum_wf = numpy.empty(ns, float)
-                    sum_wf2 = numpy.empty((ns, ns), float)
-                    mean = numpy.zeros(ns, float)
-                    var = numpy.zeros((ns, ns), float)
-                    if integrand_shape == ():
-                        result = RAvg(weighted=self.adapt)
-                    else:
-                        result = RAvgArray(
-                            integrand_shape, weighted=self.adapt
-                            )
-
-
-                # repackage in simpler (uniform) format
-                fx = _fx.reshape((x.shape[0], ns))
+                fx = fcn.eval(x)
 
                 # compute integral and variance for each h-cube
                 # j is index of hcube within batch, i is absolute index
@@ -1649,7 +1356,7 @@ cdef class Integrator(object):
                     sum_wf2[:, :] = 0.0
                     neval = 0
                     while j < len(hcube) and hcube[j] == i:
-                        for s in range(ns):
+                        for s in range(fcn.size):
                             wf[s] = wgt[j] * fx[j, s]
                             sum_wf[s] += wf[s]
                             for t in range(s + 1):
@@ -1657,7 +1364,7 @@ cdef class Integrator(object):
                         fdv2[j] = (wf[0] * self.neval_hcube[i - hcube[0]]) ** 2
                         j += 1
                         neval += 1
-                    for s in range(fx.shape[1]):
+                    for s in range(fcn.size):
                         mean[s] += sum_wf[s]
                         for t in range(s + 1):
                             var[s, t] += (
@@ -1682,19 +1389,17 @@ cdef class Integrator(object):
             for s in range(var.shape[0]):
                 for t in range(s):
                     var[t, s] = var[s, t]
-            # create answer for this iteration, with correct shape
-            if integrand_shape == ():
-                result.add(gvar.gvar(mean[0], var[0,0] ** 0.5))
-            else:
-                result.add(gvar.gvar(mean, var).reshape(integrand_shape))
+
+            # accumulate result from this iteration
+            result.update(mean, var)
 
             if self.beta > 0 and self.adapt:
                 self.sum_sigf = sum_sigf
             if self.alpha > 0 and self.adapt:
                 self.map.adapt(alpha=self.alpha)
             if self.analyzer is not None:
-                self.analyzer.end(result.itn_results[-1], result)
-        return result
+                result.update_analyzer(self.analyzer)
+        return result.result
 
 class reporter:
     """ Analyzer class that prints out a report, iteration
@@ -1716,7 +1421,7 @@ class reporter:
             print(integrator.settings())
 
     def end(self, itn_ans, ans):
-        print "    itn %2d: %s\n all itn's: %s"%(self.itn+1, itn_ans, ans)
+        print("    itn %2d: %s\n all itn's: %s"%(self.itn+1, itn_ans, ans))
         print(
             '    neval = %d  neval/h-cube = %s\n    chi2/dof = %.2f  Q = %.2f'
             % (
@@ -1729,14 +1434,488 @@ class reporter:
         print(self.integrator.map.settings(ngrid=self.ngrid))
         print('')
 
+# Objects for accumulating the results from multiple iterations of vegas.
+# Results can be scalars (RAvg), arrays (RAvgArray), or dictionaries (RAvgDict).
+# Each stores results from each iterations, as well as a weighted (running)
+# average of the results of all iterations (unless parameter weigthed=False,
+# in which case the average is unweighted).
+class RAvg(gvar.GVar):
+    """ Running average of scalar-valued Monte Carlo estimates.
+
+    This class accumulates independent Monte Carlo
+    estimates (e.g., of an integral) and combines
+    them into a single average. It
+    is derived from :class:`gvar.GVar` (from
+    the :mod:`gvar` module if it is present) and
+    represents a Gaussian random variable.
+
+    Different estimates are weighted by their
+    inverse variances if parameter ``weight=True``;
+    otherwise straight, unweighted averages are used.
+    """
+    def __init__(self, weighted=True):
+        if weighted:
+            self._v_s2 = 0.
+            self._v2_s2 = 0.
+            self._1_s2 = 0.
+            self.weighted = True
+        else:
+            self._v = 0.
+            self._v2 = 0.
+            self._s2 = 0.
+            self._n = 0
+            self.weighted = False
+        self.itn_results = []
+        super(RAvg, self).__init__(
+            *gvar.gvar(0., 0.).internaldata,
+           )
+
+    def _chi2(self):
+        if len(self.itn_results) <= 1:
+            return 0.0
+        if self.weighted:
+            return self._v2_s2 - self._v_s2 ** 2 / self._1_s2
+        else:
+            return (self._v2 - self.mean ** 2 * self._n) * self._n / self._s2
+    chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
+
+    def _dof(self):
+        return len(self.itn_results) - 1
+    dof = property(
+        _dof,
+        None,
+        None,
+        "Number of degrees of freedom in weighted average."
+        )
+
+    def _Q(self):
+        return (
+            gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
+            if self.dof > 0 and self.chi2 > 0
+            else 1
+            )
+    Q = property(
+        _Q,
+        None,
+        None,
+        "*Q* or *p-value* of weighted average's *chi**2*.",
+        )
+
+    def add(self, g):
+        """ Add estimate ``g`` to the running average. """
+        self.itn_results.append(g)
+        tiny = sys.float_info.epsilon * 10 * g.mean ** 2 + TINY
+        if self.weighted:
+            var = g.sdev ** 2 + tiny
+            self._v_s2 +=   g.mean / var
+            self._v2_s2 +=  g.mean ** 2 / var
+            self._1_s2 +=  1. / var
+            super(RAvg, self).__init__(*gvar.gvar(
+                self._v_s2 / self._1_s2,
+                sqrt(1. / self._1_s2),
+                ).internaldata)
+        else:
+            self._v += g.mean
+            self._v2 += g.mean ** 2
+            self._s2 += g.var + tiny
+            self._n += 1
+            super(RAvg, self).__init__(*gvar.gvar(
+                self._v / self._n,
+                sqrt(self._s2) / self._n,
+                ).internaldata)
+
+
+    def summary(self):
+        """ Assemble summary of independent results into a string. """
+        acc = RAvg()
+        linedata = []
+        for i, res in enumerate(self.itn_results):
+            acc.add(res)
+            if i > 0:
+                chi2_dof = acc.chi2 / acc.dof
+                Q = acc.Q
+            else:
+                chi2_dof = 0.0
+                Q = 1.0
+            itn = '%3d' % (i + 1)
+            integral = '%-15s' % res
+            wgtavg = '%-15s' % acc
+            chi2dof = '%8.2f' % (acc.chi2 / acc.dof if i != 0 else 0.0)
+            Q = '%8.2f' % (acc.Q if i != 0 else 1.0)
+            linedata.append((itn, integral, wgtavg, chi2dof, Q))
+        nchar = 5 * [0]
+        for data in linedata:
+            for i, d in enumerate(data):
+                if len(d) > nchar[i]:
+                    nchar[i] = len(d)
+        fmt = '%%%ds   %%-%ds %%-%ds %%%ds %%%ds\n' % tuple(nchar)
+        ans = fmt % ('itn', 'integral', 'wgt average', 'chi2/dof', 'Q')
+        ans += len(ans[:-1]) * '-' + '\n'
+        for data in linedata:
+            ans += fmt % data
+        return ans
+
+class RAvgDict(gvar.BufferDict):
+    """ Running average of dictionary-valued Monte Carlo estimates.
+
+    This class accumulates independent dictionaries of Monte Carlo
+    estimates (e.g., of an integral) and combines
+    them into a dictionary of averages. It
+    is derived from :class:`gvar.BufferDict`. The dictionary
+    values are :class:`gvar.GVar`\s or arrays of :class:`gvar.GVar`\s.
+
+    Different estimates are weighted by their
+    inverse covariance matrices if parameter ``weight=True``;
+    otherwise straight, unweighted averages are used.
+    """
+    def __init__(self, dictionary, weighted=True):
+        super(RAvgDict, self).__init__(dictionary)
+        self.rarray = RAvgArray(shape=(self.size,), weighted=weighted)
+        self.buf = numpy.array(self.rarray)
+        self.itn_results = []
+
+    def add(self, g):
+        if isinstance(g, gvar.BufferDict):
+            newg = gvar.BufferDict(g)
+        else:
+            newg = gvar.BufferDict()
+            for k in self:
+                try:
+                    newg[k] = g[k]
+                except AttributeError:
+                    raise ValueError(
+                        "Dictionary g doesn't contain key " + str(k) + '.'
+                        )
+        self.itn_results.append(newg)
+        self.rarray.add(newg.buf)
+        self.buf = numpy.array(self.rarray)
+
+    def summary(self):
+        return self.rarray.summary()
+
+    def _chi2(self):
+        return self.rarray.chi2
+    chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
+
+    def _dof(self):
+        return self.rarray.dof
+    dof = property(
+        _dof, None, None,
+        "Number of degrees of freedom in weighted average."
+        )
+
+    def _Q(self):
+        return self.rarray.Q
+    Q = property(
+        _Q, None, None,
+        "*Q* or *p-value* of weighted average's *chi**2*.",
+        )
+
+
+class RAvgArray(numpy.ndarray):
+    """ Running average of array-valued Monte Carlo estimates.
+
+    This class accumulates independent arrays of Monte Carlo
+    estimates (e.g., of an integral) and combines
+    them into an array of averages. It
+    is derived from :class:`numpy.ndarray`. The array
+    elements are :class:`gvar.GVar`\s (from the ``gvar`` module if
+    present) and represent Gaussian random variables.
+
+    Different estimates are weighted by their
+    inverse covariance matrices if parameter ``weight=True``;
+    otherwise straight, unweighted averages are used.
+    """
+    def __new__(
+        subtype, shape, weighted=True,
+        dtype=object, buffer=None, offset=0, strides=None, order=None
+        ):
+        obj = numpy.ndarray.__new__(
+            subtype, shape=shape, dtype=object, buffer=buffer, offset=offset,
+            strides=strides, order=order
+            )
+        if buffer is None:
+            obj.flat = numpy.array(obj.size * [gvar.gvar(0,0)])
+        obj.itn_results = []
+        if weighted:
+            obj._invcov_v = 0.
+            obj._v_invcov_v = 0.
+            obj._invcov = 0.
+            obj.weighted = True
+        else:
+            obj._v = 0.
+            obj._v2 = 0.
+            obj._cov = 0.
+            obj._n = 0
+            obj.weighted = False
+        return obj
+
+    def __array_finalize__(self, obj):
+        if obj is None:
+            return
+        self.itn_results = getattr(obj, 'itn_results', [])
+        if obj.weighted:
+            self._invcov_v = getattr(obj, '_invcov_v', 0.0)
+            self._v_invcov_v = getattr(obj, '_v_invcov_v', 0.0)
+            self._invcov = getattr(obj, '_invcov', 0.0)
+            self.weighted = getattr(obj, 'weighted', True)
+        else:
+            self._v = getattr(obj, '_v', 0.)
+            self._v2 = getattr(obj, '_v2', 0.)
+            self._cov = getattr(obj, '_cov', 0.)
+            self._n = getattr(obj, '_n', 0.)
+            self.weighted = getattr(obj, 'weighted', False)
+
+    def _inv(self, matrix):
+        " Invert matrix, with protection against singular matrices. "
+        return numpy.linalg.pinv(matrix, rcond=sys.float_info.epsilon * 10)
+        # svd = gvar.SVD(matrix, svdcut=sys.float_info.epsilon * 10, rescale=True)
+        # w = svd.decomp(-1)
+        # return numpy.sum(
+        #     [numpy.outer(wi, wi) for wi in reversed(svd.decomp(-1))],
+        #     axis=0
+        #     )
+
+    def _chi2(self):
+        if len(self.itn_results) <= 1:
+            return 0.0
+        if self.weighted:
+            cov = self._inv(self._invcov)
+            return self._v_invcov_v - self._invcov_v.dot(cov.dot(self._invcov_v))
+        else:
+            invcov = self._inv(self._cov / self._n)
+            return numpy.trace(   # inefficient -- fix at some point
+                (self._v2 - numpy.outer(self._v, self._v) / self._n).dot(invcov)
+                )
+    chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
+
+    def _dof(self):
+        if len(self.itn_results) <= 1:
+            return 0
+        return (len(self.itn_results) - 1) * self.itn_results[0].size
+    dof = property(
+        _dof, None, None,
+        "Number of degrees of freedom in weighted average."
+        )
+
+    def _Q(self):
+        if self.dof <= 0 or self.chi2 <= 0:
+            return 1.
+        return gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
+    Q = property(
+        _Q, None, None,
+        "*Q* or *p-value* of weighted average's *chi**2*.",
+        )
+
+    def add(self, g):
+        """ Add estimate ``g`` to the running average. """
+        g = numpy.asarray(g)
+        self.itn_results.append(g)
+        g = g.reshape((-1,))
+        gmean = gvar.mean(g)
+        tiny = sys.float_info.epsilon * 10
+        gcov = gvar.evalcov(g)
+        gcov[numpy.diag_indices_from(gcov)] = (
+            abs(gcov[numpy.diag_indices_from(gcov)])
+            + tiny * gmean ** 2 + TINY
+            )
+        if self.weighted:
+            invcov = self._inv(gcov)
+            v = gvar.mean(g)
+            u = invcov.dot(v)
+            self._invcov += invcov
+            self._invcov_v += u
+            self._v_invcov_v += v.dot(u)
+            cov = self._inv(self._invcov)
+            mean = cov.dot(self._invcov_v)
+            self[:] = gvar.gvar(mean, cov).reshape(self.shape)
+        else:
+            gmean = gvar.mean(g)
+            self._v2 += numpy.outer(gmean, gmean)
+            self._v += gmean
+            self._cov += gcov
+            self._n += 1
+            mean = self._v / self._n
+            cov = self._cov / (self._n ** 2)
+            self[:] = gvar.gvar(mean, cov).reshape(self.shape)
+
+    def summary(self):
+        """ Assemble summary of independent results into a string. """
+        acc = RAvgArray(self.shape)
+
+        linedata = []
+        for i, res in enumerate(self.itn_results):
+            acc.add(res)
+            if i > 0:
+                chi2_dof = acc.chi2 / acc.dof
+                Q = acc.Q
+            else:
+                chi2_dof = 0.0
+                Q = 1.0
+            itn = '%3d' % (i + 1)
+            integral = '%-15s' % res.flat[0]
+            wgtavg = '%-15s' % acc.flat[0]
+            chi2dof = '%8.2f' % (acc.chi2 / acc.dof if i != 0 else 0.0)
+            Q = '%8.2f' % (acc.Q if i != 0 else 1.0)
+            linedata.append((itn, integral, wgtavg, chi2dof, Q))
+        nchar = 5 * [0]
+        for data in linedata:
+            for i, d in enumerate(data):
+                if len(d) > nchar[i]:
+                    nchar[i] = len(d)
+        fmt = '%%%ds   %%-%ds %%-%ds %%%ds %%%ds\n' % tuple(nchar)
+        ans = fmt % ('itn', 'integral', 'wgt average', 'chi2/dof', 'Q')
+        ans += len(ans[:-1]) * '-' + '\n'
+        for data in linedata:
+            ans += fmt % data
+        return ans
+
 
 ################
-# Classes for standarizing the interface for integrands.
+# Classes that standarize the interface for integrands. Internally vegas
+# assumes batch integrands that return an array fx[i, d] where i = batch index
+# and d = index over integrand components. VegasIntegrand figures out how
+# to convert the various types of integrand to this format. Integrands that
+# return scalars or arrays or dictionaries lead to integration results that
+# scalars or arrays or dictionaries, respectively; VegasResult figures
+# out how to convert the 1-d array used internally in vegas into the
+# appropriate structure given the integrand structure.
+
+cdef class VegasResult:
+    cdef readonly object integrand
+    cdef readonly object shape
+    cdef readonly object result
+    """ Accumulated result object --- standard interface for integration results.
+
+    Integrands are flattened into 2-d arrays in |vegas|. This object
+    accumulates integration results from multiple iterations of |vegas|
+    and can convert them to the original integrand format.
+
+    Args:
+        integrand: :class:`VegasIntegrand` object.
+        weighted (bool): use weighted average across iterations?
+
+    Attributes:
+        shape: shape of integrand result or ``None`` if dictionary.
+        result: accumulation of integral results. This is an object
+            of type :class:`vegas.RAvgArray` for array-valued integrands,
+            :class:`vegas.RAvgDict` for dictionary-valued integrands, and
+            :class:`vegas.RAvg` for scalar-valued integrands.
+    """
+    def __init__(self, integrand=None, weighted=None):
+        self.integrand = integrand
+        self.shape = integrand.shape
+        if self.shape is None:
+            self.result = RAvgDict(integrand.bdict, weighted=weighted)
+        elif self.shape == ():
+            self.result = RAvg(weighted=weighted)
+        else:
+            self.result = RAvgArray(self.shape, weighted=weighted)
+
+    def update(self, mean, var):
+        if self.shape is None:
+            ans = gvar.BufferDict(self.integrand.bdict, buf=gvar.gvar(mean, var))
+            self.result.add(ans)
+        elif self.shape == ():
+            self.result.add(gvar.gvar(mean[0], var[0,0] ** 0.5))
+        else:
+            self.result.add(gvar.gvar(mean, var).reshape(self.shape))
+
+    def update_analyzer(self, analyzer):
+        """ Update analyzer at end of an iteration. """
+        analyzer.end(self.result.itn_results[-1], self.result)
 
 
-# preferred base class for batch integrands
-# batch integrands are typically faster
-#
+cdef class VegasIntegrand:
+    cdef readonly object shape
+    cdef readonly INTP_TYPE size
+    cdef readonly object eval
+    cdef readonly object bdict
+    """ Integand object --- standard interface for integrands
+
+    This class provides a standard interface for all |vegas| integrands.
+    It analyzes the integrand to determine the shape of its output.
+
+    All integrands are converted to batch integrands. Method ``eval(x)``
+    returns results packed into a 2-d array ``f[i, d]`` where ``i``
+    is the batch index and ``d`` indexes the different elements of the
+    integrand.
+
+    Args:
+        fcn: Integrand function.
+        map: :class:`vegas.AdaptiveMap` being used by |vegas|.
+
+    Attributes:
+        eval: ``eval(x)`` returns ``fcn(x)`` repacked as a 2-d array.
+        shape: Shape of integrand ``fcn(x)`` or ``None`` if it is a dictionary.
+        size: Size of integrand.
+    """
+    def __init__(self, fcn, AdaptiveMap map):
+        if isinstance(fcn, type(BatchIntegrand)):
+            raise ValueError(
+                'integrand given is a class, not an object -- need parentheses?'
+                )
+        # check for scalar functions and convert to batch if is scalar
+        # evaluate at arbitrary point to determine integrand shape
+        x0 = map([
+            [0.18386905, 0.72867629, 0.234253][i % 3] for i in range(map.dim)
+            ])
+        fcntype = getattr(fcn, 'fcntype', 'scalar')
+        if fcntype == 'scalar':
+            fx = fcn(x0)
+            if hasattr(fx, 'keys'):
+                if not isinstance(fx, gvar.BufferDict):
+                    fx = gvar.BufferDict(fx)
+                self.size = fx.size
+                self.shape = None
+                self.bdict = fx
+                self.eval = _BatchIntegrand_from_NonBatchDict(fcn, self.size)
+            else:
+                fx = numpy.asarray(fcn(x0))
+                self.shape = fx.shape
+                self.size = fx.size
+                self.eval = _BatchIntegrand_from_NonBatch(fcn, self.shape)
+        else:
+            x0.shape = (1,) + x0.shape
+            fx = fcn(x0)
+            if hasattr(fx, 'keys'):
+                # build dictionary for non-batch version of function
+                fxs = gvar.BufferDict()
+                for k in fx:
+                    fxs[k] = fx[k][0]
+                self.shape = None
+                self.bdict = fxs
+                self.size = self.bdict.size
+                self.eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict)
+            else:
+                fx = numpy.asarray(fcn(x0))
+                self.shape = tuple(
+                    [fx.shape[s] for s in range(1, fx.ndim)]
+                    )
+                self.size = fx.size
+                self.eval = _BatchIntegrand_from_Batch(fcn)
+
+    def format(self, f):
+        """ Convert array ``f`` to integrand's format. """
+        if self.shape is None:
+            return gvar.BufferDict(self.bdict, buf=f)
+        elif self.shape is ():
+            return f[0]
+        else:
+            return numpy.asarray(f).reshape(self.shape)
+
+    def training(self, x):
+        """ Calculate first element of integrand at point ``x``. """
+        cdef numpy.ndarray fx =self.eval(x)
+        if fx.ndim == 1:
+            return fx
+        else:
+            fx = fx.reshape((x.shape[0], -1))
+            return fx[:, 0]
+
+# BatchIntegrand is a base class for users who want to design
+# batch integrands. It is also used by VegasIntegrand to convert
+# all types of integrand into batch integrands.
 cdef class BatchIntegrand:
     """ Base class for classes providing batch integrands.
 
@@ -1777,19 +1956,12 @@ cdef class BatchIntegrand:
     def __cinit__(self, *args, **kargs):
         self.fcntype = 'batch'
         self.fcn = None
-    def training_f(self, x):
-        cdef numpy.ndarray fx = numpy.asarray(self(x))
-        if fx.ndim == 1:
-            return fx
-        else:
-            fx = fx.reshape((x.shape[0], -1))
-            return fx[:, 0]
-    def __call__(self, x):
-        if self.fcn is None:
-            raise TypeError('no __call__ method defined')
-        else:
-            return self.fcn(x)
 
+    def __call__(self, x):
+        try:
+            return self.fcn(x)
+        except TypeError:
+            raise TypeError('no __call__ method defined (or badly defined)')
 
 def batchintegrand(f):
     """ Decorator for batch integrand functions.
@@ -1821,27 +1993,80 @@ def batchintegrand(f):
     ans.fcn = f
     return ans
 
-
+# The _BatchIntegrand_from_XXXX objects are used by VegasIntegrand
+# to convert different types of integrand (ie, scalar vs array vs dict,
+# and nonbatch vs batch) to the standard output format assumed internally
+# in vegas.
 cdef class _BatchIntegrand_from_NonBatch(BatchIntegrand):
     cdef object shape
-    """ Batch integrand from non-batch integrand.
-
-    This class is used internally by |vegas|.
-    """
-    def __init__(self, fcn):
+    """ Batch integrand from non-batch integrand. """
+    def __init__(self, fcn, shape):
         self.fcn = fcn
-        self.shape = None
+        self.shape = (1,) if shape == () else shape
 
-    def __call__(self, double[:, ::1] x):
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
         cdef INT_TYPE i
-        cdef numpy.ndarray f
-        if self.shape is None:
-            self.shape = numpy.asarray(self.fcn(x[0, :])).shape
-        f = numpy.empty((x.shape[0],) + self.shape, float)
+        cdef numpy.ndarray f = numpy.empty(
+            (x.shape[0],) + self.shape, float
+            )
         for i in range(x.shape[0]):
             f[i] = self.fcn(x[i, :])
         return f
 
+cdef class _BatchIntegrand_from_NonBatchDict(BatchIntegrand):
+    cdef INTP_TYPE size
+    """ Batch integrand from non-batch dict-integrand. """
+    def __init__(self, fcn, size):
+        self.fcn = fcn
+        self.size = size
+
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+        cdef INT_TYPE i
+        cdef numpy.ndarray f = numpy.empty(
+            (x.shape[0], self.size), float
+            )
+        for i in range(x.shape[0]):
+            fx = self.fcn(x[i, :])
+            if not isinstance(fx, gvar.BufferDict):
+                fx = gvar.BufferDict(fx)
+            f[i] = fx.buf
+        return f
+
+cdef class _BatchIntegrand_from_Batch(BatchIntegrand):
+    """ BatchIntegrand from batch function. """
+    def __init__(self, fcn):
+        self.fcn = fcn
+
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+        fx = self.fcn(x)
+        if not isinstance(fx, numpy.ndarray):
+            fx = numpy.array(fx)
+        return fx if len(fx.shape) == 2 else fx.reshape((x.shape[0], -1))
+        # if len(fx.shape) != 2:
+        #     fx =
+        # return numpy.asarray(self.fcn(x)).reshape((x.shape[0],-1))
+
+cdef class _BatchIntegrand_from_BatchDict(BatchIntegrand):
+    cdef readonly INTP_TYPE size
+    cdef readonly object slice
+    """ BatchIntegrand from non-batch dict-integrand. """
+    def __init__(self, fcn, bdict):
+        self.fcn = fcn
+        self.size = bdict.size
+        self.slice = {k:bdict.slice(k) for k in bdict}
+
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+        cdef INT_TYPE i
+        cdef numpy.ndarray buf = numpy.empty(
+            (x.shape[0], self.size), float
+            )
+        fx = self.fcn(x)
+        for k in self.slice:
+            buf[:, self.slice[k]] = fx[k]
+        return buf
+
+# MPIintegrand is a base class for users who want to construct
+# multi-processor integrands using MPI.
 cdef class MPIintegrand(BatchIntegrand):
     """ Convert (batch) integrand into an MPI multiprocessor integrand.
 
@@ -1963,33 +2188,4 @@ cdef class MPIintegrand(BatchIntegrand):
 
 # legacy names
 vecintegrand = batchintegrand
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
