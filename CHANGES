@@ -7,8 +7,9 @@ that module was not installed. This kludge is not sustainable.
 - Integrand function in the past could return numbers or numpy arrays. Now
   they can alternatively return dictionaries whose values are either numbers
   or numpy arrays. This is useful in situations where multiple integrals are
-  being done simultaneously since the keys can be used to keep straight which
-  integral is which.
+  being done simultaneously since the keys can be used to document and  keep
+  straight which integral is which. This should make code  easier to read and
+  write.
 
 - Miscellaneous nternal changes to simplify the vegas code that handles
   integrands.

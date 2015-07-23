@@ -29,6 +29,9 @@ cdef class MPIintegrand(BatchIntegrand):
     cdef readonly INTP_TYPE nproc
     cdef readonly object seed
     cdef readonly object fcn_shape
+    cdef readonly INTP_TYPE size
+    cdef readonly object shape
+    cdef readonly object slice
 
 cdef class AdaptiveMap:
     # first index is direction, second is increment

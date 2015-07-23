@@ -17,6 +17,7 @@ cimport cython
 cimport numpy
 from libc.math cimport floor, log, abs, tanh, erf, exp, sqrt, lgamma
 
+import collections
 import math
 import sys
 import warnings
@@ -1313,20 +1314,25 @@ cdef class Integrator(object):
         cdef double[:, ::1] var
         cdef INT_TYPE itn, i, j, s, t, neval, neval_batch
         cdef double sum_sigf, sigf2
+        cdef bint firsteval = True
 
         if kargs:
             self.set(kargs)
 
         # Put integrand into standard form
-        fcn = VegasIntegrand(fcn, map=self.map)
+        fcn = VegasIntegrand(fcn)
+        # fcn = VegasIntegrand(fcn, map=self.map)
 
-        # Allocate work arrays
-        wf = numpy.empty(fcn.size, float)
-        sum_wf = numpy.empty(fcn.size, float)
-        sum_wf2 = numpy.empty((fcn.size, fcn.size), float)
-        mean = numpy.empty(fcn.size, float)
-        var = numpy.empty((fcn.size, fcn.size), float)
-        result = VegasResult(fcn, weighted=self.adapt)
+        # # Allocate work arrays
+        # wf = numpy.empty(fcn.size, float)
+        # sum_wf = numpy.empty(fcn.size, float)
+        # sum_wf2 = numpy.empty((fcn.size, fcn.size), float)
+        # mean = numpy.empty(fcn.size, float)
+        # var = numpy.empty((fcn.size, fcn.size), float)
+        # result = VegasResult(fcn, weighted=self.adapt)
+        mean = numpy.empty(1, float)
+        var = numpy.empty((1,1), float)
+
 
         sigf = self.sigf
         for itn in range(self.nitn):
@@ -1346,6 +1352,16 @@ cdef class Integrator(object):
 
                 # evaluate integrand at all points in x
                 fx = fcn.eval(x)
+                if firsteval:
+                    firsteval = False
+                    wf = numpy.empty(fcn.size, float)
+                    sum_wf = numpy.empty(fcn.size, float)
+                    sum_wf2 = numpy.empty((fcn.size, fcn.size), float)
+                    mean = numpy.empty(fcn.size, float)
+                    var = numpy.empty((fcn.size, fcn.size), float)
+                    mean[:] = 0.0
+                    var[:, :] = 0.0
+                    result = VegasResult(fcn, weighted=self.adapt)
 
                 # compute integral and variance for each h-cube
                 # j is index of hcube within batch, i is absolute index
@@ -1827,10 +1843,10 @@ cdef class VegasResult:
 
 
 cdef class VegasIntegrand:
-    cdef readonly object shape
-    cdef readonly INTP_TYPE size
-    cdef readonly object eval
-    cdef readonly object bdict
+    cdef public object shape
+    cdef public INTP_TYPE size
+    cdef public object eval
+    cdef public object bdict
     """ Integand object --- standard interface for integrands
 
     This class provides a standard interface for all |vegas| integrands.
@@ -1841,6 +1857,12 @@ cdef class VegasIntegrand:
     is the batch index and ``d`` indexes the different elements of the
     integrand.
 
+    :class:`vegas.Integrand` doesn't know anything about the integrand
+    until method ``eval(x)`` is called the first time. It then examines
+    the result returned by the integrand function to figure out what
+    kind of integrand it is dealing with. It waits until this point
+    because it needs a valid ``x`` at which to evaluate the integrand.
+
     Args:
         fcn: Integrand function.
         map: :class:`vegas.AdaptiveMap` being used by |vegas|.
@@ -1850,59 +1872,59 @@ cdef class VegasIntegrand:
         shape: Shape of integrand ``fcn(x)`` or ``None`` if it is a dictionary.
         size: Size of integrand.
     """
-    def __init__(self, fcn, AdaptiveMap map):
+    def __init__(self, fcn):
         if isinstance(fcn, type(BatchIntegrand)):
             raise ValueError(
                 'integrand given is a class, not an object -- need parentheses?'
                 )
-        # check for scalar functions and convert to batch if is scalar
-        # evaluate at arbitrary point to determine integrand shape
-        x0 = map([
-            [0.18386905, 0.72867629, 0.234253][i % 3] for i in range(map.dim)
-            ])
-        fcntype = getattr(fcn, 'fcntype', 'scalar')
-        if fcntype == 'scalar':
-            fx = fcn(x0)
-            if hasattr(fx, 'keys'):
-                if not isinstance(fx, gvar.BufferDict):
-                    fx = gvar.BufferDict(fx)
-                self.size = fx.size
-                self.shape = None
-                self.bdict = fx
-                self.eval = _BatchIntegrand_from_NonBatchDict(fcn, self.size)
+        def eval(x, self=self, fcn=fcn):
+            " Temporary eval, used for first call but then replaced by correct eval. "
+            # check for scalar functions and convert to batch if is scalar
+            # evaluate at arbitrary point to determine integrand shape
+            x0 = x[0]
+            fcntype = getattr(fcn, 'fcntype', 'scalar')
+            if fcntype == 'scalar':
+                fx = fcn(x0)
+                if hasattr(fx, 'keys'):
+                    if not isinstance(fx, gvar.BufferDict):
+                        fx = gvar.BufferDict(fx)
+                    self.size = fx.size
+                    self.shape = None
+                    self.bdict = fx
+                    self.eval = _BatchIntegrand_from_NonBatchDict(fcn, self.size)
+                else:
+                    fx = numpy.asarray(fcn(x0))
+                    self.shape = fx.shape
+                    self.size = fx.size
+                    self.eval = _BatchIntegrand_from_NonBatch(fcn, self.shape)
             else:
-                fx = numpy.asarray(fcn(x0))
-                self.shape = fx.shape
-                self.size = fx.size
-                self.eval = _BatchIntegrand_from_NonBatch(fcn, self.shape)
-        else:
-            x0.shape = (1,) + x0.shape
-            fx = fcn(x0)
-            if hasattr(fx, 'keys'):
-                # build dictionary for non-batch version of function
-                fxs = gvar.BufferDict()
-                for k in fx:
-                    fxs[k] = fx[k][0]
-                self.shape = None
-                self.bdict = fxs
-                self.size = self.bdict.size
-                self.eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict)
-            else:
-                fx = numpy.asarray(fcn(x0))
-                self.shape = tuple(
-                    [fx.shape[s] for s in range(1, fx.ndim)]
-                    )
-                self.size = fx.size
-                self.eval = _BatchIntegrand_from_Batch(fcn)
+                x0.shape = (1,) + x0.shape
+                fx = fcn(x0)
+                if hasattr(fx, 'keys'):
+                    # build dictionary for non-batch version of function
+                    fxs = gvar.BufferDict()
+                    for k in fx:
+                        fxs[k] = fx[k][0]
+                    self.shape = None
+                    self.bdict = fxs
+                    self.size = self.bdict.size
+                    self.eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict)
+                else:
+                    fx = numpy.asarray(fcn(x0))
+                    self.shape = fx.shape[1:]
+                    self.size = fx.size
+                    self.eval = _BatchIntegrand_from_Batch(fcn)
+            return self.eval(x)
+        self.eval = eval
 
-    def format(self, f):
-        """ Convert array ``f`` to integrand's format. """
-        if self.shape is None:
-            return gvar.BufferDict(self.bdict, buf=f)
-        elif self.shape is ():
-            return f[0]
-        else:
-            return numpy.asarray(f).reshape(self.shape)
+    # def format(self, f):
+    #     """ Convert array ``f`` to integrand's format. """
+    #     if self.shape is None:
+    #         return gvar.BufferDict(self.bdict, buf=f)
+    #     elif self.shape is ():
+    #         return f[0]
+    #     else:
+    #         return numpy.asarray(f).reshape(self.shape)
 
     def training(self, x):
         """ Calculate first element of integrand at point ``x``. """
@@ -1912,6 +1934,94 @@ cdef class VegasIntegrand:
         else:
             fx = fx.reshape((x.shape[0], -1))
             return fx[:, 0]
+
+# cdef class VegasIntegrand:
+#     cdef readonly object shape
+#     cdef readonly INTP_TYPE size
+#     cdef readonly object eval
+#     cdef readonly object bdict
+#     """ Integand object --- standard interface for integrands
+
+#     This class provides a standard interface for all |vegas| integrands.
+#     It analyzes the integrand to determine the shape of its output.
+
+#     All integrands are converted to batch integrands. Method ``eval(x)``
+#     returns results packed into a 2-d array ``f[i, d]`` where ``i``
+#     is the batch index and ``d`` indexes the different elements of the
+#     integrand.
+
+#     Args:
+#         fcn: Integrand function.
+#         map: :class:`vegas.AdaptiveMap` being used by |vegas|.
+
+#     Attributes:
+#         eval: ``eval(x)`` returns ``fcn(x)`` repacked as a 2-d array.
+#         shape: Shape of integrand ``fcn(x)`` or ``None`` if it is a dictionary.
+#         size: Size of integrand.
+#     """
+#     def __init__(self, fcn, AdaptiveMap map):
+#         if isinstance(fcn, type(BatchIntegrand)):
+#             raise ValueError(
+#                 'integrand given is a class, not an object -- need parentheses?'
+#                 )
+#         # check for scalar functions and convert to batch if is scalar
+#         # evaluate at arbitrary point to determine integrand shape
+#         x0 = map([
+#             [0.18386905, 0.72867629, 0.234253][i % 3] for i in range(map.dim)
+#             ])
+#         fcntype = getattr(fcn, 'fcntype', 'scalar')
+#         if fcntype == 'scalar':
+#             fx = fcn(x0)
+#             if hasattr(fx, 'keys'):
+#                 if not isinstance(fx, gvar.BufferDict):
+#                     fx = gvar.BufferDict(fx)
+#                 self.size = fx.size
+#                 self.shape = None
+#                 self.bdict = fx
+#                 self.eval = _BatchIntegrand_from_NonBatchDict(fcn, self.size)
+#             else:
+#                 fx = numpy.asarray(fcn(x0))
+#                 self.shape = fx.shape
+#                 self.size = fx.size
+#                 self.eval = _BatchIntegrand_from_NonBatch(fcn, self.shape)
+#         else:
+#             x0.shape = (1,) + x0.shape
+#             fx = fcn(x0)
+#             if hasattr(fx, 'keys'):
+#                 # build dictionary for non-batch version of function
+#                 fxs = gvar.BufferDict()
+#                 for k in fx:
+#                     fxs[k] = fx[k][0]
+#                 self.shape = None
+#                 self.bdict = fxs
+#                 self.size = self.bdict.size
+#                 self.eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict)
+#             else:
+#                 fx = numpy.asarray(fcn(x0))
+#                 self.shape = fx.shape[1:]
+#                 #tuple(
+#                 #    [fx.shape[s] for s in range(1, fx.ndim)]
+#                 #    )
+#                 self.size = fx.size
+#                 self.eval = _BatchIntegrand_from_Batch(fcn)
+
+#     def format(self, f):
+#         """ Convert array ``f`` to integrand's format. """
+#         if self.shape is None:
+#             return gvar.BufferDict(self.bdict, buf=f)
+#         elif self.shape is ():
+#             return f[0]
+#         else:
+#             return numpy.asarray(f).reshape(self.shape)
+
+#     def training(self, x):
+#         """ Calculate first element of integrand at point ``x``. """
+#         cdef numpy.ndarray fx =self.eval(x)
+#         if fx.ndim == 1:
+#             return fx
+#         else:
+#             fx = fx.reshape((x.shape[0], -1))
+#             return fx[:, 0]
 
 # BatchIntegrand is a base class for users who want to design
 # batch integrands. It is also used by VegasIntegrand to convert
@@ -2049,11 +2159,13 @@ cdef class _BatchIntegrand_from_Batch(BatchIntegrand):
 cdef class _BatchIntegrand_from_BatchDict(BatchIntegrand):
     cdef readonly INTP_TYPE size
     cdef readonly object slice
+    cdef readonly object shape
     """ BatchIntegrand from non-batch dict-integrand. """
     def __init__(self, fcn, bdict):
         self.fcn = fcn
         self.size = bdict.size
-        self.slice = {k:bdict.slice(k) for k in bdict}
+        self.slice = {k:bdict.slice_shape(k).slice for k in bdict}
+        self.shape = {k:bdict.slice_shape(k).shape for k in bdict}
 
     def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
         cdef INT_TYPE i
@@ -2062,7 +2174,11 @@ cdef class _BatchIntegrand_from_BatchDict(BatchIntegrand):
             )
         fx = self.fcn(x)
         for k in self.slice:
-            buf[:, self.slice[k]] = fx[k]
+            buf[:, self.slice[k]] = (
+                fx[k]
+                if self.shape[k] is None else
+                numpy.asarray(fx[k]).reshape((x.shape[0],) + self.shape[k])
+                )
         return buf
 
 # MPIintegrand is a base class for users who want to construct
@@ -2174,16 +2290,52 @@ cdef class MPIintegrand(BatchIntegrand):
         cdef numpy.ndarray results, f
         cdef INTP_TYPE nx, i0, i1
         if self.fcn_shape is None:
-            # use a trial evaluation with the first x to get fcn_shape
-            self.fcn_shape = numpy.shape(self.fcn(x[:1]))[1:]
-        nx = x.shape[0] // self.nproc + 1
-        i0 = self.rank * nx
-        i1 = min(i0 + nx, x.shape[0])
+            # use trial evaluation to figure out function shape
+            fx = self.fcn(x[:1])
+            if hasattr(fx, 'keys'):
+                fxs = gvar.BufferDict()
+                for k in fx:
+                    fxs[k] = fx[k][0]
+                self.size = fxs.size
+                self.slice = {k:fxs.slice_shape(k).slice for k in fxs}
+                self.shape = {k:fxs.slice_shape(k).shape for k in fxs}
+                def fcn(y, oldfcn=self.fcn):
+                    return gvar.asbufferdict(oldfcn(y)).buf
+                self.fcn = fcn
+            else:
+                fx = numpy.asarray(fx)
+                self.shape = fx.shape[1:]
+                self.size = fx.size
+                self.slice = None
+                def fcn(y, oldfcn=self.fcn):
+                    return numpy.asarray(oldfcn(y)).reshape((y.shape[0], -1))
+                self.fcn = fcn
+            self.fcn_shape = (self.size,)
+        if x.shape[0] < self.nproc:
+            # too many processors => all calculate same thing
+            nx = x.shape[0]
+            i0 = 0
+            i1 = nx
+        else:
+            nx = x.shape[0] // self.nproc + 1
+            i0 = self.rank * nx
+            i1 = min(i0 + nx, x.shape[0])
         f = numpy.empty((nx,) + self.fcn_shape, numpy.double)
         f[:(i1-i0)] = self.fcn(x[i0:i1])
         results = numpy.empty((self.nproc * nx,) + self.fcn_shape, numpy.double)
         self.comm.Allgather(f, results)
-        return results[:x.shape[0]]
+        results = results[:x.shape[0]]
+        if self.slice is not None:
+            ans = collections.OrderedDict()
+            for k in self.slice:
+                ans[k] = (
+                    results[:, self.slice[k]].reshape(
+                        (x.shape[0],) + self.shape[k]
+                        )
+                    )
+            return ans
+        else:
+            return results.reshape((x.shape[0],) + self.shape)
 
 
 # legacy names
