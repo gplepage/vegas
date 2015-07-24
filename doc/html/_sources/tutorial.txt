@@ -299,7 +299,7 @@ There are several things to note here:
     Some of its samples hit the peak's shoulders, so |vegas| is
     eventually able to find the peak (by iterations 5--6), but
     the integrand estimates are wildly non-Gaussian before that
-    point. This results in a non-sensical final result, as
+    point. This results in a nonsensical final result, as
     indicated by the ``Q = 0.00``.
 
     It is common practice in using |vegas| to discard
@@ -522,10 +522,10 @@ This can be done using the following code::
     integ = vegas.Integrator(4 * [[0, 1]])
 
     # adapt grid
-    training = integ(f, nitn=10, neval=1000)
+    training = integ(f, nitn=10, neval=2000)
 
     # final analysis
-    result = integ(f, nitn=10, neval=5000)
+    result = integ(f, nitn=10, neval=10000)
     print('I[0] =', result[0], '  I[1] =', result[1], '  I[2] =', result[2])
     print('Q = %.2f\n' % result.Q)
     print('<x> =', result[1] / result[0])
@@ -547,16 +547,16 @@ The code produces the following output:
 .. literalinclude:: eg3a.out
 
 The estimates for the individual integrals are separately accurate to
-about ±0.1%,
+about ±0.07%,
 but the estimate for :math:`\langle x \rangle = I_1/I_0`
-is accurate to ±0.02%.
+is accurate to ±0.01%.
 This is almost an order
-of magnitude (7x) more accurate than we would obtain absent correlations.
+of magnitude (8x) more accurate than we would obtain absent correlations.
 The correlation matrix shows that there is 98% correlation between the
 statistical fluctuations in estimates for :math:`I_0` and :math:`I_1`,
 and so the bulk of these fluctuations cancel in the ratio.
 The estimate for the variance :math:`\sigma^2_x`
-is 45x more accurate than we would
+is 51x more accurate than we would
 have obtained had the integrals been evaluated separately. Both estimates
 are correct to within the quoted errors.
 
@@ -566,10 +566,49 @@ represent Gaussian random variables. Such objects have means
 also can be statistically correlated with other :class:`gvar.GVar`\s.
 Such correlations are handled automatically by :mod:`gvar` when
 :class:`gvar.GVar`\s are combined with each other or with numbers in
-arithmetical expressions. (|vegas| requires that the :mod:`gvar` module
-which can be installed using ``pip install gvar`` or downloaded from
-https://github.com/gplepage/gvar.git.)
+arithmetical expressions. (Documentation for :mod:`gvar` can be found
+at http://pythonhosted.org/gvar or with the source code
+at https://github.com/gplepage/gvar.git.)
 
+Integrands can return dictionaries instead of arrays. The example above,
+for example, can be rewritten as ::
+
+    import vegas
+    import math
+    import gvar as gv
+
+    def f(x):
+        dx2 = 0.0
+        for d in range(4):
+            dx2 += (x[d] - 0.5) ** 2
+        f = math.exp(-200 * dx2)
+        return {'1':f, 'x':f * x[0], 'x**2':f * x[0] ** 2}
+
+    integ = vegas.Integrator(4 * [[0, 1]])
+
+    # adapt grid
+    training = integ(f, nitn=10, neval=2000)
+
+    # final analysis
+    result = integ(f, nitn=10, neval=10000)
+    print(result)
+    print('Q = %.2f\n' % result.Q)
+    print('<x> =', result['x'] / result['1'])
+    print(
+        'sigma_x**2 = <x**2> - <x>**2 =',
+        result['x**2'] / result['1'] - (result['x'] / result['1']) ** 2
+        )
+
+which returns the following output:
+
+.. literalinclude:: eg3b.out
+
+The result returned by |vegas| is a dictionary using the same keys as the
+dictionary returned by the integrand. Using a dictionary, with descriptive
+keys, instead of an array can often make code more intelligible, and,
+therefore, easier to write  and maintain. Here the values in the integrand's
+dictionary are all numbers; in general, values can be  either numbers or
+arrays (of any shape).
 
 Faster Integrands
 -------------------------
@@ -724,6 +763,10 @@ module ``cython_integrand.pyx`` to be compiled the first time
 it is called. The compiled code is stored and used in subsequent
 calls, so compilation occurs only once.
 
+Cython code can also link easily to compiled C or Fortran code,
+so integrands written in these languages can be used as well (and
+would be faster than pure Python). See Cython's documentation.
+
 Batch mode is also a good idea for array-valued integrands.
 The code from the previous section could have been written as::
 
@@ -747,10 +790,10 @@ The code from the previous section could have been written as::
     integ = vegas.Integrator(4 * [[0, 1]])
 
     # adapt grid
-    training = integ(f, nitn=10, neval=1000)
+    training = integ(f, nitn=10, neval=2000)
 
     # final analysis
-    result = integ(f, nitn=10, neval=5000)
+    result = integ(f, nitn=10, neval=10000)
     print('I[0] =', result[0], '  I[1] =', result[1], '  I[2] =', result[2])
     print('Q = %.2f\n' % result.Q)
     print('<x> =', result[1] / result[0])
@@ -760,11 +803,22 @@ The code from the previous section could have been written as::
         )
     print('\ncorrelation matrix:\n', gv.evalcorr(result))
 
-Note that the batch index (here ``:``) always comes first.
+Note that the batch index (here ``:``) always comes first. An extra
+(first) index is also added to each value in the dictionary returned
+by a dictionary-valued batch integrand: e.g., ::
 
-Cython code can also link easily to compiled C or Fortran code,
-so integrands written in these languages can be used as well (and
-would be faster than pure Python).
+    dim = 4
+
+    @vegas.batchintegrand
+    def f(x):
+        ans = {}
+        dx2 = 0.0
+        for d in range(dim):
+            dx2 += (x[:, d] - 0.5) ** 2
+        ans['1'] = np.exp(-200 * dx2)
+        ans['x'] = x[:, 0] * ans['1']
+        ans['x**2'] = x[:, 0] ** 2 * ans['1']
+        return ans
 
 Multiple Processors
 ---------------------------

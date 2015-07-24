@@ -49,7 +49,8 @@ setup(
     package_dir=package_dir,
     package_data=package_data,
     ext_modules=ext_modules,
-    requires=["cython (>=0.17)","numpy (>=1.7)", "gvar"],
+    install_requires=['cython>=0.17', 'numpy>=1.7', 'gvar>=7.0'], # for pip
+    requires=["cython (>=0.17)","numpy (>=1.7)", "gvar (>=7.0)"], # for disutils
     url="https://github.com/gplepage/vegas.git",
     license='GPLv3+',
     platforms='Any',

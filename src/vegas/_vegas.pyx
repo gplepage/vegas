@@ -598,14 +598,19 @@ cdef class Integrator(object):
     result is an object of type :class:`RAvg` (which is derived
     from :class:`gvar.GVar`).
 
-    Integrands can be array-valued, in which case ``f(x)``
-    returns an array of values corresponding to different
-    integrands. Also |vegas| can generate integration points
-    in batches for integrands built from classes
-    derived from :class:`vegas.BatchIntegrand`, or integrand
-    functions decorated by :func:`vegas.batchintegrand`. Batch
-    integrands are typically much faster, especially if they
-    are coded in Cython.
+    Integrands ``f(x)`` return numbers, arrays of numbers (any shape), or
+    dictionaries whose values are numbers or arrays (any shape). Each number
+    returned by an integrand corresponds to a different integrand. When
+    arrays are returned, |vegas| adapts to the first number
+    in the flattened array. When dictionaries are returned,
+    |vegas| adapts to the first number in the value corresponding to
+    the first key.
+
+    |vegas| can generate integration points in batches for integrands
+    built from classes derived from :class:`vegas.BatchIntegrand`, or
+    integrand functions decorated by :func:`vegas.batchintegrand`. Batch
+    integrands are typically much faster, especially if they are coded in
+    Cython.
 
     |Integrator|\s have a large number of parameters but the
     only ones that most people will care about are: the
@@ -618,7 +623,7 @@ cdef class Integrator(object):
     since it causes |vegas| to print (on ``sys.stdout``)
     intermediate results from each iteration, as they are
     produced. This helps when each iteration takes a long time
-    to complete (e.g., an hour) because it allows you to
+    to complete (e.g., longer than an hour) because it allows you to
     monitor progress as it is being made (or not).
 
     :param map: The integration region as specified by
@@ -1263,10 +1268,16 @@ cdef class Integrator(object):
             def f(x):
                 return [x[0] ** 2, x[0] / x[1]]
 
-        The return arrays can have any shape. Array-valued
-        integrands are useful for integrands that
-        are closely related, and can lead to
-        substantial reductions in the errors for
+        The return arrays can have any shape. Dictionary-valued
+        integrands are also supported: e.g., ::
+
+            def f(x):
+                return {'a':x[0] ** 2, 'b':[x[0] / x[1], x[1] / x[0]]}
+
+
+        Integrand functions that return arrays or dictionaries
+        are useful for multiple integrands that are closely related,
+        and can lead to substantial reductions in the errors for
         ratios or differences of the results.
 
         It is usually much faster to use |vegas| in batch
@@ -1310,8 +1321,8 @@ cdef class Integrator(object):
         cdef double[::1] wf
         cdef double[::1] sum_wf
         cdef double[:, ::1] sum_wf2
-        cdef double[::1] mean
-        cdef double[:, ::1] var
+        cdef double[::1] mean = numpy.empty(1, float)
+        cdef double[:, ::1] var = numpy.empty((1, 1), float)
         cdef INT_TYPE itn, i, j, s, t, neval, neval_batch
         cdef double sum_sigf, sigf2
         cdef bint firsteval = True
@@ -1321,18 +1332,6 @@ cdef class Integrator(object):
 
         # Put integrand into standard form
         fcn = VegasIntegrand(fcn)
-        # fcn = VegasIntegrand(fcn, map=self.map)
-
-        # # Allocate work arrays
-        # wf = numpy.empty(fcn.size, float)
-        # sum_wf = numpy.empty(fcn.size, float)
-        # sum_wf2 = numpy.empty((fcn.size, fcn.size), float)
-        # mean = numpy.empty(fcn.size, float)
-        # var = numpy.empty((fcn.size, fcn.size), float)
-        # result = VegasResult(fcn, weighted=self.adapt)
-        mean = numpy.empty(1, float)
-        var = numpy.empty((1,1), float)
-
 
         sigf = self.sigf
         for itn in range(self.nitn):
@@ -1353,6 +1352,8 @@ cdef class Integrator(object):
                 # evaluate integrand at all points in x
                 fx = fcn.eval(x)
                 if firsteval:
+                    # allocate work arrays on first pass through;
+                    # (needed a sample fcn evaluation in order to do this)
                     firsteval = False
                     wf = numpy.empty(fcn.size, float)
                     sum_wf = numpy.empty(fcn.size, float)
@@ -1896,7 +1897,7 @@ cdef class VegasIntegrand:
                     fx = numpy.asarray(fcn(x0))
                     self.shape = fx.shape
                     self.size = fx.size
-                    self.eval = _BatchIntegrand_from_NonBatch(fcn, self.shape)
+                    self.eval = _BatchIntegrand_from_NonBatch(fcn, self.size, self.shape)
             else:
                 x0.shape = (1,) + x0.shape
                 fx = fcn(x0)
@@ -1917,15 +1918,6 @@ cdef class VegasIntegrand:
             return self.eval(x)
         self.eval = eval
 
-    # def format(self, f):
-    #     """ Convert array ``f`` to integrand's format. """
-    #     if self.shape is None:
-    #         return gvar.BufferDict(self.bdict, buf=f)
-    #     elif self.shape is ():
-    #         return f[0]
-    #     else:
-    #         return numpy.asarray(f).reshape(self.shape)
-
     def training(self, x):
         """ Calculate first element of integrand at point ``x``. """
         cdef numpy.ndarray fx =self.eval(x)
@@ -1935,97 +1927,94 @@ cdef class VegasIntegrand:
             fx = fx.reshape((x.shape[0], -1))
             return fx[:, 0]
 
-# cdef class VegasIntegrand:
-#     cdef readonly object shape
-#     cdef readonly INTP_TYPE size
-#     cdef readonly object eval
-#     cdef readonly object bdict
-#     """ Integand object --- standard interface for integrands
+# The _BatchIntegrand_from_XXXX objects are used by VegasIntegrand
+# to convert different types of integrand (ie, scalar vs array vs dict,
+# and nonbatch vs batch) to the standard output format assumed internally
+# in vegas.
+cdef class _BatchIntegrand_from_NonBatch(object):
+    cdef INTP_TYPE size
+    cdef object shape
+    cdef object fcn
+    """ Batch integrand from non-batch integrand. """
+    def __init__(self, fcn, size, shape):
+        self.fcn = fcn
+        self.size = size
+        self.shape = shape
 
-#     This class provides a standard interface for all |vegas| integrands.
-#     It analyzes the integrand to determine the shape of its output.
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+        cdef INT_TYPE i
+        cdef numpy.ndarray[numpy.double_t, ndim=2] f = numpy.empty(
+            (x.shape[0], self.size), float
+            )
+        if self.shape == ():
+            # very common special case
+            for i in range(x.shape[0]):
+                f[i] = self.fcn(x[i])
+        else:
+            for i in range(x.shape[0]):
+                f[i] = numpy.asarray(self.fcn(x[i])).reshape((-1,))
+        return f
 
-#     All integrands are converted to batch integrands. Method ``eval(x)``
-#     returns results packed into a 2-d array ``f[i, d]`` where ``i``
-#     is the batch index and ``d`` indexes the different elements of the
-#     integrand.
+cdef class _BatchIntegrand_from_NonBatchDict(object):
+    cdef INTP_TYPE size
+    cdef object fcn
+    """ Batch integrand from non-batch dict-integrand. """
+    def __init__(self, fcn, size):
+        self.fcn = fcn
+        self.size = size
 
-#     Args:
-#         fcn: Integrand function.
-#         map: :class:`vegas.AdaptiveMap` being used by |vegas|.
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+        cdef INT_TYPE i
+        cdef numpy.ndarray[numpy.double_t, ndim=2] f = numpy.empty(
+            (x.shape[0], self.size), float
+            )
+        for i in range(x.shape[0]):
+            fx = self.fcn(x[i])
+            if not isinstance(fx, gvar.BufferDict):
+                fx = gvar.BufferDict(fx)
+            f[i] = fx.buf
+        return f
 
-#     Attributes:
-#         eval: ``eval(x)`` returns ``fcn(x)`` repacked as a 2-d array.
-#         shape: Shape of integrand ``fcn(x)`` or ``None`` if it is a dictionary.
-#         size: Size of integrand.
-#     """
-#     def __init__(self, fcn, AdaptiveMap map):
-#         if isinstance(fcn, type(BatchIntegrand)):
-#             raise ValueError(
-#                 'integrand given is a class, not an object -- need parentheses?'
-#                 )
-#         # check for scalar functions and convert to batch if is scalar
-#         # evaluate at arbitrary point to determine integrand shape
-#         x0 = map([
-#             [0.18386905, 0.72867629, 0.234253][i % 3] for i in range(map.dim)
-#             ])
-#         fcntype = getattr(fcn, 'fcntype', 'scalar')
-#         if fcntype == 'scalar':
-#             fx = fcn(x0)
-#             if hasattr(fx, 'keys'):
-#                 if not isinstance(fx, gvar.BufferDict):
-#                     fx = gvar.BufferDict(fx)
-#                 self.size = fx.size
-#                 self.shape = None
-#                 self.bdict = fx
-#                 self.eval = _BatchIntegrand_from_NonBatchDict(fcn, self.size)
-#             else:
-#                 fx = numpy.asarray(fcn(x0))
-#                 self.shape = fx.shape
-#                 self.size = fx.size
-#                 self.eval = _BatchIntegrand_from_NonBatch(fcn, self.shape)
-#         else:
-#             x0.shape = (1,) + x0.shape
-#             fx = fcn(x0)
-#             if hasattr(fx, 'keys'):
-#                 # build dictionary for non-batch version of function
-#                 fxs = gvar.BufferDict()
-#                 for k in fx:
-#                     fxs[k] = fx[k][0]
-#                 self.shape = None
-#                 self.bdict = fxs
-#                 self.size = self.bdict.size
-#                 self.eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict)
-#             else:
-#                 fx = numpy.asarray(fcn(x0))
-#                 self.shape = fx.shape[1:]
-#                 #tuple(
-#                 #    [fx.shape[s] for s in range(1, fx.ndim)]
-#                 #    )
-#                 self.size = fx.size
-#                 self.eval = _BatchIntegrand_from_Batch(fcn)
+cdef class _BatchIntegrand_from_Batch(object):
+    cdef object fcn
+    """ BatchIntegrand from batch function. """
+    def __init__(self, fcn):
+        self.fcn = fcn
 
-#     def format(self, f):
-#         """ Convert array ``f`` to integrand's format. """
-#         if self.shape is None:
-#             return gvar.BufferDict(self.bdict, buf=f)
-#         elif self.shape is ():
-#             return f[0]
-#         else:
-#             return numpy.asarray(f).reshape(self.shape)
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+        fx = self.fcn(x)
+        if not isinstance(fx, numpy.ndarray):
+            fx = numpy.asarray(fx)
+        return fx if len(fx.shape) == 2 else fx.reshape((x.shape[0], -1))
 
-#     def training(self, x):
-#         """ Calculate first element of integrand at point ``x``. """
-#         cdef numpy.ndarray fx =self.eval(x)
-#         if fx.ndim == 1:
-#             return fx
-#         else:
-#             fx = fx.reshape((x.shape[0], -1))
-#             return fx[:, 0]
+cdef class _BatchIntegrand_from_BatchDict(object):
+    cdef readonly INTP_TYPE size
+    cdef readonly object slice
+    cdef readonly object shape
+    cdef object fcn
+    """ BatchIntegrand from non-batch dict-integrand. """
+    def __init__(self, fcn, bdict):
+        self.fcn = fcn
+        self.size = bdict.size
+        self.slice = {k:bdict.slice_shape(k).slice for k in bdict}
+        self.shape = {k:bdict.slice_shape(k).shape for k in bdict}
+
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+        cdef INT_TYPE i
+        cdef numpy.ndarray[numpy.double_t, ndim=2] buf = numpy.empty(
+            (x.shape[0], self.size), float
+            )
+        fx = self.fcn(x)
+        for k in self.slice:
+            buf[:, self.slice[k]] = (
+                fx[k]
+                if self.shape[k] is () else
+                numpy.asarray(fx[k]).reshape((x.shape[0], -1))
+                )
+        return buf
 
 # BatchIntegrand is a base class for users who want to design
-# batch integrands. It is also used by VegasIntegrand to convert
-# all types of integrand into batch integrands.
+# batch integrands.
 cdef class BatchIntegrand:
     """ Base class for classes providing batch integrands.
 
@@ -2082,8 +2071,7 @@ def batchintegrand(f):
     as an argument, where ``i=0...`` labels the integration point and
     ``d=0...`` labels direction, and return an array ``f[i]`` of
     integrand values (or arrays of integrand values) for the corresponding
-    points. The meaning of ``fcn(x)`` is unchanged by the decorator, but
-    the type of ``fcn`` is changed.
+    points. The meaning of ``fcn(x)`` is unchanged by the decorator.
 
     An example is ::
 
@@ -2099,87 +2087,14 @@ def batchintegrand(f):
     This decorator provides an alternative to deriving an integrand
     class from :class:`vegas.BatchIntegrand`.
     """
-    ans = BatchIntegrand()
-    ans.fcn = f
-    return ans
-
-# The _BatchIntegrand_from_XXXX objects are used by VegasIntegrand
-# to convert different types of integrand (ie, scalar vs array vs dict,
-# and nonbatch vs batch) to the standard output format assumed internally
-# in vegas.
-cdef class _BatchIntegrand_from_NonBatch(BatchIntegrand):
-    cdef object shape
-    """ Batch integrand from non-batch integrand. """
-    def __init__(self, fcn, shape):
-        self.fcn = fcn
-        self.shape = (1,) if shape == () else shape
-
-    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
-        cdef INT_TYPE i
-        cdef numpy.ndarray f = numpy.empty(
-            (x.shape[0],) + self.shape, float
-            )
-        for i in range(x.shape[0]):
-            f[i] = self.fcn(x[i, :])
+    try:
+        f.fcntype = 'batch'
         return f
+    except:
+        ans = BatchIntegrand()
+        ans.fcn = f
+        return ans
 
-cdef class _BatchIntegrand_from_NonBatchDict(BatchIntegrand):
-    cdef INTP_TYPE size
-    """ Batch integrand from non-batch dict-integrand. """
-    def __init__(self, fcn, size):
-        self.fcn = fcn
-        self.size = size
-
-    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
-        cdef INT_TYPE i
-        cdef numpy.ndarray f = numpy.empty(
-            (x.shape[0], self.size), float
-            )
-        for i in range(x.shape[0]):
-            fx = self.fcn(x[i, :])
-            if not isinstance(fx, gvar.BufferDict):
-                fx = gvar.BufferDict(fx)
-            f[i] = fx.buf
-        return f
-
-cdef class _BatchIntegrand_from_Batch(BatchIntegrand):
-    """ BatchIntegrand from batch function. """
-    def __init__(self, fcn):
-        self.fcn = fcn
-
-    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
-        fx = self.fcn(x)
-        if not isinstance(fx, numpy.ndarray):
-            fx = numpy.array(fx)
-        return fx if len(fx.shape) == 2 else fx.reshape((x.shape[0], -1))
-        # if len(fx.shape) != 2:
-        #     fx =
-        # return numpy.asarray(self.fcn(x)).reshape((x.shape[0],-1))
-
-cdef class _BatchIntegrand_from_BatchDict(BatchIntegrand):
-    cdef readonly INTP_TYPE size
-    cdef readonly object slice
-    cdef readonly object shape
-    """ BatchIntegrand from non-batch dict-integrand. """
-    def __init__(self, fcn, bdict):
-        self.fcn = fcn
-        self.size = bdict.size
-        self.slice = {k:bdict.slice_shape(k).slice for k in bdict}
-        self.shape = {k:bdict.slice_shape(k).shape for k in bdict}
-
-    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
-        cdef INT_TYPE i
-        cdef numpy.ndarray buf = numpy.empty(
-            (x.shape[0], self.size), float
-            )
-        fx = self.fcn(x)
-        for k in self.slice:
-            buf[:, self.slice[k]] = (
-                fx[k]
-                if self.shape[k] is None else
-                numpy.asarray(fx[k]).reshape((x.shape[0],) + self.shape[k])
-                )
-        return buf
 
 # MPIintegrand is a base class for users who want to construct
 # multi-processor integrands using MPI.
@@ -2293,14 +2208,25 @@ cdef class MPIintegrand(BatchIntegrand):
             # use trial evaluation to figure out function shape
             fx = self.fcn(x[:1])
             if hasattr(fx, 'keys'):
-                fxs = gvar.BufferDict()
+                self.slice = {}
+                self.shape = {}
+                if not isinstance(fx, gvar.BufferDict):
+                    fx = gvar.BufferDict(fx)
                 for k in fx:
-                    fxs[k] = fx[k][0]
-                self.size = fxs.size
-                self.slice = {k:fxs.slice_shape(k).slice for k in fxs}
-                self.shape = {k:fxs.slice_shape(k).shape for k in fxs}
-                def fcn(y, oldfcn=self.fcn):
-                    return gvar.asbufferdict(oldfcn(y)).buf
+                    fslice, fshape = fx.slice_shape(k)
+                    self.shape[k] = fshape[1:]
+                    self.slice[k] = fslice.start if fshape[1:] == () else fslice
+                self.size = fx.size
+                def fcn(y, oldfcn=self.fcn, slice=self.slice):
+                    # pack results in a 2-d array f[i, d]
+                    cdef numpy.ndarray[numpy.double_t, ndim=2] ans
+                    ans = numpy.empty((y.shape[0], self.size), float)
+                    fy = oldfcn(y)
+                    for k in slice:
+                        ans[:, self.slice[k]] = (
+                            fy[k] if self.shape[k] == () else fy[k].reshape((y.shape[0], -1))
+                            )
+                    return ans
                 self.fcn = fcn
             else:
                 fx = numpy.asarray(fx)
@@ -2308,6 +2234,7 @@ cdef class MPIintegrand(BatchIntegrand):
                 self.size = fx.size
                 self.slice = None
                 def fcn(y, oldfcn=self.fcn):
+                    # pack results in a 2-d array f[i, d]
                     return numpy.asarray(oldfcn(y)).reshape((y.shape[0], -1))
                 self.fcn = fcn
             self.fcn_shape = (self.size,)

@@ -347,7 +347,7 @@ wrong (by 76 and 123 standard deviations!).
 Some of its samples hit the peak&#8217;s shoulders, so <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> is
 eventually able to find the peak (by iterations 5&#8211;6), but
 the integrand estimates are wildly non-Gaussian before that
-point. This results in a non-sensical final result, as
+point. This results in a nonsensical final result, as
 indicated by the <code class="docutils literal"><span class="pre">Q</span> <span class="pre">=</span> <span class="pre">0.00</span></code>.</p>
 <p>It is common practice in using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> to discard
 estimates from the first several iterations, before the
@@ -605,10 +605,10 @@ projected onto one of the axes:</p>
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 
 <span class="c"># adapt grid</span>
-<span class="n">training</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">training</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
 
 <span class="c"># final analysis</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;I[0] =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;  I[1] =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">&#39;  I[2] =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;Q = </span><span class="si">%.2f</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;&lt;x&gt; =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -626,29 +626,29 @@ both cases, one result for each of the three integrals. <a class="reference inte
 the first integrand in the array. The <code class="docutils literal"><span class="pre">Q</span></code> value is for all three
 of the integrals, taken together.</p>
 <p>The code produces the following output:</p>
-<div class="highlight-python"><div class="highlight"><pre>I[0] = 0.00024686(26)   I[1] = 0.00012347(13)   I[2] = 0.000062372(72)
-Q = 0.86
+<div class="highlight-python"><div class="highlight"><pre>I[0] = 0.00024677(17)   I[1] = 0.000123397(85)   I[2] = 0.000062322(45)
+Q = 0.49
 
-&lt;x&gt; = 0.50016(11)
-sigma_x**2 = &lt;x**2&gt; - &lt;x&gt;**2 = 0.002506(15)
+&lt;x&gt; = 0.500056(59)
+sigma_x**2 = &lt;x**2&gt; - &lt;x&gt;**2 = 0.0024974(83)
 
 correlation matrix:
- [[ 1.          0.98054444  0.92734262]
- [ 0.98054444  1.          0.98207749]
- [ 0.92734262  0.98207749  1.        ]]
+ [[ 1.          0.98520462  0.94374824]
+ [ 0.98520462  1.          0.98591163]
+ [ 0.94374824  0.98591163  1.        ]]
 </pre></div>
 </div>
 <p>The estimates for the individual integrals are separately accurate to
-about ±0.1%,
+about ±0.07%,
 but the estimate for <img class="math" src="_images/math/3896a13c95ef36dd89adfcc73d27dfbdd258645a.png" alt="\langle x \rangle = I_1/I_0" style="vertical-align: -4px"/>
-is accurate to ±0.02%.
+is accurate to ±0.01%.
 This is almost an order
-of magnitude (7x) more accurate than we would obtain absent correlations.
+of magnitude (8x) more accurate than we would obtain absent correlations.
 The correlation matrix shows that there is 98% correlation between the
 statistical fluctuations in estimates for <img class="math" src="_images/math/1aac7189c0c3ecd30b3206945889849d09e7a988.png" alt="I_0" style="vertical-align: -3px"/> and <img class="math" src="_images/math/166a449596545aa6ed34c4808e99660683af1606.png" alt="I_1" style="vertical-align: -3px"/>,
 and so the bulk of these fluctuations cancel in the ratio.
 The estimate for the variance <img class="math" src="_images/math/580763986e6b9a5e3f106827b822d99870eb2a4c.png" alt="\sigma^2_x" style="vertical-align: -8px"/>
-is 45x more accurate than we would
+is 51x more accurate than we would
 have obtained had the integrals been evaluated separately. Both estimates
 are correct to within the quoted errors.</p>
 <p>The individual results are objects of type <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>, which
@@ -657,9 +657,52 @@ represent Gaussian random variables. Such objects have means
 also can be statistically correlated with other <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s.
 Such correlations are handled automatically by <code class="xref py py-mod docutils literal"><span class="pre">gvar</span></code> when
 <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s are combined with each other or with numbers in
-arithmetical expressions. (<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> requires that the <code class="xref py py-mod docutils literal"><span class="pre">gvar</span></code> module
-which can be installed using <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gvar</span></code> or downloaded from
-<a class="reference external" href="https://github.com/gplepage/gvar.git">https://github.com/gplepage/gvar.git</a>.)</p>
+arithmetical expressions. (Documentation for <code class="xref py py-mod docutils literal"><span class="pre">gvar</span></code> can be found
+at <a class="reference external" href="http://pythonhosted.org/gvar">http://pythonhosted.org/gvar</a> or with the source code
+at <a class="reference external" href="https://github.com/gplepage/gvar.git">https://github.com/gplepage/gvar.git</a>.)</p>
+<p>Integrands can return dictionaries instead of arrays. The example above,
+for example, can be rewritten as</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">gvar</span> <span class="kn">as</span> <span class="nn">gv</span>
+
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">200</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;1&#39;</span><span class="p">:</span><span class="n">f</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">:</span><span class="n">f</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;x**2&#39;</span><span class="p">:</span><span class="n">f</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">}</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+
+<span class="c"># adapt grid</span>
+<span class="n">training</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+
+<span class="c"># final analysis</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;Q = </span><span class="si">%.2f</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;&lt;x&gt; =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="s">&#39;1&#39;</span><span class="p">])</span>
+<span class="k">print</span><span class="p">(</span>
+    <span class="s">&#39;sigma_x**2 = &lt;x**2&gt; - &lt;x&gt;**2 =&#39;</span><span class="p">,</span>
+    <span class="n">result</span><span class="p">[</span><span class="s">&#39;x**2&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="s">&#39;1&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="s">&#39;1&#39;</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>which returns the following output:</p>
+<div class="highlight-python"><div class="highlight"><pre>{&#39;1&#39;: 0.00024677(17),&#39;x&#39;: 0.000123397(85),&#39;x**2&#39;: 0.000062322(45)}
+Q = 0.49
+
+&lt;x&gt; = 0.500056(59)
+sigma_x**2 = &lt;x**2&gt; - &lt;x&gt;**2 = 0.0024974(83)
+</pre></div>
+</div>
+<p>The result returned by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> is a dictionary using the same keys as the
+dictionary returned by the integrand. Using a dictionary, with descriptive
+keys, instead of an array can often make code more intelligible, and,
+therefore, easier to write  and maintain. Here the values in the integrand&#8217;s
+dictionary are all numbers; in general, values can be  either numbers or
+arrays (of any shape).</p>
 </div>
 <div class="section" id="faster-integrands">
 <h2>Faster Integrands<a class="headerlink" href="#faster-integrands" title="Permalink to this headline">¶</a></h2>
@@ -806,6 +849,9 @@ cdef class f_cython(vegas.BatchIntegrand):
 module <code class="docutils literal"><span class="pre">cython_integrand.pyx</span></code> to be compiled the first time
 it is called. The compiled code is stored and used in subsequent
 calls, so compilation occurs only once.</p>
+<p>Cython code can also link easily to compiled C or Fortran code,
+so integrands written in these languages can be used as well (and
+would be faster than pure Python). See Cython&#8217;s documentation.</p>
 <p>Batch mode is also a good idea for array-valued integrands.
 The code from the previous section could have been written as:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
@@ -828,10 +874,10 @@ The code from the previous section could have been written as:</p>
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 
 <span class="c"># adapt grid</span>
-<span class="n">training</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">training</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
 
 <span class="c"># final analysis</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;I[0] =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;  I[1] =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">&#39;  I[2] =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;Q = </span><span class="si">%.2f</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;&lt;x&gt; =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -842,10 +888,23 @@ The code from the previous section could have been written as:</p>
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">correlation matrix:</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">gv</span><span class="o">.</span><span class="n">evalcorr</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Note that the batch index (here <code class="docutils literal"><span class="pre">:</span></code>) always comes first.</p>
-<p>Cython code can also link easily to compiled C or Fortran code,
-so integrands written in these languages can be used as well (and
-would be faster than pure Python).</p>
+<p>Note that the batch index (here <code class="docutils literal"><span class="pre">:</span></code>) always comes first. An extra
+(first) index is also added to each value in the dictionary returned
+by a dictionary-valued batch integrand: e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
+
+<span class="nd">@vegas.batchintegrand</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">ans</span><span class="p">[</span><span class="s">&#39;1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">200</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+    <span class="n">ans</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ans</span><span class="p">[</span><span class="s">&#39;1&#39;</span><span class="p">]</span>
+    <span class="n">ans</span><span class="p">[</span><span class="s">&#39;x**2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ans</span><span class="p">[</span><span class="s">&#39;1&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ans</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="multiple-processors">
 <h2>Multiple Processors<a class="headerlink" href="#multiple-processors" title="Permalink to this headline">¶</a></h2>

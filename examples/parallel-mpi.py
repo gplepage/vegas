@@ -1,7 +1,7 @@
 import numpy as np
 import vegas
 
-def f(x): 
+def f(x):
     dim = 4
     N = 10
     ans = np.zeros(x.shape[0], np.double)
@@ -26,20 +26,19 @@ def main():
     # final results
     result = integ(fparallel, nitn=10, neval=1e3)
     if fparallel.rank == 0:
-        # result should be approximately 0.851
         print('result = %s    Q = %.2f' % (result, result.Q))
 
 if __name__ == '__main__':
     main()
 
 
-# Copyright (c) 2014 G. Peter Lepage. 
+# Copyright (c) 2014 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # any later version (see <http://www.gnu.org/licenses/>).
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the

@@ -1,18 +1,21 @@
-Version 3.0 ????
-=====================
+Version 3.0 - 2015-07-23
+=========================
 Starting with this version, vegas requires module gvar ('pip install gvar') in
 order to function. In the past it used a (very poor) substitute for gvar if
-that module was not installed. This kludge is not sustainable.
+that module was not installed. That kludge is not sustainable.
 
-- Integrand function in the past could return numbers or numpy arrays. Now
-  they can alternatively return dictionaries whose values are either numbers
+- Integrand functions in the past could return numbers or numpy arrays. Now
+  they can also return dictionaries whose values are either numbers
   or numpy arrays. This is useful in situations where multiple integrals are
   being done simultaneously since the keys can be used to document and  keep
   straight which integral is which. This should make code  easier to read and
   write.
 
-- Miscellaneous nternal changes to simplify the vegas code that handles
+- Miscellaneous internal changes to simplify the vegas code that handles
   integrands.
+
+- Switch to pip for installing and uninstalling. It is more robust than
+  the alternatives.
 
 Version 2.2.2 - 2014-11-25
 ==========================

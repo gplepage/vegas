@@ -27,8 +27,9 @@ import vegas
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 # GPL: 1st is the best production choice; 2nd is fast for use in development
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.pngmath']
-# extensions = ['sphinx.ext.autodoc', 'sphinx.ext.mathjax']  # much faster 
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.pngmath']
+
+# extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.mathjax']  # much faster
 pngmath_use_preview = True
 pngmath_latex_preamble = "\usepackage{arev}"
 pngmath_dvipng_args = ['-gamma 0.5' , '-D 100']

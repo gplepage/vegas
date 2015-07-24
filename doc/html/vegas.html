@@ -103,14 +103,18 @@ adapted. The integrator returns the weighted average of all
 (Monte Carlo) uncertainty in that estimate of the integral. The
 result is an object of type <a class="reference internal" href="#vegas.RAvg" title="vegas.RAvg"><code class="xref py py-class docutils literal"><span class="pre">RAvg</span></code></a> (which is derived
 from <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>).</p>
-<p>Integrands can be array-valued, in which case <code class="docutils literal"><span class="pre">f(x)</span></code>
-returns an array of values corresponding to different
-integrands. Also <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> can generate integration points
-in batches for integrands built from classes
-derived from <a class="reference internal" href="#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.BatchIntegrand</span></code></a>, or integrand
-functions decorated by <a class="reference internal" href="#vegas.batchintegrand" title="vegas.batchintegrand"><code class="xref py py-func docutils literal"><span class="pre">vegas.batchintegrand()</span></code></a>. Batch
-integrands are typically much faster, especially if they
-are coded in Cython.</p>
+<p>Integrands <code class="docutils literal"><span class="pre">f(x)</span></code> return numbers, arrays of numbers (any shape), or
+dictionaries whose values are numbers or arrays (any shape). Each number
+returned by an integrand corresponds to a different integrand. When
+arrays are returned, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> adapts to the first number
+in the flattened array. When dictionaries are returned,
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> adapts to the first number in the value corresponding to
+the first key.</p>
+<p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> can generate integration points in batches for integrands
+built from classes derived from <a class="reference internal" href="#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.BatchIntegrand</span></code></a>, or
+integrand functions decorated by <a class="reference internal" href="#vegas.batchintegrand" title="vegas.batchintegrand"><code class="xref py py-func docutils literal"><span class="pre">vegas.batchintegrand()</span></code></a>. Batch
+integrands are typically much faster, especially if they are coded in
+Cython.</p>
 <p><a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></code></a>s have a large number of parameters but the
 only ones that most people will care about are: the
 number <code class="docutils literal"><span class="pre">nitn</span></code> of iterations of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> algorithm;
@@ -122,7 +126,7 @@ be unstable (e.g., with very peaky integrands). Setting parameter
 since it causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> to print (on <code class="docutils literal"><span class="pre">sys.stdout</span></code>)
 intermediate results from each iteration, as they are
 produced. This helps when each iteration takes a long time
-to complete (e.g., an hour) because it allows you to
+to complete (e.g., longer than an hour) because it allows you to
 monitor progress as it is being made (or not).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -279,10 +283,15 @@ integrands: e.g.,</p>
     <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
 </pre></div>
 </div>
-<p>The return arrays can have any shape. Array-valued
-integrands are useful for integrands that
-are closely related, and can lead to
-substantial reductions in the errors for
+<p>The return arrays can have any shape. Dictionary-valued
+integrands are also supported: e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]]}</span>
+</pre></div>
+</div>
+<p>Integrand functions that return arrays or dictionaries
+are useful for multiple integrands that are closely related,
+and can lead to substantial reductions in the errors for
 ratios or differences of the results.</p>
 <p>It is usually much faster to use <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> in batch
 mode, where integration points are presented to the
@@ -683,6 +692,8 @@ omitted (or negative).</li>
 <dd><p>Return <code class="docutils literal"><span class="pre">x</span></code> values corresponding to <code class="docutils literal"><span class="pre">y</span></code>.</p>
 <p><code class="docutils literal"><span class="pre">y</span></code> can be a single <code class="docutils literal"><span class="pre">dim</span></code>-dimensional point, or it
 can be an array <code class="docutils literal"><span class="pre">y[i,j,</span> <span class="pre">...,</span> <span class="pre">d]</span></code> of such points (<code class="docutils literal"><span class="pre">d=0..dim-1</span></code>).</p>
+<p>If <code class="docutils literal"><span class="pre">y=None</span></code> (default), <code class="docutils literal"><span class="pre">y</span></code> is set equal to a (uniform) random point
+in the volume.</p>
 </dd></dl>
 
 <dl class="method">
@@ -778,7 +789,7 @@ in the map grid for each direction. Parameter
 <dl class="class">
 <dt id="vegas.RAvg">
 <em class="property">class </em><code class="descclassname">vegas.</code><code class="descname">RAvg</code><a class="headerlink" href="#vegas.RAvg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Running average of Monte Carlo estimates.</p>
+<dd><p>Running average of scalar-valued Monte Carlo estimates.</p>
 <p>This class accumulates independent Monte Carlo
 estimates (e.g., of an integral) and combines
 them into a single average. It
@@ -899,8 +910,7 @@ functions take a <code class="xref py py-mod docutils literal"><span class="pre"
 as an argument, where <code class="docutils literal"><span class="pre">i=0...</span></code> labels the integration point and
 <code class="docutils literal"><span class="pre">d=0...</span></code> labels direction, and return an array <code class="docutils literal"><span class="pre">f[i]</span></code> of
 integrand values (or arrays of integrand values) for the corresponding
-points. The meaning of <code class="docutils literal"><span class="pre">fcn(x)</span></code> is unchanged by the decorator, but
-the type of <code class="docutils literal"><span class="pre">fcn</span></code> is changed.</p>
+points. The meaning of <code class="docutils literal"><span class="pre">fcn(x)</span></code> is unchanged by the decorator.</p>
 <p>An example is</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>

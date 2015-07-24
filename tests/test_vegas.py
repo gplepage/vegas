@@ -243,13 +243,13 @@ class TestRAvg(unittest.TestCase):
         rbig = gv.raniter(xbig, N)
         xsmall = gv.gvar(mean, cov / 10.)
         rsmall = gv.raniter(xsmall, N)
-        ravg = RAvgArray(2)
+        ravg = RAvgArray((1, 2))
         for rb, rs in zip(rbig, rsmall):
-            ravg.add(gv.gvar(rb, cov))
-            ravg.add(gv.gvar(rs, cov / 10.))
-        np_assert_allclose(gv.evalcov(ravg), cov / (10. + 1.) / N)
+            ravg.add([gv.gvar(rb, cov)])
+            ravg.add([gv.gvar(rs, cov / 10.)])
+        np_assert_allclose(gv.evalcov(ravg.flat), cov / (10. + 1.) / N)
         for i in range(2):
-            self.assertLess(abs(mean[i] - ravg[i].mean), 5 * ravg[i].sdev)
+            self.assertLess(abs(mean[i] - ravg[0, i].mean), 5 * ravg[0, i].sdev)
         self.assertEqual(ravg.dof, 4 * N - 2)
         self.assertGreater(ravg.Q, 1e-3)
 
@@ -262,29 +262,29 @@ class TestRAvg(unittest.TestCase):
         N = 30
         x = gv.gvar(mean, cov)
         r = gv.raniter(x, N)
-        ravg = RAvgArray(2, weighted=False)
+        ravg = RAvgArray((1, 2), weighted=False)
         for ri in r:
-            ravg.add(gv.gvar(ri, cov))
-        np_assert_allclose(gv.evalcov(ravg), cov / N)
+            ravg.add([gv.gvar(ri, cov)])
+        np_assert_allclose(gv.evalcov(ravg.flat), cov / N)
         for i in range(2):
-            self.assertLess(abs(mean[i] - ravg[i].mean), 5 * ravg[i].sdev)
+            self.assertLess(abs(mean[i] - ravg[0, i].mean), 5 * ravg[0, i].sdev)
         self.assertEqual(ravg.dof, 2 * N - 2)
         self.assertGreater(ravg.Q, 1e-3)
 
     def test_array(self):
         " RAvgArray "
-        a = RAvgArray((2,))
-        a.add([gvar.gvar(1, 1), gvar.gvar(10,10)])
-        a.add([gvar.gvar(2, 2), gvar.gvar(20,20)])
-        a.add([gvar.gvar(3, 3), gvar.gvar(30,30)])
-        self.assertEqual(a.shape, (2,))
-        np_assert_allclose(a[0].mean, 1.346938775510204)
-        np_assert_allclose(a[0].sdev, 0.8571428571428571)
+        a = RAvgArray((1, 2))
+        a.add([[gvar.gvar(1, 1), gvar.gvar(10,10)]])
+        a.add([[gvar.gvar(2, 2), gvar.gvar(20,20)]])
+        a.add([[gvar.gvar(3, 3), gvar.gvar(30,30)]])
+        self.assertEqual(a.shape, (1, 2))
+        np_assert_allclose(a[0, 0].mean, 1.346938775510204)
+        np_assert_allclose(a[0, 0].sdev, 0.8571428571428571)
         self.assertEqual(a.dof, 4)
         np_assert_allclose(a.chi2, 2*0.5306122448979592)
         np_assert_allclose(a.Q, 0.900374555485)
-        self.assertEqual(str(a[0]), '1.35(86)')
-        self.assertEqual(str(a[1]), '13.5(8.6)')
+        self.assertEqual(str(a[0, 0]), '1.35(86)')
+        self.assertEqual(str(a[0, 1]), '13.5(8.6)')
         s = [
             "itn   integral        wgt average     chi2/dof        Q",
             "-------------------------------------------------------",
@@ -297,15 +297,15 @@ class TestRAvg(unittest.TestCase):
 
     def test_ravgdict(self):
         " RAvgDict "
-        a = RAvgDict(dict(s=1.0, a=[2.0, 3.0]))
-        a.add(dict(s=gv.gvar(1, 1), a=[gvar.gvar(1, 1), gvar.gvar(10,10)]))
-        a.add(dict(s=gv.gvar(2, 2), a=[gvar.gvar(2, 2), gvar.gvar(20,20)]))
-        a.add(dict(s=gv.gvar(3, 3), a=[gvar.gvar(3, 3), gvar.gvar(30,30)]))
-        self.assertEqual(a['a'].shape, (2,))
-        np_assert_allclose(a['a'][0].mean, 1.346938775510204)
-        np_assert_allclose(a['a'][0].sdev, 0.8571428571428571)
-        self.assertEqual(str(a['a'][0]), '1.35(86)')
-        self.assertEqual(str(a['a'][1]), '13.5(8.6)')
+        a = RAvgDict(dict(s=1.0, a=[[2.0, 3.0]]))
+        a.add(dict(s=gv.gvar(1, 1), a=[[gvar.gvar(1, 1), gvar.gvar(10,10)]]))
+        a.add(dict(s=gv.gvar(2, 2), a=[[gvar.gvar(2, 2), gvar.gvar(20,20)]]))
+        a.add(dict(s=gv.gvar(3, 3), a=[[gvar.gvar(3, 3), gvar.gvar(30,30)]]))
+        self.assertEqual(a['a'].shape, (1, 2))
+        np_assert_allclose(a['a'][0, 0].mean, 1.346938775510204)
+        np_assert_allclose(a['a'][0, 0].sdev, 0.8571428571428571)
+        self.assertEqual(str(a['a'][0, 0]), '1.35(86)')
+        self.assertEqual(str(a['a'][0, 1]), '13.5(8.6)')
         np_assert_allclose(a['s'].mean, 1.346938775510204)
         np_assert_allclose(a['s'].sdev, 0.8571428571428571)
         self.assertEqual(str(a['s']), '1.35(86)')
@@ -334,21 +334,21 @@ class TestRAvg(unittest.TestCase):
         x_a = gv.gvar(mean_a, cov_a)
         N = 30
         r_a = gv.raniter(x_a, N)
-        ravg = RAvgDict(dict(scalar=1.0, array=[2., 3.]), weighted=False)
+        ravg = RAvgDict(dict(scalar=1.0, array=[[2., 3.]]), weighted=False)
         for ri in r_a:
             ravg.add(dict(
-                scalar=gv.gvar(x_s(), sdev_s), array=gv.gvar(ri, cov_a)
+                scalar=gv.gvar(x_s(), sdev_s), array=[gv.gvar(ri, cov_a)]
                 ))
         np_assert_allclose( ravg['scalar'].sdev, x_s.sdev / (N ** 0.5))
         self.assertLess(
             abs(ravg['scalar'].mean - mean_s),
             5 * ravg['scalar'].sdev
             )
-        np_assert_allclose(gv.evalcov(ravg['array']), cov_a / N)
+        np_assert_allclose(gv.evalcov(ravg['array'].flat), cov_a / N)
         for i in range(2):
             self.assertLess(
-                abs(mean_a[i] - ravg['array'][i].mean),
-                5 * ravg['array'][i].sdev
+                abs(mean_a[i] - ravg['array'][0, i].mean),
+                5 * ravg['array'][0, i].sdev
                 )
         self.assertEqual(ravg.dof, 2 * N - 2 + N - 1)
         self.assertGreater(ravg.Q, 1e-3)
@@ -369,13 +369,14 @@ class TestRAvg(unittest.TestCase):
         xsmall_a = gv.gvar(mean_a, cov_a / 10.)
         rsmall_a = gv.raniter(xsmall_a, N)
 
-        ravg = RAvgDict(dict(scalar=1.0, array=[2., 3.]))
+        ravg = RAvgDict(dict(scalar=1.0, array=[[2., 3.]]))
         for rb, rw in zip(rbig_a, rsmall_a):
             ravg.add(dict(
-                scalar=gv.gvar(xbig_s(), 1.), array=gv.gvar(rb, cov_a)
+                scalar=gv.gvar(xbig_s(), 1.), array=[gv.gvar(rb, cov_a)]
                 ))
             ravg.add(dict(
-                scalar=gv.gvar(xsmall_s(), 0.1), array=gv.gvar(rw, cov_a / 10.)
+                scalar=gv.gvar(xsmall_s(), 0.1),
+                array=[gv.gvar(rw, cov_a / 10.)]
                 ))
         np_assert_allclose(
             ravg['scalar'].sdev,
@@ -384,11 +385,11 @@ class TestRAvg(unittest.TestCase):
         self.assertLess(
             abs(ravg['scalar'].mean - mean_s), 5 * ravg['scalar'].sdev
             )
-        np_assert_allclose(gv.evalcov(ravg['array']), cov_a / (10. + 1.) / N)
+        np_assert_allclose(gv.evalcov(ravg['array'].flat), cov_a / (10. + 1.) / N)
         for i in range(2):
             self.assertLess(
-                abs(mean_a[i] - ravg['array'][i].mean),
-                5 * ravg['array'][i].sdev
+                abs(mean_a[i] - ravg['array'][0, i].mean),
+                5 * ravg['array'][0, i].sdev
                 )
         self.assertEqual(ravg.dof, 4 * N - 2 + 2 * N - 1)
         self.assertGreater(ravg.Q, 1e-3)
@@ -544,6 +545,20 @@ class TestIntegrator(unittest.TestCase):
         self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
         self.assertGreater(r.Q, 1e-3)
         self.assertLess(r.sdev, 1e-3)
+        @batchintegrand
+        def f_batch(x):
+            f = np.empty(x.shape[0], float)
+            for i in range(f.shape[0]):
+                f[i] = (
+                    math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
+                    ) / math.pi ** 2
+            return f
+        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
+        r = I(f_batch, neval=10000)
+        self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
+        self.assertGreater(r.Q, 1e-3)
+        self.assertLess(r.sdev, 1e-3)
+
 
     def test_min_sigf(self):
         " test minimize_mem=True mode "
@@ -669,22 +684,21 @@ class TestIntegrator(unittest.TestCase):
             for d in range(4):
                 dx2 += (x[d] - 0.5) ** 2
             f = math.exp(-100. * dx2)
-            return [f, f * x[0]]
+            return [[f, f * x[0]]]
         class f_multi_v(BatchIntegrand):
             def __call__(self, x):
                 x = np.asarray(x)
-                f = np.empty((x.shape[0], 2), float)
+                f = np.empty((x.shape[0], 1, 2), float)
                 dx2 = 0.
                 for d in range(4):
                     dx2 += (x[:, d] - 0.5) ** 2
-                f[:, 0] = np.exp(-100. * dx2)
-                f[:, 1] = x[:, 0] * f[:, 0]
+                f[:, 0, 0] = np.exp(-100. * dx2)
+                f[:, 0, 1] = x[:, 0] * f[:, 0, 0]
                 return f
         I = Integrator(4 * [[0, 1]])
         warmup = I(f_s, neval=1000, nitn=10)
-        # if have_gvar:
         for r in [I(f_multi_v(), nitn=10), I(f_multi_s, nitn=10)]:
-            ratio = r[1] / r[0]
+            ratio = r[0, 1] / r[0, 0]
             self.assertLess(abs(ratio.mean - 0.5), 5 * ratio.sdev)
             self.assertLess(ratio.sdev, 1e-2)
 
@@ -706,35 +720,35 @@ class TestIntegrator(unittest.TestCase):
     def test_dictintegrand(self):
         " dictionary-valued integrand "
         def f(x):
-            return dict(a=x[0] + x[1], b=[x[0] ** 2 * 3., x[1] ** 3 * 4.])
+            return dict(a=x[0] + x[1], b=[[x[0] ** 2 * 3., x[1] ** 3 * 4.]])
         I = Integrator(2 * [[0, 1]])
         r = I(f, neval=1000)
         self.assertTrue(abs(r['a'].mean - 1.) < 5. * r['a'].sdev)
-        self.assertTrue(abs(r['b'][0].mean - 1.) < 5. * r['b'][0].sdev)
-        self.assertTrue(abs(r['b'][1].mean - 1.) < 5. * r['b'][1].sdev)
+        self.assertTrue(abs(r['b'][0, 0].mean - 1.) < 5. * r['b'][0, 0].sdev)
+        self.assertTrue(abs(r['b'][0, 1].mean - 1.) < 5. * r['b'][0, 1].sdev)
         self.assertTrue(r['a'].sdev < 1e-2)
-        self.assertTrue(r['b'][0].sdev < 1e-2)
-        self.assertTrue(r['b'][1].sdev < 1e-2)
+        self.assertTrue(r['b'][0, 0].sdev < 1e-2)
+        self.assertTrue(r['b'][0, 1].sdev < 1e-2)
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.dof == 27)
         @batchintegrand
         def f(x):
             ans = dict(
                 a=np.empty(x.shape[0], float),
-                b=np.empty((x.shape[0], 2), float)
+                b=np.empty((x.shape[0], 1, 2), float)
                 )
             ans['a'] = x[:, 0] + x[:, 1]
-            ans['b'][:, 0] = x[:, 0] ** 2 * 3.
-            ans['b'][:, 1] = x[:, 1] ** 3 * 4.
+            ans['b'][:, 0, 0] = x[:, 0] ** 2 * 3.
+            ans['b'][:, 0, 1] = x[:, 1] ** 3 * 4.
             return ans
         I = Integrator(2 * [[0, 1]])
         r = I(f, neval=1000)
         self.assertTrue(abs(r['a'].mean - 1.) < 5. * r['a'].sdev)
-        self.assertTrue(abs(r['b'][0].mean - 1.) < 5. * r['b'][0].sdev)
-        self.assertTrue(abs(r['b'][1].mean - 1.) < 5. * r['b'][1].sdev)
+        self.assertTrue(abs(r['b'][0, 0].mean - 1.) < 5. * r['b'][0, 0].sdev)
+        self.assertTrue(abs(r['b'][0, 1].mean - 1.) < 5. * r['b'][0, 1].sdev)
         self.assertTrue(r['a'].sdev < 1e-2)
-        self.assertTrue(r['b'][0].sdev < 1e-2)
-        self.assertTrue(r['b'][1].sdev < 1e-2)
+        self.assertTrue(r['b'][0, 0].sdev < 1e-2)
+        self.assertTrue(r['b'][0, 1].sdev < 1e-2)
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.dof == 27)
 
@@ -769,73 +783,47 @@ class TestMPIintegrand(unittest.TestCase):
             return
         @MPIintegrand
         def fcn(x):
-            f = np.empty((x.shape[0],2), float)
+            f = np.empty((x.shape[0], 1, 2), float)
             for i in range(f.shape[0]):
-                f[i, 0] = (
+                f[i, 0, 0] = (
                     math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
                     ) / math.pi ** 2
-                f[i, 1] = (
+                f[i, 0, 1] = (
                     math.sin(x[i, 0]) ** 2 - math.cos(x[i, 1]) ** 2
                     ) / math.pi ** 2
             return f
+        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
+        r = I(fcn, neval=10000)
+        self.assertLess(abs(r[0, 0].mean - 1.), 5 * r[0, 0].sdev)
+        self.assertLess(r[0, 0].sdev, 1e-3)
+        self.assertLess(abs(r[0, 1].mean - 0.), 5 * r[0, 0].sdev)
+        self.assertLess(r[0, 1].sdev, 1e-3)
+        self.assertGreater(r.Q, 1e-3)
+
+    def test_dict(self):
+        " integrate dict-valued MPIintegrand  "
+        if mpi4py is None:
+            return
+        @MPIintegrand
+        def fcn(x):
+            f = np.empty((x.shape[0], 1, 2), float)
+            for i in range(f.shape[0]):
+                f[i, 0, 0] = (
+                    math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
+                    ) / math.pi ** 2
+                f[i, 0, 1] = (
+                    math.sin(x[i, 0]) ** 2 - math.cos(x[i, 1]) ** 2
+                    ) / math.pi ** 2
+            return {0:f[:, 0, 0], 1:f[:, 0, 1], 'a':f}
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
         r = I(fcn, neval=10000)
         self.assertLess(abs(r[0].mean - 1.), 5 * r[0].sdev)
         self.assertLess(r[0].sdev, 1e-3)
         self.assertLess(abs(r[1].mean - 0.), 5 * r[0].sdev)
         self.assertLess(r[1].sdev, 1e-3)
+        for i in [0, 1]:
+            self.assertEqual(r['a'][0, i].fmt(), r[i].fmt())
         self.assertGreater(r.Q, 1e-3)
-
-class Testgvar(unittest.TestCase):
-    """ tests gvar and GVar since might be the vegas substitutes if no gvar """
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_init(self):
-        x = gvar.gvar(1., 3.)
-        self.assertEqual(x.mean, 1.)
-        self.assertEqual(x.sdev, 3.)
-
-    def test_math(self):
-        " test math involving GVars "
-        x = gvar.gvar(2., 5.)
-        cases = [
-            (x + 10., 12., 5.),
-            (10 + x, 12. , 5.),
-            (+x, 2., 5.),
-            (x - 6., -4., 5.),
-            (6 - x, 4., 5.),
-            (-x, -2., 5.),
-            (3 * x, 6., 15.),
-            (x * 3., 6., 15.),
-            (x / 4., 0.5, 1.25),
-            (10. / x, 5., 12.5),
-            (x ** 2, 4., 20.),
-            (2 ** x, 4., math.log(2) * 20.),
-            (np.log(x), math.log(2.), 2.5),
-            (np.exp(x), math.exp(2.), math.exp(2.) * 5.),
-            (np.exp(np.log(x)), 2., 5.),
-            (np.sqrt(x), math.sqrt(2.), math.sqrt(2.) * 1.25),
-            (np.sqrt(x ** 2), 2., 5.),
-            ]
-        for y, ymean, ysdev in cases:
-            np_assert_allclose(y.mean, ymean)
-            np_assert_allclose(y.sdev, ysdev)
-
-    def test_gammaQ(self):
-        " gammaQ(a, x) "
-        cases = [
-            (2.371, 5.243, 0.05371580082389009, 0.9266599665892222),
-            (20.12, 20.3, 0.4544782602230986, 0.4864172139106905),
-            (100.1, 105.2, 0.29649013488390663, 0.6818457585776236),
-            (1004., 1006., 0.4706659307021259, 0.5209695379094582),
-            ]
-        for a, x, gax, gxa in cases:
-            np_assert_allclose(gax, gvar.gammaQ(a, x), rtol=0.01)
-            np_assert_allclose(gxa, gvar.gammaQ(x, a), rtol=0.01)
 
 if __name__ == '__main__':
     unittest.main()
