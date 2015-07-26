@@ -25,8 +25,8 @@ To install:
 	    and matplotlib as well.
 	    (https://pypi.python.org/pypi/pip)
 
-	The first, second and third of these libraries are often included
-	in 3rd-party distributions of python.
+	All other the third of these libraries are often included in 3rd-party
+	distributions of python.
 
 	The vegas code works for Python 2.7 and 3.3-3.4. It has not been tested
 	for earlier versions.
@@ -74,8 +74,7 @@ To install:
 
 To uninstall:
 
-1. 'make uninstall' (probably) uninstalls most of what was installed. It
-    uses pip uninstall.
+1. 'make uninstall' uninstalls what was installed. It uses pip uninstall.
 
 
 Problems:
