@@ -1,3 +1,18 @@
+Version 3.0.1 - ????
+========================
+
+- Corrected small bugs in RAvg.summary(), RAvgArray.summary() and
+  RAvgDict.summary(). Summary tables give weighted averages when
+  weighted=True, unweighted averages otherwise. summary() has an
+  optional argument (weighted) to overwrite the default setting in
+  the RAvg, etc. Summary tables used to always list weighted averages,
+  whether or not weighted=True.
+
+- Corrected small bug in code for batch integrands that return dictionaries.
+  vegas is supposed to adapt to the first entry in dictionary-valued
+  functions, where 'first' is defined to be the first entry in dictionary[k]
+  where k is the first key in dictionary.keys().
+
 Version 3.0 - 2015-07-23
 =========================
 Starting with this version, vegas requires module gvar ('pip install gvar') in

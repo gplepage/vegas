@@ -68,7 +68,7 @@ clean:
 	rm -rf __pycache__
 	rm -f *.so *.tmp *.pyc *.prof *.c .coverage doc.zip
 	rm -f -r dist
-	rm -f src/vegas/*.c
+	rm -f src/vegas/*.c examples/*.c
 	# $(MAKE) -C doc/source clean
 	# $(MAKE) -C tests clean
 	# $(MAKE) -C examples clean

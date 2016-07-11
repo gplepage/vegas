@@ -76,8 +76,8 @@ def V_aho(x):
 def analyze_theory(V, x0list=[], plot=False):
     """ Extract ground-state energy E0 and psi**2 for potential V. """
     # initialize path integral
-    T = 4
-    ndT = 8         # use larger ndT to reduce discretization error (goes like 1/ndT**2)
+    T = 4.
+    ndT = 8.         # use larger ndT to reduce discretization error (goes like 1/ndT**2)
     neval = 3e5   # should probably use more evaluations (10x?)
     nitn = 6
     alpha = 0.1     # damp adaptation

@@ -905,9 +905,9 @@ cdef class Integrator(object):
         if ns < 1:
             ns = 1
         elif (
-            self.beta > 0
-            and ns ** self.dim > self.max_nhcube
-            and not self.minimize_mem
+            # self.beta > 0 and
+            ns ** self.dim > self.max_nhcube and
+            not self.minimize_mem
             ):
             ns = int(self.max_nhcube ** (1. / self.dim))
         if ni < 1:
@@ -1542,9 +1542,11 @@ class RAvg(gvar.GVar):
                 ).internaldata)
 
 
-    def summary(self):
+    def summary(self, weighted=None):
         """ Assemble summary of independent results into a string. """
-        acc = RAvg()
+        if weighted is None:
+            weighted = self.weighted
+        acc = RAvg(weighted=weighted)
         linedata = []
         for i, res in enumerate(self.itn_results):
             acc.add(res)
@@ -1566,7 +1568,10 @@ class RAvg(gvar.GVar):
                 if len(d) > nchar[i]:
                     nchar[i] = len(d)
         fmt = '%%%ds   %%-%ds %%-%ds %%%ds %%%ds\n' % tuple(nchar)
-        ans = fmt % ('itn', 'integral', 'wgt average', 'chi2/dof', 'Q')
+        if weighted:
+            ans = fmt % ('itn', 'integral', 'wgt average', 'chi2/dof', 'Q')
+        else:
+            ans = fmt % ('itn', 'integral', 'average', 'chi2/dof', 'Q')
         ans += len(ans[:-1]) * '-' + '\n'
         for data in linedata:
             ans += fmt % data
@@ -1590,6 +1595,7 @@ class RAvgDict(gvar.BufferDict):
         self.rarray = RAvgArray(shape=(self.size,), weighted=weighted)
         self.buf = numpy.array(self.rarray)
         self.itn_results = []
+        self.weighted = weighted
 
     def add(self, g):
         if isinstance(g, gvar.BufferDict):
@@ -1608,7 +1614,7 @@ class RAvgDict(gvar.BufferDict):
         self.buf = numpy.array(self.rarray)
 
     def summary(self):
-        return self.rarray.summary()
+        return self.rarray.summary(weighted=self.weighted)
 
     def _chi2(self):
         return self.rarray.chi2
@@ -1756,9 +1762,11 @@ class RAvgArray(numpy.ndarray):
             cov = self._cov / (self._n ** 2)
             self[:] = gvar.gvar(mean, cov).reshape(self.shape)
 
-    def summary(self):
+    def summary(self, weighted=None):
         """ Assemble summary of independent results into a string. """
-        acc = RAvgArray(self.shape)
+        if weighted is None:
+            weighted = self.weighted
+        acc = RAvgArray(self.shape, weighted=weighted)
 
         linedata = []
         for i, res in enumerate(self.itn_results):
@@ -1781,7 +1789,10 @@ class RAvgArray(numpy.ndarray):
                 if len(d) > nchar[i]:
                     nchar[i] = len(d)
         fmt = '%%%ds   %%-%ds %%-%ds %%%ds %%%ds\n' % tuple(nchar)
-        ans = fmt % ('itn', 'integral', 'wgt average', 'chi2/dof', 'Q')
+        if weighted:
+            ans = fmt % ('itn', 'integral', 'wgt average', 'chi2/dof', 'Q')
+        else:
+            ans = fmt % ('itn', 'integral', 'average', 'chi2/dof', 'Q')
         ans += len(ans[:-1]) * '-' + '\n'
         for data in linedata:
             ans += fmt % data
@@ -1996,8 +2007,10 @@ cdef class _BatchIntegrand_from_BatchDict(object):
     def __init__(self, fcn, bdict):
         self.fcn = fcn
         self.size = bdict.size
-        self.slice = {k:bdict.slice_shape(k).slice for k in bdict}
-        self.shape = {k:bdict.slice_shape(k).shape for k in bdict}
+        self.slice = collections.OrderedDict()
+        self.shape = collections.OrderedDict()
+        for k in bdict:
+            self.slice[k], self.shape[k] = bdict.slice_shape(k)
 
     def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
         cdef INT_TYPE i

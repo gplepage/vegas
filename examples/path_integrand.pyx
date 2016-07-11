@@ -13,6 +13,7 @@ cimport vegas
 # import exp(), tan() from C
 from libc.math cimport exp, tan
 
+import collections
 import numpy as np
 import vegas
 
@@ -132,8 +133,8 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
                     )
                 f[i, j] = (jac if j == 0 else jac_x0) * exp(-S)
         # repackage as dictionary
-        ans = {
-            'exp(-E0*T)':f[:, 0], 'exp(-E0*T) * psi(x0)**2':f[:,1:]
-            }
+        ans = collections.OrderedDict()
+        ans['exp(-E0*T)'] = f[:, 0]
+        ans['exp(-E0*T) * psi(x0)**2'] = f[:,1:]
         return ans
 
