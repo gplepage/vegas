@@ -4,10 +4,10 @@
 .. |Integrator| replace:: :class:`vegas.Integrator`
 .. |AdaptiveMap| replace:: :class:`vegas.AdaptiveMap`
 .. |vegas| replace:: :mod:`vegas`
-.. |WAvg| replace:: :class:`vegas.RAvg`
+.. |RAvg| replace:: :class:`vegas.RAvg`
 .. |chi2| replace:: :math:`\chi^2`
-.. |x| replace:: x 
-.. |y| replace:: y 
+.. |x| replace:: x
+.. |y| replace:: y
 
 .. moduleauthor:: G. Peter Lepage <g.p.lepage@cornell.edu>
 
@@ -25,15 +25,18 @@ The key Python objects supported by the |vegas| module are:
 
    * |AdaptiveMap| --- an object describing the remappings used by |vegas|.
 
-   * |WAvg| --- an object describing the result of a |vegas| integration. 
+   * |RAvg| --- an object describing the result of a |vegas| integration.
      |vegas| returns the weighted average of the integral estimates
-     from each |vegas| iteration as an object of class |WAvg|. These are 
-     Gaussian random variables --- that is, they have a 
+     from each |vegas| iteration as an object of class |RAvg|. These are
+     Gaussian random variables --- that is, they have a
      mean and a standard deviation --- but also contain information about the
      iterations |vegas| used in generating the result.
 
-   * :class:`vegas.RAvgArray` --- an array version of |WAvg| used when
+   * :class:`vegas.RAvgArray` --- an array version of |RAvg| used when
      the integrand is array-valued.
+
+   * :class:`vegas.RAvgDict` --- a dictionary version of |RAvg| used when
+     the integrand is dictionary-valued.
 
 These are described in detail below.
 
@@ -43,7 +46,7 @@ Integrator Objects
 The central component of the |vegas| package is the integrator class:
 
 .. autoclass:: vegas.Integrator
-    
+
     |Integrator| objects have attributes for each of these parameters.
     In addition they have the following methods:
 
@@ -61,7 +64,7 @@ The central component of the |vegas| package is the integrator class:
 AdaptiveMap Objects
 ---------------------
 |vegas|’s remapping of the integration variables is handled
-by a :class:`vegas.AdaptiveMap` object, which maps the original 
+by a :class:`vegas.AdaptiveMap` object, which maps the original
 integration variables |x| into new variables |y| in a unit hypercube.
 Each direction has its own map specified by a grid in |x| space:
 
@@ -73,8 +76,8 @@ Each direction has its own map specified by a grid in |x| space:
         \cdots \\
         x_N &= x_{N-1} + \Delta x_{N-1} = b
 
-where :math:`a` and :math:`b` are the limits of integration. 
-The grid specifies the transformation function at the points 
+where :math:`a` and :math:`b` are the limits of integration.
+The grid specifies the transformation function at the points
 :math:`y=i/N` for :math:`i=0,1\ldots N`:
 
     .. math::
@@ -84,12 +87,12 @@ The grid specifies the transformation function at the points
 Linear interpolation is used between those points. The Jacobian
 for this transformation is:
 
-    .. math:: 
+    .. math::
 
         J(y) = J_i = N \Delta x_i
 
 |vegas| adjusts the increments sizes to optimize its Monte Carlo
-estimates of the integral. This involves training the grid. To 
+estimates of the integral. This involves training the grid. To
 illustrate how this is done with |AdaptiveMap|\s consider a simple
 two dimensional integral over a unit hypercube with integrand::
 
@@ -98,8 +101,8 @@ two dimensional integral over a unit hypercube with integrand::
 
 We want to create a grid that optimizes uniform Monte Carlo estimates
 of the integral in |y| space. We do this by sampling the integrand
-at a large number ``ny`` of random points ``y[j, d]``, where ``j=0...ny-1`` 
-and ``d=0,1``, uniformly distributed throughout the integration 
+at a large number ``ny`` of random points ``y[j, d]``, where ``j=0...ny-1``
+and ``d=0,1``, uniformly distributed throughout the integration
 volume in |y| space. These samples be used to train the grid
 using the following code::
 
@@ -133,27 +136,27 @@ using the following code::
       print('iteration %d:' % itn)
       print(m.settings())
 
-In each of the 5 iterations, the |AdaptiveMap| adjusts the 
-map, making increments smaller where ``f2`` is larger and 
-larger where ``f2`` is smaller. 
-The map converges after only 2 or 3 iterations, as 
+In each of the 5 iterations, the |AdaptiveMap| adjusts the
+map, making increments smaller where ``f2`` is larger and
+larger where ``f2`` is smaller.
+The map converges after only 2 or 3 iterations, as
 is clear from the output:
 
 .. literalinclude:: eg2a.out
 
-The grid increments along direction 0 shrink at larger 
-values ``x[0]``, varying as ``1/x[0]``. Along direction 1 
+The grid increments along direction 0 shrink at larger
+values ``x[0]``, varying as ``1/x[0]``. Along direction 1
 the increments shrink more quickly varying like ``1/x[1]**2``.
 
 |vegas| samples the integrand in order to estimate the integral.
-It uses those same samples to train its |AdaptiveMap| in this 
+It uses those same samples to train its |AdaptiveMap| in this
 fashion, for use in subsequent iterations of the algorithm.
 
 .. autoclass:: vegas.AdaptiveMap
 
    .. autoattribute:: dim
 
-   .. autoattribute:: ninc 
+   .. autoattribute:: ninc
 
    .. attribute:: grid
 
@@ -194,7 +197,7 @@ Other Objects and Functions
    .. attribute:: sdev
 
       The standard deviation of the weighted average.
-    
+
    .. autoattribute:: chi2
 
    .. autoattribute:: dof
@@ -210,7 +213,23 @@ Other Objects and Functions
    .. automethod:: summary()
 
 .. autoclass:: vegas.RAvgArray
-    
+
+   .. autoattribute:: chi2
+
+   .. autoattribute:: dof
+
+   .. autoattribute:: Q
+
+   .. attribute:: itn_results
+
+      A list of the results from each iteration.
+
+   .. automethod:: add(g)
+
+   .. automethod:: summary()
+
+.. autoclass:: vegas.RAvgDict
+
    .. autoattribute:: chi2
 
    .. autoattribute:: dof

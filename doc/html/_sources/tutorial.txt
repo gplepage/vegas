@@ -459,12 +459,9 @@ There are several things to note here:
 
     The lack of systematic biases is *not* a strong reason for turning
     off adaptation, however, since the biases are
-    usually negligible (see above). Also, again,
-    errors tend to fall faster if the number of evaluations per iteration
-    ``neval`` is increased rather than the number of iterations. Finally
-    in practice it is difficult to know precisely when |vegas| is
-    finished adapting. One often finds (modest) continued improvement after
-    the training step, leading to more accurate final results.
+    usually negligible (see above). The most important reason is the
+    first: stability. It is particularly relevant if the number of
+    integrand evaluations ``neval`` is small for the integrand.
 
     Training the integrator and then setting ``adapt=False`` for the
     final results works best if the number of evaluations per iteration
@@ -604,8 +601,8 @@ which returns the following output:
 .. literalinclude:: eg3b.out
 
 The result returned by |vegas| is a dictionary using the same keys as the
-dictionary returned by the integrand. Using a dictionary, with descriptive
-keys, instead of an array can often make code more intelligible, and,
+dictionary returned by the integrand. Using a dictionary with descriptive
+keys, instead of an array, can often make code more intelligible, and,
 therefore, easier to write  and maintain. Here the values in the integrand's
 dictionary are all numbers; in general, values can be  either numbers or
 arrays (of any shape).

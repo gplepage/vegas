@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vegas Module &mdash; vegas 3.0 documentation</title>
+    <title>vegas Module &mdash; vegas 3.0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '3.0',
+        VERSION:     '3.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 3.0 documentation" href="index.html" />
+    <link rel="top" title="vegas 3.0.1 documentation" href="index.html" />
     <link rel="prev" title="How vegas Works" href="background.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -46,7 +46,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -75,6 +75,8 @@ mean and a standard deviation &#8212; but also contain information about the
 iterations <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> used in generating the result.</li>
 <li><a class="reference internal" href="#vegas.RAvgArray" title="vegas.RAvgArray"><code class="xref py py-class docutils literal"><span class="pre">vegas.RAvgArray</span></code></a> &#8212; an array version of <a class="reference internal" href="#vegas.RAvg" title="vegas.RAvg"><code class="xref py py-class docutils literal"><span class="pre">vegas.RAvg</span></code></a> used when
 the integrand is array-valued.</li>
+<li><a class="reference internal" href="#vegas.RAvgDict" title="vegas.RAvgDict"><code class="xref py py-class docutils literal"><span class="pre">vegas.RAvgDict</span></code></a> &#8212; a dictionary version of <a class="reference internal" href="#vegas.RAvg" title="vegas.RAvg"><code class="xref py py-class docutils literal"><span class="pre">vegas.RAvg</span></code></a> used when
+the integrand is dictionary-valued.</li>
 </ul>
 </div></blockquote>
 <p>These are described in detail below.</p>
@@ -900,6 +902,54 @@ otherwise straight, unweighted averages are used.</p>
 
 </dd></dl>
 
+<dl class="class">
+<dt id="vegas.RAvgDict">
+<em class="property">class </em><code class="descclassname">vegas.</code><code class="descname">RAvgDict</code><a class="headerlink" href="#vegas.RAvgDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Running average of dictionary-valued Monte Carlo estimates.</p>
+<p>This class accumulates independent dictionaries of Monte Carlo
+estimates (e.g., of an integral) and combines
+them into a dictionary of averages. It
+is derived from <code class="xref py py-class docutils literal"><span class="pre">gvar.BufferDict</span></code>. The dictionary
+values are <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s or arrays of <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s.</p>
+<p>Different estimates are weighted by their
+inverse covariance matrices if parameter <code class="docutils literal"><span class="pre">weight=True</span></code>;
+otherwise straight, unweighted averages are used.</p>
+<dl class="attribute">
+<dt id="vegas.RAvgDict.chi2">
+<code class="descname">chi2</code><a class="headerlink" href="#vegas.RAvgDict.chi2" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>chi**2</em> of weighted average.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.RAvgDict.dof">
+<code class="descname">dof</code><a class="headerlink" href="#vegas.RAvgDict.dof" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of degrees of freedom in weighted average.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.RAvgDict.Q">
+<code class="descname">Q</code><a class="headerlink" href="#vegas.RAvgDict.Q" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Q</em> or <em>p-value</em> of weighted average&#8217;s <em>chi**2</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.RAvgDict.itn_results">
+<code class="descname">itn_results</code><a class="headerlink" href="#vegas.RAvgDict.itn_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of the results from each iteration.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.RAvgDict.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>g</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="vegas.RAvgDict.summary">
+<code class="descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict.summary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="vegas.batchintegrand">
 <code class="descclassname">vegas.</code><code class="descname">batchintegrand</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.batchintegrand" title="Permalink to this definition">¶</a></dt>
@@ -1094,7 +1144,7 @@ version of <a class="reference internal" href="#module-vegas" title="vegas: Adap
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
