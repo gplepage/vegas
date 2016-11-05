@@ -39,7 +39,7 @@ The key Python objects supported by the |vegas| module are:
    * :class:`vegas.RAvgDict` --- a dictionary version of |RAvg| used when
      the integrand is dictionary-valued.
 
-   * :class:`PDFIntegrator` --- a specialized integrator for evaluating
+   * :class:`vegas.PDFIntegrator` --- a specialized integrator for evaluating
      Gaussian expectation values.
 
 These are described in detail below.

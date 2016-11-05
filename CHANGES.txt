@@ -7,6 +7,8 @@ had to be moved to vegas to avoid circular imports (which are bad) in the code.
 It is part of the setup for Bayesian integrals (BayesIntegrator)
 in the lsqfit module.
 
+Also fixed a bug in MPIntegrator that caused occasional crashes.
+
 Version 3.0.1 - 2016-08-14
 ===========================
 - Corrected small bugs in RAvg.summary(), RAvgArray.summary() and
