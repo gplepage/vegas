@@ -1,6 +1,14 @@
+Version 3.1  2016-11-05
+========================
+Added new class PDFIntegrator for evaluating expectation values weighted
+by the probability density function (PDF) for arbitrary multi-dimensional
+Gaussian distributions. This class once resided in module gvar but
+had to be moved to vegas to avoid circular imports (which are bad) in the code.
+It is part of the setup for Bayesian integrals (BayesIntegrator)
+in the lsqfit module.
+
 Version 3.0.1 - 2016-08-14
 ===========================
-
 - Corrected small bugs in RAvg.summary(), RAvgArray.summary() and
   RAvgDict.summary(). Summary tables give weighted averages when
   weighted=True, unweighted averages otherwise. summary() has an

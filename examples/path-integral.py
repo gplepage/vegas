@@ -50,7 +50,7 @@ def main():
     # Harmonic oscillator: V = x ** 2 / 2
     print('Harmonic Oscillator')
     print('===================')
-    E0_sho = analyze_theory(V_sho, x0list=np.linspace(0, 2., 6), plot=True)
+    E0_sho = analyze_theory(V_sho, x0list=np.linspace(0, 2., 6), plot=False)
     print('\n')
 
     # Anharmonic oscillator: V = x**2 /2 + 0.2 * x ** 4
@@ -123,8 +123,8 @@ def plot_results(E0, x0, corr, T):
         plt.errorbar(x=x0, y=corr_mean, yerr=corr_sdev, fmt='bo', label='path integral')
         x = np.linspace(0,2.,100)
         y = np.exp(-x ** 2) / np.sqrt(np.pi)
-        plt.plot(x, y, 'r:', label='exact')
-        plt.legend(('path integral', 'exact sho'), frameon=False)
+        plt.plot(x, y, 'r:', label='sho exact')
+        plt.legend(frameon=False)
         plt.xlabel('$x$')
         plt.ylabel('$|\psi(x)|^2$')
         plt.text(1.4, 0.475, '$E_0 =$ %s' % E0)

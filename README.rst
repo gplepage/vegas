@@ -24,4 +24,4 @@ the form major.minor.patch. The minor number signals new features, and the
 patch number bug fixes.
 
 | Created by G. Peter Lepage (Cornell University) 2013
-| Copyright (c) 2013-2015 G. Peter Lepage
+| Copyright (c) 2013-2016 G. Peter Lepage

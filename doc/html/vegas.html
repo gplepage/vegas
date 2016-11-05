@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vegas Module &mdash; vegas 3.0.1 documentation</title>
+    <title>vegas Module &mdash; vegas 3.1 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '3.0.1',
+        VERSION:     '3.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 3.0.1 documentation" href="index.html" />
+    <link rel="top" title="vegas 3.1 documentation" href="index.html" />
     <link rel="prev" title="How vegas Works" href="background.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -46,7 +46,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.0.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -77,6 +77,8 @@ iterations <a class="reference internal" href="#module-vegas" title="vegas: Adap
 the integrand is array-valued.</li>
 <li><a class="reference internal" href="#vegas.RAvgDict" title="vegas.RAvgDict"><code class="xref py py-class docutils literal"><span class="pre">vegas.RAvgDict</span></code></a> &#8212; a dictionary version of <a class="reference internal" href="#vegas.RAvg" title="vegas.RAvg"><code class="xref py py-class docutils literal"><span class="pre">vegas.RAvg</span></code></a> used when
 the integrand is dictionary-valued.</li>
+<li><a class="reference internal" href="#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal"><span class="pre">PDFIntegrator</span></code></a> &#8212; a specialized integrator for evaluating
+Gaussian expectation values.</li>
 </ul>
 </div></blockquote>
 <p>These are described in detail below.</p>
@@ -723,8 +725,8 @@ increments as the old grid.</p>
 <code class="docutils literal"><span class="pre">x[j,</span> <span class="pre">d]</span></code> is filled with the corresponding <code class="docutils literal"><span class="pre">x</span></code> values,
 and <code class="docutils literal"><span class="pre">jac[j]</span></code> is filled with the corresponding Jacobian
 values. <code class="docutils literal"><span class="pre">x</span></code> and <code class="docutils literal"><span class="pre">jac</span></code> must be preallocated: for example,</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
-<span class="n">jac</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+<span class="n">jac</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -781,6 +783,178 @@ just the nodes being displayed. The default is
 in the map grid for each direction. Parameter
 <code class="docutils literal"><span class="pre">ngrid</span></code> specifies the maximum number of nodes to print
 (spread evenly over the grid).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="pdfintegrator-objects">
+<h2>PDFIntegrator Objects<a class="headerlink" href="#pdfintegrator-objects" title="Permalink to this headline">¶</a></h2>
+<p>Expectation values using probability density functions defined by
+collections of Gaussian random variables (see <code class="xref py py-mod docutils literal"><span class="pre">gvar</span></code>)
+can be evaluated using the following
+specialized integrator:</p>
+<dl class="class">
+<dt id="vegas.PDFIntegrator">
+<em class="property">class </em><code class="descclassname">vegas.</code><code class="descname">PDFIntegrator</code><span class="sig-paren">(</span><em>g</em>, <em>limit=1e15</em>, <em>scale=1.</em>, <em>svdcut=1e-15</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> integrator for PDF expectation values.</p>
+<p><code class="docutils literal"><span class="pre">PDFIntegrator(g)</span></code> is a <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> integrator that evaluates
+expectation values for the multi-dimensional Gaussian distribution
+specified by with <code class="docutils literal"><span class="pre">g</span></code>, which is a <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code> or an array of <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s or a
+dictionary whose values are <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s or arrays of <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s.</p>
+<p><code class="docutils literal"><span class="pre">PDFIntegrator</span></code> integrates over the entire parameter space of the
+distribution but reexpresses integrals in terms of variables
+that diagonalize <code class="docutils literal"><span class="pre">g</span></code>&#8216;s covariance matrix and are centered at
+its mean value. This greatly facilitates integration over these
+variables using the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> module, making integrals over
+10s or more of parameters feasible.</p>
+<p>A simple illustration of <code class="docutils literal"><span class="pre">PDFIntegrator</span></code> is given by the following
+code:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">gvar</span> <span class="kn">as</span> <span class="nn">gv</span>
+
+<span class="c"># multi-dimensional Gaussian distribution</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="p">()</span>
+<span class="n">g</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+<span class="n">g</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="s">&#39;1(1)&#39;</span><span class="p">)</span>
+
+<span class="c"># integrator for expectation values in distribution g</span>
+<span class="n">g_expval</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">PDFIntegrator</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+<span class="c"># adapt integrator to PDF</span>
+<span class="n">warmup</span> <span class="o">=</span> <span class="n">g_expval</span><span class="p">(</span><span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c"># want expectation value of [fp, fp**2]</span>
+<span class="k">def</span> <span class="nf">f_f2</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">fp</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="n">fp</span> <span class="o">**</span> <span class="mi">2</span><span class="p">]</span>
+
+<span class="c"># results = &lt;f_f2&gt; in distribution g</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">g_expval</span><span class="p">(</span><span class="n">f_f2</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="k">print</span> <span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<span class="k">print</span> <span class="p">(</span><span class="s">&#39;results =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+<span class="c"># mean and standard deviation of f(p)&#39;s distribution</span>
+<span class="n">fmean</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">fsdev</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="k">print</span> <span class="p">(</span><span class="s">&#39;f.mean =&#39;</span><span class="p">,</span> <span class="n">fmean</span><span class="p">,</span> <span class="s">&#39;   f.sdev =&#39;</span><span class="p">,</span> <span class="n">fsdev</span><span class="p">)</span>
+<span class="k">print</span> <span class="p">(</span><span class="s">&quot;Gaussian approx&#39;n for f(g) =&quot;</span><span class="p">,</span> <span class="n">f_f2</span><span class="p">(</span><span class="n">g</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>where the <code class="docutils literal"><span class="pre">warmup</span></code> calls to the integrator are used to adapt it to
+the PDF, and the final results are in <code class="docutils literal"><span class="pre">results</span></code>. Here <code class="docutils literal"><span class="pre">neval</span></code> is
+the (approximate) number of function calls per iteration of the
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> algorithm and <code class="docutils literal"><span class="pre">nitn</span></code> is the number of iterations. We
+use the integrator to calculated  the expectation value of <code class="docutils literal"><span class="pre">fp</span></code> and
+<code class="docutils literal"><span class="pre">fp**2</span></code>, so we can compute the standard deviation for the
+distribution of <code class="docutils literal"><span class="pre">fp</span></code>s. The output from this code shows that the
+Gaussian approximation (1.0(1.4)) for the mean and standard deviation
+of the <code class="docutils literal"><span class="pre">fp</span></code> distribution is not particularly accurate here
+(correct value is 1.9(2.0)), because of the large uncertainties in
+<code class="docutils literal"><span class="pre">g</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>itn   integral        average         chi2/dof        Q
+-------------------------------------------------------
+  1   0.995(12)       0.995(12)           0.00     1.00
+  2   1.014(11)       1.0043(79)          1.39     0.24
+  3   1.005(11)       1.0046(65)          1.75     0.10
+  4   0.977(13)       0.9978(58)          2.40     0.01
+  5   1.004(12)       0.9990(52)          1.94     0.03
+
+results = [1.904(17) 7.57(17)]
+
+f.mean = 1.904(17)    f.sdev = 1.986(31)
+Gaussian approx&#39;n for f(g) = 1.0(1.4)
+</pre></div>
+</div>
+<p>In general functions being integrated can return a number, or an array of
+numbers, or a dictionary whose values are numbers or arrays of numbers.
+This allows multiple expectation values to be evaluated simultaneously.</p>
+<p>See the documentation with the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> module for more details on its
+use, and on the attributes and methods associated with integrators.
+The example above sets <code class="docutils literal"><span class="pre">adapt=False</span></code> when  computing final results. This
+gives more reliable error estimates  when <code class="docutils literal"><span class="pre">neval</span></code> is small. Note
+that <code class="docutils literal"><span class="pre">neval</span></code> may need to be much larger (tens or hundreds of
+thousands) for more difficult high-dimension integrals.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>g</strong> &#8211; <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>, array of <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s, or dictionary whose values
+are <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s or arrays of <code class="xref py py-class docutils literal"><span class="pre">gvar.GVar</span></code>s that specifies the
+multi-dimensional Gaussian distribution used to construct
+the probability density function.</li>
+<li><strong>limit</strong> (<em>positive float</em>) &#8211; Limits the integrations to a finite
+region of size <code class="docutils literal"><span class="pre">limit</span></code> times the standard deviation on
+either side of the mean. This can be useful if the
+functions being integrated misbehave for large parameter
+values (e.g., <code class="docutils literal"><span class="pre">numpy.exp</span></code> overflows for a large range of
+arguments). Default is <code class="docutils literal"><span class="pre">1e15</span></code>.</li>
+<li><strong>scale</strong> (<em>positive float</em>) &#8211; The integration variables are
+rescaled to emphasize parameter values of order
+<code class="docutils literal"><span class="pre">scale</span></code> times the standard deviation. The rescaling
+does not change the value of the integral but it
+can reduce uncertainties in the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> estimate.
+Default is <code class="docutils literal"><span class="pre">1.0</span></code>.</li>
+<li><strong>svdcut</strong> (<em>non-negative float or None</em>) &#8211; If not <code class="docutils literal"><span class="pre">None</span></code>, replace
+covariance matrix of <code class="docutils literal"><span class="pre">g</span></code> with a new matrix whose
+small eigenvalues are modified: eigenvalues smaller than
+<code class="docutils literal"><span class="pre">svdcut</span></code> times the maximum eigenvalue <code class="docutils literal"><span class="pre">eig_max</span></code> are
+replaced by <code class="docutils literal"><span class="pre">svdcut*eig_max</span></code>. This can ameliorate
+problems caused by roundoff errors when inverting the
+covariance matrix. It increases the uncertainty associated
+with the modified eigenvalues and so is conservative.
+Setting <code class="docutils literal"><span class="pre">svdcut=None</span></code> or <code class="docutils literal"><span class="pre">svdcut=0</span></code> leaves the
+covariance matrix unchanged. Default is <code class="docutils literal"><span class="pre">1e-15</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="vegas.PDFIntegrator.__call__">
+<code class="descname">__call__</code><span class="sig-paren">(</span><em>f</em>, <em>nopdf=False</em>, <em>mpi=False</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate expectation value of function <code class="docutils literal"><span class="pre">f(p)</span></code>.</p>
+<p>Uses module <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> to estimate the integral of
+<code class="docutils literal"><span class="pre">f(p)</span></code> multiplied by the probability density function
+associated with <code class="docutils literal"><span class="pre">g</span></code> (i.e., <code class="docutils literal"><span class="pre">pdf(p)</span></code>). The probability
+density function is omitted if <code class="docutils literal"><span class="pre">nopdf=True</span></code> (default
+setting is <code class="docutils literal"><span class="pre">False</span></code>). Setting <code class="docutils literal"><span class="pre">mpi=True</span></code> configures vegas
+for multi-processor running using MPI.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>f</strong> (<em>function</em>) &#8211; Function <code class="docutils literal"><span class="pre">f(p)</span></code> to integrate. Integral is
+the expectation value of the function with respect
+to the distribution. The function can return a number,
+an array of numbers, or a dictionary whose values are
+numbers or arrays of numbers.</li>
+<li><strong>nopdf</strong> (<em>bool</em>) &#8211; If <code class="docutils literal"><span class="pre">True</span></code> drop the probability density function
+from the integrand (so no longer an expectation value).
+This is useful if one wants to use the optimized
+integrator for something other than a standard
+expectation value. Default is <code class="docutils literal"><span class="pre">False</span></code>.</li>
+<li><strong>mpi</strong> (<em>bool</em>) &#8211; <p>If <code class="docutils literal"><span class="pre">True</span></code> configure for use with multiple processors
+and MPI. This option requires module <code class="xref py py-mod docutils literal"><span class="pre">mpi4py</span></code>. A
+script <code class="docutils literal"><span class="pre">xxx.py</span></code> using an MPI integrator is run
+with <code class="docutils literal"><span class="pre">mpirun</span></code>: e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre>mpirun -np 4 -output-filename xxx.out python xxx.py
+</pre></div>
+</div>
+<p>runs on 4 processors. Setting <code class="docutils literal"><span class="pre">mpi=False</span></code> (default) does
+not support multiple processors. The MPI processor
+rank can be obtained from the <code class="docutils literal"><span class="pre">mpi_rank</span></code>
+attribute of the integrator.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>All other keyword arguments are passed on to a <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>
+integrator; see the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> documentation for further information.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1107,6 +1281,7 @@ version of <a class="reference internal" href="#module-vegas" title="vegas: Adap
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#integrator-objects">Integrator Objects</a></li>
 <li><a class="reference internal" href="#adaptivemap-objects">AdaptiveMap Objects</a></li>
+<li><a class="reference internal" href="#pdfintegrator-objects">PDFIntegrator Objects</a></li>
 <li><a class="reference internal" href="#other-objects-and-functions">Other Objects and Functions</a></li>
 </ul>
 </li>
@@ -1144,7 +1319,7 @@ version of <a class="reference internal" href="#module-vegas" title="vegas: Adap
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.0.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

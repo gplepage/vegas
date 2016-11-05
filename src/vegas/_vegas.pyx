@@ -1,7 +1,7 @@
 # c#ython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-15 G. Peter Lepage.
+# Copyright (c) 2013-16 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,13 @@ import math
 import sys
 import warnings
 
-import gvar
+from gvar import GVar as gvar_GVar
+from gvar import gvar as gvar_gvar
+from gvar import gammaQ as gvar_gammaQ
+from gvar import BufferDict as gvar_BufferDict
+from gvar import mean as gvar_mean
+from gvar import evalcov as gvar_evalcov
+
 try:
     import mpi4py
     import mpi4py.MPI
@@ -106,7 +112,7 @@ cdef class AdaptiveMap:
         if isinstance(grid, AdaptiveMap):
             self._init_grid(grid.grid, initinc=True)
         else:
-            grid = numpy.array(grid, float)
+            grid = numpy.array(grid, numpy.float_)
             if grid.ndim != 2:
                 raise ValueError('grid must be 2-d array not %d-d' % grid.ndim)
             grid.sort(axis=1)
@@ -199,7 +205,7 @@ cdef class AdaptiveMap:
                 "no of increments < 1 in AdaptiveMap -- %d"
                 % ninc
                 )
-        new_grid = numpy.empty((dim, ninc + 1), float)
+        new_grid = numpy.empty((dim, ninc + 1), numpy.float_)
         for d in range(dim):
             tmp = numpy.linspace(self.grid[d, 0], self.grid[d, -1], ninc + 1)
             for i in range(ninc + 1):
@@ -213,7 +219,7 @@ cdef class AdaptiveMap:
         cdef INT_TYPE d, i
         self.grid = new_grid
         if initinc or self.inc.shape[0] != dim or self.inc.shape[1] != ninc:
-            self.inc = numpy.empty((dim, ninc), float)
+            self.inc = numpy.empty((dim, ninc), numpy.float_)
         for d in range(dim):
             for i in range(ninc):
                 self.inc[d, i] = self.grid[d, i + 1] - self.grid[d, i]
@@ -230,11 +236,11 @@ cdef class AdaptiveMap:
         if y is None:
             y = numpy.random.uniform(size=self.dim)
         else:
-            y = numpy.asarray(y, float)
+            y = numpy.asarray(y, numpy.float_)
         y_shape = y.shape
         y.shape = -1, y.shape[-1]
         x = 0 * y
-        jac = numpy.empty(y.shape[0], float)
+        jac = numpy.empty(y.shape[0], numpy.float_)
         self.map(y, x, jac)
         x.shape = y_shape
         return x
@@ -249,7 +255,7 @@ cdef class AdaptiveMap:
         y_shape = y.shape
         y.shape = -1, y.shape[-1]
         x = 0 * y
-        jac = numpy.empty(y.shape[0], float)
+        jac = numpy.empty(y.shape[0], numpy.float_)
         self.map(y, x, jac)
         return jac
 
@@ -269,8 +275,8 @@ cdef class AdaptiveMap:
         and ``jac[j]`` is filled with the corresponding Jacobian
         values. ``x`` and ``jac`` must be preallocated: for example, ::
 
-            x = numpy.empty(y.shape, float)
-            jac = numpy.empty(y.shape[0], float)
+            x = numpy.empty(y.shape, numpy.float_)
+            jac = numpy.empty(y.shape[0], numpy.float_)
 
         :param y: ``y`` values to be mapped. ``y`` is a contiguous 2-d array,
             where ``y[j, d]`` contains values for points along direction ``d``.
@@ -339,8 +345,8 @@ cdef class AdaptiveMap:
         cdef INT_TYPE iy
         cdef INT_TYPE i, d
         if self.sum_f is None:
-            self.sum_f = numpy.zeros((dim, ninc), float)
-            self.n_f = numpy.zeros((dim, ninc), float) + TINY
+            self.sum_f = numpy.zeros((dim, ninc), numpy.float_)
+            self.n_f = numpy.zeros((dim, ninc), numpy.float_) + TINY
         if ny < 0:
             ny = y.shape[0]
         elif ny > y.shape[0]:
@@ -399,7 +405,7 @@ cdef class AdaptiveMap:
         if new_ninc < 1:
             raise ValueError('ninc < 1: ' + str(new_ninc))
         if new_ninc == 1:
-            new_grid = numpy.empty((dim, 2), float)
+            new_grid = numpy.empty((dim, 2), numpy.float_)
             for d in range(dim):
                 new_grid[d, 0] = self.grid[d, 0]
                 new_grid[d, 1] = self.grid[d, -1]
@@ -407,10 +413,10 @@ cdef class AdaptiveMap:
             return
 
         # smoothing
-        new_grid = numpy.empty((dim, new_ninc + 1), float)
-        avg_f = numpy.ones(old_ninc, float) # default = uniform
+        new_grid = numpy.empty((dim, new_ninc + 1), numpy.float_)
+        avg_f = numpy.ones(old_ninc, numpy.float_) # default = uniform
         if alpha > 0 and old_ninc > 1:
-            tmp_f = numpy.empty(old_ninc, float)
+            tmp_f = numpy.empty(old_ninc, numpy.float_)
         for d in range(dim):
             if self.sum_f is not None and alpha != 0:
                 for i in range(old_ninc):
@@ -791,7 +797,7 @@ cdef class Integrator(object):
     def __init__(Integrator self not None, map, **kargs):
         # N.B. All attributes initialized automatically by cython.
         #      This is why self.set() works here.
-        self.sigf = numpy.array([], float) # dummy
+        self.sigf = numpy.array([], numpy.float_) # dummy
         self.neval_hcube_range = None
         self.last_neval = 0
         if isinstance(map, Integrator):
@@ -949,18 +955,18 @@ cdef class Integrator(object):
             )
         if self.beta > 0 and len(self.sigf) != nsigf:
             if self.minimize_mem:
-                self.sigf = numpy.empty(nsigf, float)
+                self.sigf = numpy.empty(nsigf, numpy.float_)
                 self.sum_sigf = HUGE
             else:
-                self.sigf = numpy.ones(nsigf, float)
+                self.sigf = numpy.ones(nsigf, numpy.float_)
                 self.sum_sigf = nsigf
         self.neval_hcube = (
-            numpy.zeros(self.nhcube_batch, int) + self.min_neval_hcube
+            numpy.zeros(self.nhcube_batch, numpy.intp) + self.min_neval_hcube
             )
-        self.y = numpy.empty((neval_batch, self.dim), float)
-        self.x = numpy.empty((neval_batch, self.dim), float)
-        self.jac = numpy.empty(neval_batch, float)
-        self.fdv2 = numpy.empty(neval_batch, float)
+        self.y = numpy.empty((neval_batch, self.dim), numpy.float_)
+        self.x = numpy.empty((neval_batch, self.dim), numpy.float_)
+        self.jac = numpy.empty(neval_batch, numpy.float_)
+        self.fdv2 = numpy.empty(neval_batch, numpy.float_)
         return old_val
 
     def settings(Integrator self not None, ngrid=0):
@@ -1033,7 +1039,7 @@ cdef class Integrator(object):
         ):
         cdef INT_TYPE i_start
         cdef INT_TYPE ihcube, hcube, tmp_hcube
-        cdef INT_TYPE[::1] y0 = numpy.empty(self.dim, int)
+        cdef INT_TYPE[::1] y0 = numpy.empty(self.dim, numpy.intp)
         cdef INT_TYPE i, d
         cdef INT_TYPE neval_hcube = self.min_neval_hcube
         cdef INT_TYPE neval_batch = nhcube_batch * neval_hcube
@@ -1118,16 +1124,16 @@ cdef class Integrator(object):
             else HUGE
             )
         cdef INT_TYPE[::1] neval_hcube = self.neval_hcube
-        cdef INT_TYPE[::1] y0 = numpy.empty(self.dim, int)
+        cdef INT_TYPE[::1] y0 = numpy.empty(self.dim, numpy.intp)
         cdef double[::1] sigf
         cdef double[:, ::1] yran
         cdef double[:, ::1] y
         cdef double[:, ::1] x
         cdef double[::1] jac
         self.last_neval = 0
-        self.neval_hcube_range = numpy.zeros(2, int) + self.min_neval_hcube
+        self.neval_hcube_range = numpy.zeros(2, numpy.intp) + self.min_neval_hcube
         if yield_hcube:
-            hcube_array = numpy.empty(self.y.shape[0], int)
+            hcube_array = numpy.empty(self.y.shape[0], numpy.intp)
         for hcube_base in range(0, nhcube, nhcube_batch):
             if (hcube_base + nhcube_batch) > nhcube:
                 nhcube_batch = nhcube - hcube_base
@@ -1160,15 +1166,15 @@ cdef class Integrator(object):
 
             # resize work arrays if needed
             if neval_batch > self.y.shape[0]:
-                self.y = numpy.empty((neval_batch, self.dim), float)
-                self.x = numpy.empty((neval_batch, self.dim), float)
-                self.jac = numpy.empty(neval_batch, float)
-                self.fdv2 = numpy.empty(neval_batch, float)
+                self.y = numpy.empty((neval_batch, self.dim), numpy.float_)
+                self.x = numpy.empty((neval_batch, self.dim), numpy.float_)
+                self.jac = numpy.empty(neval_batch, numpy.float_)
+                self.fdv2 = numpy.empty(neval_batch, numpy.float_)
             y = self.y
             x = self.x
             jac = self.jac
             if yield_hcube and neval_batch > hcube_array.shape[0]:
-                hcube_array = numpy.empty(neval_batch, int)
+                hcube_array = numpy.empty(neval_batch, numpy.intp)
 
             # generate random points
             yran = self.ran_array_generator((neval_batch, self.dim))
@@ -1321,8 +1327,8 @@ cdef class Integrator(object):
         cdef double[::1] wf
         cdef double[::1] sum_wf
         cdef double[:, ::1] sum_wf2
-        cdef double[::1] mean = numpy.empty(1, float)
-        cdef double[:, ::1] var = numpy.empty((1, 1), float)
+        cdef double[::1] mean = numpy.empty(1, numpy.float_)
+        cdef double[:, ::1] var = numpy.empty((1, 1), numpy.float_)
         cdef INT_TYPE itn, i, j, s, t, neval, neval_batch
         cdef double sum_sigf, sigf2
         cdef bint firsteval = True
@@ -1355,11 +1361,11 @@ cdef class Integrator(object):
                     # allocate work arrays on first pass through;
                     # (needed a sample fcn evaluation in order to do this)
                     firsteval = False
-                    wf = numpy.empty(fcn.size, float)
-                    sum_wf = numpy.empty(fcn.size, float)
-                    sum_wf2 = numpy.empty((fcn.size, fcn.size), float)
-                    mean = numpy.empty(fcn.size, float)
-                    var = numpy.empty((fcn.size, fcn.size), float)
+                    wf = numpy.empty(fcn.size, numpy.float_)
+                    sum_wf = numpy.empty(fcn.size, numpy.float_)
+                    sum_wf2 = numpy.empty((fcn.size, fcn.size), numpy.float_)
+                    mean = numpy.empty(fcn.size, numpy.float_)
+                    var = numpy.empty((fcn.size, fcn.size), numpy.float_)
                     mean[:] = 0.0
                     var[:, :] = 0.0
                     result = VegasResult(fcn, weighted=self.adapt)
@@ -1456,7 +1462,7 @@ class reporter:
 # Each stores results from each iterations, as well as a weighted (running)
 # average of the results of all iterations (unless parameter weigthed=False,
 # in which case the average is unweighted).
-class RAvg(gvar.GVar):
+class RAvg(gvar_GVar):
     """ Running average of scalar-valued Monte Carlo estimates.
 
     This class accumulates independent Monte Carlo
@@ -1484,7 +1490,7 @@ class RAvg(gvar.GVar):
             self.weighted = False
         self.itn_results = []
         super(RAvg, self).__init__(
-            *gvar.gvar(0., 0.).internaldata,
+            *gvar_gvar(0., 0.).internaldata,
            )
 
     def _chi2(self):
@@ -1507,7 +1513,7 @@ class RAvg(gvar.GVar):
 
     def _Q(self):
         return (
-            gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
+            gvar_gammaQ(self.dof / 2., self.chi2 / 2.)
             if self.dof > 0 and self.chi2 > 0
             else 1
             )
@@ -1527,7 +1533,7 @@ class RAvg(gvar.GVar):
             self._v_s2 +=   g.mean / var
             self._v2_s2 +=  g.mean ** 2 / var
             self._1_s2 +=  1. / var
-            super(RAvg, self).__init__(*gvar.gvar(
+            super(RAvg, self).__init__(*gvar_gvar(
                 self._v_s2 / self._1_s2,
                 sqrt(1. / self._1_s2),
                 ).internaldata)
@@ -1536,7 +1542,7 @@ class RAvg(gvar.GVar):
             self._v2 += g.mean ** 2
             self._s2 += g.var + tiny
             self._n += 1
-            super(RAvg, self).__init__(*gvar.gvar(
+            super(RAvg, self).__init__(*gvar_gvar(
                 self._v / self._n,
                 sqrt(self._s2) / self._n,
                 ).internaldata)
@@ -1577,7 +1583,7 @@ class RAvg(gvar.GVar):
             ans += fmt % data
         return ans
 
-class RAvgDict(gvar.BufferDict):
+class RAvgDict(gvar_BufferDict):
     """ Running average of dictionary-valued Monte Carlo estimates.
 
     This class accumulates independent dictionaries of Monte Carlo
@@ -1598,10 +1604,10 @@ class RAvgDict(gvar.BufferDict):
         self.weighted = weighted
 
     def add(self, g):
-        if isinstance(g, gvar.BufferDict):
-            newg = gvar.BufferDict(g)
+        if isinstance(g, gvar_BufferDict):
+            newg = gvar_BufferDict(g)
         else:
-            newg = gvar.BufferDict()
+            newg = gvar_BufferDict()
             for k in self:
                 try:
                     newg[k] = g[k]
@@ -1658,7 +1664,7 @@ class RAvgArray(numpy.ndarray):
             strides=strides, order=order
             )
         if buffer is None:
-            obj.flat = numpy.array(obj.size * [gvar.gvar(0,0)])
+            obj.flat = numpy.array(obj.size * [gvar_gvar(0,0)])
         obj.itn_results = []
         if weighted:
             obj._invcov_v = 0.
@@ -1692,7 +1698,7 @@ class RAvgArray(numpy.ndarray):
     def _inv(self, matrix):
         " Invert matrix, with protection against singular matrices. "
         return numpy.linalg.pinv(matrix, rcond=sys.float_info.epsilon * 10)
-        # svd = gvar.SVD(matrix, svdcut=sys.float_info.epsilon * 10, rescale=True)
+        # svd = gvar_SVD(matrix, svdcut=sys.float_info.epsilon * 10, rescale=True)
         # w = svd.decomp(-1)
         # return numpy.sum(
         #     [numpy.outer(wi, wi) for wi in reversed(svd.decomp(-1))],
@@ -1724,7 +1730,7 @@ class RAvgArray(numpy.ndarray):
     def _Q(self):
         if self.dof <= 0 or self.chi2 <= 0:
             return 1.
-        return gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
+        return gvar_gammaQ(self.dof / 2., self.chi2 / 2.)
     Q = property(
         _Q, None, None,
         "*Q* or *p-value* of weighted average's *chi**2*.",
@@ -1735,32 +1741,32 @@ class RAvgArray(numpy.ndarray):
         g = numpy.asarray(g)
         self.itn_results.append(g)
         g = g.reshape((-1,))
-        gmean = gvar.mean(g)
+        gmean = gvar_mean(g)
         tiny = sys.float_info.epsilon * 10
-        gcov = gvar.evalcov(g)
+        gcov = gvar_evalcov(g)
         gcov[numpy.diag_indices_from(gcov)] = (
             abs(gcov[numpy.diag_indices_from(gcov)])
             + tiny * gmean ** 2 + TINY
             )
         if self.weighted:
             invcov = self._inv(gcov)
-            v = gvar.mean(g)
+            v = gvar_mean(g)
             u = invcov.dot(v)
             self._invcov += invcov
             self._invcov_v += u
             self._v_invcov_v += v.dot(u)
             cov = self._inv(self._invcov)
             mean = cov.dot(self._invcov_v)
-            self[:] = gvar.gvar(mean, cov).reshape(self.shape)
+            self[:] = gvar_gvar(mean, cov).reshape(self.shape)
         else:
-            gmean = gvar.mean(g)
+            gmean = gvar_mean(g)
             self._v2 += numpy.outer(gmean, gmean)
             self._v += gmean
             self._cov += gcov
             self._n += 1
             mean = self._v / self._n
             cov = self._cov / (self._n ** 2)
-            self[:] = gvar.gvar(mean, cov).reshape(self.shape)
+            self[:] = gvar_gvar(mean, cov).reshape(self.shape)
 
     def summary(self, weighted=None):
         """ Assemble summary of independent results into a string. """
@@ -1842,12 +1848,12 @@ cdef class VegasResult:
 
     def update(self, mean, var):
         if self.shape is None:
-            ans = gvar.BufferDict(self.integrand.bdict, buf=gvar.gvar(mean, var))
+            ans = gvar_BufferDict(self.integrand.bdict, buf=gvar_gvar(mean, var))
             self.result.add(ans)
         elif self.shape == ():
-            self.result.add(gvar.gvar(mean[0], var[0,0] ** 0.5))
+            self.result.add(gvar_gvar(mean[0], var[0,0] ** 0.5))
         else:
-            self.result.add(gvar.gvar(mean, var).reshape(self.shape))
+            self.result.add(gvar_gvar(mean, var).reshape(self.shape))
 
     def update_analyzer(self, analyzer):
         """ Update analyzer at end of an iteration. """
@@ -1898,8 +1904,8 @@ cdef class VegasIntegrand:
             if fcntype == 'scalar':
                 fx = fcn(x0)
                 if hasattr(fx, 'keys'):
-                    if not isinstance(fx, gvar.BufferDict):
-                        fx = gvar.BufferDict(fx)
+                    if not isinstance(fx, gvar_BufferDict):
+                        fx = gvar_BufferDict(fx)
                     self.size = fx.size
                     self.shape = None
                     self.bdict = fx
@@ -1914,7 +1920,7 @@ cdef class VegasIntegrand:
                 fx = fcn(x0)
                 if hasattr(fx, 'keys'):
                     # build dictionary for non-batch version of function
-                    fxs = gvar.BufferDict()
+                    fxs = gvar_BufferDict()
                     for k in fx:
                         fxs[k] = fx[k][0]
                     self.shape = None
@@ -1981,8 +1987,8 @@ cdef class _BatchIntegrand_from_NonBatchDict(object):
             )
         for i in range(x.shape[0]):
             fx = self.fcn(x[i])
-            if not isinstance(fx, gvar.BufferDict):
-                fx = gvar.BufferDict(fx)
+            if not isinstance(fx, gvar_BufferDict):
+                fx = gvar_BufferDict(fx)
             f[i] = fx.buf
         return f
 
@@ -2223,8 +2229,8 @@ cdef class MPIintegrand(BatchIntegrand):
             if hasattr(fx, 'keys'):
                 self.slice = {}
                 self.shape = {}
-                if not isinstance(fx, gvar.BufferDict):
-                    fx = gvar.BufferDict(fx)
+                if not isinstance(fx, gvar_BufferDict):
+                    fx = gvar_BufferDict(fx)
                 for k in fx:
                     fslice, fshape = fx.slice_shape(k)
                     self.shape[k] = fshape[1:]
@@ -2233,7 +2239,7 @@ cdef class MPIintegrand(BatchIntegrand):
                 def fcn(y, oldfcn=self.fcn, slice=self.slice):
                     # pack results in a 2-d array f[i, d]
                     cdef numpy.ndarray[numpy.double_t, ndim=2] ans
-                    ans = numpy.empty((y.shape[0], self.size), float)
+                    ans = numpy.empty((y.shape[0], self.size), numpy.float_)
                     fy = oldfcn(y)
                     for k in slice:
                         ans[:, self.slice[k]] = (
@@ -2248,21 +2254,21 @@ cdef class MPIintegrand(BatchIntegrand):
                 self.slice = None
                 def fcn(y, oldfcn=self.fcn):
                     # pack results in a 2-d array f[i, d]
-                    return numpy.asarray(oldfcn(y)).reshape((y.shape[0], -1))
+                    try:
+                        return numpy.asarray(oldfcn(y)).reshape((y.shape[0], -1))
+                    except ValueError:
+                        print(oldfcn(y), y.shape, y)
+                        raise ValueError('bad')
                 self.fcn = fcn
             self.fcn_shape = (self.size,)
-        if x.shape[0] < self.nproc:
-            # too many processors => all calculate same thing
-            nx = x.shape[0]
-            i0 = 0
-            i1 = nx
-        else:
-            nx = x.shape[0] // self.nproc + 1
-            i0 = self.rank * nx
-            i1 = min(i0 + nx, x.shape[0])
-        f = numpy.empty((nx,) + self.fcn_shape, numpy.double)
-        f[:(i1-i0)] = self.fcn(x[i0:i1])
-        results = numpy.empty((self.nproc * nx,) + self.fcn_shape, numpy.double)
+        nx = x.shape[0] // self.nproc + 1
+        i0 = self.rank * nx
+        i1 = min(i0 + nx, x.shape[0])
+        f = numpy.empty((nx,) + self.fcn_shape, numpy.float_)
+        if i1 > i0:
+            # fill f so long as haven't gone off end
+            f[:(i1-i0)] = self.fcn(x[i0:i1])
+        results = numpy.empty((self.nproc * nx,) + self.fcn_shape, numpy.float_)
         self.comm.Allgather(f, results)
         results = results[:x.shape[0]]
         if self.slice is not None:

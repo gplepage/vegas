@@ -1,9 +1,9 @@
-import multiprocessing 
+import multiprocessing
 import numpy as np
 import vegas
 
 class parallelintegrand(vegas.BatchIntegrand):
-    """ Convert (batch) integrand into multiprocessor integrand. 
+    """ Convert (batch) integrand into multiprocessor integrand.
 
     Integrand should return a numpy array.
     """
@@ -21,7 +21,7 @@ class parallelintegrand(vegas.BatchIntegrand):
         nx = x.shape[0] // self.nproc + 1
         # launch evaluation of self.fcn for each chunk, in parallel
         po = self.pool.map_async(
-            self.fcn, 
+            self.fcn,
             [x[i*nx : (i+1)*nx] for i in range(self.nproc)],
             1,
             )
@@ -30,7 +30,7 @@ class parallelintegrand(vegas.BatchIntegrand):
         # convert list of results into a single numpy array
         return np.concatenate(results)
 
-def f(x): 
+def f(x):
     dim = 4
     N = 10
     ans = np.zeros(x.shape[0], np.double)
@@ -59,13 +59,13 @@ def main():
 if __name__ == '__main__':
     main()
 
-# Copyright (c) 2014 G. Peter Lepage. 
+# Copyright (c) 2014 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # any later version (see <http://www.gnu.org/licenses/>).
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the

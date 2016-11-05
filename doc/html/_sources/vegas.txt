@@ -8,6 +8,7 @@
 .. |chi2| replace:: :math:`\chi^2`
 .. |x| replace:: x
 .. |y| replace:: y
+.. |GVar| replace:: :class:`gvar.GVar`
 
 .. moduleauthor:: G. Peter Lepage <g.p.lepage@cornell.edu>
 
@@ -37,6 +38,9 @@ The key Python objects supported by the |vegas| module are:
 
    * :class:`vegas.RAvgDict` --- a dictionary version of |RAvg| used when
      the integrand is dictionary-valued.
+
+   * :class:`PDFIntegrator` --- a specialized integrator for evaluating
+     Gaussian expectation values.
 
 These are described in detail below.
 
@@ -185,6 +189,19 @@ fashion, for use in subsequent iterations of the algorithm.
    .. automethod:: show_grid(ngrid=40, shrink=False)
 
    .. automethod:: settings(ngrid=5)
+
+
+PDFIntegrator Objects
+-----------------------------------------------------------
+Expectation values using probability density functions defined by
+collections of Gaussian random variables (see :mod:`gvar`)
+can be evaluated using the following
+specialized integrator:
+
+.. autoclass:: vegas.PDFIntegrator(g, limit=1e15, scale=1., svdcut=1e-15)
+
+  .. automethod:: __call__(f, nopdf=False, mpi=False, **kargs)
+
 
 Other Objects and Functions
 ----------------------------

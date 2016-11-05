@@ -1,5 +1,5 @@
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-14 G. Peter Lepage.
+# Copyright (c) 2013-16 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -178,9 +178,9 @@ class TestRAvg(unittest.TestCase):
     def test_all(self):
         " RWavg "
         a = RAvg()
-        a.add(gvar.gvar(1, 1))
-        a.add(gvar.gvar(2, 2))
-        a.add(gvar.gvar(3, 3))
+        a.add(gv.gvar(1, 1))
+        a.add(gv.gvar(2, 2))
+        a.add(gv.gvar(3, 3))
         np_assert_allclose(a.mean, 1.346938775510204)
         np_assert_allclose(a.sdev, 0.8571428571428571)
         self.assertEqual(a.dof, 2)
@@ -274,9 +274,9 @@ class TestRAvg(unittest.TestCase):
     def test_array(self):
         " RAvgArray "
         a = RAvgArray((1, 2))
-        a.add([[gvar.gvar(1, 1), gvar.gvar(10,10)]])
-        a.add([[gvar.gvar(2, 2), gvar.gvar(20,20)]])
-        a.add([[gvar.gvar(3, 3), gvar.gvar(30,30)]])
+        a.add([[gv.gvar(1, 1), gv.gvar(10,10)]])
+        a.add([[gv.gvar(2, 2), gv.gvar(20,20)]])
+        a.add([[gv.gvar(3, 3), gv.gvar(30,30)]])
         self.assertEqual(a.shape, (1, 2))
         np_assert_allclose(a[0, 0].mean, 1.346938775510204)
         np_assert_allclose(a[0, 0].sdev, 0.8571428571428571)
@@ -298,9 +298,9 @@ class TestRAvg(unittest.TestCase):
     def test_ravgdict(self):
         " RAvgDict "
         a = RAvgDict(dict(s=1.0, a=[[2.0, 3.0]]))
-        a.add(dict(s=gv.gvar(1, 1), a=[[gvar.gvar(1, 1), gvar.gvar(10,10)]]))
-        a.add(dict(s=gv.gvar(2, 2), a=[[gvar.gvar(2, 2), gvar.gvar(20,20)]]))
-        a.add(dict(s=gv.gvar(3, 3), a=[[gvar.gvar(3, 3), gvar.gvar(30,30)]]))
+        a.add(dict(s=gv.gvar(1, 1), a=[[gv.gvar(1, 1), gv.gvar(10,10)]]))
+        a.add(dict(s=gv.gvar(2, 2), a=[[gv.gvar(2, 2), gv.gvar(20,20)]]))
+        a.add(dict(s=gv.gvar(3, 3), a=[[gv.gvar(3, 3), gv.gvar(30,30)]]))
         self.assertEqual(a['a'].shape, (1, 2))
         np_assert_allclose(a['a'][0, 0].mean, 1.346938775510204)
         np_assert_allclose(a['a'][0, 0].sdev, 0.8571428571428571)
@@ -824,6 +824,113 @@ class TestMPIintegrand(unittest.TestCase):
         for i in [0, 1]:
             self.assertEqual(r['a'][0, i].fmt(), r[i].fmt())
         self.assertGreater(r.Q, 1e-3)
+
+class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
+    # @unittest.skipIf(FAST,"skipping test_expval for speed")
+    def test_expval(self):
+        " integrator(f ...) "
+        xarray = gv.gvar([5., 3.], [[4., 0.9], [0.9, 1.]])
+        xdict = gv.BufferDict([(0, 1), (1, 1)])
+        xdict = gv.BufferDict(xdict, buf=xarray)
+        def farray(x):
+            if hasattr(x, 'keys'):
+                x = x.buf
+            return gv.PDFStatistics.moments(x[0])
+        def fdict(x):
+            if hasattr(x, 'keys'):
+                x = x.buf
+            return gv.BufferDict([
+                 (0, x[0]), (1, x[0] ** 2),
+                (2, x[0] ** 3), (3, x[0] ** 4)
+                ])
+        for x in [xarray, xdict]:
+            integ = PDFIntegrator(x)
+            integ(neval=1000, nitn=5)
+            for f in [farray, fdict]:
+                r = integ(f, neval=1000, nitn=5, adapt=False)
+                if hasattr(r, 'keys'):
+                    r = r.buf
+                s = gv.PDFStatistics(r)
+                self.assertTrue(abs(s.mean.mean - 5.) < 5. * s.mean.sdev)
+                self.assertTrue(abs(s.sdev.mean - 2.) < 5. * s.sdev.sdev)
+                self.assertTrue(abs(s.skew.mean) < 5. * s.skew.sdev)
+                self.assertTrue(abs(s.ex_kurt.mean) < 5. * s.ex_kurt.sdev)
+
+        # covariance test
+        def fcov(x):
+            return dict(x=x, xx=np.outer(x, x))
+        integ = PDFIntegrator(xarray)
+        r = integ(fcov, neval=1000, nitn=5)
+        rmean = r['x']
+        rcov = r['xx'] - np.outer(r['x'], r['x'])
+        xmean = gv.mean(xarray)
+        xcov = gv.evalcov(xarray)
+        for i in [0, 1]:
+            self.assertTrue(abs(rmean[i].mean - xmean[i]) < 5. * rmean[i].sdev)
+            for j in [0, 1]:
+                self.assertTrue(abs(rcov[i,j].mean - xcov[i,j]) < 5. * rcov[i,j].sdev)
+
+    # @unittest.skipIf(FAST,"skipping test_nopdf for speed")
+    def test_nopdf(self):
+        " integrator(f ... nopdf=True) and pdf(p) "
+        xarray = gv.gvar([5., 3.], [[4., 1.9], [1.9, 1.]])
+        xdict = gv.BufferDict([(0, 1), (1, 1)])
+        xdict = gv.BufferDict(xdict, buf=xarray)
+        pdf = PDFIntegrator(xarray).pdf
+        def farray(x):
+            if hasattr(x, 'keys'):
+                x = x.buf
+            prob = pdf(x)
+            return [x[0] * prob, x[0] ** 2 * prob, prob]
+        def fdict(x):
+            if hasattr(x, 'keys'):
+                x = x.buf
+            prob = pdf(x)
+            return gv.BufferDict([(0, x[0] * prob), (1, x[0] ** 2 * prob), (3, prob)])
+        for x in [xarray, xdict]:
+            x[0] -= 0.1 * x[0].sdev
+            x[1] += 0.1 * x[1].sdev
+            for f in [farray, fdict]:
+                integ = PDFIntegrator(x)
+                integ(f, neval=1000, nitn=5)
+                r = integ(f, neval=1000, nitn=5, nopdf=True, adapt=False)
+                rmean = r[0]
+                rsdev = np.sqrt(r[1] - rmean ** 2)
+                self.assertTrue(abs(rmean.mean - 5.) < 5. * rmean.sdev)
+                self.assertTrue(abs(rsdev.mean - 2.) < 5. * rsdev.sdev)
+
+    # @unittest.skipIf(FAST,"skipping test_limit_scale for speed")
+    def test_limit_scale(self):
+        " integrator(...,limit=..,scale=..) "
+        g = gv.gvar(1,0.1)
+        for scale in [1., 2.]:
+            integ = PDFIntegrator(g, limit=1., scale=scale)
+            integ(neval=1000, nitn=5)
+            self.assertTrue(
+                abs(integ.norm.mean - 0.682689492137) < 5 * integ.norm.sdev
+                )
+            integ = PDFIntegrator(g, limit=2., scale=scale)
+            integ(neval=1000, nitn=5)
+            self.assertTrue(
+                abs(integ.norm.mean - 0.954499736104) < 5 * integ.norm.sdev
+                )
+
+    # @unittest.skipIf(FAST,"skipping test_histogram for speed")
+    def test_histogram(self):
+        x = gv.gvar([5., 3.], [[4., 0.2], [0.2, 1.]])
+        xsum = x[0] + x[1]
+        integ = PDFIntegrator(x)
+        hist = gv.PDFHistogram(xsum, nbin=40, binwidth=0.2)
+        integ(neval=1000, nitn=5)
+        def fhist(x):
+            return hist.count(x[0] + x[1])
+        r = integ(fhist, neval=1000, nitn=5, adapt=False)
+        bins, prob, stat, norm = hist.analyze(r)
+        self.assertTrue(abs(gv.mean(np.sum(prob)) - 1.) < 5. * gv.sdev(np.sum(prob)))
+        self.assertTrue(abs(stat.mean.mean - xsum.mean) < 5. * stat.mean.sdev)
+        self.assertTrue(abs(stat.sdev.mean - xsum.sdev) < 5. * stat.sdev.sdev)
+        self.assertTrue(abs(stat.skew.mean) < 5. * stat.skew.sdev)
+        self.assertTrue(abs(stat.ex_kurt.mean) < 5. * stat.ex_kurt.sdev)
 
 if __name__ == '__main__':
     unittest.main()

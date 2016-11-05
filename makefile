@@ -13,6 +13,7 @@
 
 PIP = pip
 PYTHON = python
+PYTHONVERSION = python`python -c 'import platform; print(platform.python_version())'`
 
 install :
 	$(PIP) install . --user
@@ -22,6 +23,12 @@ install-sys :
 
 uninstall :			# mostly works (may leave some empty directories)
 	- $(PIP) uninstall vegas
+
+try:
+	$(PYTHON) setup.py install --user --record files-vegas.$(PYTHONVERSION)
+
+untry:
+	- cat files-vegas.$(PYTHONVERSION) | xargs rm -rf
 
 doc-html:
 	rm -rf doc/html; sphinx-build -b html doc/source doc/html
@@ -48,7 +55,7 @@ tests:
 	@echo ''
 	$(PYTHON) -m unittest discover
 
-run-examples:
+run run-examples:
 	$(MAKE) -C examples PYTHON=$(PYTHON) PLOT=True run
 
 time:
@@ -62,6 +69,10 @@ upload-git:
 	make doc-all
 	git commit -a -m "prep for upload"
 	git push origin master
+
+test-download:
+	-$(PIP) uninstall vegas
+	$(PIP) install vegas --no-cache-dir
 
 clean:
 	rm -f -r build

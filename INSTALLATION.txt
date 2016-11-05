@@ -20,8 +20,8 @@ To install:
 		unless you want to make pictures of the vegas grid
 		(see the documentation on How vegas Works).
 
-	e. pip is used for installing (and uninstalling) gvar. pip usually
-	    comes with python. pip can be used to install numpy, cython
+	e. pip is used for installing (and uninstalling) vegas. pip usually
+	    comes with python. pip can be used to install numpy, cython, gvar,
 	    and matplotlib as well.
 	    (https://pypi.python.org/pypi/pip)
 
@@ -83,7 +83,7 @@ Problems:
 
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-15 G. Peter Lepage.
+# Copyright (c) 2013-16 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

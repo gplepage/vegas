@@ -11,8 +11,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-ctypedef long INT_TYPE
-ctypedef ssize_t INTP_TYPE
+# ctypedef long INT_TYPE
+# ctypedef Py_ssize_t INTP_TYPE
+
+from numpy cimport npy_intp as INTP_TYPE
+# index type for numpy (signed) -- same as numpy.intp_t and Py_ssize_t
+
+ctypedef INTP_TYPE INT_TYPE
 
 cdef class BatchIntegrand:
     cdef readonly object fcntype
