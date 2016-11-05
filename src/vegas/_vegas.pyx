@@ -2254,11 +2254,7 @@ cdef class MPIintegrand(BatchIntegrand):
                 self.slice = None
                 def fcn(y, oldfcn=self.fcn):
                     # pack results in a 2-d array f[i, d]
-                    try:
-                        return numpy.asarray(oldfcn(y)).reshape((y.shape[0], -1))
-                    except ValueError:
-                        print(oldfcn(y), y.shape, y)
-                        raise ValueError('bad')
+                    return numpy.asarray(oldfcn(y)).reshape((y.shape[0], -1))
                 self.fcn = fcn
             self.fcn_shape = (self.size,)
         nx = x.shape[0] // self.nproc + 1
