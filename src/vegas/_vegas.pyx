@@ -22,6 +22,8 @@ import math
 import sys
 import warnings
 
+import numpy
+
 from gvar import GVar as gvar_GVar
 from gvar import gvar as gvar_gvar
 from gvar import gammaQ as gvar_gammaQ
@@ -34,7 +36,6 @@ try:
     import mpi4py.MPI
 except ImportError:
     mpi4py = None
-import numpy
 
 cdef double TINY = 10 ** (sys.float_info.min_10_exp + 50)  # smallest and biggest
 cdef double HUGE = 10 ** (sys.float_info.max_10_exp - 50)  # with extra headroom
@@ -900,6 +901,9 @@ cdef class Integrator(object):
             elif k == 'ran_array_generator':
                 old_val[k] = self.ran_array_generator
                 self.ran_array_generator = kargs[k]
+            elif k == 'mpi':
+                # for legacy code
+                pass
             else:
                 raise AttributeError('no attribute named "%s"' % str(k))
 
@@ -1078,6 +1082,11 @@ cdef class Integrator(object):
             mean = sum_fdv / neval_hcube
             sigf2 = abs(sum_fdv2 / neval_hcube - mean * mean)
             sigf[ihcube] = sigf2 ** (self.beta / 2.)
+
+    def _get_mpi_rank(self):
+        return 0 if mpi4py is None else mpi4py.MPI.COMM_WORLD.Get_rank()
+
+    mpi_rank = property(_get_mpi_rank, doc="MPI rank (>=0)")
 
     def random_batch(
         Integrator self not None,
@@ -1865,6 +1874,9 @@ cdef class VegasIntegrand:
     cdef public INTP_TYPE size
     cdef public object eval
     cdef public object bdict
+    cdef public int nproc
+    cdef public int rank
+    cdef public object comm
     """ Integand object --- standard interface for integrands
 
     This class provides a standard interface for all |vegas| integrands.
@@ -1881,6 +1893,9 @@ cdef class VegasIntegrand:
     kind of integrand it is dealing with. It waits until this point
     because it needs a valid ``x`` at which to evaluate the integrand.
 
+    The integrands are automatically configured for parallel processing
+    using MPI (via :mod:`mpi4py`).
+
     Args:
         fcn: Integrand function.
         map: :class:`vegas.AdaptiveMap` being used by |vegas|.
@@ -1889,12 +1904,20 @@ cdef class VegasIntegrand:
         eval: ``eval(x)`` returns ``fcn(x)`` repacked as a 2-d array.
         shape: Shape of integrand ``fcn(x)`` or ``None`` if it is a dictionary.
         size: Size of integrand.
+        nproc: Number of processors (=1 if no MPI)
+        rank: MPI rank of processors (=0 if no MPI)
     """
     def __init__(self, fcn):
         if isinstance(fcn, type(BatchIntegrand)):
             raise ValueError(
                 'integrand given is a class, not an object -- need parentheses?'
                 )
+        if mpi4py is None:
+            self.nproc = 1
+        else:
+            self.comm = mpi4py.MPI.COMM_WORLD
+            self.rank = self.comm.Get_rank()
+            self.nproc = self.comm.Get_size()
         def eval(x, self=self, fcn=fcn):
             " Temporary eval, used for first call but then replaced by correct eval. "
             # check for scalar functions and convert to batch if is scalar
@@ -1909,12 +1932,12 @@ cdef class VegasIntegrand:
                     self.size = fx.size
                     self.shape = None
                     self.bdict = fx
-                    self.eval = _BatchIntegrand_from_NonBatchDict(fcn, self.size)
+                    _eval = _BatchIntegrand_from_NonBatchDict(fcn, self.size)
                 else:
                     fx = numpy.asarray(fcn(x0))
                     self.shape = fx.shape
                     self.size = fx.size
-                    self.eval = _BatchIntegrand_from_NonBatch(fcn, self.size, self.shape)
+                    _eval = _BatchIntegrand_from_NonBatch(fcn, self.size, self.shape)
             else:
                 x0.shape = (1,) + x0.shape
                 fx = fcn(x0)
@@ -1926,12 +1949,28 @@ cdef class VegasIntegrand:
                     self.shape = None
                     self.bdict = fxs
                     self.size = self.bdict.size
-                    self.eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict)
+                    _eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict)
                 else:
                     fx = numpy.asarray(fcn(x0))
                     self.shape = fx.shape[1:]
                     self.size = fx.size
-                    self.eval = _BatchIntegrand_from_Batch(fcn)
+                    _eval = _BatchIntegrand_from_Batch(fcn)
+            if self.nproc > 1:
+                # MPI multi-processor mode
+                def _mpi_eval(x, self=self, _eval=_eval):
+                    nx = x.shape[0] // self.nproc + 1
+                    i0 = self.rank * nx
+                    i1 = min(i0 + nx, x.shape[0])
+                    f = numpy.empty((nx, self.size), numpy.float_)
+                    if i1 > i0:
+                        # fill f so long as haven't gone off end
+                        f[:(i1-i0)] = _eval(x[i0:i1])
+                    results = numpy.empty((self.nproc * nx, self.size), numpy.float_)
+                    self.comm.Allgather(f, results)
+                    return results[:x.shape[0]]
+                self.eval = _mpi_eval
+            else:
+                self.eval = _eval
             return self.eval(x)
         self.eval = eval
 
@@ -1960,8 +1999,8 @@ cdef class _BatchIntegrand_from_NonBatch(object):
 
     def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
         cdef INT_TYPE i
-        cdef numpy.ndarray[numpy.double_t, ndim=2] f = numpy.empty(
-            (x.shape[0], self.size), float
+        cdef numpy.ndarray[numpy.float_t, ndim=2] f = numpy.empty(
+            (x.shape[0], self.size),  numpy.float_
             )
         if self.shape == ():
             # very common special case
@@ -2075,6 +2114,13 @@ cdef class BatchIntegrand:
         self.fcntype = 'batch'
         self.fcn = None
 
+    def _get_rank(self):
+        return 0 if mpi4py is None else mpi4py.MPI.COMM_WORLD.Get_rank()
+
+    rank = property(
+        _get_rank, doc='MPI rank (deprecated - use Integrator.mpi_rank)'
+        )
+
     def __call__(self, x):
         try:
             return self.fcn(x)
@@ -2108,178 +2154,15 @@ def batchintegrand(f):
     """
     try:
         f.fcntype = 'batch'
+        f.rank = 0 if mpi4py is None else mpi4py.MPI.COMM_WORLD.Get_rank()
         return f
     except:
         ans = BatchIntegrand()
         ans.fcn = f
         return ans
 
-
-# MPIintegrand is a base class for users who want to construct
-# multi-processor integrands using MPI.
-cdef class MPIintegrand(BatchIntegrand):
-    """ Convert (batch) integrand into an MPI multiprocessor integrand.
-
-    Applying decorator :class:`vegas.MPIintegrand` to  a function
-    repackages the function as a  batch |vegas| integrand that can
-    execute in parallel on multiple processors. Appropriate  functions
-    take a :mod:`numpy` array of integration points ``x[i, d]`` as an
-    argument, where ``i=0...`` labels the integration point and
-    ``d=0...`` labels direction, and return an array ``f[i]`` of
-    integrand values (or arrays  f[i,...] of integrand values) for the
-    corresponding  points.
-
-    An example is ::
-
-        import vegas
-        import numpy as np
-
-        @vegas.MPIintegrand
-        def f(x):
-            return np.exp(-x[:, 0] - x[:, 1])
-
-    for the two-dimensional integrand :math:`\exp(-x_0 - x_1)`.  Of
-    course, one could write ``f = vegas.MPIintegrand(f)`` instead of
-    using the decorator.
-
-    Message passing between processors uses MPI via Python  module
-    :mod:`mpi4py`, which must be installed in Python.  To run an MPI
-    integration code ``mpi-integral.py`` on 4 processors,  for
-    example, one might execute::
-
-        mpirun -np 4 python mpi-integral.py
-
-    Executing ``python mpi-integral.py``, without the ``mpirun``, causes
-    it to run on a single processor, in more or less the same  way an
-    integral with a batch integrand runs.
-
-    An object of type :class:`vegas.MPIintegrand` contains information
-    about the MPI processes in the following attributes:
-
-    .. attribute:: comm
-
-        MPI intracommunicator --- :class:`mpi4py.MPI.Intracomm` object
-        ``mpi4py.MPI.COMM_WORLD``.
-
-    .. attribute:: nproc
-
-        Number of processors used.
-
-    .. attribute:: rank
-
-        MPI rank of current process. Each process has a unique  rank,
-        ranging from ``0`` to ``nproc-1``. The rank is used  to make
-        different processes do different things (for example, one
-        generally wants only one of the processes to report out  final
-        results).
-
-    .. attribute:: seed
-
-        The random number see used to reset ``numpy.random.random``
-        in all the processes.
-
-    The implementation used here has the entire integration code run
-    on every processor. It is only when evaluating the integrand that
-    the processes do different  things. This is efficient provided
-    most of the time is spent evaluating the integrand, which, in any
-    case, is the only situation where it might make sense to use multiple
-    processors.
-
-    Note that :class:`vegas.MPIintegrand` assumes that
-    :class:`vegas.Integrator` is using the default random  number
-    generator (``numpy.random.random``). If this  is not the case, it
-    is important to seed the other random  number generator so that all
-    processes use the same random numbers.
-
-    The approach used here to make |vegas| parallel is  based on a
-    strategy developed by R. Horgan and Q. Mason for the original Fortran
-    version of |vegas|.
-    """
-    #cdef readonly object comm
-    #cdef readonly INTP_TYPE rank
-    #cdef readonly INTP_TYPE nproc
-    #cdef readonly object seed
-
-    def __init__(self, fcn):
-        if mpi4py is None:
-            raise ImportError("MPIintegrand couldn't fine module mpi4py.")
-        self.fcn = fcn
-        self.comm = mpi4py.MPI.COMM_WORLD
-        self.rank = self.comm.Get_rank()
-        self.nproc = self.comm.Get_size()
-        # synchronize random number generators
-        if self.rank == 0:
-            seed = tuple(numpy.random.randint(1, min(2**32,sys.maxsize), size=3))
-        else:
-            seed = None
-        self.seed = self.comm.bcast(seed, root=0)
-        numpy.random.seed(self.seed)
-        self.fcn_shape = None
-
-    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
-        """ Divide x into self.nproc chunks, feeding one to each processor. """
-        # Note that the last chunk needs to be padded out to the same
-        # length as the others so that Allgather doesn't get upset. The
-        # size of the pad is smaller than ``self.nproc``.
-        cdef numpy.ndarray results, f
-        cdef INTP_TYPE nx, i0, i1
-        if self.fcn_shape is None:
-            # use trial evaluation to figure out function shape
-            fx = self.fcn(x[:1])
-            if hasattr(fx, 'keys'):
-                self.slice = {}
-                self.shape = {}
-                if not isinstance(fx, gvar_BufferDict):
-                    fx = gvar_BufferDict(fx)
-                for k in fx:
-                    fslice, fshape = fx.slice_shape(k)
-                    self.shape[k] = fshape[1:]
-                    self.slice[k] = fslice.start if fshape[1:] == () else fslice
-                self.size = fx.size
-                def fcn(y, oldfcn=self.fcn, slice=self.slice):
-                    # pack results in a 2-d array f[i, d]
-                    cdef numpy.ndarray[numpy.double_t, ndim=2] ans
-                    ans = numpy.empty((y.shape[0], self.size), numpy.float_)
-                    fy = oldfcn(y)
-                    for k in slice:
-                        ans[:, self.slice[k]] = (
-                            fy[k] if self.shape[k] == () else fy[k].reshape((y.shape[0], -1))
-                            )
-                    return ans
-                self.fcn = fcn
-            else:
-                fx = numpy.asarray(fx)
-                self.shape = fx.shape[1:]
-                self.size = fx.size
-                self.slice = None
-                def fcn(y, oldfcn=self.fcn):
-                    # pack results in a 2-d array f[i, d]
-                    return numpy.asarray(oldfcn(y)).reshape((y.shape[0], -1))
-                self.fcn = fcn
-            self.fcn_shape = (self.size,)
-        nx = x.shape[0] // self.nproc + 1
-        i0 = self.rank * nx
-        i1 = min(i0 + nx, x.shape[0])
-        f = numpy.empty((nx,) + self.fcn_shape, numpy.float_)
-        if i1 > i0:
-            # fill f so long as haven't gone off end
-            f[:(i1-i0)] = self.fcn(x[i0:i1])
-        results = numpy.empty((self.nproc * nx,) + self.fcn_shape, numpy.float_)
-        self.comm.Allgather(f, results)
-        results = results[:x.shape[0]]
-        if self.slice is not None:
-            ans = collections.OrderedDict()
-            for k in self.slice:
-                ans[k] = (
-                    results[:, self.slice[k]].reshape(
-                        (x.shape[0],) + self.shape[k]
-                        )
-                    )
-            return ans
-        else:
-            return results.reshape((x.shape[0],) + self.shape)
-
-
 # legacy names
 vecintegrand = batchintegrand
+MPIintegrand = batchintegrand
+
 

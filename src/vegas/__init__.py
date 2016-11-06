@@ -203,7 +203,6 @@ class PDFIntegrator(Integrator):
         #     self.pdf.size * [(-limit, limit)]
         #     )
         self._expval = self._expval_tan
-        self.mpi_rank = 0    # in case mpi is used
 
     def _make_map(self, limit):
         """ Make vegas grid that is adapted to the pdf. """
@@ -222,15 +221,14 @@ class PDFIntegrator(Integrator):
             m.adapt(alpha=1.5)
         return numpy.array(m.grid[0])
 
-    def __call__(self, f=None, nopdf=False, mpi=False, _fstd=None, **kargs):
+    def __call__(self, f=None, nopdf=False, _fstd=None, **kargs):
         """ Estimate expectation value of function ``f(p)``.
 
         Uses module :mod:`vegas` to estimate the integral of
         ``f(p)`` multiplied by the probability density function
         associated with ``g`` (i.e., ``pdf(p)``). The probability
         density function is omitted if ``nopdf=True`` (default
-        setting is ``False``). Setting ``mpi=True`` configures vegas
-        for multi-processor running using MPI.
+        setting is ``False``).
 
         Args:
             f (function): Function ``f(p)`` to integrate. Integral is
@@ -244,18 +242,6 @@ class PDFIntegrator(Integrator):
                 This is useful if one wants to use the optimized
                 integrator for something other than a standard
                 expectation value. Default is ``False``.
-
-            mpi (bool): If ``True`` configure for use with multiple processors
-                and MPI. This option requires module :mod:`mpi4py`. A
-                script ``xxx.py`` using an MPI integrator is run
-                with ``mpirun``: e.g., ::
-
-                    mpirun -np 4 -output-filename xxx.out python xxx.py
-
-                runs on 4 processors. Setting ``mpi=False`` (default) does
-                not support multiple processors. The MPI processor
-                rank can be obtained from the ``mpi_rank``
-                attribute of the integrator.
 
         All other keyword arguments are passed on to a :mod:`vegas`
         integrator; see the :mod:`vegas` documentation for further information.
@@ -295,12 +281,7 @@ class PDFIntegrator(Integrator):
                 return self._buffer
         else:
             fstd = _fstd
-        integrand = self._expval(fstd, nopdf)
-        if mpi:
-            integrand = MPIintegrand(integrand)
-            self.mpi_rank = integrand.rank
-        else:
-            integrand = batchintegrand(integrand)
+        integrand = batchintegrand(self._expval(fstd, nopdf))
         results = super(PDFIntegrator, self).__call__(integrand, **kargs)
         if _fstd is not None:
             return results

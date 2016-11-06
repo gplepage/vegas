@@ -27,13 +27,16 @@ doesn't use vegas to do this --- see the paper above.
 """
 from __future__ import print_function   # makes this work for python2 and 3
 
-import pyximport; pyximport.install()   # compiles path_integrand.pyx
-
 import vegas
 import numpy as np
 import math
 import sys
 import gvar as gv
+
+import pyximport
+pyximport.install(setup_args=dict(include_dirs=[np.get_include()]))
+# compiles path_integrand.pyx
+
 from path_integrand import PathIntegrand
 
 
@@ -50,7 +53,7 @@ def main():
     # Harmonic oscillator: V = x ** 2 / 2
     print('Harmonic Oscillator')
     print('===================')
-    E0_sho = analyze_theory(V_sho, x0list=np.linspace(0, 2., 6), plot=False)
+    E0_sho = analyze_theory(V_sho, x0list=np.linspace(0, 2., 6), plot=True)
     print('\n')
 
     # Anharmonic oscillator: V = x**2 /2 + 0.2 * x ** 4
