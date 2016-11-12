@@ -17,12 +17,8 @@ import unittest
 import warnings
 
 import gvar as gv
-try:
-    import mpi4py
-    import mpi4py.MPI
-except ImportError:
-    mpi4py = None
 import numpy as np
+
 from numpy.testing import assert_allclose as np_assert_allclose
 from vegas import *
 
@@ -487,8 +483,8 @@ class TestIntegrator(unittest.TestCase):
             alpha=0.35,
             beta=0.25,
             adapt_to_errors=True,
-            rtol=0.1,
-            atol=0.2,
+            # rtol=0.1,
+            # atol=0.2,
             analyzer=reporter(5),
             )
         I = Integrator([[1,2]])
@@ -751,79 +747,6 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(r['b'][0, 1].sdev < 1e-2)
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.dof == 27)
-
-class TestMPIintegrand(unittest.TestCase):
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_scalar(self):
-        " integrate scalar-valued MPIintegrand  "
-        if mpi4py is None:
-            return
-        @MPIintegrand
-        def fcn(x):
-            f = np.empty(x.shape[0], float)
-            for i in range(f.shape[0]):
-                f[i] = (
-                    math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
-                    ) / math.pi ** 2
-            return f
-        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
-        r = I(fcn, neval=10000)
-        self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
-        self.assertGreater(r.Q, 1e-3)
-        self.assertLess(r.sdev, 1e-3)
-
-    def test_array(self):
-        " integrate array-valued MPIintegrand  "
-        if mpi4py is None:
-            return
-        @MPIintegrand
-        def fcn(x):
-            f = np.empty((x.shape[0], 1, 2), float)
-            for i in range(f.shape[0]):
-                f[i, 0, 0] = (
-                    math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
-                    ) / math.pi ** 2
-                f[i, 0, 1] = (
-                    math.sin(x[i, 0]) ** 2 - math.cos(x[i, 1]) ** 2
-                    ) / math.pi ** 2
-            return f
-        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
-        r = I(fcn, neval=10000)
-        self.assertLess(abs(r[0, 0].mean - 1.), 5 * r[0, 0].sdev)
-        self.assertLess(r[0, 0].sdev, 1e-3)
-        self.assertLess(abs(r[0, 1].mean - 0.), 5 * r[0, 0].sdev)
-        self.assertLess(r[0, 1].sdev, 1e-3)
-        self.assertGreater(r.Q, 1e-3)
-
-    def test_dict(self):
-        " integrate dict-valued MPIintegrand  "
-        if mpi4py is None:
-            return
-        @MPIintegrand
-        def fcn(x):
-            f = np.empty((x.shape[0], 1, 2), float)
-            for i in range(f.shape[0]):
-                f[i, 0, 0] = (
-                    math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
-                    ) / math.pi ** 2
-                f[i, 0, 1] = (
-                    math.sin(x[i, 0]) ** 2 - math.cos(x[i, 1]) ** 2
-                    ) / math.pi ** 2
-            return {0:f[:, 0, 0], 1:f[:, 0, 1], 'a':f}
-        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
-        r = I(fcn, neval=10000)
-        self.assertLess(abs(r[0].mean - 1.), 5 * r[0].sdev)
-        self.assertLess(r[0].sdev, 1e-3)
-        self.assertLess(abs(r[1].mean - 0.), 5 * r[0].sdev)
-        self.assertLess(r[1].sdev, 1e-3)
-        for i in [0, 1]:
-            self.assertEqual(r['a'][0, i].fmt(), r[i].fmt())
-        self.assertGreater(r.Q, 1e-3)
 
 class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
     # @unittest.skipIf(FAST,"skipping test_expval for speed")

@@ -1,5 +1,5 @@
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-14 G. Peter Lepage.
+# Copyright (c) 2013-16 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -11,13 +11,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-# ctypedef long INT_TYPE
-# ctypedef Py_ssize_t INTP_TYPE
-
-from numpy cimport npy_intp as INTP_TYPE
-# index type for numpy (signed) -- same as numpy.intp_t and Py_ssize_t
-
-ctypedef INTP_TYPE INT_TYPE
+cimport numpy
+# index type for numpy is numpy.npy_intp (signed)
+# -- same as numpy.intp_t and Py_ssize_t (usually) in Cython
 
 cdef class BatchIntegrand:
     cdef readonly object fcntype
@@ -34,18 +30,18 @@ cdef class AdaptiveMap:
     cdef double[:, ::1] sum_f
     cdef double[:, ::1] n_f
 
-    cpdef map(self, double[:, ::1] y, double[:, ::1] x, double[::1] J, INT_TYPE ny=*)
-    cpdef add_training_data(self, double[:, ::1] y, double[::1] f, INT_TYPE ny=*)
+    cpdef map(self, double[:, ::1] y, double[:, ::1] x, double[::1] J, numpy.npy_intp ny=*)
+    cpdef add_training_data(self, double[:, ::1] y, double[::1] f, numpy.npy_intp ny=*)
 
 cdef class Integrator:
     # inputs
-    cdef readonly INT_TYPE neval
-    cdef readonly INT_TYPE[::1] neval_hcube_range
-    cdef readonly INT_TYPE nhcube_batch
-    cdef readonly INT_TYPE maxinc_axis
-    cdef readonly INT_TYPE max_nhcube
-    cdef readonly INT_TYPE max_neval_hcube
-    cdef readonly INT_TYPE nitn
+    cdef readonly numpy.npy_intp neval
+    cdef readonly numpy.npy_intp[::1] neval_hcube_range
+    cdef readonly numpy.npy_intp nhcube_batch
+    cdef readonly numpy.npy_intp maxinc_axis
+    cdef readonly numpy.npy_intp max_nhcube
+    cdef readonly numpy.npy_intp max_neval_hcube
+    cdef readonly numpy.npy_intp nitn
     cdef readonly double alpha
     cdef readonly double rtol
     cdef readonly double atol
@@ -55,19 +51,20 @@ cdef class Integrator:
     cdef readonly bint adapt
     cdef readonly object analyzer
     cdef readonly object ran_array_generator
+    cdef readonly bint sync_ran
     # generated
     cdef readonly AdaptiveMap map
     cdef readonly double sum_sigf
-    cdef readonly INT_TYPE nstrat
-    cdef readonly INT_TYPE min_neval_hcube
-    cdef readonly INT_TYPE dim
-    cdef readonly INT_TYPE last_neval
-    cdef readonly INT_TYPE nhcube
+    cdef readonly numpy.npy_intp nstrat
+    cdef readonly numpy.npy_intp min_neval_hcube
+    cdef readonly numpy.npy_intp dim
+    cdef readonly numpy.npy_intp last_neval
+    cdef readonly numpy.npy_intp nhcube
     # internal work areas
     cdef double[:, ::1] y
     cdef double[:, ::1] x
     cdef double[::1] jac
     cdef double[::1] fdv2
-    cdef INT_TYPE[::1] neval_hcube
+    cdef numpy.npy_intp[::1] neval_hcube
     cdef readonly double[::1] sigf
 

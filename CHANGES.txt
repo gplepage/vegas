@@ -1,4 +1,24 @@
-Version 3.1  2016-11-05
+Version 3.2 - 2016-11-06??
+========================
+MPI support for multiple processors is revamped in this version. MPI is
+now built into the integrator and available for any integrand (scalar or
+batch). So vegas.MPIintegrator is no longer needed. I left MPIintegrator
+in the code, for legacy purposes, but it is now just another name for
+vegas.batchintegrand.
+
+Other changes:
+
+- The stopping conditions (atol and rtol) now work. I forgot to install
+  the stopping conditions, mostly because I never use them. These
+  stopping conditions can be quite unreliable in early iterations,
+  before vegas has converged --- use them with caution if you use them
+  at all. Thanks to Kevin Andrade for pointing out that they were not
+  working.
+
+- Extra documentation on how to access integrands written in C or
+  Fortran from Python vegas.
+
+Version 3.1 - 2016-11-05
 ========================
 Added new class PDFIntegrator for evaluating expectation values weighted
 by the probability density function (PDF) for arbitrary multi-dimensional
@@ -7,7 +27,7 @@ had to be moved to vegas to avoid circular imports (which are bad) in the code.
 It is part of the setup for Bayesian integrals (BayesIntegrator)
 in the lsqfit module.
 
-Also fixed a bug in MPIntegrator that caused occasional crashes.
+Also fixed a bug in MPIintegrator that caused occasional crashes.
 
 Version 3.0.1 - 2016-08-14
 ===========================

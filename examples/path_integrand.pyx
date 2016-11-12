@@ -10,7 +10,7 @@ is derived from it and specifies a specific potential.
 # import Cython description of vegas
 cimport vegas
 
-# import exp(), tan() from C
+# import exp(),  tan() from C
 from libc.math cimport exp, tan
 
 import collections
@@ -138,3 +138,16 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
         ans['exp(-E0*T) * psi(x0)**2'] = f[:,1:]
         return ans
 
+
+
+# Copyright (c) 2013-16 G. Peter Lepage.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version (see <http://www.gnu.org/licenses/>).
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.

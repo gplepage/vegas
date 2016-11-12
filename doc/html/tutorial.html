@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; vegas 3.1 documentation</title>
+    <title>Tutorial &mdash; vegas 3.2 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '3.1',
+        VERSION:     '3.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 3.1 documentation" href="index.html" />
+    <link rel="top" title="vegas 3.2 documentation" href="index.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -50,7 +50,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -829,7 +829,12 @@ cdef class f_cython(vegas.BatchIntegrand):
 </div>
 <p>We put this in a separate file called, say,
 <code class="docutils literal"><span class="pre">cython_integrand.pyx</span></code>, and rewrite the main code as:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pyximport</span><span class="p">;</span> <span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pyximport</span>
+<span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">(</span>
+    <span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="n">setup_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">include_dirs</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">get_include</span><span class="p">()])</span>
+    <span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">from</span> <span class="nn">cython_integrand</span> <span class="kn">import</span> <span class="n">f_cython</span>
@@ -842,14 +847,11 @@ cdef class f_cython(vegas.BatchIntegrand):
 <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">   Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>The first line (<code class="docutils literal"><span class="pre">import</span> <span class="pre">pyximport;</span> <span class="pre">...</span></code>) causes the Cython
+<p>Module <code class="xref py py-mod docutils literal"><span class="pre">pyximport</span></code> is used here to cause the Cython
 module <code class="docutils literal"><span class="pre">cython_integrand.pyx</span></code> to be compiled the first time
-it is called. The compiled code is stored and used in subsequent
+it is called. The compiled code is used in subsequent
 calls, so compilation occurs only once.</p>
-<p>Cython code can also link easily to compiled C or Fortran code,
-so integrands written in these languages can be used as well (and
-would be faster than pure Python). See Cython&#8217;s documentation.</p>
-<p>Batch mode is also a good idea for array-valued integrands.
+<p>Batch mode is also useful for array-valued integrands.
 The code from the previous section could have been written as:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">gvar</span> <span class="kn">as</span> <span class="nn">gv</span>
@@ -905,84 +907,87 @@ by a dictionary-valued batch integrand: e.g.,</p>
 </div>
 <div class="section" id="multiple-processors">
 <h2>Multiple Processors<a class="headerlink" href="#multiple-processors" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> code normally runs on a single CPU. It is possible
-to distribute the evaluation of the integrand over multiple processors
-by using the batch mode described in the previous section. This
-becomes worthwhile when the integrand becomes more expensive to
-evaluate.</p>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> comes with a decorator, <a class="reference internal" href="vegas.html#vegas.MPIintegrand" title="vegas.MPIintegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></code></a>, that  adapts
-batch integrands for multiprocessor use through MPI. It assumes that Python
-module <code class="xref py py-mod docutils literal"><span class="pre">mpi4py</span></code> is installed (and MPI, of course). To illustrate its use
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> has built in support for MPI (via the <code class="xref py py-mod docutils literal"><span class="pre">mpi4py</span></code> Python module),
+allowing the evaluation of integrands
+to be spread over multiple processors. This can shorten execution time
+substantially when the integrand is costly to evaluate.</p>
+<p>To illustrate MPI parallel processing with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>,
 consider an integrand consisting of 1000 narrow Gaussians distributed evenly
-along the diagonal of a 4-dimensional unit hypercube. To maximize speed, we
-implement the integrand in Cython, putting the result in a file <code class="docutils literal"><span class="pre">ridge.pyx</span></code>:</p>
-<div class="highlight-python"><div class="highlight"><pre># file: ridge.pyx
+along the diagonal of a 4-dimensional unit hypercube. We
+implement the integrand in Cython, putting the result
+in a file <code class="docutils literal"><span class="pre">ridge_integrand.pyx</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre># file: ridge_integrand.pyx
 
 from libc.math cimport exp      # use exp() from C library
-import numpy as np
 
-def f(double[:, ::1] x):
+def f(double[::1] x):
     cdef double dx2, x0
-    cdef int d, i, j
+    cdef int d, j
     cdef int dim=4
     cdef int N=1000
-    cdef double[::1] ans = np.zeros(x.shape[0], float)
-    for i in range(x.shape[0]):
-        for j in range(N):
-            x0 = j / (N - 1.)
-            dx2 = 0.0
-            for d in range(dim):
-                dx2 += (x[i, d] - x0) ** 2
-            ans[i] += exp(-100. * dx2)
-        ans[i] *= (100. / np.pi) ** 2 / N
-    return ans
+    cdef double ans = 0
+    cdef double norm = (100. / 3.1415926535897932384626) ** 2 / N
+    for j in range(N):
+        x0 = j / (N - 1.)
+        dx2 = 0.0
+        for d in range(dim):
+            dx2 += (x[d] - x0) ** 2
+        ans += exp(-100. * dx2)
+    return ans * norm
 </pre></div>
 </div>
-<p>This is a standard batch integrand; it could have been written in Fortran
-or C almost as easily, or in Python. The main integration code,
-in file <code class="docutils literal"><span class="pre">mpi-integral.py</span></code>, is then:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># file: mpi-integral.py</span>
+<p>This is a standard integrand. The main integration code,
+in file <code class="docutils literal"><span class="pre">ridge.py</span></code>, is then:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># file: ridge.py</span>
 
-<span class="kn">import</span> <span class="nn">pyximport</span><span class="p">;</span> <span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>  <span class="c"># compiles ridge.pyx</span>
-
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">vegas</span>
-<span class="kn">import</span> <span class="nn">ridge</span>
+
+<span class="c"># compile ridge_integrand.pyx, if not already compiled</span>
+<span class="kn">import</span> <span class="nn">pyximport</span>
+<span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>
+
+<span class="kn">import</span> <span class="nn">ridge_integrand</span>
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
-    <span class="c"># convert ridge.f into an MPI integrand</span>
-    <span class="n">fparallel</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">MPIintegrand</span><span class="p">(</span><span class="n">ridge</span><span class="o">.</span><span class="n">f</span><span class="p">)</span>
     <span class="c"># adapt</span>
-    <span class="n">integ</span><span class="p">(</span><span class="n">fparallel</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e5</span><span class="p">)</span>
+    <span class="n">integ</span><span class="p">(</span><span class="n">ridge_integrand</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e5</span><span class="p">)</span>
     <span class="c"># final results</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">fparallel</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e5</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">fparrallel</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="c"># result should be approximately 0.851</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge_integrand</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e5</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">integ</span><span class="o">.</span><span class="n">mpi_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c"># result should be approximately 0.85</span>
         <span class="k">print</span><span class="p">(</span><span class="s">&#39;result = </span><span class="si">%s</span><span class="s">    Q = </span><span class="si">%.2f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The integrand and main program are identical to what one would use for
-a batch integral except that <code class="docutils literal"><span class="pre">vegas.MPIintegrand(ridge.f)</span></code> is used
-in place of <code class="docutils literal"><span class="pre">vegas.batchintegrand(ridge.f)</span></code>, and we check the MPI
+<p>The integrand and main program are completely standard,
+except that we check the MPI
 rank of the process to avoid printing out multiple copies of the result,
-after the integration. To run this code on 4 CPUs, we might execute:</p>
-<div class="highlight-python"><div class="highlight"><pre>mpirun -np 4 python mpi-integral.py
+after the integration. To run this code on 4 CPUs, we execute</p>
+<div class="highlight-python"><div class="highlight"><pre>mpirun -np 4 python ridge.py
 </pre></div>
 </div>
-<p>This code runs 2.5&#8211;3 times faster on 4 CPUs than on a single CPU.
+<p>which gives the output</p>
+<div class="highlight-python"><div class="highlight"><pre>result = 0.85130(64)    Q = 0.50
+</pre></div>
+</div>
+<p>This code runs about 3 times faster on 4 CPUs than on a single CPU.
 One might have hoped that 4 CPUs would be 4x faster, but they aren&#8217;t
 quite that fast because of the time needed to transfer integration
 information between the processes on the different CPUs.
 Multiple CPUs are efficient only for costly integrands.</p>
+<p>It is important that the separate processes use the same random
+numbers when running in parallel. This is automatically enforced
+(unless <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></code></a> parameter <code class="docutils literal"><span class="pre">sync_ran</span></code>
+is set to <code class="docutils literal"><span class="pre">False</span></code>) provided the default random-number generator
+is used.</p>
 <p>There are many other ways to implement multiprocessing for <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>.
 All methods work with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> in batch mode, and distribute different
 integration points to different CPUs. For example, a class similar
-in function to <a class="reference internal" href="vegas.html#vegas.MPIintegrand" title="vegas.MPIintegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></code></a>, but where Python&#8217;s
-<code class="xref py py-mod docutils literal"><span class="pre">multiprocessing</span></code> module replaces MPI, is:</p>
+in function to <a class="reference internal" href="vegas.html#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.BatchIntegrand</span></code></a>, but where Python&#8217;s
+<code class="xref py py-mod docutils literal"><span class="pre">multiprocessing</span></code> module provides parallel processing, is:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">multiprocessing</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">vegas</span>
@@ -1018,8 +1023,8 @@ in function to <a class="reference internal" href="vegas.html#vegas.MPIintegrand
 </div>
 <p>Then <code class="docutils literal"><span class="pre">fparallel</span> <span class="pre">=</span> <span class="pre">parallelintegrand(f,</span> <span class="pre">4)</span></code>, for example, will create a
 new integrand <code class="docutils literal"><span class="pre">fparallel(x)</span></code> that uses 4 CPUs. This particular
-implementation of parallelism is not as efficient as the
-<a class="reference internal" href="vegas.html#vegas.MPIintegrand" title="vegas.MPIintegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></code></a>.</p>
+implementation of parallelism is not as efficient as the built-in
+MPI implementation.</p>
 </div>
 <div class="section" id="sums-with-vegas">
 <h2>Sums with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a><a class="headerlink" href="#sums-with-vegas" title="Permalink to this headline">¶</a></h2>
@@ -1146,6 +1151,241 @@ shows how this is done:</p>
 </div>
 <p>Here <code class="docutils literal"><span class="pre">hcube[i]</span></code> identifies the hypercube containing <code class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></code>.</p>
 </div>
+<div class="section" id="integrands-in-c-or-fortran">
+<h2>Integrands in C or Fortran<a class="headerlink" href="#integrands-in-c-or-fortran" title="Permalink to this headline">¶</a></h2>
+<p>Integrands coded in C or Fortran are often very fast to evaluate. There are
+many ways to access such integrands using the Python <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>. Here we
+review a few of the options.</p>
+<div class="section" id="ctypes-for-c">
+<h3><code class="xref py py-mod docutils literal"><span class="pre">ctypes</span></code> for C<a class="headerlink" href="#ctypes-for-c" title="Permalink to this headline">¶</a></h3>
+<p>The simplest way to access an integrand coded in C is to use the
+Python <code class="xref py py-mod docutils literal"><span class="pre">ctypes</span></code> module. To illustrate consider the following
+integrand, written in C and stored in file <code class="docutils literal"><span class="pre">cfcn.c</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>// file cfcn.c
+#include &lt;math.h&gt;
+
+double fcn(double x[], int dim)
+{
+      int i;
+      double xsq = 0.0;
+      for(i=0; i&lt;dim; i++)
+            xsq += x[i] * x[i] ;
+      return exp(-100. * sqrt(xsq)) * pow(100.,dim);
+}
+</pre></div>
+</div>
+<p>This file needs to be compiled into a shared library using something
+like:</p>
+<div class="highlight-python"><div class="highlight"><pre>cc -fPIC -shared -o cfcn.so cfcn.c
+</pre></div>
+</div>
+<p>The exact compilation command depends on the operating system and compiler
+being used. The function in this library is then wrapped in
+Python function <code class="docutils literal"><span class="pre">f</span></code>, and integrated using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">ctypes</span>
+
+<span class="c"># import cfcn.so</span>
+<span class="n">cfcn</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="s">&#39;cfcn.so&#39;</span><span class="p">)</span>
+<span class="c"># specify argument types and result type for cfcn.fcn</span>
+<span class="n">cfcn</span><span class="o">.</span><span class="n">fcn</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">)</span>
+<span class="n">cfcn</span><span class="o">.</span><span class="n">fcn</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span>
+
+<span class="c"># Python wrapper for function cfcn.fcn</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">cfcn</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">array_type</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="k">return</span> <span class="n">cfcn</span><span class="o">.</span><span class="n">fcn</span><span class="p">(</span><span class="n">array_type</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+    <span class="k">print</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+    <span class="k">print</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The output shows 10 iterations that are used to adapt <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> to the
+integrand, and then an additional 10 iterations to generate the
+final result:</p>
+<div class="highlight-python"><div class="highlight"><pre>itn   integral        wgt average     chi2/dof        Q
+-------------------------------------------------------
+  1   8.6(7.1)        8.6(7.1)            0.00     1.00
+  2   8.2(1.7)        8.2(1.7)            0.00     0.96
+  3   7.14(76)        7.32(69)            0.18     0.84
+  4   7.88(38)        7.75(33)            0.29     0.84
+  5   7.39(13)        7.44(12)            0.47     0.76
+  6   7.359(81)       7.383(68)           0.43     0.82
+  7   7.400(55)       7.393(43)           0.37     0.90
+  8   7.392(51)       7.393(33)           0.32     0.95
+  9   7.427(48)       7.404(27)           0.32     0.96
+ 10   7.388(41)       7.399(23)           0.30     0.98
+
+itn   integral        wgt average     chi2/dof        Q
+-------------------------------------------------------
+  1   7.429(34)       7.429(34)           0.00     1.00
+  2   7.412(32)       7.420(24)           0.13     0.72
+  3   7.413(28)       7.417(18)           0.08     0.92
+  4   7.366(25)       7.400(15)           0.96     0.41
+  5   7.366(23)       7.390(12)           1.12     0.34
+  6   7.410(22)       7.395(11)           1.02     0.40
+  7   7.395(20)       7.3951(95)          0.85     0.53
+  8   7.425(19)       7.4011(85)          1.02     0.42
+  9   7.394(19)       7.3998(77)          0.91     0.51
+ 10   7.386(17)       7.3976(71)          0.86     0.56
+</pre></div>
+</div>
+<p>The final estimate for the integral is <code class="docutils literal"><span class="pre">7.3976(71)</span></code>
+(1000 times more accurate than the very first iteration).</p>
+<p>The <code class="xref py py-mod docutils literal"><span class="pre">ctypes</span></code> implementation is probably the slowest of the
+implementations shown here.</p>
+</div>
+<div class="section" id="cython-for-c">
+<h3>Cython for C<a class="headerlink" href="#cython-for-c" title="Permalink to this headline">¶</a></h3>
+<p>A more flexible (and often faster) interface to a C integrand can be
+created using Cython. To increase efficiency (slightly, in this case),
+we use Cython code in file <code class="docutils literal"><span class="pre">cfcn.pyx</span></code> to convert the orginal
+function (in <code class="docutils literal"><span class="pre">cfcn.c</span></code>) into a batch integral:</p>
+<div class="highlight-python"><div class="highlight"><pre># file cfcn.pyx
+import numpy as np
+import vegas
+
+cdef extern double fcn (double[] x, int n)
+
+@vegas.batchintegrand
+def f(double[:, ::1] x):
+    cdef double[:] ans
+    cdef int i, dim=x.shape[1]
+    ans = np.empty(x.shape[0], type(x[0,0]))
+    for i in range(x.shape[0]):
+        ans[i] = fcn(&amp;x[i, 0], dim)
+    return ans
+</pre></div>
+</div>
+<p>We also have to tell Cython how to construct the <code class="docutils literal"><span class="pre">cfcn</span></code> Python
+module since that module needs to include compiled code
+from <code class="docutils literal"><span class="pre">cfcn.c</span></code>. This is done with a <cite>.pyxbld</cite> file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># file cfcn.pyxbld</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="k">def</span> <span class="nf">make_ext</span><span class="p">(</span><span class="n">modname</span><span class="p">,</span> <span class="n">pyxfilename</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">distutils.extension</span> <span class="kn">import</span> <span class="n">Extension</span>
+    <span class="k">return</span> <span class="n">Extension</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="n">modname</span><span class="p">,</span>
+                     <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">pyxfilename</span><span class="p">,</span> <span class="s">&#39;cfcn.c&#39;</span><span class="p">],</span>
+                     <span class="n">libraries</span><span class="o">=</span><span class="p">[],</span>
+                     <span class="n">include_dirs</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">get_include</span><span class="p">()],</span>
+                     <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">make_setup_args</span><span class="p">():</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Finally the integral is evaluated using the Python code</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+
+<span class="c"># compile cfcn, if needed, at import</span>
+<span class="kn">import</span> <span class="nn">pyximport</span>
+<span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">cfcn</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">print</span> <span class="n">integ</span><span class="p">(</span><span class="n">cfcn</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+    <span class="k">print</span> <span class="n">integ</span><span class="p">(</span><span class="n">cfcn</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>where, again, <code class="xref py py-mod docutils literal"><span class="pre">pyximport</span></code> guarantees that the <code class="docutils literal"><span class="pre">cfcn</span></code> module
+is compiled the first time the code is run.</p>
+<p>This implementation is probably the fastest of those presented here.</p>
+</div>
+<div class="section" id="f2py-for-fortran">
+<h3>f2py for Fortran<a class="headerlink" href="#f2py-for-fortran" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="xref py py-mod docutils literal"><span class="pre">f2py</span></code> package, which is distributed with <code class="xref py py-mod docutils literal"><span class="pre">numpy</span></code>,
+makes it relatively easy to compile Fortran
+code directly into Python modules. Consider a Fortran implementation of
+integrand discussed above, stored in file <code class="docutils literal"><span class="pre">ffcn.f</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>c file ffcn.f
+c
+      function fcn(x, dim)
+      integer i, dim
+      real*8 x(dim), x2, fcn
+      x2 = 0.0
+      do i=1,dim
+        x2 = x2 + x(i) ** 2
+      end do
+      fcn = exp(-100. * sqrt(x2)) * 100. ** dim
+      return
+      end
+</pre></div>
+</div>
+<p>This code is compiled into a Python module using</p>
+<div class="highlight-python"><div class="highlight"><pre>f2py -m ffcn -c ffcn.f
+</pre></div>
+</div>
+<p>and the resulting module provides access to the
+integrand from Python:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">ffcn</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">print</span> <span class="n">integ</span><span class="p">(</span><span class="n">ffcn</span><span class="o">.</span><span class="n">fcn</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+    <span class="k">print</span> <span class="n">integ</span><span class="p">(</span><span class="n">ffcn</span><span class="o">.</span><span class="n">fcn</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="f2py-for-c">
+<h3><code class="xref py py-mod docutils literal"><span class="pre">f2py</span></code> for C<a class="headerlink" href="#f2py-for-c" title="Permalink to this headline">¶</a></h3>
+<p><code class="xref py py-mod docutils literal"><span class="pre">f2py</span></code> can also be used to compile C code directly into Python
+modules, but usually needs an interface file to specify how the
+C is turned into Python. The interface file <code class="docutils literal"><span class="pre">cfcn.pyf</span></code> for
+the C file <code class="docutils literal"><span class="pre">cfcn.c</span></code> (above) is:</p>
+<div class="highlight-python"><div class="highlight"><pre>python module cfcn
+interface
+  real*8 function fcn(x, n)
+    intent(c) fcn                 ! foo is a C function
+    intent(c)                     ! all foo arguments are
+                                  ! considered as C based
+    integer intent(hide), depend(x) :: n=len(x)  ! n is the length
+                                                 ! of input array x
+    real*8 intent(in) :: x(n)          ! x is input array
+    ! double precision fcn
+  end function fcn
+end interface
+end python module cfcn
+</pre></div>
+</div>
+<p>More information is available in the documentation for <code class="xref py py-mod docutils literal"><span class="pre">f2py</span></code>.
+The module is created using</p>
+<div class="highlight-python"><div class="highlight"><pre>f2py -m cfcn -c cfcn.pyf cfcn.c
+</pre></div>
+</div>
+<p>and the integral evaluated using Python code:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">cfcn</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">print</span> <span class="n">integ</span><span class="p">(</span><span class="n">cfcn</span><span class="o">.</span><span class="n">fcn</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+    <span class="k">print</span> <span class="n">integ</span><span class="p">(</span><span class="n">cfcn</span><span class="o">.</span><span class="n">fcn</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="implementation-notes">
 <h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h2>
 <p>This implementation relies upon Cython for its speed and
@@ -1179,6 +1419,13 @@ deviations, and properly correlated with other
 <li><a class="reference internal" href="#multiple-processors">Multiple Processors</a></li>
 <li><a class="reference internal" href="#sums-with-vegas">Sums with <code class="docutils literal"><span class="pre">vegas</span></code></a></li>
 <li><a class="reference internal" href="#vegas-as-a-random-number-generator"><code class="docutils literal"><span class="pre">vegas</span></code> as a Random Number Generator</a></li>
+<li><a class="reference internal" href="#integrands-in-c-or-fortran">Integrands in C or Fortran</a><ul>
+<li><a class="reference internal" href="#ctypes-for-c"><code class="docutils literal"><span class="pre">ctypes</span></code> for C</a></li>
+<li><a class="reference internal" href="#cython-for-c">Cython for C</a></li>
+<li><a class="reference internal" href="#f2py-for-fortran">f2py for Fortran</a></li>
+<li><a class="reference internal" href="#f2py-for-c"><code class="docutils literal"><span class="pre">f2py</span></code> for C</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#implementation-notes">Implementation Notes</a></li>
 </ul>
 </li>
@@ -1222,7 +1469,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

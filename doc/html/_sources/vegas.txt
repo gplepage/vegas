@@ -265,6 +265,4 @@ Other Objects and Functions
 
 .. autoclass:: vegas.BatchIntegrand
 
-.. autoclass:: MPIintegrand
-
 

@@ -1,0 +1,26 @@
+c Sample vegas integrand written in Fortran
+
+      function fcn(x, dim)
+      integer i, dim
+      real*8 x(dim), x2, fcn
+      x2 = 0.0
+      do i=1,dim
+        x2 = x2 + x(i) ** 2
+      end do
+      fcn = exp(-100. * sqrt(x2)) * 100. ** dim
+      return
+      end
+
+
+
+c Copyright (c) 2016 G. Peter Lepage.
+c
+c This program is free software: you can redistribute it and/or modify
+c it under the terms of the GNU General Public License as published by
+c the Free Software Foundation, either version 3 of the License, or
+c any later version (see <http://www.gnu.org/licenses/>).
+c
+c This program is distributed in the hope that it will be useful,
+c but WITHOUT ANY WARRANTY; without even the implied warranty of
+c MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+c GNU General Public License for more details.

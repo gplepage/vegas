@@ -3,8 +3,8 @@
 Cython code for the integrator used in fastest.py.
 
 Note that this achieves better performance than the integrand in faster.py
-without the  complication of using numpy vectorization.
-Some problems are not so simply coded using whole-array operators.
+without the complication of using numpy vectorization.
+Some problems are not easily coded using whole-array operators.
 """
 
 # import Cython description of vegas (to derive from vegas.BatchIntegrand)

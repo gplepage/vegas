@@ -1,0 +1,13 @@
+python module cfcn_f2py
+interface
+  real*8 function fcn(x, n)
+    intent(c) fcn                 ! foo is a C function
+    intent(c)                     ! all foo arguments are
+                                  ! considered as C based
+    integer intent(hide), depend(x) :: n=len(x)  ! n is the length
+                                                 ! of input array x
+    real*8 intent(in) :: x(n)          ! x is input array
+    ! double precision fcn
+  end function fcn
+end interface
+end python module cfcn_f2py

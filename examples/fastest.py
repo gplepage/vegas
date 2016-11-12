@@ -18,9 +18,12 @@ import vegas
 import math
 import numpy as np
 
+# compile fastest_integrand.pyx, if necessary
 import pyximport
-pyximport.install(setup_args=dict(include_dirs=[np.get_include()]))
-# compiles fastest_integrand.pyx
+pyximport.install(
+    inplace=True,
+    setup_args=dict(include_dirs=[np.get_include()])
+    )
 
 from fastest_integrand import f_cython
 
@@ -29,7 +32,7 @@ np.random.seed((1,2))   # causes reproducible random numbers
 def main():
     # create integrand and integrator
     f = f_cython(dim=6)
-    integ = vegas.Integrator(f.dim * [[0, 1]])
+    integ = vegas.Integrator(f.dim * [[0, 1]], sync_ran=False)
 
     # adapt the grid; discard these results
     integ(f, neval=25000, nitn=10)
@@ -57,7 +60,7 @@ if __name__ == '__main__':
 
 
 
-# Copyright (c) 2013-14 G. Peter Lepage.
+# Copyright (c) 2013-16 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

@@ -33,9 +33,12 @@ import math
 import sys
 import gvar as gv
 
+# compiles path_integrand.pyx, if needed
 import pyximport
-pyximport.install(setup_args=dict(include_dirs=[np.get_include()]))
-# compiles path_integrand.pyx
+pyximport.install(
+    inplace=True,
+    setup_args=dict(include_dirs=[np.get_include()]),
+    )
 
 from path_integrand import PathIntegrand
 
@@ -143,3 +146,18 @@ def plot_results(E0, x0, corr, T):
 
 if __name__ == '__main__':
     main()
+
+
+
+
+# Copyright (c) 2013-16 G. Peter Lepage.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version (see <http://www.gnu.org/licenses/>).
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.

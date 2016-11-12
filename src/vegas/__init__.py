@@ -182,7 +182,7 @@ class PDFIntegrator(Integrator):
             Setting ``svdcut=None`` or ``svdcut=0`` leaves the
             covariance matrix unchanged. Default is ``1e-15``.
     """
-    def __init__(self, g, limit=1e15, scale=1., svdcut=1e-15):
+    def __init__(self, g, limit=1e15, scale=1., svdcut=1e-15, **kargs):
         if isinstance(g, _gvar.PDF):
             self.pdf = g
         else:
@@ -194,9 +194,11 @@ class PDFIntegrator(Integrator):
         #     super(PDFIntegrator, self).__init__(self.pdf.size * [(1. - limit, limit)])
         #     self._expval = self._expval_ndtri
         # else:
+        if kargs.get('sync_ran', True):
+            Integrator.synchronize_random()   # for mpi
         integ_map = self._make_map(self.limit / self.scale)
         super(PDFIntegrator, self).__init__(
-            self.pdf.size * [integ_map]
+            self.pdf.size * [integ_map], **kargs
             )
         # limit = numpy.arctan(self.limit / self.scale)
         # super(PDFIntegrator, self).__init__(

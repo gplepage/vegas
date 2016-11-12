@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vegas Module &mdash; vegas 3.1 documentation</title>
+    <title>vegas Module &mdash; vegas 3.2 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '3.1',
+        VERSION:     '3.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 3.1 documentation" href="index.html" />
+    <link rel="top" title="vegas 3.2 documentation" href="index.html" />
     <link rel="prev" title="How vegas Works" href="background.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -46,7 +46,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.2 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -231,14 +231,18 @@ per hypercube in the stratification. The default value
 is 1e7. Larger values might allow for more adaptation
 (when <code class="docutils literal"><span class="pre">neval</span></code> is larger than <code class="docutils literal"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">max_neval_hcube</span></code>),
 but also can result in very large internal work arrays.</li>
-<li><strong>rtol</strong> (<em>float less than 1</em>) &#8211; Relative error in the integral estimate
+<li><strong>rtol</strong> (<em>non-negative float</em>) &#8211; Relative error in the integral estimate
 at which point the integrator can stop. The default
-value is 0.0 which means that the integrator will
-complete all iterations specified by <code class="docutils literal"><span class="pre">nitn</span></code>.</li>
-<li><strong>atol</strong> (<em>float</em>) &#8211; Absolute error in the integral estimate
+value is 0.0 which turns off this stopping condition.
+This stopping condition can be quite unreliable
+in early iterations, before <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> has converged.
+Use with caution, if at all.</li>
+<li><strong>atol</strong> (<em>non-negative float</em>) &#8211; Absolute error in the integral estimate
 at which point the integrator can stop. The default
-value is 0.0 which means that the integrator will
-complete all iterations specified by <code class="docutils literal"><span class="pre">nitn</span></code>.</li>
+value is 0.0 which turns off this stopping condition.
+This stopping condition can be quite unreliable
+in early iterations, before <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> has converged.
+Use with caution, if at all.</li>
 <li><strong>analyzer</strong> &#8211; <p>An object with methods</p>
 <blockquote>
 <div><code class="docutils literal"><span class="pre">analyzer.begin(itn,</span> <span class="pre">integrator)</span></code><p><code class="docutils literal"><span class="pre">analyzer.end(itn_result,</span> <span class="pre">result)</span></code></p>
@@ -919,8 +923,7 @@ covariance matrix unchanged. Default is <code class="docutils literal"><span cla
 <code class="docutils literal"><span class="pre">f(p)</span></code> multiplied by the probability density function
 associated with <code class="docutils literal"><span class="pre">g</span></code> (i.e., <code class="docutils literal"><span class="pre">pdf(p)</span></code>). The probability
 density function is omitted if <code class="docutils literal"><span class="pre">nopdf=True</span></code> (default
-setting is <code class="docutils literal"><span class="pre">False</span></code>). Setting <code class="docutils literal"><span class="pre">mpi=True</span></code> configures vegas
-for multi-processor running using MPI.</p>
+setting is <code class="docutils literal"><span class="pre">False</span></code>).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -936,18 +939,6 @@ from the integrand (so no longer an expectation value).
 This is useful if one wants to use the optimized
 integrator for something other than a standard
 expectation value. Default is <code class="docutils literal"><span class="pre">False</span></code>.</li>
-<li><strong>mpi</strong> (<em>bool</em>) &#8211; <p>If <code class="docutils literal"><span class="pre">True</span></code> configure for use with multiple processors
-and MPI. This option requires module <code class="xref py py-mod docutils literal"><span class="pre">mpi4py</span></code>. A
-script <code class="docutils literal"><span class="pre">xxx.py</span></code> using an MPI integrator is run
-with <code class="docutils literal"><span class="pre">mpirun</span></code>: e.g.,</p>
-<div class="highlight-python"><div class="highlight"><pre>mpirun -np 4 -output-filename xxx.out python xxx.py
-</pre></div>
-</div>
-<p>runs on 4 processors. Setting <code class="docutils literal"><span class="pre">mpi=False</span></code> (default) does
-not support multiple processors. The MPI processor
-rank can be obtained from the <code class="docutils literal"><span class="pre">mpi_rank</span></code>
-attribute of the integrator.</p>
-</li>
 </ul>
 </td>
 </tr>
@@ -1184,88 +1175,6 @@ easiest way to construct integrands in Cython, and
 gives the fastest results.</p>
 </dd></dl>
 
-<dl class="class">
-<dt id="vegas.MPIintegrand">
-<em class="property">class </em><code class="descclassname">vegas.</code><code class="descname">MPIintegrand</code><a class="headerlink" href="#vegas.MPIintegrand" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert (batch) integrand into an MPI multiprocessor integrand.</p>
-<p>Applying decorator <a class="reference internal" href="#vegas.MPIintegrand" title="vegas.MPIintegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></code></a> to  a function
-repackages the function as a  batch <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> integrand that can
-execute in parallel on multiple processors. Appropriate  functions
-take a <code class="xref py py-mod docutils literal"><span class="pre">numpy</span></code> array of integration points <code class="docutils literal"><span class="pre">x[i,</span> <span class="pre">d]</span></code> as an
-argument, where <code class="docutils literal"><span class="pre">i=0...</span></code> labels the integration point and
-<code class="docutils literal"><span class="pre">d=0...</span></code> labels direction, and return an array <code class="docutils literal"><span class="pre">f[i]</span></code> of
-integrand values (or arrays  f[i,...] of integrand values) for the
-corresponding  points.</p>
-<p>An example is</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-
-<span class="nd">@vegas.MPIintegrand</span>
-<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>for the two-dimensional integrand <img class="math" src="_images/math/f3d2e2952c5287b08304f19892d3bb323eb1b153.png" alt="\exp(-x_0 - x_1)" style="vertical-align: -3px"/>.  Of
-course, one could write <code class="docutils literal"><span class="pre">f</span> <span class="pre">=</span> <span class="pre">vegas.MPIintegrand(f)</span></code> instead of
-using the decorator.</p>
-<p>Message passing between processors uses MPI via Python  module
-<code class="xref py py-mod docutils literal"><span class="pre">mpi4py</span></code>, which must be installed in Python.  To run an MPI
-integration code <code class="docutils literal"><span class="pre">mpi-integral.py</span></code> on 4 processors,  for
-example, one might execute:</p>
-<div class="highlight-python"><div class="highlight"><pre>mpirun -np 4 python mpi-integral.py
-</pre></div>
-</div>
-<p>Executing <code class="docutils literal"><span class="pre">python</span> <span class="pre">mpi-integral.py</span></code>, without the <code class="docutils literal"><span class="pre">mpirun</span></code>, causes
-it to run on a single processor, in more or less the same  way an
-integral with a batch integrand runs.</p>
-<p>An object of type <a class="reference internal" href="#vegas.MPIintegrand" title="vegas.MPIintegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></code></a> contains information
-about the MPI processes in the following attributes:</p>
-<dl class="attribute">
-<dt id="vegas.MPIintegrand.comm">
-<code class="descname">comm</code><a class="headerlink" href="#vegas.MPIintegrand.comm" title="Permalink to this definition">¶</a></dt>
-<dd><p>MPI intracommunicator &#8212; <code class="xref py py-class docutils literal"><span class="pre">mpi4py.MPI.Intracomm</span></code> object
-<code class="docutils literal"><span class="pre">mpi4py.MPI.COMM_WORLD</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="vegas.MPIintegrand.nproc">
-<code class="descname">nproc</code><a class="headerlink" href="#vegas.MPIintegrand.nproc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of processors used.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="vegas.MPIintegrand.rank">
-<code class="descname">rank</code><a class="headerlink" href="#vegas.MPIintegrand.rank" title="Permalink to this definition">¶</a></dt>
-<dd><p>MPI rank of current process. Each process has a unique  rank,
-ranging from <code class="docutils literal"><span class="pre">0</span></code> to <code class="docutils literal"><span class="pre">nproc-1</span></code>. The rank is used  to make
-different processes do different things (for example, one
-generally wants only one of the processes to report out  final
-results).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="vegas.MPIintegrand.seed">
-<code class="descname">seed</code><a class="headerlink" href="#vegas.MPIintegrand.seed" title="Permalink to this definition">¶</a></dt>
-<dd><p>The random number see used to reset <code class="docutils literal"><span class="pre">numpy.random.random</span></code>
-in all the processes.</p>
-</dd></dl>
-
-<p>The implementation used here has the entire integration code run
-on every processor. It is only when evaluating the integrand that
-the processes do different  things. This is efficient provided
-most of the time is spent evaluating the integrand, which, in any
-case, is the only situation where it might make sense to use multiple
-processors.</p>
-<p>Note that <a class="reference internal" href="#vegas.MPIintegrand" title="vegas.MPIintegrand"><code class="xref py py-class docutils literal"><span class="pre">vegas.MPIintegrand</span></code></a> assumes that
-<a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></code></a> is using the default random  number
-generator (<code class="docutils literal"><span class="pre">numpy.random.random</span></code>). If this  is not the case, it
-is important to seed the other random  number generator so that all
-processes use the same random numbers.</p>
-<p>The approach used here to make <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> parallel is  based on a
-strategy developed by R. Horgan and Q. Mason for the original Fortran
-version of <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>.</p>
-</dd></dl>
-
 </div>
 </div>
 
@@ -1319,7 +1228,7 @@ version of <a class="reference internal" href="#module-vegas" title="vegas: Adap
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.2 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

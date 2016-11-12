@@ -1,6 +1,7 @@
-These .py files are simple examples showing how to use vegas. 
-Use 'make run' to run all of them, and compare the check their 
-output against the corresponding .out files.
+These .py files are simple examples showing how to use vegas. Use 'make run'
+to run most of them, and compare their output against the corresponding .out
+files. This will also try to run code on multiple processors, using MPI
+(assumes MPI installed).
 
 Some of these examples are discussed in the vegas documentation (which
 starts at doc/html/index.html):
@@ -15,7 +16,22 @@ starts at doc/html/index.html):
 
     path-integral.py - Quantum mechanics using Feynman's path integral.
 
-    parallel-mpi.py - Parallel processing using MPI
-
     parallel-pools.py - Parallel processing using Python's multiprocessing module
-    
+
+Several examples demonstrate how to use integrands written in C or Fortran.
+The ctypes code will probably not work on windows machines because of
+machine-specific procedures for creating (and naming) shared libraries.
+The others should work everywhere.
+
+    cfcn-ctypes.py - Uses Python's ctypes module to link to C code in cfcn.c
+
+    cfcn-cython.py - Uses an interface to C code written in cython (see
+        cfcn_cython.pyx and build information in cfcn_cython.pyxbld),
+
+    cfcn-f2py.py - Uses f2py to create a module from C code in cfcn.c, using
+        interface file cfcn_f2py.pyf.
+
+    ffcn-f2py.py - Uses f2py to create a Python module from Fortran code
+        in ffcn.f.
+
+

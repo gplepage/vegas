@@ -1,12 +1,13 @@
 include makefile README INSTALLATION COPYING MANIFEST.in CHANGES
 include setup.py src/vegas.pxd src/vegas/*.pxd src/vegas/*.pyx
-include doc/vegas.pdf
 
 graft doc/html
 graft examples
 graft tests
-exclude examples/*.tmp 
+exclude examples/*.tmp
 exclude examples/*.pyc
+exclude examples/*.so
+exclude examples/*.pyxbldc
 exclude tests/*.pyc
 recursive-exclude tests/__pycache__ *
 recursive-exclude doc/source/_build *
