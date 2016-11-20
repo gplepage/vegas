@@ -19,11 +19,10 @@ Other changes:
   before vegas has converged --- use them with caution if you use them at all.
   Thanks to Kevin Andrade for pointing out that they were not working.
 
-- Given output r from a vegas integrator, as before r.summary(extended=True)
-  prints an iteration-by-iteration summary showing how vegas adapted to the
-  integral, but it now also tabulates the final results for ever component of
-  the integrand in situations where more than one integral is being done  at a
-  time. extended=True has no effect for integrands that return a single value.
+- Given output r from a vegas integrator, added new option to r.summary().
+  Using r.summary(extended=True) appends a table showing the final results
+  for every component of the integrand (not just the part used to adapt
+  vegas).
 
 - Extra documentation on how to access integrands written in C or
   Fortran from Python vegas. New (simpler) documentation on using MPI.
