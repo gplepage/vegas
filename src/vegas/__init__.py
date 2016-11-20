@@ -196,6 +196,7 @@ class PDFIntegrator(Integrator):
         #     self._expval = self._expval_ndtri
         # else:
         if kargs.get('sync_ran', True):
+            # needed because of the Monte Carlo in _make_map()
             Integrator.synchronize_random()   # for mpi
         integ_map = self._make_map(self.limit / self.scale)
         super(PDFIntegrator, self).__init__(
