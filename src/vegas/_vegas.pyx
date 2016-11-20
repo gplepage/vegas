@@ -1607,7 +1607,13 @@ class RAvg(gvar.GVar):
 
 
     def summary(self, extended=False, weighted=None):
-        """ Assemble summary of independent results into a string. """
+        """ Assemble summary of results, iteration-by-iteration, into a string.
+
+        Args:
+            weighted (bool): Display weighted averages of results from different
+                iterations if ``True``; otherwise show unweighted averages.
+                Default behavior is determined by |vegas|.
+        """
         if weighted is None:
             weighted = self.weighted
         acc = RAvg(weighted=weighted)
@@ -1683,8 +1689,19 @@ class RAvgDict(gvar.BufferDict):
         self.rarray.add(newg.buf)
         self.buf = numpy.array(self.rarray)
 
-    def summary(self, extended=False):
-        ans = self.rarray.summary(weighted=self.weighted, extended=False)
+    def summary(self, extended=False, weighted=None):
+        """ Assemble summary of results, iteration-by-iteration, into a string.
+
+        Args:
+            extended (bool): Include a table of final averages for every
+                component of the integrand if ``True``. Default is ``False``.
+            weighted (bool): Display weighted averages of results from different
+                iterations if ``True``; otherwise show unweighted averages.
+                Default behavior is determined by |vegas|.
+        """
+        if weighted is None:
+            weighted = self.weighted
+        ans = self.rarray.summary(weighted=weighted, extended=False)
         if extended and self.itn_results[0].size > 1:
             ans += '\n' + gvar.tabulate(self)
         return ans
@@ -1851,7 +1868,15 @@ class RAvgArray(numpy.ndarray):
             self[:] = gvar.gvar(mean, cov).reshape(self.shape)
 
     def summary(self, extended=False, weighted=None):
-        """ Assemble summary of independent results into a string. """
+        """ Assemble summary of results, iteration-by-iteration, into a string.
+
+        Args:
+            extended (bool): Include a table of final averages for every
+                component of the integrand if ``True``. Default is ``False``.
+            weighted (bool): Display weighted averages of results from different
+                iterations if ``True``; otherwise show unweighted averages.
+                Default behavior is determined by |vegas|.
+        """
         if weighted is None:
             weighted = self.weighted
         acc = RAvgArray(self.shape, weighted=weighted)

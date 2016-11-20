@@ -900,7 +900,10 @@ but where Python's
             return np.concatenate(results)
 
 Then ``fparallel = parallelintegrand(f, 4)``, for example, will create a
-new integrand ``fparallel(x)`` that uses 4 CPUs.
+new integrand ``fparallel(x)`` that uses 4 CPUs. Python's
+:mod:`multiprocessing` module has limitations, particularly on Windows
+machines, which make this approach to multi-processing less robust than
+MPI.
 
 
 Sums with |vegas|

@@ -1,27 +1,32 @@
-Version 3.2 - 2016-11-06??
+Version 3.2 - 2016-11-20
 ========================
-MPI support for multiple processors is simplified in this version. MPI is
-now built into the integrator and automatically avaible for any
-integrand without modifying its code --- simply run
-the code using, for example,
+MPI (multi-processor) support is now integrated into vegas
+and automatically avaible for any integrand without modifying
+its code --- simply run the code using, for example,
 
-  mpirun -np 4 python code.py
+  mpirun -np 4 python your-code.py
 
-You no longer need to convert the integrand using vegas.MPIintegrator;
-MPIintegrator is no longer needed for anything. I left it in vegas
-for legacy purposes, but you should discontinue its use.
+to distribute integrand evaluations over 4 processes (and processors if you
+have that many). You no longer need to convert the integrand using
+vegas.MPIintegrator; MPIintegrator is no longer needed for anything. I left it
+in vegas for legacy purposes, but you should discontinue its use.
 
 Other changes:
 
 - The stopping conditions (atol and rtol) now work. I forgot to install
-  the stopping conditions earlier, mostly because I never use them. These
-  stopping conditions can be quite unreliable in early iterations,
-  before vegas has converged --- use them with caution if you use them
-  at all. Thanks to Kevin Andrade for pointing out that they were not
-  working.
+  the stopping conditions in earlier versions, mostly because I never use
+  them. These stopping conditions can be quite unreliable in early iterations,
+  before vegas has converged --- use them with caution if you use them at all.
+  Thanks to Kevin Andrade for pointing out that they were not working.
+
+- Given output r from a vegas integrator, as before r.summary(extended=True)
+  prints an iteration-by-iteration summary showing how vegas adapted to the
+  integral, but it now also tabulates the final results for ever component of
+  the integrand in situations where more than one integral is being done  at a
+  time. extended=True has no effect for integrands that return a single value.
 
 - Extra documentation on how to access integrands written in C or
-  Fortran from Python vegas.
+  Fortran from Python vegas. New (simpler) documentation on using MPI.
 
 Version 3.1 - 2016-11-05
 ========================

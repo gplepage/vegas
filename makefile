@@ -58,6 +58,9 @@ tests:
 run run-examples:
 	$(MAKE) -C examples PYTHON=$(PYTHON) PLOT=True run
 
+test-linking:
+	$(MAKE) -C examples PYTHON=$(PYTHON) test-linking
+
 time:
 	time $(MAKE) -C examples PYTHON=$(PYTHON) PLOT=False run
 

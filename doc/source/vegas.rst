@@ -227,7 +227,7 @@ Other Objects and Functions
 
    .. automethod:: add(g)
 
-   .. automethod:: summary()
+   .. automethod:: summary(extended=False, weighted=None)
 
 .. autoclass:: vegas.RAvgArray
 
@@ -243,7 +243,7 @@ Other Objects and Functions
 
    .. automethod:: add(g)
 
-   .. automethod:: summary()
+   .. automethod:: summary(extended=False, weighted=None)
 
 .. autoclass:: vegas.RAvgDict
 
@@ -259,7 +259,7 @@ Other Objects and Functions
 
    .. automethod:: add(g)
 
-   .. automethod:: summary()
+   .. automethod:: summary(extended=False, weighted=None)
 
 .. autofunction:: vegas.batchintegrand
 

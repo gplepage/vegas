@@ -1016,7 +1016,17 @@ otherwise straight, unweighted averages are used.</p>
 <dl class="method">
 <dt id="vegas.RAvg.summary">
 <code class="descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg.summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assemble summary of independent results into a string.</p>
+<dd><p>Assemble summary of results, iteration-by-iteration, into a string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>weighted</strong> (<em>bool</em>) &#8211; Display weighted averages of results from different
+iterations if <code class="docutils literal"><span class="pre">True</span></code>; otherwise show unweighted averages.
+Default behavior is determined by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -1067,7 +1077,22 @@ otherwise straight, unweighted averages are used.</p>
 <dl class="method">
 <dt id="vegas.RAvgArray.summary">
 <code class="descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgArray.summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assemble summary of independent results into a string.</p>
+<dd><p>Assemble summary of results, iteration-by-iteration, into a string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>extended</strong> (<em>bool</em>) &#8211; Include a table of final averages for every
+component of the integrand if <code class="docutils literal"><span class="pre">True</span></code>. Default is <code class="docutils literal"><span class="pre">False</span></code>.</li>
+<li><strong>weighted</strong> (<em>bool</em>) &#8211; Display weighted averages of results from different
+iterations if <code class="docutils literal"><span class="pre">True</span></code>; otherwise show unweighted averages.
+Default behavior is determined by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -1116,7 +1141,23 @@ otherwise straight, unweighted averages are used.</p>
 <dl class="method">
 <dt id="vegas.RAvgDict.summary">
 <code class="descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict.summary" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Assemble summary of results, iteration-by-iteration, into a string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>extended</strong> (<em>bool</em>) &#8211; Include a table of final averages for every
+component of the integrand if <code class="docutils literal"><span class="pre">True</span></code>. Default is <code class="docutils literal"><span class="pre">False</span></code>.</li>
+<li><strong>weighted</strong> (<em>bool</em>) &#8211; Display weighted averages of results from different
+iterations if <code class="docutils literal"><span class="pre">True</span></code>; otherwise show unweighted averages.
+Default behavior is determined by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 

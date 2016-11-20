@@ -848,7 +848,7 @@ can be run on 2 processors using ::
 
     mpirun -np 2 python ridge.py
 
-to cut the run time almost in half. The speed is not exactly doubled because
+This cuts the run time almost in half. The speed is not exactly doubled because
 time is required to move integration results between the different CPUs.
 The code uses the MPI rank of the processes so that only one of them
 prints out results::
@@ -900,7 +900,10 @@ but where Python's
             return np.concatenate(results)
 
 Then ``fparallel = parallelintegrand(f, 4)``, for example, will create a
-new integrand ``fparallel(x)`` that uses 4 CPUs.
+new integrand ``fparallel(x)`` that uses 4 CPUs. Python's
+:mod:`multiprocessing` module has limitations, particularly on Windows
+machines, which make this approach to multi-processing less robust than
+MPI.
 
 
 Sums with |vegas|
