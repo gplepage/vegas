@@ -10,6 +10,10 @@ papers/
 examples/vegas.prof
 examples/*.c
 examples/*.tmp
+examples/*.1.0
+examples/*.1.1
+examples/*.1.2
+examples/*.1.3
 MANIFEST
 dist/
 doc/source/_build/

@@ -36,7 +36,7 @@ def main():
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
     if SHOW_GRID:
-        integ.map.show_grid(30)
+        integ.map.show_grid(20)
 
 if __name__ == '__main__':
     main()

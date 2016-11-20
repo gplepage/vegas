@@ -907,10 +907,10 @@ cdef class Integrator(object):
                 self.analyzer = kargs[k]
             elif k == 'rtol':
                 old_val[k] = self.rtol
-                self.rtol = kargs[k]
+                self.rtol = abs(kargs[k])
             elif k == 'atol':
                 old_val[k] = self.atol
-                self.atol = kargs[k]
+                self.atol = abs(kargs[k])
             elif k == 'ran_array_generator':
                 old_val[k] = self.ran_array_generator
                 self.ran_array_generator = kargs[k]
@@ -1005,12 +1005,12 @@ cdef class Integrator(object):
         ans = "Integrator Settings:\n"
         if self.beta > 0:
             ans = ans + (
-                "    %d (max) integrand evaluations in each of %d iterations\n"
+                "    %.6g (max) integrand evaluations in each of %d iterations\n"
                 % (self.neval, self.nitn)
                 )
         else:
             ans = ans + (
-                "    %d integrand evaluations in each of %d iterations\n"
+                "    %.6g integrand evaluations in each of %d iterations\n"
                 % (neval, self.nitn)
                 )
         ans = ans + (
@@ -1019,12 +1019,12 @@ cdef class Integrator(object):
             )
         if self.beta > 0:
             ans = ans + (
-                "                h-cubes = %d  evaluations/h-cube = %d (min)\n"
+                "                h-cubes = %.6g  evaluations/h-cube = %d (min)\n"
                 % (nhcube, self.min_neval_hcube)
                 )
         else:
             ans = ans + (
-                    "                h-cubes = %d  evaluations/h-cube = %d\n"
+                    "                h-cubes = %.6g evaluations/h-cube = %d\n"
                     % (nhcube, self.min_neval_hcube)
                     )
         ans += "                h-cubes/batch = %d\n" % self.nhcube_batch
@@ -1496,9 +1496,9 @@ class reporter:
     def end(self, itn_ans, ans):
         print("    itn %2d: %s\n all itn's: %s"%(self.itn+1, itn_ans, ans))
         print(
-            '    neval = %d  neval/h-cube = %s\n    chi2/dof = %.2f  Q = %.2f'
+            '    neval = %s  neval/h-cube = %s\n    chi2/dof = %.2f  Q = %.2f'
             % (
-                self.integrator.last_neval,
+                format(self.integrator.last_neval, '.6g'),
                 tuple(self.integrator.neval_hcube_range),
                 ans.chi2 / ans.dof if ans.dof > 0 else 0,
                 ans.Q if ans.dof > 0 else 1.,
@@ -1561,6 +1561,11 @@ class RAvg(gvar.GVar):
         "Number of degrees of freedom in weighted average."
         )
 
+    def _nitn(self):
+        return len(self.itn_results)
+
+    nitn = property(_nitn, None, None, "Number of iterations.")
+
     def _Q(self):
         return (
             gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
@@ -1575,7 +1580,7 @@ class RAvg(gvar.GVar):
         )
 
     def converged(self, rtol, atol):
-        return self.sdev < abs(atol) + abs(rtol * self.mean)
+        return self.sdev < atol + rtol * abs(self.mean)
 
     def add(self, g):
         """ Add estimate ``g`` to the running average. """
@@ -1601,7 +1606,7 @@ class RAvg(gvar.GVar):
                 ).internaldata)
 
 
-    def summary(self, weighted=None):
+    def summary(self, extended=False, weighted=None):
         """ Assemble summary of independent results into a string. """
         if weighted is None:
             weighted = self.weighted
@@ -1659,7 +1664,7 @@ class RAvgDict(gvar.BufferDict):
     def converged(self, rtol, atol):
         return numpy.all(
             gvar.sdev(self.buf) <
-            abs(atol) + numpy.abs(rtol * gvar.mean(self.buf))
+            atol + rtol * numpy.abs(gvar.mean(self.buf))
             )
 
     def add(self, g):
@@ -1678,8 +1683,11 @@ class RAvgDict(gvar.BufferDict):
         self.rarray.add(newg.buf)
         self.buf = numpy.array(self.rarray)
 
-    def summary(self):
-        return self.rarray.summary(weighted=self.weighted)
+    def summary(self, extended=False):
+        ans = self.rarray.summary(weighted=self.weighted, extended=False)
+        if extended and self.itn_results[0].size > 1:
+            ans += '\n' + gvar.tabulate(self)
+        return ans
 
     def _chi2(self):
         return self.rarray.chi2
@@ -1691,6 +1699,11 @@ class RAvgDict(gvar.BufferDict):
         _dof, None, None,
         "Number of degrees of freedom in weighted average."
         )
+
+    def _nitn(self):
+        return len(self.itn_results)
+
+    nitn = property(_nitn, None, None, "Number of iterations.")
 
     def _Q(self):
         return self.rarray.Q
@@ -1766,7 +1779,7 @@ class RAvgArray(numpy.ndarray):
 
     def converged(self, rtol, atol):
         return numpy.all(
-            gvar.sdev(self) < abs(atol) + numpy.abs(rtol * gvar.mean(self))
+            gvar.sdev(self) < atol + rtol * numpy.abs(gvar.mean(self))
             )
 
     def _chi2(self):
@@ -1790,6 +1803,11 @@ class RAvgArray(numpy.ndarray):
         _dof, None, None,
         "Number of degrees of freedom in weighted average."
         )
+
+    def _nitn(self):
+        return len(self.itn_results)
+
+    nitn = property(_nitn, None, None, "Number of iterations.")
 
     def _Q(self):
         if self.dof <= 0 or self.chi2 <= 0:
@@ -1832,7 +1850,7 @@ class RAvgArray(numpy.ndarray):
             cov = self._cov / (self._n ** 2)
             self[:] = gvar.gvar(mean, cov).reshape(self.shape)
 
-    def summary(self, weighted=None):
+    def summary(self, extended=False, weighted=None):
         """ Assemble summary of independent results into a string. """
         if weighted is None:
             weighted = self.weighted
@@ -1866,6 +1884,8 @@ class RAvgArray(numpy.ndarray):
         ans += len(ans[:-1]) * '-' + '\n'
         for data in linedata:
             ans += fmt % data
+        if extended and self.itn_results[0].size > 1:
+            ans += '\n' + gvar.tabulate(self)
         return ans
 
 
@@ -2013,7 +2033,7 @@ cdef class VegasIntegrand:
                     fx = numpy.asarray(fcn(x0))
                     self.shape = fx.shape[1:]
                     self.size = fx.size
-                    _eval = _BatchIntegrand_from_Batch(fcn)
+                    _eval = _BatchIntegrand_from_Batch(fcn, self.shape)
             if self.nproc > 1:
                 # MPI multiprocessor mode
                 def _mpi_eval(x, self=self, _eval=_eval):
@@ -2047,9 +2067,9 @@ cdef class VegasIntegrand:
 # and nonbatch vs batch) to the standard output format assumed internally
 # in vegas.
 cdef class _BatchIntegrand_from_NonBatch(object):
-    cdef numpy.npy_intp size
-    cdef object shape
-    cdef object fcn
+    cdef readonly numpy.npy_intp size
+    cdef readonly object shape
+    cdef readonly object fcn
     """ Batch integrand from non-batch integrand. """
     def __init__(self, fcn, size, shape):
         self.fcn = fcn
@@ -2071,8 +2091,8 @@ cdef class _BatchIntegrand_from_NonBatch(object):
         return f
 
 cdef class _BatchIntegrand_from_NonBatchDict(object):
-    cdef numpy.npy_intp size
-    cdef object fcn
+    cdef readonly numpy.npy_intp size
+    cdef readonly object fcn
     """ Batch integrand from non-batch dict-integrand. """
     def __init__(self, fcn, size):
         self.fcn = fcn
@@ -2091,12 +2111,16 @@ cdef class _BatchIntegrand_from_NonBatchDict(object):
         return f
 
 cdef class _BatchIntegrand_from_Batch(object):
-    cdef object fcn
+    cdef readonly object fcn
+    cdef readonly object shape
     """ BatchIntegrand from batch function. """
-    def __init__(self, fcn):
+    def __init__(self, fcn, shape):
         self.fcn = fcn
+        self.shape = shape
 
     def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+        if x.shape[0] <= 0:
+            return numpy.empty((0,) + self.shape, float)
         fx = self.fcn(x)
         if not isinstance(fx, numpy.ndarray):
             fx = numpy.asarray(fx)
@@ -2121,6 +2145,8 @@ cdef class _BatchIntegrand_from_BatchDict(object):
         cdef numpy.ndarray[numpy.double_t, ndim=2] buf = numpy.empty(
             (x.shape[0], self.size), float
             )
+        if x.shape[0] <= 0:
+            return buf
         fx = self.fcn(x)
         for k in self.slice:
             buf[:, self.slice[k]] = (

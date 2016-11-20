@@ -66,7 +66,7 @@ upload-pypi:
 	python setup.py sdist upload
 
 upload-git:
-	make doc-all
+	make doc-html
 	git commit -a -m "prep for upload"
 	git push origin master
 

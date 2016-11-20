@@ -483,8 +483,8 @@ class TestIntegrator(unittest.TestCase):
             alpha=0.35,
             beta=0.25,
             adapt_to_errors=True,
-            # rtol=0.1,
-            # atol=0.2,
+            rtol=0.1,
+            atol=0.2,
             analyzer=reporter(5),
             )
         I = Integrator([[1,2]])
@@ -747,6 +747,26 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(r['b'][0, 1].sdev < 1e-2)
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.dof == 27)
+
+    def test_tol(self):
+        " test rtol, atol stopping conditions "
+        def f(x):
+            return 10 * np.exp(-100. * x[0]) * 100.
+        def f_array(x):
+            return [f(x), f(x)]
+        def f_dict(x):
+            return dict(a=f(x), b=f(x))
+        for args, nitn in [
+            (dict(), 2),
+            (dict(rtol=0.5), 1),
+            (dict(rtol=0.0001), 2),
+            (dict(atol=0.5 * 10), 1),
+            (dict(atol=0.0001 * 10), 2),
+            ]:
+            for fcn in [f, f_array, f_dict]:
+                I = Integrator([[0,1.]], neval=1000, nitn=2, **args)
+                result = I(f)
+                self.assertEqual(result.nitn, nitn)
 
 class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
     # @unittest.skipIf(FAST,"skipping test_expval for speed")

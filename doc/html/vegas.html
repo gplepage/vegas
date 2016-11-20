@@ -266,6 +266,11 @@ between 0 and 1. <code class="docutils literal"><span class="pre">ran_array_gene
 create an array whose dimensions are specified by the
 integer-valued tuple <code class="docutils literal"><span class="pre">shape</span></code>. The default generator
 is <code class="docutils literal"><span class="pre">numpy.random.random</span></code>.</li>
+<li><strong>sync_ran</strong> &#8211; If <code class="docutils literal"><span class="pre">True</span></code>, the default random number
+generator is synchronized across all processors when
+using MPI. If <code class="docutils literal"><span class="pre">False</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> does no synchronization
+(but the random numbers should synchronized some other
+way).</li>
 </ul>
 </td>
 </tr>

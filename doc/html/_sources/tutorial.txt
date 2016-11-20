@@ -623,24 +623,59 @@ by using |vegas|'s batch mode. For example, replacing ::
     import vegas
     import math
 
-    dim = 4
-    norm = 1013.2118364296088 ** (dim / 4.)
-
-    def f_scalar(x):
+    def f(x):
+        dim = len(x)
+        norm = 1013.2118364296088 ** (dim / 4.)
         dx2 = 0.0
         for d in range(dim):
             dx2 += (x[d] - 0.5) ** 2
         return math.exp(-100. * dx2) * norm
 
-    integ = vegas.Integrator(dim * [[0, 1]])
+    integ = vegas.Integrator(4 * [[0, 1]])
 
-    integ(f_scalar, nitn=10, neval=2e5)
-    result = integ(f_scalar, nitn=10, neval=2e5)
+    integ(f, nitn=10, neval=2e5)
+    result = integ(f, nitn=10, neval=2e5)
     print('result = %s   Q = %.2f' % (result, result.Q))
 
 
 
 by ::
+
+    import vegas
+    import numpy as np
+
+    @vegas.batchintegrand
+    def f_batch(x):
+        # evaluate integrand at multiple points simultaneously
+        dim = x.shape[1]
+        norm = 1013.2118364296088 ** (dim / 4.)
+        dx2 = 0.0
+        for d in range(dim):
+            dx2 += (x[:, d] - 0.5) ** 2
+        return np.exp(-100. * dx2) * norm
+
+    integ = vegas.Integrator(4 * [[0, 1]])
+
+    integ(f_batch, nitn=10, neval=2e5)
+    result = integ(f_batch, nitn=10, neval=2e5)
+    print('result = %s   Q = %.2f' % (result, result.Q))
+
+reduces the cost of the integral by an order of magnitude. Internally |vegas|
+processes integration points in batches. (|vegas| parameter ``nhcube_batch``
+determines the number of integration
+points per batch (typically 1000s).) In batch mode,
+|vegas| presents integration points to the integrand in batches
+rather than offering them one at a
+time. Here, for example, function ``f_batch(x)`` accepts  an array of integration
+points --- ``x[i, d]`` where ``i=0...`` labels the integration point and
+``d=0...`` the direction --- and returns an array of integrand values
+corresponding  to those points. The decorator
+:func:`vegas.batchintegrand` tells |vegas| that it should send
+integration points to ``f(x)`` in batches.
+
+An alternative to a function decorated with :func:`vegas.batchintegrand` is
+a class derived from :class:`vegas.BatchIntegrand` that
+behaves like a batch integrand::
 
     import vegas
     import numpy as np
@@ -658,112 +693,67 @@ by ::
             return np.exp(-100. * dx2) * self.norm
 
     f = f_batch(dim=4)
-    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_batch=1000)
+    integ = vegas.Integrator(f.dim * [[0, 1]])
 
     integ(f, nitn=10, neval=2e5)
     result = integ(f, nitn=10, neval=2e5)
     print('result = %s   Q = %.2f' % (result, result.Q))
 
-reduces the cost of the integral by almost an order of magnitude.
-Internally |vegas| processes integration points in batches, where
-parameter ``nhcube_batch`` determines the number of points per
-batch (typically 1000s).
-In batch mode, |vegas| presents all of the integration points
-from a batch together, in a single array, to the integrand
-function, rather than offering them one at a time. Here, for example,
-an instance ``f`` of class ``f_batch`` behaves like a function ``f(x)`` of
-an array of integration points --- ``x[i, d]`` where ``i=0...``
-labels the integration point and ``d=0...`` the direction --- and
-returns an array of integrand values corresponding  to these points.
+This version is as fast as the previous batch integrand, but is
+potentially more flexible because it is built around a class rather
+than a function.
 
-We derive class ``f_batch`` from :class:`vegas.BatchIntegrand` to
-signal to |vegas| that it should present integration points in
-batches to the integrand function.
-
-An alternative to deriving from :class:`vegas.BatchIntegrand` is
-to apply the :func:`vegas.batchintegrand` decorator to a batch
-function for the integrand: e.g., ::
-
-    import vegas
-    import numpy as np
-
-    dim = 4
-    norm = 1013.2118364296088 ** (dim / 4.)
-
-    @vegas.batchintegrand
-    def f(x):
-        # evaluate integrand at multiple points simultaneously
-        dx2 = 0.0
-        for d in range(dim):
-            dx2 += (x[:, d] - 0.5) ** 2
-        return np.exp(-100. * dx2) * norm
-
-    integ = vegas.Integrator(dim * [[0, 1]], nhcube_batch=1000)
-
-    integ(f, nitn=10, neval=200000)
-    result = integ(f, nitn=10, neval=200000)
-    print('result = %s   Q = %.2f' % (result, result.Q))
-
-
-
-This batch integrand is fast because it is expressed in terms
-:mod:`numpy` operators that act on entire arrays. That optimization
-is unnecessary
-(and the result is faster) if we write the integrand in Cython, which
+The batch integrands here are fast because they are expressed in terms
+:mod:`numpy` operators that act on entire arrays, evaluating the
+integrand for all integration points in a batch at the same time.
+That optimization is not always possible or simple.
+It is unnecessary if we write the integrand in Cython, which
 is a compiled hybrid of Python and C. The Cython version
-of this code is::
+of the (batch) integrand is::
 
     # file: cython_integrand.pyx
 
-    cimport vegas                   # for BatchIntegrand
-    from libc.math cimport exp      # use exp() from C library
+    import numpy as np
 
-    import vegas
-    import numpy
+    # use exp from C
+    from libc.math cimport exp
 
-    cdef class f_cython(vegas.BatchIntegrand):
-        cdef double norm
-        cdef readonly int dim
-
-        def __init__(self, dim):
-            self.dim = dim
-            self.norm = 1013.2118364296088 ** (dim / 4.)
-
-        def __call__(self, double[:, ::1] x):
-            cdef int i, d
-            cdef double dx2
-            cdef double[::1] f = numpy.empty(x.shape[0], float)
-            for i in range(f.shape[0]):
-                dx2 = 0.0
-                for d in range(self.dim):
-                    dx2 += (x[i, d] - 0.5) ** 2
-                f[i] = exp(-100. * dx2) * self.norm
-            return f
+    def f_batch(double[:, ::1] x):
+        cdef int i          # labels integration point
+        cdef int d          # labels direction
+        cdef int dim = x.shape[1]
+        cdef double norm = 1013.2118364296088 ** (dim / 4.)
+        cdef double dx2
+        cdef double[::1] ans = np.empty(x.shape[0], float)
+        for i in range(x.shape[0]):
+            # integrand for integration point x[i]
+            dx2 = 0.0
+            for d in range(dim):
+                dx2 += (x[i, d] - 0.5) ** 2
+            ans[i] = exp(-100. * dx2) * norm
+        return ans
 
 We put this in a separate file called, say,
 ``cython_integrand.pyx``, and rewrite the main code as::
 
     import numpy as np
     import pyximport
-    pyximport.install(
-        inplace=True,
-        setup_args=dict(include_dirs=[np.get_include()])
-        )
+    pyximport.install(inplace=True)
 
     import vegas
-    from cython_integrand import f_cython
+    from cython_integrand import f_batch
+    f = vegas.batchintegrand(f_batch)
 
-    f = f_cython(dim=4)
-    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_batch=1000)
+    integ = vegas.Integrator(4 * [[0, 1]])
 
-    integ(f, nitn=10, neval=200000)
-    result = integ(f, nitn=10, neval=200000)
+    integ(f, nitn=10, neval=2e5)
+    result = integ(f, nitn=10, neval=2e5)
     print('result = %s   Q = %.2f' % (result, result.Q))
 
 Module :mod:`pyximport` is used here to cause the Cython
 module ``cython_integrand.pyx`` to be compiled the first time
-it is called. The compiled code is used in subsequent
-calls, so compilation occurs only once.
+it is imported. The compiled code is used in subsequent
+imports, so compilation occurs only once.
 
 Batch mode is also useful for array-valued integrands.
 The code from the previous section could have been written as::
@@ -818,92 +808,66 @@ by a dictionary-valued batch integrand: e.g., ::
         ans['x**2'] = x[:, 0] ** 2 * ans['1']
         return ans
 
+
 Multiple Processors
 ---------------------------
-|vegas| has built in support for MPI (via the :mod:`mpi4py` Python module),
-allowing the evaluation of integrands
-to be spread over multiple processors. This can shorten execution time
+|vegas| supports multi-processor evaluation of integrands using MPI,
+via the Python module :mod:`mpi4py` (which must be installed separately).
+This can shorten execution time
 substantially when the integrand is costly to evaluate.
 
-To illustrate MPI parallel processing with |vegas|,
-consider an integrand consisting of 1000 narrow Gaussians distributed evenly
-along the diagonal of a 4-dimensional unit hypercube. We
-implement the integrand in Cython, putting the result
-in a file ``ridge_integrand.pyx``::
-
-    # file: ridge_integrand.pyx
-
-    from libc.math cimport exp      # use exp() from C library
-
-    def f(double[::1] x):
-        cdef double dx2, x0
-        cdef int d, j
-        cdef int dim=4
-        cdef int N=1000
-        cdef double ans = 0
-        cdef double norm = (100. / 3.1415926535897932384626) ** 2 / N
-        for j in range(N):
-            x0 = j / (N - 1.)
-            dx2 = 0.0
-            for d in range(dim):
-                dx2 += (x[d] - x0) ** 2
-            ans += exp(-100. * dx2)
-        return ans * norm
-
-This is a standard integrand. The main integration code,
-in file ``ridge.py``, is then::
+MPI support works for any integrand. For example, the script ::
 
     # file: ridge.py
 
     import vegas
+    import numpy as np
 
-    # compile ridge_integrand.pyx, if not already compiled
-    import pyximport
-    pyximport.install()
-
-    import ridge_integrand
+    # Integrand: ridge of N Gaussians spread evenly along the diagonal
+    def ridge(x):
+        N = 10000
+        x0 = np.arange(0.0, N) / (N - 1.)
+        dx2 = 0.0
+        for xd in x:
+            dx2 += (xd - x0) ** 2
+        return np.average(np.exp(-100. * dx2)) *  (100. / np.pi) ** (len(x) / 2.)
 
     def main():
         integ = vegas.Integrator(4 * [[0, 1]])
         # adapt
-        integ(ridge_integrand.f, nitn=10, neval=1e5)
+        integ(ridge, nitn=10, neval=1e4)
         # final results
-        result = integ(ridge_integrand.f, nitn=10, neval=1e5)
+        result = integ(ridge, nitn=10, neval=1e4)
         if integ.mpi_rank == 0:
-            # result should be approximately 0.85
             print('result = %s    Q = %.2f' % (result, result.Q))
 
     if __name__ == '__main__':
         main()
 
-The integrand and main program are completely standard,
-except that we check the MPI
-rank of the process to avoid printing out multiple copies of the result,
-after the integration. To run this code on 4 CPUs, we execute ::
+can be run on 2 processors using ::
 
-    mpirun -np 4 python ridge.py
+    mpirun -np 2 python ridge.py
 
-which gives the output ::
+to cut the run time almost in half. The speed is not exactly doubled because
+time is required to move integration results between the different CPUs.
+The code uses the MPI rank of the processes so that only one of them
+prints out results::
 
-    result = 0.85130(64)    Q = 0.50
+    result = 0.8559(39)    Q = 0.52
 
-This code runs about 3 times faster on 4 CPUs than on a single CPU.
-One might have hoped that 4 CPUs would be 4x faster, but they aren't
-quite that fast because of the time needed to transfer integration
-information between the processes on the different CPUs.
-Multiple CPUs are efficient only for costly integrands.
-
-It is important that the separate processes use the same random
-numbers when running in parallel. This is automatically enforced
+Note that the random number generator used by |vegas| must be
+synchronized so that it
+produces the same random numbers on the different processors. This
+happens automatically for the default random-number generator
 (unless :class:`vegas.Integrator` parameter ``sync_ran``
-is set to ``False``) provided the default random-number generator
-is used.
+is set to ``False``).
 
-There are many other ways to implement multiprocessing for |vegas|.
-All methods work with |vegas| in batch mode, and distribute different
-integration points to different CPUs. For example, a class similar
-in function to :class:`vegas.BatchIntegrand`, but where Python's
-:mod:`multiprocessing` module provides parallel processing, is::
+|vegas|'s batch mode makes it possible to implement other strategies
+for distributing integrand evaluations across multiple processors.
+For example, we can create a class ``parallelintegrand``
+whose function is similar to decorator :func:`vegas.batchintegrand`,
+but where Python's
+:mod:`multiprocessing` module provides parallel processing::
 
     import multiprocessing
     import numpy as np
@@ -927,26 +891,22 @@ in function to :class:`vegas.BatchIntegrand`, but where Python's
             " Divide x into self.nproc chunks, feeding one to each process. "
             nx = x.shape[0] // self.nproc + 1
             # launch evaluation of self.fcn for each chunk, in parallel
-            po = self.pool.map_async(
+            results = self.pool.map(
                 self.fcn,
                 [x[i*nx : (i+1)*nx] for i in range(self.nproc)],
                 1,
                 )
-            # harvest the results
-            results = po.get()
             # convert list of results into a single numpy array
             return np.concatenate(results)
 
 Then ``fparallel = parallelintegrand(f, 4)``, for example, will create a
-new integrand ``fparallel(x)`` that uses 4 CPUs. This particular
-implementation of parallelism is not as efficient as the built-in
-MPI implementation.
+new integrand ``fparallel(x)`` that uses 4 CPUs.
 
 
 Sums with |vegas|
 -------------------
 The code in the previous sections is inefficient in the way it
-handles the sum over 1000 Gaussians. It is not necessary to include every
+handles the sum over 10,000 Gaussians. It is not necessary to include every
 term in the sum for every integration point. Rather we can sample the sum,
 using |vegas| to do the sampling. The trick is to replace the sum with
 an equivalent integral:
@@ -959,53 +919,36 @@ where :math:`\mathrm{floor}(x)` is the largest
 integer smaller than :math:`x`. The
 resulting integral can then be handed to |vegas|. Using this trick,
 the integral in the previous section can be re-cast as a 5-dimensional
-integral (again in Cython), ::
+integral::
 
-    # file: ridge.pyx
-
-    from libc.math cimport exp, floor
-    import numpy as np
-
-    def fsum(double[:, ::1] x):
-        cdef double dx2, x0, j
-        cdef int d, i
-        cdef int dim=4
-        cdef int N=1000
-        cdef double[::1] ans = np.zeros(x.shape[0], float)
-        for i in range(x.shape[0]):
-            j = floor(x[i, -1] * N)
-            x0 = j / (N - 1.)
-            dx2 = 0.0
-            for d in range(dim):
-                dx2 += (x[i, d] - x0) ** 2
-            ans[i] += exp(-100. * dx2)
-            # drop 1/N because multiplying by N
-            ans[i] *= (100. / np.pi) ** 2
-        return np.asarray(ans)
-
-and the main program becomes::
-
-    import pyximport; pyximport.install()
-
-    import numpy as np
     import vegas
-    import ridge
+    import numpy as np
+
+    # Integrand: ridge of N Gaussians spread evenly along the diagonal
+    def ridge(x):
+        N = 10000
+        dim = 4
+        x0 = np.floor(x[-1] * N) / (N - 1.)
+        dx2 = 0.0
+        for xd in x[:-1]:
+            dx2 += (xd - x0) ** 2
+        return np.exp(-100. * dx2) *  (100. / np.pi) ** (dim / 2.)
 
     def main():
         integ = vegas.Integrator(5 * [[0, 1]])
-        f = vegas.batchintegrand(ridge.fsum)
         # adapt
-        integ(f, nitn=10, neval=5e5)
+        integ(ridge, nitn=10, neval=5e4)
         # final results
-        result = integ(f, nitn=10, neval=5e5)
-        # result should be approximately 0.851
+        result = integ(ridge, nitn=10, neval=5e4)
         print('result = %s    Q = %.2f' % (result, result.Q))
 
     if __name__ == '__main__':
         main()
 
-This gives about the same precision but is 3x faster (on a laptop in 2014)
-than the code in the previous section.
+This code gives a result with the same precision, but is 5x faster
+than the code in the previous section. (The difference would be much
+larger if both integrands were coded in Cython. Also running
+the code on two processors with MPI again cuts the time almost in half.)
 
 The same trick can be generalized to sums over multiple indices, including sums
 to infinity. |vegas| will provide Monte Carlo estimates of the sums, emphasizing
@@ -1079,14 +1022,15 @@ Here ``hcube[i]`` identifies the hypercube containing ``x[i, d]``.
 
 Integrands in C or Fortran
 ---------------------------
-Integrands coded in C or Fortran are often very fast to evaluate. There are
-many ways to access such integrands using the Python |vegas|. Here we
+It is relatively straightforward to use |vegas| with integrands
+coded in C or Fortran. There are
+many ways to access such integrands from Python. Here we
 review a few of the options.
 
 :mod:`ctypes` for C
 ....................
 The simplest way to access an integrand coded in C is to use the
-Python :mod:`ctypes` module. To illustrate consider the following
+Python :mod:`ctypes` module. To illustrate, consider the following
 integrand, written in C and stored in file ``cfcn.c``::
 
     // file cfcn.c
@@ -1234,9 +1178,10 @@ where, again, :mod:`pyximport` guarantees that the ``cfcn`` module
 is compiled the first time the code is run.
 
 This implementation is probably the fastest of those presented here.
+Cython also works with C++.
 
-f2py for Fortran
-..................
+:mod:`f2py` for Fortran
+.........................
 The :mod:`f2py` package, which is distributed with :mod:`numpy`,
 makes it relatively easy to compile Fortran
 code directly into Python modules. Consider a Fortran implementation of
@@ -1283,13 +1228,12 @@ the C file ``cfcn.c`` (above) is::
     python module cfcn
     interface
       real*8 function fcn(x, n)
-        intent(c) fcn                 ! foo is a C function
-        intent(c)                     ! all foo arguments are
+        intent(c) fcn                 ! fcn is a C function
+        intent(c)                     ! all fcn arguments are
                                       ! considered as C based
         integer intent(hide), depend(x) :: n=len(x)  ! n is the length
                                                      ! of input array x
-        real*8 intent(in) :: x(n)          ! x is input array
-        ! double precision fcn
+        real*8 intent(in) :: x(n)     ! x is input array
       end function fcn
     end interface
     end python module cfcn

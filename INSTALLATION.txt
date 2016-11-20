@@ -20,7 +20,10 @@ To install:
 		unless you want to make pictures of the vegas grid
 		(see the documentation on How vegas Works).
 
-	e. pip is used for installing (and uninstalling) vegas. pip usually
+	e. The mpi4py package (and MPI itself) for multi-processor
+	   	evaluation of integrands. This is optional.
+
+	f. pip is used for installing (and uninstalling) vegas. pip usually
 	    comes with python. pip can be used to install numpy, cython, gvar,
 	    and matplotlib as well.
 	    (https://pypi.python.org/pypi/pip)

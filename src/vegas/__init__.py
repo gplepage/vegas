@@ -66,6 +66,7 @@ from ._vegas import vecintegrand, VecIntegrand
 
 import gvar as _gvar
 import numpy
+import multiprocessing
 
 class PDFIntegrator(Integrator):
     """ :mod:`vegas` integrator for PDF expectation values.
@@ -466,3 +467,38 @@ class _RAvgArrayWrapper(numpy.ndarray):
 
     def summary(self, weighted=None):
         return self.results.summary(weighted=weighted)
+
+class parallelintegrand(BatchIntegrand):
+    """ Convert (batch) integrand into multiprocessor integrand.
+
+    Usage::
+
+        fparallel = vegas.parallelintegrand(fbatch, 4)
+
+    turns batch integrand ``fbatch`` into multi-process integrand
+    that spreads integrand evaluations over 4 processes. The original
+    integrand ``fbatch`` needs to be defined at the top level
+    of the Python script and should return a :mod:`numpy` array.
+    """
+    def __init__(self, fcn, nproc=4):
+        " Save integrand; create pool of nproc processes. "
+        self.fcn = fcn
+        self.nproc = nproc
+        self.pool = multiprocessing.Pool(processes=nproc)
+
+    def __del__(self):
+        " Standard cleanup. "
+        self.pool.close()
+        self.pool.join()
+
+    def __call__(self, x):
+        " Divide x into self.nproc chunks, feeding one to each process. "
+        nx = x.shape[0] // self.nproc + 1
+        # launch evaluation of self.fcn for each chunk, in parallel
+        results = self.pool.map(
+            self.fcn,
+            [x[i*nx : (i+1)*nx] for i in range(self.nproc)],
+            1,
+            )
+        # convert list of results into a single numpy array
+        return numpy.concatenate(results)
