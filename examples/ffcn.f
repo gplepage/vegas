@@ -11,7 +11,19 @@ c Sample vegas integrand written in Fortran
       return
       end
 
+c Batch form of integrand.
 
+      subroutine batch_fcn(ans, x, dim, nbatch)
+      integer dim, nbatch, i, j
+      real*8 x(nbatch, dim), xi(dim), ans(nbatch), fcn
+cf2py intent(out) ans
+      do i=1,nbatch
+            do j=1,dim
+                  xi(j) = x(i, j)
+            end do
+            ans(i) = fcn(xi, dim)
+      end do
+      end
 
 c Copyright (c) 2016 G. Peter Lepage.
 c

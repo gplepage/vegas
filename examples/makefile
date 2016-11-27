@@ -52,7 +52,7 @@ test-linking: cfcn_f2py.so cfcn_ctypes.so ffcn_f2py.so
 	$(PYTHON) cfcn-cython.py > cfcn-cython.tmp
 	- diff -w cfcn.out cfcn-cython.tmp
 	$(PYTHON) ffcn-f2py.py > ffcn-f2py.tmp
-	- diff -w cfcn.out cfcn-f2py.tmp
+	- diff -w cfcn.out ffcn-f2py.tmp
 
 cfcn_f2py.so : cfcn.c cfcn_f2py.pyf
 	f2py -m cfcn_f2py -c cfcn_f2py.pyf cfcn.c

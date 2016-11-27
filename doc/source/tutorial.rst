@@ -704,7 +704,7 @@ potentially more flexible because it is built around a class rather
 than a function.
 
 The batch integrands here are fast because they are expressed in terms
-:mod:`numpy` operators that act on entire arrays, evaluating the
+:mod:`numpy` operators that act on entire arrays --- they evaluate the
 integrand for all integration points in a batch at the same time.
 That optimization is not always possible or simple.
 It is unnecessary if we write the integrand in Cython, which
@@ -1025,16 +1025,24 @@ Here ``hcube[i]`` identifies the hypercube containing ``x[i, d]``.
 
 Integrands in C or Fortran
 ---------------------------
-It is relatively straightforward to use |vegas| with integrands
-coded in C or Fortran. There are
-many ways to access such integrands from Python. Here we
+Older implementations of the |vegas| algorithm
+have been used extensively in code written in C or Fortran.
+It is relatively straightforward to combine the Python version (and its
+improved |vegas| algorithm) with integrands
+coded in C or Fortran. Such integrands are usually substantially
+faster than integrands coded directly in Python, and similar in
+speed to optimized Cython code.
+There are
+many ways to access C and Fortran integrands from Python. Here we
 review a few of the options.
 
 :mod:`ctypes` for C
 ....................
 The simplest way to access an integrand coded in C is to use the
 Python :mod:`ctypes` module. To illustrate, consider the following
-integrand, written in C and stored in file ``cfcn.c``::
+integrand, written in C and stored in file ``cfcn.c``:
+
+.. code-block:: C
 
     // file cfcn.c
     #include <math.h>
@@ -1124,7 +1132,9 @@ Cython for C
 A more flexible (and often faster) interface to a C integrand can be
 created using Cython. To increase efficiency (slightly, in this case),
 we use Cython code in file ``cfcn.pyx`` to convert the orginal
-function (in ``cfcn.c``) into a batch integral::
+function (in ``cfcn.c``) into a batch integral:
+
+.. code-block:: Cython
 
     # file cfcn.pyx
     import numpy as np
@@ -1183,12 +1193,15 @@ is compiled the first time the code is run.
 This implementation is probably the fastest of those presented here.
 Cython also works with C++.
 
+
 :mod:`f2py` for Fortran
 .........................
 The :mod:`f2py` package, which is distributed with :mod:`numpy`,
 makes it relatively easy to compile Fortran
 code directly into Python modules. Consider a Fortran implementation of
-integrand discussed above, stored in file ``ffcn.f``::
+integrand discussed above, stored in file ``ffcn.f``:
+
+.. code-block:: Fortran
 
     c file ffcn.f
     c
@@ -1220,6 +1233,51 @@ integrand from Python::
 
     if __name__ == '__main__':
         main()
+
+Again you can make the code somewhat faster by converting the integrand
+into a batch integrand inside the Fortran module. Adding the following
+function to the end of file ``ffcn.f`` above :
+
+.. code-block:: Fortran
+
+    c part 2 of file ffcn.f --- batch form of integrand
+
+          subroutine batch_fcn(ans, x, dim, nbatch)
+          integer dim, nbatch, i, j
+          real*8 x(nbatch, dim), xi(dim), ans(nbatch), fcn
+    cf2py intent(out) ans
+          do i=1,nbatch
+                do j=1,dim
+                      xi(j) = x(i, j)
+                end do
+                ans(i) = fcn(xi, dim)
+          end do
+          end
+
+results in a second Python function ``ffcn.batch_fcn(x)`` that takes the
+integration points ``x[i,d]`` as input and returns an array of
+integrand values ``ans[i]``. (The second Fortran comment tells ``f2py``
+that array ``ans`` should be returned by the correponding Python
+function; ``f2py`` also has the function automatically deduce ``dim`` and
+``nbatch`` from the shape of ``x``.)
+The correponding Python script for doing the integral
+is then::
+
+    import vegas
+    import ffcn_f2py
+    import numpy as np
+
+    def main():
+        integ = vegas.Integrator(4 *[[0,1]])
+        batch_fcn = vegas.batchintegrand(ffcn_f2py.batch_fcn)
+        print(integ(batch_fcn, neval=1e4, nitn=10).summary())
+        print(integ(batch_fcn, neval=1e4, nitn=10).summary())
+
+    if __name__ == '__main__':
+        main()
+
+This runs roughly twice as fast as the original
+when ``neval`` is large (eg, 1e6).
 
 :mod:`f2py` for C
 ..................
@@ -1263,8 +1321,9 @@ and the integral evaluated using Python code::
 Implementation Notes
 ---------------------
 This implementation relies upon Cython for its speed and
-numpy for array processing. It also uses matplotlib
-for graphics, but graphics is optional.
+numpy for array processing. It also uses :mod:`matplotlib`
+for graphics and :mod:`mpi4py` for MPI support, but graphics
+and MPI are optional.
 
 |vegas| also uses the :mod:`gvar` module (``pip install gvar``).
 Integration results are returned as objects of type
