@@ -1102,11 +1102,11 @@ shows how this is done:</p>
 <div class="section" id="integrands-in-c-or-fortran">
 <h2>Integrands in C or Fortran<a class="headerlink" href="#integrands-in-c-or-fortran" title="Permalink to this headline">¶</a></h2>
 <p>Older implementations of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> algorithm
-have been used extensively in code written in C or Fortran.
-It is relatively straightforward to use the Python version (with
-the improved <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> algorithm) to integrate integrands
+have been used extensively in C and Fortran codes. The Python
+implementation described here uses a more powerful algorithm.
+It is relatively straightforward to combine this version with integrands
 coded in C or Fortran. Such integrands are usually substantially
-faster than integrands coded directly in Python, and similar in
+faster than integrands coded directly in Python; they are similar in
 speed to optimized Cython code.
 There are
 many ways to access C and Fortran integrands from Python. Here we

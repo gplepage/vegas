@@ -1026,11 +1026,11 @@ Here ``hcube[i]`` identifies the hypercube containing ``x[i, d]``.
 Integrands in C or Fortran
 ---------------------------
 Older implementations of the |vegas| algorithm
-have been used extensively in code written in C or Fortran.
-It is relatively straightforward to use the Python version (with
-the improved |vegas| algorithm) to integrate integrands
+have been used extensively in C and Fortran codes. The Python
+implementation described here uses a more powerful algorithm.
+It is relatively straightforward to combine this version with integrands
 coded in C or Fortran. Such integrands are usually substantially
-faster than integrands coded directly in Python, and similar in
+faster than integrands coded directly in Python; they are similar in
 speed to optimized Cython code.
 There are
 many ways to access C and Fortran integrands from Python. Here we
