@@ -44,7 +44,7 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 """
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-16 G. Peter Lepage.
+# Copyright (c) 2013-17 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -97,18 +97,18 @@ class PDFIntegrator(Integrator):
         # integrator for expectation values in distribution g
         g_expval = vegas.PDFIntegrator(g)
 
-        # adapt integrator to PDF
-        warmup = g_expval(neval=1000, nitn=5)
-
         # want expectation value of [fp, fp**2]
         def f_f2(p):
             fp = p['a'][0] * p['a'][1] + p['b']
             return [fp, fp ** 2]
 
+        # adapt integrator to f_f2
+        warmup = g_expval(neval=1000, nitn=5)
+
         # results = <f_f2> in distribution g
         results = g_expval(f_f2, neval=1000, nitn=5, adapt=False)
-        print (results.summary())
-        print ('results =', results, '\\n')
+        print(results.summary())
+        print('results =', results, '\\n')
 
         # mean and standard deviation of f(p)'s distribution
         fmean = results[0]
@@ -117,7 +117,7 @@ class PDFIntegrator(Integrator):
         print ("Gaussian approx'n for f(g) =", f_f2(g)[0])
 
     where the ``warmup`` calls to the integrator are used to adapt it to
-    the PDF, and the final results are in ``results``. Here ``neval`` is
+    the integrand, and the final results are in ``results``. Here ``neval`` is
     the (approximate) number of function calls per iteration of the
     :mod:`vegas` algorithm and ``nitn`` is the number of iterations. We
     use the integrator to calculated  the expectation value of ``fp`` and
@@ -130,15 +130,15 @@ class PDFIntegrator(Integrator):
 
         itn   integral        average         chi2/dof        Q
         -------------------------------------------------------
-          1   0.995(12)       0.995(12)           0.00     1.00
-          2   1.014(11)       1.0043(79)          1.39     0.24
-          3   1.005(11)       1.0046(65)          1.75     0.10
-          4   0.977(13)       0.9978(58)          2.40     0.01
-          5   1.004(12)       0.9990(52)          1.94     0.03
+          1   1.9144(97)      1.9144(97)          0.00     1.00
+          2   1.899(11)       1.9069(74)          0.57     0.57
+          3   1.899(11)       1.9041(61)          0.39     0.81
+          4   1.903(11)       1.9037(54)          0.28     0.95
+          5   1.899(10)       1.9028(48)          0.32     0.96
 
-        results = [1.904(17) 7.57(17)]
+        results = [1.9028(48) 7.433(39)]
 
-        f.mean = 1.904(17)    f.sdev = 1.986(31)
+        f.mean = 1.9028(48)    f.sdev = 1.9526(82)
         Gaussian approx'n for f(g) = 1.0(1.4)
 
     In general functions being integrated can return a number, or an array of
@@ -190,11 +190,6 @@ class PDFIntegrator(Integrator):
             self.pdf = _gvar.PDF(g, svdcut=svdcut)
         self.limit = abs(limit)
         self.scale = scale
-        # if _have_scipy and limit <= 8.:
-        #     limit = scipy.special.ndtr(self.limit)
-        #     super(PDFIntegrator, self).__init__(self.pdf.size * [(1. - limit, limit)])
-        #     self._expval = self._expval_ndtri
-        # else:
         if kargs.get('sync_ran', True):
             # needed because of the Monte Carlo in _make_map()
             Integrator.synchronize_random()   # for mpi
@@ -202,11 +197,6 @@ class PDFIntegrator(Integrator):
         super(PDFIntegrator, self).__init__(
             self.pdf.size * [integ_map], **kargs
             )
-        # limit = numpy.arctan(self.limit / self.scale)
-        # super(PDFIntegrator, self).__init__(
-        #     self.pdf.size * [(-limit, limit)]
-        #     )
-        self._expval = self._expval_tan
 
     def _make_map(self, limit):
         """ Make vegas grid that is adapted to the pdf. """
@@ -245,95 +235,19 @@ class PDFIntegrator(Integrator):
                 from the integrand (so no longer an expectation value).
                 This is useful if one wants to use the optimized
                 integrator for something other than a standard
-                expectation value. Default is ``False``.
+                expectation value (e.g., an expectation value with a
+                non-Gaussian PDF). Default is ``False``.
 
         All other keyword arguments are passed on to a :mod:`vegas`
         integrator; see the :mod:`vegas` documentation for further information.
         """
-        # N.B. If _fstd is specified then it substitutes for fstd()
-        # and the results are returned without modification. This
-        # is use by lsqfit.BayesIntegrator.
-        if nopdf and f is None and _fstd is None:
-            raise ValueError('nopdf==True and f is None --- no integrand')
-        if _fstd is None:
-            self._buffer = None
-            def fstd(p):
-                """ convert output to an array """
-                fp = [] if f is None else f(p)
-                if self._buffer is None:
-                    # setup --- only on first call
-                    self._is_dict = hasattr(fp, 'keys')
-                    if self._is_dict:
-                        self._fp = _gvar.BufferDict(fp)
-                        self._is_bdict = isinstance(fp, _gvar.BufferDict)
-                        bufsize = self._fp.buf.size
-                    else:
-                        self._is_bdict = False
-                        self._fp = numpy.asarray(fp)
-                        bufsize = self._fp.size
-                    if nopdf:
-                        self._buffer = numpy.empty(bufsize, float)
-                    else:
-                        self._buffer = numpy.empty(bufsize + 1, float)
-                        self._buffer[0] = 1.
-                if self._is_bdict:
-                    self._buffer[(0 if nopdf else 1):] = fp.buf
-                elif self._is_dict:
-                    self._buffer[(0 if nopdf else 1):] = _gvar.BufferDict(fp).buf
-                else:
-                    self._buffer[(0 if nopdf else 1):] = numpy.asarray(fp).flat[:]
-                return self._buffer
-        else:
-            fstd = _fstd
-        integrand = batchintegrand(self._expval(fstd, nopdf))
+        if nopdf and f is None:
+            raise ValueError('nopdf==True and f is None => no integrand')
+        integrand = batchintegrand(self._expval(f, nopdf)) # fstd, nopdf))
         results = super(PDFIntegrator, self).__call__(integrand, **kargs)
-        if _fstd is not None:
-            return results
-        else:
-            # return output to original format:
-            self.norm = None if nopdf else results[0]
-            if self._fp.shape is None:
-                return _RAvgDictWrapper(self._fp, results, nopdf)
-            elif self._fp.shape != ():
-                return _RAvgArrayWrapper(self._fp.shape, results, nopdf)
-            else:
-                return _RAvgWrapper(results, nopdf)
+        return results
 
-    # def _expval_ndtri(self, f, nopdf):
-    #     """ Return integrand using ndtr mapping. """
-    #     def ff(theta, nopdf=nopdf):
-    #         x = scipy.special.ndtri(theta)
-    #         dp = self.pdf.x2dpflat(x) # x.dot(self.vec_sig)
-    #         if nopdf:
-    #             # must remove built in pdf
-    #             pdf = (
-    #                 numpy.sqrt(2 * numpy.pi) * numpy.exp((x ** 2) / 2.)
-    #                 * self.pdf.pjac[None,:]
-    #                 )
-    #         else:
-    #             pdf = numpy.ones(numpy.shape(x), float)
-    #         ans = []
-    #         parg = None
-    #         for dpi, pdfi in zip(dp, pdf):
-    #             p = self.pdf.meanflat + dpi
-    #             if parg is None:
-    #                 if self.pdf.shape is None:
-    #                     if self.pdf.extend:
-    #                         parg = ExtendedDict(self.pdf.g, buf=p)
-    #                     else:
-    #                         parg = BufferDict(self.pdf.g, buf=p)
-    #                 else:
-    #                     parg = p.reshape(self.pdf.shape)
-    #             else:
-    #                 if parg.shape is None:
-    #                     parg.buf = p
-    #                 else:
-    #                     parg.flat[:] = p
-    #             ans.append(f(parg) * numpy.prod(pdfi))
-    #         return numpy.array(ans)
-    #     return ff
-
-    def _expval_tan(self, f, nopdf):
+    def _expval(self, f, nopdf):
         """ Return integrand using the tan mapping. """
         def ff(theta, nopdf=nopdf):
             tan_theta = numpy.tan(theta)
@@ -343,12 +257,15 @@ class PDFIntegrator(Integrator):
                 pdf = jac * self.pdf.pjac[None, :]
             else:
                 pdf = jac * numpy.exp(-(x ** 2) / 2.) / numpy.sqrt(2 * numpy.pi)
-            dp = self.pdf.x2dpflat(x) # .dot(self.vec_sig))
-            ans = []
+            dp = self.pdf.x2dpflat(x)
             parg = None
-            for dpi, pdfi in zip(dp, pdf):
+            ans = None
+            fparg_is_dict = False
+            # iterate through the batch
+            for i, (dpi, pdfi) in enumerate(zip(dp, pdf)):
                 p = self.pdf.meanflat + dpi
                 if parg is None:
+                    # first time only
                     if self.pdf.shape is None:
                         if self.pdf.extend:
                             parg = _gvar.ExtendedDict(self.pdf.g, buf=p)
@@ -361,113 +278,35 @@ class PDFIntegrator(Integrator):
                         parg.buf = p
                     else:
                         parg.flat[:] = p
-                ans.append(f(parg) * numpy.prod(pdfi))
-            return numpy.array(ans)
+                fparg = 1. if f is None else f(parg)
+                if ans is None:
+                    # first time only
+                    if hasattr(fparg, 'keys'):
+                        fparg_is_dict = True
+                        if not isinstance(fparg, _gvar.BufferDict):
+                            fparg = _gvar.BufferDict(fparg)
+                        ans = _gvar.BufferDict()
+                        for k in fparg:
+                            ans[k] = numpy.empty(
+                                (len(pdf),) + fparg.slice_shape(k)[1], float
+                                )
+                    else:
+                        if numpy.shape(fparg) == ():
+                            ans = numpy.empty(len(pdf), float)
+                        else:
+                            ans = numpy.empty(
+                                (len(pdf),) + numpy.shape(fparg), float
+                                )
+                if fparg_is_dict:
+                    prod_pdfi = numpy.prod(pdfi)
+                    for k in ans:
+                        ans[k][i] = fparg[k] * prod_pdfi
+                else:
+                    if not isinstance(fparg, numpy.ndarray):
+                        fparg = numpy.asarray(fparg)
+                    ans[i] = fparg * numpy.prod(pdfi)
+            return ans
         return ff
-
-class _RAvgWrapper(_gvar.GVar):
-    """ Wrapper for BayesIntegrator GVar result. """
-    def __init__(self, results, nopdf=False):
-        self.results = results
-        ans = results[0] if nopdf else (results[1] / results[0])
-        super(_RAvgWrapper, self).__init__(*ans.internaldata)
-
-    def _dof(self):
-        return self.results.dof
-
-    dof = property(
-        _dof,
-        None,
-        None,
-        "Number of degrees of freedom in weighted average."
-        )
-
-    def _Q(self):
-        return self.results.Q
-
-    Q = property(
-        _Q,
-        None,
-        None,
-        "*Q* or *p-value* of weighted average's *chi**2*.",
-        )
-
-    def summary(self, weighted=None):
-        return self.results.summary(weighted=weighted)
-
-class _RAvgDictWrapper(_gvar.BufferDict):
-    """ Wrapper for BayesIntegrator dictionary result """
-    def __init__(self, fp, results, nopdf=False):
-        super(_RAvgDictWrapper, self).__init__(fp)
-        self.results = results
-        self.buf = results if nopdf else (results[1:] / results[0])
-
-    def _dof(self):
-        return self.results.dof
-
-    dof = property(
-        _dof,
-        None,
-        None,
-        "Number of degrees of freedom in weighted average."
-        )
-
-    def _Q(self):
-        return self.results.Q
-
-    Q = property(
-        _Q,
-        None,
-        None,
-        "*Q* or *p-value* of weighted average's *chi**2*.",
-        )
-
-    def summary(self, weighted=None):
-        return self.results.summary(weighted=weighted)
-
-class _RAvgArrayWrapper(numpy.ndarray):
-    """ Wrapper for BayesIntegrator array result. """
-    def __new__(
-        subtype, shape, results, nopdf=False,
-        dtype=object, buffer=None, offset=0, strides=None, order=None
-        ):
-        obj = numpy.ndarray.__new__(
-            subtype, shape=shape, dtype=object, buffer=buffer, offset=offset,
-            strides=strides, order=order
-            )
-        if buffer is None:
-            obj.flat = numpy.array(obj.size * [_gvar.gvar(0,0)])
-        obj.results = results
-        obj.flat = results if nopdf else (results[1:] / results[0])
-        return obj
-
-    def __array_finalize__(self, obj):
-        if obj is None:
-            return
-        self.results = getattr(obj, 'results', None)
-
-    def _dof(self):
-        return self.results.dof
-
-    dof = property(
-        _dof,
-        None,
-        None,
-        "Number of degrees of freedom in weighted average."
-        )
-
-    def _Q(self):
-        return self.results.Q
-
-    Q = property(
-        _Q,
-        None,
-        None,
-        "*Q* or *p-value* of weighted average's *chi**2*.",
-        )
-
-    def summary(self, weighted=None):
-        return self.results.summary(weighted=weighted)
 
 class parallelintegrand(BatchIntegrand):
     """ Convert (batch) integrand into multiprocessor integrand.
@@ -480,6 +319,8 @@ class parallelintegrand(BatchIntegrand):
     that spreads integrand evaluations over 4 processes. The original
     integrand ``fbatch`` needs to be defined at the top level
     of the Python script and should return a :mod:`numpy` array.
+
+    This is *not* part of the public API.
     """
     def __init__(self, fcn, nproc=4):
         " Save integrand; create pool of nproc processes. "

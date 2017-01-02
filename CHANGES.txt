@@ -1,3 +1,8 @@
+Version 3.3 - 2017-01-02
+==========================
+vegas.PDFIntegrator rewritten to make it more efficient.
+The interface is the same.
+
 Version 3.2 - 2016-11-20
 ========================
 MPI (multi-processor) support is now integrated into vegas

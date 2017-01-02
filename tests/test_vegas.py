@@ -775,29 +775,37 @@ class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
         xarray = gv.gvar([5., 3.], [[4., 0.9], [0.9, 1.]])
         xdict = gv.BufferDict([(0, 1), (1, 1)])
         xdict = gv.BufferDict(xdict, buf=xarray)
+        xscalar = xarray[0]
+        def fscalar(x):
+            if hasattr(x, 'keys'):
+                x = x.buf
+            return x.flat[0]
         def farray(x):
             if hasattr(x, 'keys'):
                 x = x.buf
-            return gv.PDFStatistics.moments(x[0])
+            return gv.PDFStatistics.moments(x.flat[0])
         def fdict(x):
             if hasattr(x, 'keys'):
                 x = x.buf
             return gv.BufferDict([
-                 (0, x[0]), (1, x[0] ** 2),
-                (2, x[0] ** 3), (3, x[0] ** 4)
+                 (0, x.flat[0]), (1, x.flat[0] ** 2),
+                (2, x.flat[0] ** 3), (3, x.flat[0] ** 4)
                 ])
-        for x in [xarray, xdict]:
+        for x in [xscalar, xarray, xdict]:
             integ = PDFIntegrator(x)
             integ(neval=1000, nitn=5)
-            for f in [farray, fdict]:
+            for f in [fscalar, farray, fdict]:
                 r = integ(f, neval=1000, nitn=5, adapt=False)
-                if hasattr(r, 'keys'):
-                    r = r.buf
-                s = gv.PDFStatistics(r)
-                self.assertTrue(abs(s.mean.mean - 5.) < 5. * s.mean.sdev)
-                self.assertTrue(abs(s.sdev.mean - 2.) < 5. * s.sdev.sdev)
-                self.assertTrue(abs(s.skew.mean) < 5. * s.skew.sdev)
-                self.assertTrue(abs(s.ex_kurt.mean) < 5. * s.ex_kurt.sdev)
+                if f is fscalar:
+                    self.assertTrue(abs(r.mean - 5) < 5. * r.sdev)
+                else:
+                    if hasattr(r, 'keys'):
+                        r = r.buf
+                    s = gv.PDFStatistics(r)
+                    self.assertTrue(abs(s.mean.mean - 5.) < 5. * s.mean.sdev)
+                    self.assertTrue(abs(s.sdev.mean - 2.) < 5. * s.sdev.sdev)
+                    self.assertTrue(abs(s.skew.mean) < 5. * s.skew.sdev)
+                    self.assertTrue(abs(s.ex_kurt.mean) < 5. * s.ex_kurt.sdev)
 
         # covariance test
         def fcov(x):
@@ -848,14 +856,14 @@ class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
         g = gv.gvar(1,0.1)
         for scale in [1., 2.]:
             integ = PDFIntegrator(g, limit=1., scale=scale)
-            integ(neval=1000, nitn=5)
+            norm = integ(neval=1000, nitn=5)
             self.assertTrue(
-                abs(integ.norm.mean - 0.682689492137) < 5 * integ.norm.sdev
+                abs(norm.mean - 0.682689492137) < 5 * norm.sdev
                 )
             integ = PDFIntegrator(g, limit=2., scale=scale)
-            integ(neval=1000, nitn=5)
+            norm = integ(neval=1000, nitn=5)
             self.assertTrue(
-                abs(integ.norm.mean - 0.954499736104) < 5 * integ.norm.sdev
+                abs(norm.mean - 0.954499736104) < 5 * norm.sdev
                 )
 
     # @unittest.skipIf(FAST,"skipping test_histogram for speed")
