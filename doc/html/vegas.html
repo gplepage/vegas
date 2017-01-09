@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>vegas Module &mdash; vegas 3.2 documentation</title>
+    <title>vegas Module &mdash; vegas 3.3 documentation</title>
     
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '3.2',
+        VERSION:     '3.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="vegas 3.2 documentation" href="index.html" />
+    <link rel="top" title="vegas 3.3 documentation" href="index.html" />
     <link rel="prev" title="How vegas Works" href="background.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -46,7 +46,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.2 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -830,18 +830,18 @@ code:</p>
 <span class="c"># integrator for expectation values in distribution g</span>
 <span class="n">g_expval</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">PDFIntegrator</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
 
-<span class="c"># adapt integrator to PDF</span>
-<span class="n">warmup</span> <span class="o">=</span> <span class="n">g_expval</span><span class="p">(</span><span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-
 <span class="c"># want expectation value of [fp, fp**2]</span>
 <span class="k">def</span> <span class="nf">f_f2</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
     <span class="n">fp</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">]</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="n">fp</span> <span class="o">**</span> <span class="mi">2</span><span class="p">]</span>
 
-<span class="c"># results = &lt;f_f2&gt; in distribution g</span>
+<span class="c"># adapt integrator to f_f2</span>
+<span class="n">warmup</span> <span class="o">=</span> <span class="n">g_expval</span><span class="p">(</span><span class="n">f_f2</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c"># &lt;f_f2&gt; in distribution g</span>
 <span class="n">results</span> <span class="o">=</span> <span class="n">g_expval</span><span class="p">(</span><span class="n">f_f2</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<span class="k">print</span> <span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-<span class="k">print</span> <span class="p">(</span><span class="s">&#39;results =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;results =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
 
 <span class="c"># mean and standard deviation of f(p)&#39;s distribution</span>
 <span class="n">fmean</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -851,7 +851,7 @@ code:</p>
 </pre></div>
 </div>
 <p>where the <code class="docutils literal"><span class="pre">warmup</span></code> calls to the integrator are used to adapt it to
-the PDF, and the final results are in <code class="docutils literal"><span class="pre">results</span></code>. Here <code class="docutils literal"><span class="pre">neval</span></code> is
+the integrand, and the final results are in <code class="docutils literal"><span class="pre">results</span></code>. Here <code class="docutils literal"><span class="pre">neval</span></code> is
 the (approximate) number of function calls per iteration of the
 <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> algorithm and <code class="docutils literal"><span class="pre">nitn</span></code> is the number of iterations. We
 use the integrator to calculated  the expectation value of <code class="docutils literal"><span class="pre">fp</span></code> and
@@ -863,15 +863,15 @@ of the <code class="docutils literal"><span class="pre">fp</span></code> distrib
 <code class="docutils literal"><span class="pre">g</span></code>:</p>
 <div class="highlight-python"><div class="highlight"><pre>itn   integral        average         chi2/dof        Q
 -------------------------------------------------------
-  1   0.995(12)       0.995(12)           0.00     1.00
-  2   1.014(11)       1.0043(79)          1.39     0.24
-  3   1.005(11)       1.0046(65)          1.75     0.10
-  4   0.977(13)       0.9978(58)          2.40     0.01
-  5   1.004(12)       0.9990(52)          1.94     0.03
+  1   1.893(38)       1.893(38)           0.00     1.00
+  2   1.905(35)       1.899(26)           0.25     0.78
+  3   1.854(41)       1.884(22)           0.47     0.76
+  4   1.921(36)       1.893(19)           0.44     0.85
+  5   1.913(37)       1.897(17)           0.35     0.94
 
-results = [1.904(17) 7.57(17)]
+results = [1.897(17) 7.48(10)]
 
-f.mean = 1.904(17)    f.sdev = 1.986(31)
+f.mean = 1.897(17)    f.sdev = 1.969(21)
 Gaussian approx&#39;n for f(g) = 1.0(1.4)
 </pre></div>
 </div>
@@ -943,7 +943,8 @@ numbers or arrays of numbers.</li>
 from the integrand (so no longer an expectation value).
 This is useful if one wants to use the optimized
 integrator for something other than a standard
-expectation value. Default is <code class="docutils literal"><span class="pre">False</span></code>.</li>
+expectation value (e.g., an expectation value with a
+non-Gaussian PDF). Default is <code class="docutils literal"><span class="pre">False</span></code>.</li>
 </ul>
 </td>
 </tr>
@@ -1274,7 +1275,7 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.2 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

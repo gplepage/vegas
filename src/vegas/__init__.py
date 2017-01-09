@@ -103,9 +103,9 @@ class PDFIntegrator(Integrator):
             return [fp, fp ** 2]
 
         # adapt integrator to f_f2
-        warmup = g_expval(neval=1000, nitn=5)
+        warmup = g_expval(f_f2, neval=1000, nitn=5)
 
-        # results = <f_f2> in distribution g
+        # <f_f2> in distribution g
         results = g_expval(f_f2, neval=1000, nitn=5, adapt=False)
         print(results.summary())
         print('results =', results, '\\n')
@@ -130,15 +130,15 @@ class PDFIntegrator(Integrator):
 
         itn   integral        average         chi2/dof        Q
         -------------------------------------------------------
-          1   1.9144(97)      1.9144(97)          0.00     1.00
-          2   1.899(11)       1.9069(74)          0.57     0.57
-          3   1.899(11)       1.9041(61)          0.39     0.81
-          4   1.903(11)       1.9037(54)          0.28     0.95
-          5   1.899(10)       1.9028(48)          0.32     0.96
+          1   1.893(38)       1.893(38)           0.00     1.00
+          2   1.905(35)       1.899(26)           0.25     0.78
+          3   1.854(41)       1.884(22)           0.47     0.76
+          4   1.921(36)       1.893(19)           0.44     0.85
+          5   1.913(37)       1.897(17)           0.35     0.94
 
-        results = [1.9028(48) 7.433(39)]
+        results = [1.897(17) 7.48(10)]
 
-        f.mean = 1.9028(48)    f.sdev = 1.9526(82)
+        f.mean = 1.897(17)    f.sdev = 1.969(21)
         Gaussian approx'n for f(g) = 1.0(1.4)
 
     In general functions being integrated can return a number, or an array of
@@ -300,7 +300,8 @@ class PDFIntegrator(Integrator):
                 if fparg_is_dict:
                     prod_pdfi = numpy.prod(pdfi)
                     for k in ans:
-                        ans[k][i] = fparg[k] * prod_pdfi
+                        ans[k][i] = fparg[k]
+                        ans[k][i] *= prod_pdfi
                 else:
                     if not isinstance(fparg, numpy.ndarray):
                         fparg = numpy.asarray(fparg)
