@@ -227,7 +227,7 @@ Other Objects and Functions
 
    .. automethod:: add(g)
 
-   .. automethod:: summary(extended=False, weighted=None)
+   .. automethod:: summary(weighted=None)
 
 .. autoclass:: vegas.RAvgArray
 

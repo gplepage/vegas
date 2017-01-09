@@ -70,6 +70,7 @@ upload-pypi:
 	python setup.py sdist upload
 
 upload-git:
+	echo  "version $(VERSION)"
 	make doc-all
 	git commit -a -m "prep documentation for upload"
 	git push origin master
