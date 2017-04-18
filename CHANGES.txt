@@ -1,3 +1,8 @@
+Version 3.3.1 - 2017-01-02
+==========================
+Bug fix that allows code to work on Windows (fixes type mismatch having to do
+with different conventions for integer lengths).
+
 Version 3.3 - 2017-01-02
 ==========================
 vegas.PDFIntegrator rewritten to make it more efficient.

@@ -1362,7 +1362,7 @@ cdef class Integrator(object):
         # cdef double[::1] wgt
         cdef numpy.ndarray[numpy.double_t, ndim=2] x
         cdef numpy.ndarray[numpy.double_t, ndim=1] wgt
-        cdef numpy.ndarray[numpy.int_t, ndim=1] hcube
+        cdef numpy.ndarray[numpy.intp_t, ndim=1] hcube
         cdef double[::1] sigf
         cdef double[:, ::1] y
         cdef double[::1] fdv2
