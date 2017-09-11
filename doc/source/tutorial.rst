@@ -1085,8 +1085,8 @@ Python function ``f``, and integrated using |vegas|::
 
     def main():
         integ = vegas.Integrator(4 * [[0., 1.]])
-        print integ(f, neval=1e4, nitn=10).summary()
-        print integ(f, neval=1e4, nitn=10).summary()
+        print(integ(f, neval=1e4, nitn=10).summary())
+        print(integ(f, neval=1e4, nitn=10).summary())
 
     if __name__ == '__main__':
         main()
@@ -1181,8 +1181,8 @@ Finally the integral is evaluated using the Python code ::
 
     def main():
         integ = vegas.Integrator(4 *[[0,1]])
-        print integ(cfcn.f, neval=1e4, nitn=10).summary()
-        print integ(cfcn.f, neval=1e4, nitn=10).summary()
+        print(integ(cfcn.f, neval=1e4, nitn=10).summary())
+        print(integ(cfcn.f, neval=1e4, nitn=10).summary())
 
     if __name__ == '__main__':
         main()
@@ -1228,8 +1228,8 @@ integrand from Python::
 
     def main():
         integ = vegas.Integrator(4 *[[0,1]])
-        print integ(ffcn.fcn, neval=1e4, nitn=10).summary()
-        print integ(ffcn.fcn, neval=1e4, nitn=10).summary()
+        print(integ(ffcn.fcn, neval=1e4, nitn=10).summary())
+        print(integ(ffcn.fcn, neval=1e4, nitn=10).summary())
 
     if __name__ == '__main__':
         main()
@@ -1311,8 +1311,8 @@ and the integral evaluated using Python code::
 
     def main():
         integ = vegas.Integrator(4 *[[0,1]])
-        print integ(cfcn.fcn, neval=1e4, nitn=10).summary()
-        print integ(cfcn.fcn, neval=1e4, nitn=10).summary()
+        print(integ(cfcn.fcn, neval=1e4, nitn=10).summary())
+        print(integ(cfcn.fcn, neval=1e4, nitn=10).summary())
 
     if __name__ == '__main__':
         main()

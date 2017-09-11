@@ -1,2 +1,2 @@
 # File created by vegas setup.py
-version = '3.3'
+version = '3.3.1'
