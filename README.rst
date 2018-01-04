@@ -4,7 +4,7 @@ vegas
 This package is for evaluating multidimensional integrals using
 an improved version of the adaptive Monte Carlo vegas algorithm.
 The central package is ``vegas``. A tutorial on its use
-is in ``doc/html/index.html``.
+is in ``docs/html/index.html``.
 
 The vegas algorithm has been widely used for decades to evaluate
 integrals of 2 or more dimensions numerically. It is particularly
