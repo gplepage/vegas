@@ -1,0 +1,4 @@
+vegas
+cython>=0.17
+numpy>=1.7
+gvar>=8.0
