@@ -10,8 +10,19 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
-
 import sys, os
+# try:
+#     from unittest.mock import MagicMock
+
+#     class Mock(MagicMock):
+#         @classmethod
+#         def __getattr__(cls, name):
+#                 return MagicMock()
+
+#     # sys.modules.update(('gvar', Mock()))
+# except:
+#     pass
+
 import vegas
 
 # If extensions (or modules to document with autodoc) are in another directory,
