@@ -5,16 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>How vegas Works &#8212; vegas 3.3.1 documentation</title>
-    
+    <title>How vegas Works &#8212; vegas 3.3.2 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '3.3.1',
+        VERSION:     '3.3.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -52,7 +49,7 @@
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.2 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -214,7 +211,7 @@ in regions where the <img class="math" src="_images/math/c9501e18ba03c321050397f
 here in the vicinity of <code class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></code>, where the
 peak is.</p>
 <p>These plots were obtained by including the line</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">integ</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">show_grid</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">integ</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">show_grid</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>in the integration code after the integration is finished.
@@ -229,7 +226,7 @@ on each axis, but that is too many to display at low resolution.)</p>
 <p>A limitation of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a>’s remapping strategy becomes obvious if we look
 at the grid for the following integral, which has two Gaussians
 arranged along the diagonal of the hypercube:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">math</span>
 
 <span class="k">def</span> <span class="nf">f2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -245,9 +242,9 @@ arranged along the diagonal of the hypercube:</p>
 
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 
-<span class="n">integ</span><span class="p">(</span><span class="n">f2</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">4</span><span class="n">e4</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f2</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">4</span><span class="n">e4</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s">&#39;result = %s    Q = %.2f&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+<span class="n">integ</span><span class="p">(</span><span class="n">f2</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">4e4</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f2</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">4e4</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 
 <span class="n">integ</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">show_grid</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span>
 </pre></div>
@@ -375,12 +372,12 @@ integrals.</p>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.2 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-14, G.P. Lepage.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
     </div>
   </body>
 </html>

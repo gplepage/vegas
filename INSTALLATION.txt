@@ -28,10 +28,10 @@ To install:
 	    and matplotlib as well.
 	    (https://pypi.python.org/pypi/pip)
 
-	All other the third of these libraries are often included in 3rd-party
+	All but the third of these libraries are often included in 3rd-party
 	distributions of python.
 
-	The vegas code works for Python 2.7 and 3.3-3.4. It has not been tested
+	The vegas code works for Python 2.7 and 3.3-3.6. It has not been tested
 	for earlier versions.
 
 2. Use 'make install'. This will build the vegas packages, and

@@ -388,7 +388,7 @@ class TestRAvg(unittest.TestCase):
                 5 * ravg['array'][0, i].sdev
                 )
         self.assertEqual(ravg.dof, 4 * N - 2 + 2 * N - 1)
-        self.assertGreater(ravg.Q, 1e-3)
+        self.assertGreater(ravg.Q, 0.5e-3)
 
 class TestIntegrator(unittest.TestCase):
     def setUp(self):
@@ -606,8 +606,8 @@ class TestIntegrator(unittest.TestCase):
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]], beta=0.0)
         r = I(f_batch(), neval=10000)
         self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
-        self.assertTrue(r.Q > 1e-3)
-        self.assertTrue(r.sdev < 1e-3)
+        self.assertGreater(r.Q, 0.5e-3)
+        self.assertGreater(1e-3, r.sdev)
 
     def test_adapt_to_errors(self):
         " use adapt_to_errors "

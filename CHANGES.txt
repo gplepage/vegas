@@ -1,3 +1,7 @@
+Version 3.3.2 - 2018-01-04
+==========================
+Bug fix (in setup.py) to address installation problems on some systems.
+
 Version 3.3.1 - 2017-01-02
 ==========================
 Bug fix that allows code to work on Windows (fixes type mismatch having to do

@@ -5,16 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>vegas Module &#8212; vegas 3.3.1 documentation</title>
-    
+    <title>vegas Module &#8212; vegas 3.3.2 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '3.3.1',
+        VERSION:     '3.3.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -48,7 +45,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.2 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -95,7 +92,7 @@ Gaussian expectation values.</li>
 <p><a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></code></a> objects make Monte Carlo
 estimates of multidimensional functions <code class="docutils literal"><span class="pre">f(x)</span></code>
 where <code class="docutils literal"><span class="pre">x[d]</span></code> is a point in the integration volume:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">integration_region</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">integration_region</span><span class="p">)</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
 </pre></div>
@@ -285,7 +282,7 @@ In addition they have the following methods:</p>
 <code class="descname">__call__</code><span class="sig-paren">(</span><em>fcn</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Integrate integrand <code class="docutils literal"><span class="pre">fcn</span></code>.</p>
 <p>A typical integrand has the form, for example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">4</span>
 </pre></div>
 </div>
@@ -294,14 +291,14 @@ index <code class="docutils literal"><span class="pre">d=0...</span></code> repr
 integration volume.</p>
 <p>Integrands can be array-valued, representing multiple
 integrands: e.g.,</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
 </pre></div>
 </div>
 <p>The return arrays can have any shape. Dictionary-valued
 integrands are also supported: e.g.,</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]]}</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]]}</span>
 </pre></div>
 </div>
 <p>Integrand functions that return arrays or dictionaries
@@ -312,7 +309,7 @@ ratios or differences of the results.</p>
 mode, where integration points are presented to the
 integrand in batches. A simple batch integrand might
 be, for example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">4</span>
 </pre></div>
@@ -342,14 +339,14 @@ well suited to the integrand.</p>
 <dd><p>Reset default parameters in integrator.</p>
 <p>Usage is analogous to the constructor
 for <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></code></a>: for example,</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">old_defaults</span> <span class="o">=</span> <span class="n">integ</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">neval</span><span class="o">=</span><span class="mi">1</span><span class="n">e6</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">old_defaults</span> <span class="o">=</span> <span class="n">integ</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">neval</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>resets the default values for <code class="docutils literal"><span class="pre">neval</span></code> and <code class="docutils literal"><span class="pre">nitn</span></code>
 in <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal"><span class="pre">vegas.Integrator</span></code></a> <code class="docutils literal"><span class="pre">integ</span></code>. A dictionary, here
 <code class="docutils literal"><span class="pre">old_defaults</span></code>, is returned. It can be used
 to restore the old defaults using, for example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">integ</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">old_defaults</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">integ</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">old_defaults</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -383,13 +380,13 @@ assigned to that point by <a class="reference internal" href="#module-vegas" tit
 Optionally it will also return the index of the hypercube
 containing the integration point and/or the y-space
 coordinates:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>  <span class="n">yields</span>  <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>  <span class="n">yields</span>  <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span>
 
-<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="k">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span>
+<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span>
 
-<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_y</span><span class="o">=</span><span class="k">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">wgt</span>
+<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">wgt</span>
 
-<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">yield_y</span><span class="o">=</span><span class="k">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span>
+<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">yield_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span>
 </pre></div>
 </div>
 <p>The number of integration points returned by the iterator
@@ -410,13 +407,13 @@ in an array <code class="docutils literal"><span class="pre">wgt[i]</span></code
 <p>Optionally the integrator will also return the indices of
 the hypercubes containing the integration points and/or the y-space
 coordinates of those points:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>  <span class="n">yields</span>  <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>  <span class="n">yields</span>  <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span>
 
-<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="k">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span>
+<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span>
 
-<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_y</span><span class="o">=</span><span class="k">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">wgt</span>
+<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">wgt</span>
 
-<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">yield_y</span><span class="o">=</span><span class="k">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span>
+<span class="n">integ</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">yield_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="n">yields</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span>
 </pre></div>
 </div>
 <p>The number of integration points returned by the iterator
@@ -458,7 +455,7 @@ for this transformation is:</p>
 estimates of the integral. This involves training the grid. To
 illustrate how this is done with <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal"><span class="pre">vegas.AdaptiveMap</span></code></a>s consider a simple
 two dimensional integral over a unit hypercube with integrand:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
    <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
 </pre></div>
 </div>
@@ -468,7 +465,7 @@ at a large number <code class="docutils literal"><span class="pre">ny</span></co
 and <code class="docutils literal"><span class="pre">d=0,1</span></code>, uniformly distributed throughout the integration
 volume in y space. These samples be used to train the grid
 using the following code:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -477,25 +474,25 @@ using the following code:</p>
 <span class="n">m</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">AdaptiveMap</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">ninc</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
 <span class="n">ny</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="p">(</span><span class="n">ny</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>  <span class="c"># 1000 random y&#39;s</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="p">(</span><span class="n">ny</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>  <span class="c1"># 1000 random y&#39;s</span>
 
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>            <span class="c"># work space</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>            <span class="c1"># work space</span>
 <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
 <span class="n">f2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s">&#39;intial grid:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;intial grid:&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">settings</span><span class="p">())</span>
 
-<span class="k">for</span> <span class="n">itn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>                    <span class="c"># 5 iterations to adapt</span>
-   <span class="n">m</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span>                     <span class="c"># compute x&#39;s and jac</span>
+<span class="k">for</span> <span class="n">itn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>                    <span class="c1"># 5 iterations to adapt</span>
+   <span class="n">m</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span>                     <span class="c1"># compute x&#39;s and jac</span>
 
-   <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="p">):</span>                  <span class="c"># compute training data</span>
+   <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="p">):</span>                  <span class="c1"># compute training data</span>
       <span class="n">f2</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">jac</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span> <span class="o">**</span> <span class="mi">2</span>
 
-   <span class="n">m</span><span class="o">.</span><span class="n">add_training_data</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">f2</span><span class="p">)</span>           <span class="c"># adapt</span>
+   <span class="n">m</span><span class="o">.</span><span class="n">add_training_data</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">f2</span><span class="p">)</span>           <span class="c1"># adapt</span>
    <span class="n">m</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
 
-   <span class="nb">print</span><span class="p">(</span><span class="s">&#39;iteration %d:&#39;</span> <span class="o">%</span> <span class="n">itn</span><span class="p">)</span>
+   <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;iteration </span><span class="si">%d</span><span class="s1">:&#39;</span> <span class="o">%</span> <span class="n">itn</span><span class="p">)</span>
    <span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">settings</span><span class="p">())</span>
 </pre></div>
 </div>
@@ -504,7 +501,7 @@ map, making increments smaller where <code class="docutils literal"><span class=
 larger where <code class="docutils literal"><span class="pre">f2</span></code> is smaller.
 The map converges after only 2 or 3 iterations, as
 is clear from the output:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">initial</span> <span class="n">grid</span><span class="p">:</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">initial</span> <span class="n">grid</span><span class="p">:</span>
     <span class="n">grid</span><span class="p">[</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="mf">0.</span>   <span class="mf">0.2</span>  <span class="mf">0.4</span>  <span class="mf">0.6</span>  <span class="mf">0.8</span>  <span class="mf">1.</span> <span class="p">]</span>
     <span class="n">grid</span><span class="p">[</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="mf">0.</span>   <span class="mf">0.2</span>  <span class="mf">0.4</span>  <span class="mf">0.6</span>  <span class="mf">0.8</span>  <span class="mf">1.</span> <span class="p">]</span>
 
@@ -550,12 +547,12 @@ the grid are specified by <code class="docutils literal"><span class="pre">grid[
 direction (<code class="docutils literal"><span class="pre">d=0,1...dim-1</span></code>) and <code class="docutils literal"><span class="pre">i</span></code> labels the grid point
 (<code class="docutils literal"><span class="pre">i=0,1...N</span></code>). The mapping for a specific point <code class="docutils literal"><span class="pre">y</span></code> into
 <code class="docutils literal"><span class="pre">x</span></code> space is:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">y</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-&gt;</span> <span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">grid</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">d</span><span class="p">])]</span> <span class="o">+</span> <span class="n">inc</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">d</span><span class="p">])]</span> <span class="o">*</span> <span class="n">delta</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">d</span><span class="p">])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-&gt;</span> <span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">grid</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">d</span><span class="p">])]</span> <span class="o">+</span> <span class="n">inc</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">d</span><span class="p">])]</span> <span class="o">*</span> <span class="n">delta</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">d</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>where <code class="docutils literal"><span class="pre">i(y)=floor(y*N</span></code>), <code class="docutils literal"><span class="pre">delta(y)=y*N</span> <span class="pre">-</span> <span class="pre">i(y)</span></code>, and
 <code class="docutils literal"><span class="pre">inc[d,</span> <span class="pre">i]</span> <span class="pre">=</span> <span class="pre">grid[d,</span> <span class="pre">i+1]</span> <span class="pre">-</span> <span class="pre">grid[d,</span> <span class="pre">i]</span></code>. The Jacobian for this map,</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">dx</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">/</span><span class="n">dy</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">inc</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">d</span><span class="p">])]</span> <span class="o">*</span> <span class="n">N</span><span class="p">,</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">dx</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">/</span><span class="n">dy</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">inc</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">d</span><span class="p">])]</span> <span class="o">*</span> <span class="n">N</span><span class="p">,</span>
 </pre></div>
 </div>
 <p>is piece-wise constant and proportional to the <code class="docutils literal"><span class="pre">x</span></code>-space grid
@@ -565,7 +562,7 @@ size <code class="docutils literal"><span class="pre">1/N</span></code> in the c
 in <code class="docutils literal"><span class="pre">y</span></code> space, while larger increments are compressed.</p>
 <p>The <code class="docutils literal"><span class="pre">x</span></code> grid for an <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal"><span class="pre">AdaptiveMap</span></code></a> can be specified explicitly
 when the map is created: for example,</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">m</span> <span class="o">=</span> <span class="n">AdaptiveMap</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">AdaptiveMap</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 </pre></div>
 </div>
 <p>creates a two-dimensional map where the <code class="docutils literal"><span class="pre">x[0]</span></code> interval <code class="docutils literal"><span class="pre">(0,0.1)</span></code>
@@ -576,7 +573,7 @@ and <code class="docutils literal"><span class="pre">(0,1)</span></code> map int
 <code class="docutils literal"><span class="pre">f[j]</span></code> corresponding to <code class="docutils literal"><span class="pre">ny</span></code> points <code class="docutils literal"><span class="pre">y[j,</span> <span class="pre">d]</span></code>,
 with <code class="docutils literal"><span class="pre">j=0...ny-1</span></code>, uniformly distributed in y space:
 for example,</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">m</span><span class="o">.</span><span class="n">add_training_data</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">add_training_data</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 <span class="n">m</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -630,7 +627,7 @@ the node.</p>
 <dt id="vegas.AdaptiveMap.inc">
 <code class="descname">inc</code><a class="headerlink" href="#vegas.AdaptiveMap.inc" title="Permalink to this definition">¶</a></dt>
 <dd><p>The increment widths of the grid:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">inc</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">inc</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -737,7 +734,7 @@ increments as the old grid.</p>
 <code class="docutils literal"><span class="pre">x[j,</span> <span class="pre">d]</span></code> is filled with the corresponding <code class="docutils literal"><span class="pre">x</span></code> values,
 and <code class="docutils literal"><span class="pre">jac[j]</span></code> is filled with the corresponding Jacobian
 values. <code class="docutils literal"><span class="pre">x</span></code> and <code class="docutils literal"><span class="pre">jac</span></code> must be preallocated: for example,</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
 <span class="n">jac</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -822,35 +819,35 @@ variables using the <a class="reference internal" href="#module-vegas" title="ve
 10s or more of parameters feasible.</p>
 <p>A simple illustration of <code class="docutils literal"><span class="pre">PDFIntegrator</span></code> is given by the following
 code:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">gvar</span> <span class="k">as</span> <span class="nn">gv</span>
 
-<span class="c"># multi-dimensional Gaussian distribution</span>
+<span class="c1"># multi-dimensional Gaussian distribution</span>
 <span class="n">g</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="p">()</span>
-<span class="n">g</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
-<span class="n">g</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="s">&#39;1(1)&#39;</span><span class="p">)</span>
+<span class="n">g</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+<span class="n">g</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="s1">&#39;1(1)&#39;</span><span class="p">)</span>
 
-<span class="c"># integrator for expectation values in distribution g</span>
+<span class="c1"># integrator for expectation values in distribution g</span>
 <span class="n">g_expval</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">PDFIntegrator</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
 
-<span class="c"># want expectation value of [fp, fp**2]</span>
+<span class="c1"># want expectation value of [fp, fp**2]</span>
 <span class="k">def</span> <span class="nf">f_f2</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
-    <span class="n">fp</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">]</span>
+    <span class="n">fp</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="n">fp</span> <span class="o">**</span> <span class="mi">2</span><span class="p">]</span>
 
-<span class="c"># adapt integrator to f_f2</span>
+<span class="c1"># adapt integrator to f_f2</span>
 <span class="n">warmup</span> <span class="o">=</span> <span class="n">g_expval</span><span class="p">(</span><span class="n">f_f2</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
-<span class="c"># &lt;f_f2&gt; in distribution g</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">g_expval</span><span class="p">(</span><span class="n">f_f2</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="k">False</span><span class="p">)</span>
+<span class="c1"># &lt;f_f2&gt; in distribution g</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">g_expval</span><span class="p">(</span><span class="n">f_f2</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s">&#39;results =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;results =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
-<span class="c"># mean and standard deviation of f(p)&#39;s distribution</span>
+<span class="c1"># mean and standard deviation of f(p)&#39;s distribution</span>
 <span class="n">fmean</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">fsdev</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-<span class="nb">print</span> <span class="p">(</span><span class="s">&#39;f.mean =&#39;</span><span class="p">,</span> <span class="n">fmean</span><span class="p">,</span> <span class="s">&#39;   f.sdev =&#39;</span><span class="p">,</span> <span class="n">fsdev</span><span class="p">)</span>
-<span class="nb">print</span> <span class="p">(</span><span class="s">&quot;Gaussian approx&#39;n for f(g) =&quot;</span><span class="p">,</span> <span class="n">f_f2</span><span class="p">(</span><span class="n">g</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;f.mean =&#39;</span><span class="p">,</span> <span class="n">fmean</span><span class="p">,</span> <span class="s1">&#39;   f.sdev =&#39;</span><span class="p">,</span> <span class="n">fsdev</span><span class="p">)</span>
+<span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Gaussian approx&#39;n for f(g) =&quot;</span><span class="p">,</span> <span class="n">f_f2</span><span class="p">(</span><span class="n">g</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>where the <code class="docutils literal"><span class="pre">warmup</span></code> calls to the integrator are used to adapt it to
@@ -864,7 +861,7 @@ Gaussian approximation (1.0(1.4)) for the mean and standard deviation
 of the <code class="docutils literal"><span class="pre">fp</span></code> distribution is not particularly accurate here
 (correct value is 1.9(2.0)), because of the large uncertainties in
 <code class="docutils literal"><span class="pre">g</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">average</span>         <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">average</span>         <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
   <span class="mi">1</span>   <span class="mf">1.893</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>       <span class="mf">1.893</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
   <span class="mi">2</span>   <span class="mf">1.905</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span>       <span class="mf">1.899</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>           <span class="mf">0.25</span>     <span class="mf">0.78</span>
@@ -875,7 +872,7 @@ of the <code class="docutils literal"><span class="pre">fp</span></code> distrib
 <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.897</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span> <span class="mf">7.48</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
 
 <span class="n">f</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="mf">1.897</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>    <span class="n">f</span><span class="o">.</span><span class="n">sdev</span> <span class="o">=</span> <span class="mf">1.969</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>
-<span class="n">Gaussian</span> <span class="n">approx</span><span class="s">&#39;n for f(g) = 1.0(1.4)</span>
+<span class="n">Gaussian</span> <span class="n">approx</span><span class="s1">&#39;n for f(g) = 1.0(1.4)</span>
 </pre></div>
 </div>
 <p>In general functions being integrated can return a number, or an array of
@@ -925,7 +922,7 @@ covariance matrix unchanged. Default is <code class="docutils literal"><span cla
 </table>
 <dl class="method">
 <dt id="vegas.PDFIntegrator.__call__">
-<code class="descname">__call__</code><span class="sig-paren">(</span><em>f</em>, <em>nopdf=False</em>, <em>mpi=False</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__call__</code><span class="sig-paren">(</span><em>f</em>, <em>nopdf=False</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate expectation value of function <code class="docutils literal"><span class="pre">f(p)</span></code>.</p>
 <p>Uses module <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal"><span class="pre">vegas</span></code></a> to estimate the integral of
 <code class="docutils literal"><span class="pre">f(p)</span></code> multiplied by the probability density function
@@ -1177,7 +1174,7 @@ as an argument, where <code class="docutils literal"><span class="pre">i=0...</s
 integrand values (or arrays of integrand values) for the corresponding
 points. The meaning of <code class="docutils literal"><span class="pre">fcn(x)</span></code> is unchanged by the decorator.</p>
 <p>An example is</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
@@ -1209,14 +1206,14 @@ for multiple integrands (i.e., an
 array-valued integrand).</p>
 </div></blockquote>
 <p>An example is</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">vegas</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="k">class</span> <span class="nc">batchf</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">BatchIntegrand</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
 
-<span class="n">f</span> <span class="o">=</span> <span class="n">batchf</span><span class="p">()</span>      <span class="c"># the integrand</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">batchf</span><span class="p">()</span>      <span class="c1"># the integrand</span>
 </pre></div>
 </div>
 <p>for the two-dimensional integrand <img class="math" src="_images/math/c634373247cff28de83e3f1a430729caf7cadf09.png" alt="\exp(-x_0 - x_1)" style="vertical-align: -4px"/>.</p>
@@ -1275,12 +1272,12 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.2 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-14, G.P. Lepage.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
     </div>
   </body>
 </html>

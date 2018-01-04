@@ -11,10 +11,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-PIP = pip
 PYTHON = python
-PYTHONVERSION = python`python -c 'import platform; print(platform.python_version())'`
-VERSION = `python -c 'import vegas; print vegas.__version__'`
+PIP = $(PYTHON) -m pip
+PYTHONVERSION = python`$(PYTHON) -c 'import platform; print(platform.python_version())'`
+VERSION = `$(PYTHON) -c 'import vegas; print vegas.__version__'`
 
 install :
 	$(PIP) install . --user
