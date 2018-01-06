@@ -12,6 +12,7 @@
 # GNU General Public License for more details.
 
 import math
+import os
 import pickle
 import unittest
 import warnings
@@ -56,6 +57,7 @@ class TestAdaptiveMap(unittest.TestCase):
             pickle.dump(m1, ofile)
         with open('test_map.p', 'rb') as ifile:
             m2 = pickle.load(ifile)
+        os.remove('test_map.p')
         np_assert_allclose(m2.grid, m1.grid)
         np_assert_allclose(m2.inc, m1.inc)
 
@@ -460,6 +462,7 @@ class TestIntegrator(unittest.TestCase):
             pickle.dump(I1, ofile)
         with open('test_integ.p', 'rb') as ifile:
             I2 = pickle.load(ifile)
+        os.remove('test_integ.p')
         assert isinstance(I2, Integrator)
         for k in Integrator.defaults:
             if k == 'map':
