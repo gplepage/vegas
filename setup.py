@@ -41,6 +41,15 @@ ext_modules = [
     Extension('vegas._vegas', ['src/vegas/_vegas.pyx'], **ext_args),
     ]
 
+# fix for ReadTheDocs support
+import os
+if os.environ.get('READTHEDOCS') == 'True':
+    requires = ["cython (>=0.17)","numpy (>=1.7)"]
+    install_requires = ['cython>=0.17', 'numpy>=1.7']
+else:
+    requires = ["cython (>=0.17)","numpy (>=1.7)", "gvar (>=8.0)"]
+    install_requires = ['cython>=0.17', 'numpy>=1.7', 'gvar>=8.0']
+
 setup(
 	name='vegas',
 	version=VEGAS_VERSION,
@@ -51,8 +60,8 @@ setup(
     package_dir=dict(vegas='src/vegas'),
     package_data=dict(vegas=['../vegas.pxd','_vegas.pxd']),
     ext_modules=cythonize(ext_modules),
-    install_requires=['cython>=0.17', 'numpy>=1.7', 'gvar>=8.0'], # for pip
-    requires=["cython (>=0.17)","numpy (>=1.7)", "gvar (>=8.0)"], # for disutils
+    install_requires=install_requires, # for pip
+    requires=requires, # for disutils
     url="https://github.com/gplepage/vegas.git",
     license='GPLv3+',
     platforms='Any',
