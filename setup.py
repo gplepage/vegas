@@ -41,12 +41,6 @@ ext_modules = [
     Extension('vegas._vegas', ['src/vegas/_vegas.pyx'], **ext_args),
     ]
 
-# fix for ReadTheDocs support
-# import os
-# if os.environ.get('READTHEDOCS') == 'True':
-#     requires = ["cython (>=0.17)","numpy (>=1.7)"]
-#     install_requires = ['cython>=0.17', 'numpy>=1.7']
-# else:
 requires = ["cython (>=0.17)","numpy (>=1.7)", "gvar (>=8.0)"]
 install_requires = ['cython>=0.17', 'numpy>=1.7', 'gvar>=8.0']
 
