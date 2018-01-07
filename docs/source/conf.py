@@ -13,17 +13,17 @@
 
 import sys, os
 
-try:
-    from unittest.mock import MagicMock
-    class Mock(MagicMock):
-        @classmethod
-        def __getattr__(cls, name):
-                return MagicMock()
+# try:
+#     from unittest.mock import MagicMock
+#     class Mock(MagicMock):
+#         @classmethod
+#         def __getattr__(cls, name):
+#                 return MagicMock()
 
-    MOCK_MODULES = ['gvar']
-    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-except:
-    pass
+#     MOCK_MODULES = ['gvar']
+#     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+# except:
+#     pass
 
 import vegas
 
