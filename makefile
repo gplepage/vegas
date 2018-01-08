@@ -32,15 +32,15 @@ untry:
 	- cat files-vegas.$(PYTHONVERSION) | xargs rm -rf
 
 doc-html:
-	rm -rf docs/html; sphinx-build -b html docs/source docs/html
+	rm -rf doc/html; sphinx-build -b html doc/source doc/html
 
 doc-pdf:
-	rm -rf docs/vegas.pdf
-	sphinx-build -b latex docs/source docs/latex
-	cd docs/latex; make vegas.pdf; mv vegas.pdf ..
+	rm -rf doc/vegas.pdf
+	sphinx-build -b latex doc/source doc/latex
+	cd doc/latex; make vegas.pdf; mv vegas.pdf ..
 
 doc-zip doc.zip:
-	cd docs/html; zip -r doc *; mv doc.zip ../..
+	cd doc/html; zip -r doc *; mv doc.zip ../..
 
 doc-all: doc-html doc-pdf doc-zip
 
@@ -90,7 +90,7 @@ clean:
 	rm -f *.so *.tmp *.pyc *.prof *.c .coverage doc.zip
 	rm -f -r dist
 	rm -f src/vegas/*.c examples/*.c
-	# $(MAKE) -C docs/source clean
+	# $(MAKE) -C doc/source clean
 	# $(MAKE) -C tests clean
 	# $(MAKE) -C examples clean
 

@@ -2,6 +2,8 @@ Version 3.3.? ???
 ==================
 - Trivial changes to tests.
 
+- Extra files to support online documentation at readthedocs.
+
 Version 3.3.2 - 2018-01-04
 ==========================
 Bug fix (in setup.py) to address installation problems on some systems.
