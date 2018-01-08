@@ -41,8 +41,8 @@ ext_modules = [
     Extension('vegas._vegas', ['src/vegas/_vegas.pyx'], **ext_args),
     ]
 
-requires = ["cython (>=0.17)","numpy (>=1.7)", "gvar (>=8.0)"]
-install_requires = ['cython>=0.17', 'numpy>=1.7', 'gvar>=8.0']
+requires = ["cython (>=0.17)","numpy (>=1.7)", "gvar (>=8.0)"]  # distutils
+install_requires = ['cython>=0.17', 'numpy>=1.7', 'gvar>=8.0']  # pip
 
 setup(
 	name='vegas',

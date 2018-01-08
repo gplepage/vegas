@@ -1,0 +1,10 @@
+name: documentation
+channels:
+- defaults
+dependencies:
+- python>=3.5
+- cython
+- numpy
+- pip:
+  - gvar>=8.0
+
