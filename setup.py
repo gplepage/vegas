@@ -19,7 +19,7 @@ from distutils.extension import Extension
 from distutils.command.build_ext import build_ext as _build_ext
 
 # compile from existing .c files if USE_CYTHON is False
-USE_CYTHON = True
+USE_CYTHON = False # True
 
 class build_ext(_build_ext):
     # delays using numpy and cython until they are installed;
