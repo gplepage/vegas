@@ -16,10 +16,10 @@ PIP = $(PYTHON) -m pip
 PYTHONVERSION = python`$(PYTHON) -c 'import platform; print(platform.python_version())'`
 VERSION = `$(PYTHON) -c 'import vegas; print vegas.__version__'`
 
-install :
+install-user :
 	$(PIP) install . --user
 
-install-sys :
+install install-sys :
 	$(PIP) install .
 
 uninstall :			# mostly works (may leave some empty directories)
@@ -87,9 +87,8 @@ test-download:
 clean:
 	rm -f -r build
 	rm -rf __pycache__
-	rm -f *.so *.tmp *.pyc *.prof *.c .coverage doc.zip
+	rm -f *.so *.tmp *.pyc *.prof .coverage doc.zip
 	rm -f -r dist
-	rm -f src/vegas/*.c examples/*.c
 	# $(MAKE) -C doc/source clean
 	# $(MAKE) -C tests clean
 	# $(MAKE) -C examples clean

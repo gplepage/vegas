@@ -3,7 +3,6 @@
 *.pyxbldc
 build/
 __pycache__/
-*.c
 miscellaneous/
 tmp/
 old/

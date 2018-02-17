@@ -1,5 +1,6 @@
 include makefile README INSTALLATION COPYING MANIFEST.in CHANGES
 include setup.py src/vegas.pxd src/vegas/*.pxd src/vegas/*.pyx
+include src/vegas/*.c
 include doc/vegas.pdf
 
 graft doc/html

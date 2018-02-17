@@ -16,11 +16,27 @@ GNU General Public License for more details.
 
 from distutils.core import setup
 from distutils.extension import Extension
-from Cython.Build import cythonize
-import sys
-import numpy
+from distutils.command.build_ext import build_ext as _build_ext
 
-VEGAS_VERSION = '3.3.2'
+# compile from existing .c files if USE_CYTHON is False
+USE_CYTHON = True
+
+class build_ext(_build_ext):
+    # delays using numpy and cython until they are installed;
+    # cython is optional (set USE_CYTHON)
+    # this code adapted from https://github.com/pandas-dev/pandas setup.py
+    def build_extensions(self):
+        import numpy
+        if USE_CYTHON:
+            from Cython.Build import cythonize
+            self.extensions = cythonize(self.extensions)
+        numpy_include = numpy.get_include()
+        for ext in self.extensions:
+            ext.include_dirs.append(numpy_include)
+        _build_ext.build_extensions(self)
+
+
+VEGAS_VERSION = '3.3.3'
 
 # create vegas/version.py so vegas knows its version number
 with open("src/vegas/_version.py","w") as version_file:
@@ -31,18 +47,31 @@ with open("src/vegas/_version.py","w") as version_file:
 
 ext_args = dict(
     libraries=[],
-    include_dirs=[numpy.get_include()],
+    include_dirs=[],
     library_dirs=[],
     runtime_library_dirs=[],
     extra_link_args=[],
     )
 data_files = [('vegas_include', ['vegas.pxd'])]
+
+ext = '.pyx' if USE_CYTHON else '.c'
+
 ext_modules = [
-    Extension('vegas._vegas', ['src/vegas/_vegas.pyx'], **ext_args),
+    Extension('vegas._vegas', ['src/vegas/_vegas' + ext], **ext_args),
     ]
 
-requires = ["cython (>=0.17)","numpy (>=1.7)", "gvar (>=8.0)"]  # distutils
-install_requires = ['cython>=0.17', 'numpy>=1.7', 'gvar>=8.0']  # pip
+# for distutils:
+requires = (
+    ["cython (>=0.17)","numpy (>=1.7)", "gvar (>=8.0)"]
+    if USE_CYTHON else
+    ["numpy (>=1.7)", "gvar (>=8.0)"]
+    )
+# for pip:
+install_requires = (
+    ['cython>=0.17', 'numpy>=1.7', 'gvar>=8.0']
+    if USE_CYTHON else
+    ['numpy>=1.7', 'gvar>=8.0']
+    )
 
 setup(
 	name='vegas',
@@ -50,10 +79,11 @@ setup(
 	description='Tools for adaptive multidimensional Monte Carlo integration.',
 	author='G. Peter Lepage',
 	author_email='g.p.lepage@cornell.edu',
+    cmdclass={'build_ext':build_ext},
 	packages=['vegas'],
     package_dir=dict(vegas='src/vegas'),
     package_data=dict(vegas=['../vegas.pxd','_vegas.pxd']),
-    ext_modules=cythonize(ext_modules),
+    ext_modules=ext_modules,
     setup_requires=install_requires, # for pip
     install_requires=install_requires, # for pip
     requires=requires, # for disutils
