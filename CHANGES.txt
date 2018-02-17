@@ -1,7 +1,8 @@
 Version 3.3.3 2018-02-16
 ========================
 - Improved installation script, especially when cython and numpy not
-  installed.
+  installed. cython is no longer necessary. numpy and gvar should be
+  installed automatically if they are not present.
 
 - Trivial changes to tests.
 

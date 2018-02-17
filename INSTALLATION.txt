@@ -1,48 +1,13 @@
 To install:
 
-1. If not alread installed, download and install the following packages:
-
-	a. The numpy python library - provides fast floating-point array
-		operations in python. Versions earlier than 1.6 may not work.
-		(http://numpy.scipy.org/)
-
-	b. The Cython python package - provides a variant of python that
-		compiles into C code that can itself be compiled and is faster (but
-        less flexible) than ordinary python. Versions earlier than 0.17
-		may not work.
-		(http://www.cython.org/)
-
-	c. The gvar module which handles Gaussian random variables. This is
-		available on pypi (pip install gvar) or, as source code,
-		at https://github.com/gplepage/gvar.git.
-
-	d. The matplotlib package for 2-d plotting. This is optional
-		unless you want to make pictures of the vegas grid
-		(see the documentation on How vegas Works).
-
-	e. The mpi4py package (and MPI itself) for multi-processor
-	   	evaluation of integrands. This is optional.
-
-	f. pip is used for installing (and uninstalling) vegas. pip usually
-	    comes with python. pip can be used to install numpy, cython, gvar,
-	    and matplotlib as well.
-	    (https://pypi.python.org/pypi/pip)
-
-	All but the third of these libraries are often included in 3rd-party
-	distributions of python.
-
-	The vegas code works for Python 2.7 and 3.3-3.6. It has not been tested
-	for earlier versions.
-
-2. Use 'make install'. This will build the vegas packages, and
-	then copy it into a standard directory in the user's space that
-	Python knows about. A list of the installed files is stored in file
-	files-vegas.python (in case, for example, you want to uninstall them).
+1. Use 'make install' to install in the system library (or use
+	'make install-user' to install in user's library.) Python modules
+	numpy and gvar are installed automatically if not present.
 
 	N.B. Rather than using make and the makefile, one can instead use
-	standard distutils commands: eg, 'pip install . --user' (from
-	within the main directory), or python distutils commands
-	like 'python setup.py install --user'.
+	standard python installation tools: run 'pip install .' to install
+	to the system library (or 'pip install . --user' to install to
+	the user's directory) from within the top directory.
 
 	N.B. If you have previously installed older versions of vegas,
 	consider removing the earlier modules to make sure that the new ones are
@@ -52,13 +17,23 @@ To install:
 	using 'pydoc vegas' before installing the new software
 	(pydoc lists the location of the module under "FILE").
 
-	N.B. To install vegas for an alternative version of pip, say pip3
-	for example, use 'make PIP=pip3 install'. Python's standard
-	directories are structured in such a way that it is necessary to do
-	a separate installation for each python version that will be used for
-	vegas.
+	N.B. vegas uses cython to convert .pyx files to .c files. The .c files
+	are included in the distribution so cython is not required to install
+	gvar. To force regeneration of the .c files set USE_CYTHON=True in
+	setup.py.
 
-3. (Optional) Run 'make tests' to test your installation of vegas.
+	Install Python matplotlib if you want to make pictures of the
+	vegas grid. Install mpi4py (and MPI itself) for multi-processor
+	evaluation of integrands. Neither of these packages is installed
+	automatically.
+
+	pip is used for installing (and uninstalling) vegas. pip usually
+	comes with python.
+
+	The vegas code works for Python 2.7 and 3.3-3.6. It has not been tested
+	for earlier versions.
+
+2. (Optional) Run 'make tests' to test your installation of vegas.
 	The tests have been successful if the output ends with "OK".
 	Some tests involve random numbers and so may occasionally --- less than
 	1 in 100 runs --- fail due to rare multi-sigma fluctuations; rerun the
@@ -86,7 +61,7 @@ Problems:
 
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-16 G. Peter Lepage.
+# Copyright (c) 2013-18 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
