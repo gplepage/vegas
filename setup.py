@@ -54,6 +54,7 @@ setup(
     package_dir=dict(vegas='src/vegas'),
     package_data=dict(vegas=['../vegas.pxd','_vegas.pxd']),
     ext_modules=cythonize(ext_modules),
+    setup_requires=install_requires, # for pip
     install_requires=install_requires, # for pip
     requires=requires, # for disutils
     url="https://github.com/gplepage/vegas.git",

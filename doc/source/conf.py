@@ -32,7 +32,8 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.imgmath']
 imgmath_image_format = "png"
 imgmath_use_preview = True
 imgmath_latex_preamble = "\usepackage{arev}"
-imgmath_dvipng_args = ['-gamma', '0.35', '-D', '110', '-bg', 'Transparent']
+imgmath_dvipng_args = ['-gamma', '0.5', '-D', '110', '-bg', 'Transparent']  #35
+# imgmath_font_size = 12
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -98,8 +99,9 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+# html_theme = 'default'
 html_theme = 'pyramid'
+# html_theme = 'agogo'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

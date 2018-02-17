@@ -1,8 +1,11 @@
-Version 3.3.? ???
-==================
+Version 3.3.3 2018-02-16
+========================
+- Improved installation script, especially when cython and numpy not
+  installed.
+
 - Trivial changes to tests.
 
-- Extra files to support online documentation at readthedocs.
+- Slight rearrangement of documentation.
 
 Version 3.3.2 - 2018-01-04
 ==========================

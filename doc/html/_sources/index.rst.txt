@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    tutorial.rst
+   c_fortran.rst
    background.rst
    vegas.rst
 
