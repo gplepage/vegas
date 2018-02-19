@@ -16,6 +16,9 @@ PIP = $(PYTHON) -m pip
 PYTHONVERSION = python`$(PYTHON) -c 'import platform; print(platform.python_version())'`
 VERSION = `$(PYTHON) -c 'import vegas; print vegas.__version__'`
 
+DOCFILES :=  $(shell ls doc/source/conf.py doc/source/*.{rst,out,png})
+SRCFILES := $(shell ls setup.py src/vegas/*.{py,pyx})
+
 install-user :
 	$(PIP) install . --user
 
@@ -31,10 +34,17 @@ try:
 untry:
 	- cat files-vegas.$(PYTHONVERSION) | xargs rm -rf
 
+
 doc-html:
+	make doc/html/index.html
+
+doc/html/index.html : $(SRCFILES) $(DOCFILES)
 	rm -rf doc/html; sphinx-build -b html doc/source doc/html
 
 doc-pdf:
+	make doc/vegas.pdf
+
+doc/vegas.pdf : $(SRCFILES) $(DOCFILES)
 	rm -rf doc/vegas.pdf
 	sphinx-build -b latex doc/source doc/latex
 	cd doc/latex; make vegas.pdf; mv vegas.pdf ..
@@ -42,7 +52,7 @@ doc-pdf:
 doc-zip doc.zip:
 	cd doc/html; zip -r doc *; mv doc.zip ../..
 
-doc-all: doc-html doc-pdf doc-zip
+doc-all: doc-html doc-pdf
 
 sdist:			# source distribution
 	$(PYTHON) setup.py sdist
@@ -71,8 +81,9 @@ upload-pypi:
 
 upload-git:
 	echo  "version $(VERSION)"
-	make doc-all
-	git commit -a -m "prep documentation for upload"
+	make doc-html doc-pdf
+	git diff --exit-code
+	git diff --cached --exit-code
 	git push origin master
 
 tag-git:

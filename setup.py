@@ -14,6 +14,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
+VEGAS_VERSION = '3.3.3'
+
 from distutils.core import setup
 from distutils.extension import Extension
 from distutils.command.build_ext import build_ext as _build_ext
@@ -36,7 +38,6 @@ class build_ext(_build_ext):
         _build_ext.build_extensions(self)
 
 
-VEGAS_VERSION = '3.3.3'
 
 # create vegas/version.py so vegas knows its version number
 with open("src/vegas/_version.py","w") as version_file:
