@@ -1,3 +1,7 @@
+Version 3.3.4 2018-03-18
+========================
+Tiny change to test scripts to account for changes in numpy.
+
 Version 3.3.3 2018-02-16
 ========================
 - Improved installation script, especially when cython and numpy not

@@ -94,10 +94,10 @@ class TestAdaptiveMap(unittest.TestCase):
         m = AdaptiveMap(grid=[[0, 1, 3], [-2, 0, 6]], ninc=4)
         output = "    grid[ 0] = [ 0.   0.5  1.   2.   3. ]\n"
         output += "    grid[ 1] = [-2. -1.  0.  3.  6.]\n"
-        self.assertEqual(m.settings(5), output)
+        self.assertEqual(m.settings(5).replace(' ', ''), output.replace(' ', ''))
         output = "    grid[ 0] = [ 0.5  2. ]\n"
         output += "    grid[ 1] = [-1.  3.]\n"
-        self.assertEqual(m.settings(2), output)
+        self.assertEqual(m.settings(2).replace(' ', ''), output.replace(' ', ''))
 
     def test_training_data_adapt(self):
         "add_training_data(...)  adapt(...) "

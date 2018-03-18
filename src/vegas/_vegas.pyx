@@ -1124,13 +1124,13 @@ cdef class Integrator(object):
         the hypercubes containing the integration points and/or the |y|-space
         coordinates of those points::
 
-            integ.random()  yields  x, wgt
+            integ.random_batch()  yields  x, wgt
 
-            integ.random(yield_hcube=True) yields x, wgt, hcube
+            integ.random_batch(yield_hcube=True) yields x, wgt, hcube
 
-            integ.random(yield_y=True) yields x, y, wgt
+            integ.random_batch(yield_y=True) yields x, y, wgt
 
-            integ.random(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube
+            integ.random_batch(yield_hcube=True, yield_y=True) yields x, y, wgt, hcube
 
         The number of integration points returned by the iterator
         corresponds to a single iteration. The number in a batch
