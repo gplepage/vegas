@@ -1,7 +1,7 @@
 # c#ython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-16 G. Peter Lepage.
+# Copyright (c) 2013-18 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ from libc.math cimport floor, log, abs, tanh, erf, exp, sqrt, lgamma
 import collections
 import math
 import sys
+import time
 import warnings
 
 import numpy
@@ -931,7 +932,7 @@ cdef class Integrator(object):
         if ns < 1:
             ns = 1
         elif (
-            # self.beta > 0 and
+            self.beta > 0 and
             ns ** self.dim > self.max_nhcube and
             not self.minimize_mem
             ):
@@ -1092,7 +1093,7 @@ cdef class Integrator(object):
             sum_fdv = 0.0
             sum_fdv2 = 0.0
             for i in range(i_start, i_start + neval_hcube):
-                fdv = fx[i] * self.jac[i] * dv_y
+                fdv = fx[i] * jac[i] * dv_y
                 sum_fdv += fdv
                 sum_fdv2 += fdv ** 2
             mean = sum_fdv / neval_hcube
@@ -1400,7 +1401,7 @@ cdef class Integrator(object):
             for x, y, wgt, hcube in self.random_batch(
                 yield_hcube=True, yield_y=True, fcn=fcn
                 ):
-                fdv2 = self.fdv2        # must be ifcn.sizeide loop
+                fdv2 = self.fdv2        # must be inside loop
 
                 # evaluate integrand at all points in x
                 fx = fcn.eval(x)
@@ -1446,12 +1447,14 @@ cdef class Integrator(object):
                     if self.beta > 0 and self.adapt:
                         if not self.minimize_mem:
                             sigf[i] = sigf2 ** (self.beta / 2.)
-                        sum_sigf += sigf2 ** (self.beta / 2.)
+                            sum_sigf += sigf[i]
+                        else:
+                            sum_sigf += sigf2 ** (self.beta / 2.)
                     if self.adapt_to_errors and self.adapt:
                         # replace fdv2 with variance
                         fdv2[j - 1] = sigf2
                         self.map.add_training_data(
-                            self.y[j - 1:, :], fdv2[j - 1:], 1
+                            y[j - 1:, :], fdv2[j - 1:], 1
                             )
                 if (not self.adapt_to_errors) and self.adapt and self.alpha > 0:
                     self.map.add_training_data(y, fdv2, y.shape[0])
@@ -1486,26 +1489,31 @@ class reporter:
     """
     def __init__(self, ngrid=0):
         self.ngrid = ngrid
+        self.clock = time.process_time if hasattr(time, 'process_time') else time.time
 
     def begin(self, itn, integrator):
         self.integrator = integrator
         self.itn = itn
+        self.t0 = self.clock()
         if itn==0:
             print(integrator.settings())
+        sys.stdout.flush()
 
     def end(self, itn_ans, ans):
         print("    itn %2d: %s\n all itn's: %s"%(self.itn+1, itn_ans, ans))
         print(
-            '    neval = %s  neval/h-cube = %s\n    chi2/dof = %.2f  Q = %.2f'
+            '    neval = %s  neval/h-cube = %s\n    chi2/dof = %.2f  Q = %.2f  time = %.2f'
             % (
                 format(self.integrator.last_neval, '.6g'),
                 tuple(self.integrator.neval_hcube_range),
                 ans.chi2 / ans.dof if ans.dof > 0 else 0,
                 ans.Q if ans.dof > 0 else 1.,
+                self.clock() - self.t0
                 )
             )
         print(self.integrator.map.settings(ngrid=self.ngrid))
         print('')
+        sys.stdout.flush()
 
 # Objects for accumulating the results from multiple iterations of vegas.
 # Results can be scalars (RAvg), arrays (RAvgArray), or dictionaries (RAvgDict).

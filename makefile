@@ -28,6 +28,9 @@ install install-sys :
 uninstall :			# mostly works (may leave some empty directories)
 	- $(PIP) uninstall vegas
 
+src/vegas/_vegas.c : src/vegas/_vegas.pyx src/vegas/_vegas.pxd
+	cd src/vegas; cython _vegas.pyx
+
 try:
 	$(PYTHON) setup.py install --user --record files-vegas.$(PYTHONVERSION)
 
@@ -78,6 +81,9 @@ time:
 upload-pypi:
 	# python setup.py register   # used first time only
 	python setup.py sdist upload
+
+upload-twine:
+	twine upload dist/vegas-$(VERSION).tar.gz
 
 upload-git:
 	echo  "version $(VERSION)"
