@@ -791,6 +791,8 @@ cdef class Integrator(object):
         # N.B. All attributes initialized automatically by cython.
         #      This is why self.set() works here.
         self.nstrat = 0 # dummy (flags action in self.set())
+        self.sigf = numpy.array([], numpy.float_) # reset sigf (dummy)
+        self.sum_sigf = HUGE
         self.neval_hcube_range = None
         self.last_neval = 0
         if isinstance(map, Integrator):
@@ -938,7 +940,8 @@ cdef class Integrator(object):
 
         # determine min number of evaluations per h-cube
         if self.nstrat != ns:
-            self.sigf = numpy.array([], numpy.float_) # reset sigf (dummy)
+            # need to recalculate stratification distribution for beta>0
+            self.sum_sigf = HUGE
         self.nstrat = ns
         self.nhcube = self.nstrat ** self.dim
         self.min_neval_hcube = int(neval_eff // self.nhcube)
@@ -957,10 +960,8 @@ cdef class Integrator(object):
         if self.beta > 0 and len(self.sigf) != nsigf:
             if self.minimize_mem:
                 self.sigf = numpy.empty(nsigf, numpy.float_)
-                self.sum_sigf = HUGE
             else:
-                self.sigf = numpy.ones(nsigf, numpy.float_)
-                self.sum_sigf = nsigf
+                self.sigf = numpy.ones(nsigf, numpy.float_) * (self.sum_sigf / nsigf)
         self.neval_hcube = (
             numpy.zeros(self.nhcube_batch, numpy.intp) + self.min_neval_hcube
             )
