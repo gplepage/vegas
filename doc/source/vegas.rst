@@ -203,7 +203,7 @@ specialized integrator:
 .. autoclass:: vegas.PDFIntegrator(g, limit=1e15, scale=1., svdcut=1e-15)
 
   Methods:
-  .. automethod:: __call__(f, nopdf=False, **kargs)
+    .. automethod:: __call__(f, nopdf=False, **kargs)
 
 
 Other Objects and Functions

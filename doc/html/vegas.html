@@ -922,8 +922,44 @@ covariance matrix unchanged. Default is <code class="docutils literal notranslat
 </tr>
 </tbody>
 </table>
-<p>Methods:
-.. automethod:: __call__(f, nopdf=False, <a href="#id1"><span class="problematic" id="id2">**</span></a>kargs)</p>
+<dl class="docutils">
+<dt>Methods:</dt>
+<dd><dl class="first last method">
+<dt id="vegas.PDFIntegrator.__call__">
+<code class="descname">__call__</code><span class="sig-paren">(</span><em>f</em>, <em>nopdf=False</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate expectation value of function <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>.</p>
+<p>Uses module <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to estimate the integral of
+<code class="docutils literal notranslate"><span class="pre">f(p)</span></code> multiplied by the probability density function
+associated with <code class="docutils literal notranslate"><span class="pre">g</span></code> (i.e., <code class="docutils literal notranslate"><span class="pre">pdf(p)</span></code>). The probability
+density function is omitted if <code class="docutils literal notranslate"><span class="pre">nopdf=True</span></code> (default
+setting is <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>f</strong> (<em>function</em>) – Function <code class="docutils literal notranslate"><span class="pre">f(p)</span></code> to integrate. Integral is
+the expectation value of the function with respect
+to the distribution. The function can return a number,
+an array of numbers, or a dictionary whose values are
+numbers or arrays of numbers.</li>
+<li><strong>nopdf</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> drop the probability density function
+from the integrand (so no longer an expectation value).
+This is useful if one wants to use the optimized
+integrator for something other than a standard
+expectation value (e.g., an expectation value with a
+non-Gaussian PDF). Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>All other keyword arguments are passed on to a <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
+integrator; see the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> documentation for further information.</p>
+</dd></dl>
+
+</dd>
+</dl>
 </dd></dl>
 
 </div>
