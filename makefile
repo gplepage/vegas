@@ -78,14 +78,14 @@ test-linking:
 time:
 	time $(MAKE) -C examples PYTHON=$(PYTHON) PLOT=False run
 
-upload-pypi:
+upload-pypi: src/vegas/_vegas.c
 	# python setup.py register   # used first time only
 	python setup.py sdist upload
 
-upload-twine:
+upload-twine:  src/vegas/_vegas.c
 	twine upload dist/vegas-$(VERSION).tar.gz
 
-upload-git:
+upload-git:  src/vegas/_vegas.c
 	echo  "version $(VERSION)"
 	make doc-html doc-pdf
 	git diff --exit-code

@@ -403,9 +403,10 @@ There are several things to note here:
 
     Note, finally, that integration to infinity is also possible:
     map the relevant variable into a different variable
-    of finite range. For example,  an integral over :math:`x\equiv\tan(\theta)`
+    of finite range. For example,  an integral over :math:`x\equiv b z / (1-z)`
     from 0 to infinity is easily reexpressed as
-    an integral over :math:`\theta` from 0 to :math:`\pi/2`.
+    an integral over :math:`z` from 0 to 1, where the transformation
+    emphasizes the region in :math:`x` of order free parameter :math:`b`.
 
     **Damping:** This result in the previous section
     can be improved somewhat by slowing down

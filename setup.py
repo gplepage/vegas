@@ -14,14 +14,15 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
-VEGAS_VERSION = '3.3.4'
+VEGAS_VERSION = '3.3.5'
 
 from distutils.core import setup
 from distutils.extension import Extension
 from distutils.command.build_ext import build_ext as _build_ext
+from distutils.command.build_py import build_py as _build_py
 
 # compile from existing .c files if USE_CYTHON is False
-USE_CYTHON = False # True
+USE_CYTHON = True # False # True
 
 class build_ext(_build_ext):
     # delays using numpy and cython until they are installed;
@@ -37,14 +38,21 @@ class build_ext(_build_ext):
             ext.include_dirs.append(numpy_include)
         _build_ext.build_extensions(self)
 
+class build_py(_build_py):
+    # adds version info
+    def run(self):
+        """ Append version number to vegas/__init__.py """
+        with open('src/vegas/__init__.py', 'a') as vfile:
+            vfile.write("\n__version__ = '%s'\n" % VEGAS_VERSION)
+        _build_py.run(self)
 
 
-# create vegas/version.py so vegas knows its version number
-with open("src/vegas/_version.py","w") as version_file:
-    version_file.write(
-        "# File created by vegas setup.py\nversion = '%s'\n"
-        % VEGAS_VERSION
-        )
+# # create vegas/version.py so vegas knows its version number
+# with open("src/vegas/_version.py","w") as version_file:
+#     version_file.write(
+#         "# File created by vegas setup.py\nversion = '%s'\n"
+#         % VEGAS_VERSION
+#         )
 
 ext_args = dict(
     libraries=[],
@@ -80,7 +88,7 @@ setup(
 	description='Tools for adaptive multidimensional Monte Carlo integration.',
 	author='G. Peter Lepage',
 	author_email='g.p.lepage@cornell.edu',
-    cmdclass={'build_ext':build_ext},
+    cmdclass={'build_ext':build_ext, 'build_py':build_py},
 	packages=['vegas'],
     package_dir=dict(vegas='src/vegas'),
     package_data=dict(vegas=['../vegas.pxd','_vegas.pxd']),

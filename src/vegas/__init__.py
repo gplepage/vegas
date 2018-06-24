@@ -44,7 +44,7 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 """
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-17 G. Peter Lepage.
+# Copyright (c) 2013-18 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -60,7 +60,6 @@ from ._vegas import RAvg, RAvgArray, RAvgDict
 from ._vegas import AdaptiveMap, Integrator, BatchIntegrand
 from ._vegas import reporter, batchintegrand
 from ._vegas import MPIintegrand
-from ._version import version as __version__
 # legacy names:
 from ._vegas import vecintegrand, VecIntegrand
 

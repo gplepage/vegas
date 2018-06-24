@@ -26,14 +26,6 @@ import warnings
 import numpy
 import gvar
 
-# from gvar import GVar as gvar.GVar
-# from gvar import gvar as gvar.gvar
-# from gvar import gammaQ as gvar.gammaQ
-# from gvar import BufferDict as gvar.BufferDict
-# from gvar import mean as gvar.mean
-# from gvar import sdev as gvar.sdev
-# from gvar import evalcov as gvar.evalcov
-
 try:
     import mpi4py
     import mpi4py.MPI
@@ -101,15 +93,14 @@ cdef class AdaptiveMap:
     usually a good idea to slow adaptation down in order to avoid
     instabilities.
 
-    :param grid: Initial ``x`` grid, where ``grid[d, i]`` is the ``i``-th
-        node in direction ``d``.
-    :type x: 2-d array of floats
-    :param ninc: Number of increments along each axis of the ``x`` grid.
-        A new grid is generated if ``ninc`` differs from ``grid.shape[1]``.
-        The new grid is designed to give the same Jacobian ``dx(y)/dy``
-        as the original grid. The default value, ``ninc=None``,  leaves
-        the grid unchanged.
-    :type ninc: ``int`` or ``None``
+    Args:
+        grid (array): Initial ``x`` grid, where ``grid[d, i]``
+            is the ``i``-th node in direction ``d``.
+        ninc (int or ``None``): Number of increments along each axis
+            of the ``x`` grid. A new grid is generated if ``ninc`` differs
+            from ``grid.shape[1]``. The new grid is designed to give the same
+            Jacobian ``dx(y)/dy`` as the original grid. The default value,
+            ``ninc=None``, leaves the grid unchanged.
     """
     def __init__(self, grid, ninc=None):
         cdef numpy.npy_intp i, d
@@ -282,17 +273,17 @@ cdef class AdaptiveMap:
             x = numpy.empty(y.shape, numpy.float_)
             jac = numpy.empty(y.shape[0], numpy.float_)
 
-        :param y: ``y`` values to be mapped. ``y`` is a contiguous 2-d array,
-            where ``y[j, d]`` contains values for points along direction ``d``.
-        :type y: contiguous 2-d array of floats
-        :param x: Container for ``x`` values corresponding to ``y``.
-        :type x: contiguous 2-d array of floats
-        :param jac: Container for Jacobian values corresponding to ``y``.
-        :type jac: contiguous 1-d array of floats
-        :param ny: Number of ``y`` points: ``y[j, d]`` for ``d=0...dim-1``
-            and ``j=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
-            omitted (or negative).
-        :type ny: int
+        Args:
+            y (array): ``y`` values to be mapped. ``y`` is a contiguous
+                2-d array, where ``y[j, d]`` contains values for points
+                along direction ``d``.
+            x (array): Container for ``x[j, d]`` values corresponding
+                to ``y[j, d]``.
+            jac (array): Container for Jacobian values ``jac[j] corresponding
+                to ``y[j, d]``.
+            ny (int): Number of ``y`` points: ``y[j, d]`` for ``d=0...dim-1``
+                and ``j=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
+                omitted (or negative).
         """
         cdef numpy.npy_intp ninc = self.inc.shape[1]
         cdef numpy.npy_intp dim = self.inc.shape[0]
@@ -332,17 +323,15 @@ cdef class AdaptiveMap:
         is smaller than average. The grid is unchanged (converged?)
         when ``f`` is constant across the grid.
 
-        :param y: ``y`` values corresponding to the training data.
-            ``y`` is a contiguous 2-d array, where ``y[j, d]``
-            is for points along direction ``d``.
-        :type y: contiguous 2-d array of floats
-        :param f: Training function values. ``f[j]`` corresponds to
-            point ``y[j, d]`` in ``y``-space.
-        :type f: contiguous 2-d array of floats
-        :param ny: Number of ``y`` points: ``y[j, d]`` for ``d=0...dim-1``
-            and ``j=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
-            omitted (or negative).
-        :type ny: int
+        Args:
+            y (array): ``y`` values corresponding to the training data.
+                ``y`` is a contiguous 2-d array, where ``y[j, d]``
+                is for points along direction ``d``.
+            f (array): Training function values. ``f[j]`` corresponds to
+                point ``y[j, d]`` in ``y``-space.
+            ny (int): Number of ``y`` points: ``y[j, d]`` for ``d=0...dim-1``
+                and ``j=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
+                omitted (or negative).
         """
         cdef numpy.npy_intp ninc = self.inc.shape[1]
         cdef numpy.npy_intp dim = self.inc.shape[0]
@@ -383,16 +372,16 @@ cdef class AdaptiveMap:
         while preserving the relative density of increments
         at different values of ``x``.
 
-        :parameter alpha: Determines the speed with which the grid adapts to
-            training data. Large (postive) values imply rapid evolution;
-            small values (much less than one) imply slow evolution. Typical
-            values are of order one. Choosing ``alpha<0`` causes adaptation
-            to the unmodified training data (usually not a good idea).
-        :type alpha: double or None
-        :parameter ninc: Number of increments along each direction in the
-            new grid. The number is unchanged from the old grid if ``ninc``
-            is omitted (or equals ``None``).
-        :type ninc: int or None
+        Args:
+            alpha (double ): Determines the speed with which the grid
+                adapts to training data. Large (postive) values imply
+                rapid evolution; small values (much less than one) imply
+                slow evolution. Typical values are of order one. Choosing
+                ``alpha<0`` causes adaptation to the unmodified training
+                data (usually not a good idea).
+            ninc (int): Number of increments along each direction in the
+                new grid. The number is unchanged from the old grid if
+                ``ninc`` is omitted (or equals ``None``).
         """
         cdef double[:, ::1] new_grid
         cdef double[::1] avg_f, tmp_f
@@ -473,18 +462,18 @@ cdef class AdaptiveMap:
     def show_grid(self, ngrid=40, axes=None, shrink=False):
         """ Display plots showing the current grid.
 
-        :param ngrid: The number of grid nodes in each
-            direction to include in the plot. The default is 40.
-        :type ngrid: int
-        :param axes: List of pairs of directions to use in
-            different views of the grid. Using ``None`` in
-            place of a direction plots the grid for only one
-            direction. Omitting ``axes`` causes a default
-            set of pairings to be used.
-        :param shrink: Display entire range of each axis
-            if ``False``; otherwise shrink range to include
-            just the nodes being displayed. The default is
-            ``False``.
+        Args:
+            ngrid (int): The number of grid nodes in each
+                direction to include in the plot. The default is 40.
+            axes: List of pairs of directions to use in
+                different views of the grid. Using ``None`` in
+                place of a direction plots the grid for only one
+                direction. Omitting ``axes`` causes a default
+                set of pairings to be used.
+            shrink: Display entire range of each axis
+                if ``False``; otherwise shrink range to include
+                just the nodes being displayed. The default is
+                ``False``.
         """
         try:
             import matplotlib.pyplot as plt
@@ -636,167 +625,156 @@ cdef class Integrator(object):
     to complete (e.g., longer than an hour) because it allows you to
     monitor progress as it is being made (or not).
 
-    :param map: The integration region as specified by
-        an array ``map[d, i]`` where ``d`` is the
-        direction and ``i=0,1`` specify the lower
-        and upper limits of integration in direction ``d``.
+    Args:
+        map (array, :class:`vegas.AdaptiveMap` or :class:`vegas.Integrator`):
+            The integration region  as specified by an array ``map[d, i]``
+            where ``d`` is the direction and ``i=0,1`` specify the lower
+            and upper limits of integration in direction ``d``.
 
-        ``map`` could also be the integration map from
-        another |Integrator|, or that |Integrator|
-        itself. In this case the grid is copied from the
-        existing integrator.
-    :type map: array or :class:`vegas.AdaptiveMap`
-        or :class:`vegas.Integrator`
-    :param nitn: The maximum number of iterations used to
-        adapt to the integrand and estimate its value. The
-        default value is 10; typical values range from 10
-        to 20.
-    :type nitn: positive int
-    :param neval: The maximum number of integrand evaluations
-        in each iteration of the |vegas| algorithm. Increasing
-        ``neval`` increases the precision: statistical errors should
-        fall at least as fast as ``sqrt(1./neval)`` and often
-        fall much faster. The default value is 1000; real
-        problems often require 10--1000 times more evaluations
-        than this.
-    :type neval: positive int
-    :param alpha: Damping parameter controlling the remapping
-        of the integration variables as |vegas| adapts to the
-        integrand. Smaller values slow adaptation, which may be
-        desirable for difficult integrands. Small or zero ``alpha``\s
-        are also sometimes useful after the grid has adapted,
-        to minimize fluctuations away from the optimal grid.
-        The default value is 0.5.
-    :type alpha: float
-    :param beta: Damping parameter controlling the redistribution
-        of integrand evaluations across hypercubes in the
-        stratified sampling of the integral (over transformed
-        variables). Smaller values limit the amount of
-        redistribution. The theoretically optimal value is 1;
-        setting ``beta=0`` prevents any redistribution of
-        evaluations. The default value is 0.75.
-    :type beta: float
-    :param adapt: Setting ``adapt=False`` prevents further
-        adaptation by |vegas|. Typically this would be done
-        after training the |Integrator| on an integrand, in order
-        to stabilize further estimates of the integral. |vegas| uses
-        unweighted averages to combine results from different
-        iterations when ``adapt=False``. The default setting
-        is ``adapt=True``.
-    :type adapt: bool
-    :param nhcube_batch: The number of hypercubes (in |y| space)
-        whose integration points are combined into a single
-        batch to be passed to the integrand, together,
-        when using |vegas| in batch mode.
-        The default value is 1000. Larger values may be
-        lead to faster evaluations, but at the cost of
-        more memory for internal work arrays.
-    :type nhcube_batch: positive int
-    :param minimize_mem: When ``True``, |vegas| minimizes
-        internal workspace at the cost of extra evaluations of
-        the integrand. This can increase execution time by
-        50--100% but might be desirable when the number of
-        evaluations is very large (e.g., ``neval=1e9``). Normally
-        |vegas| uses internal work space that grows in
-        proportion to ``neval``. If that work space exceeds
-        the size of the RAM available to the processor,
-        |vegas| runs much more slowly. Setting ``minimize_mem=True``
-        greatly reduces the internal storage used by |vegas|; in
-        particular memory becomes independent of ``neval``. The default
-        setting (``minimize_mem=False``), however, is much superior
-        unless memory becomes a problem. (The large memory is needed
-        for adaptive stratified sampling, so memory is not
-        an issue if ``beta=0``.)
-    :type minimize_mem: bool
-    :param adapt_to_errors: ``adapt_to_errors=False`` causes
-        |vegas| to remap the integration variables to emphasize
-        regions where ``|f(x)|`` is largest. This is
-        the default mode.
+            ``map`` could also be the integration map from
+            another |Integrator|, or that |Integrator|
+            itself. In this case the grid is copied from the
+            existing integrator.
+        nitn (positive int): The maximum number of iterations used to
+            adapt to the integrand and estimate its value. The
+            default value is 10; typical values range from 10
+            to 20.
+        neval (positive int): Approximate number of integrand evaluations
+            in each iteration of the |vegas| algorithm. Increasing
+            ``neval`` increases the precision: statistical errors should
+            fall at least as fast as ``sqrt(1./neval)`` and often
+            fall much faster. When ``beta>0``, the total number of
+            evaluations can be substantially larger than ``neval``
+            for challenging integrands; parameter ``max_neval_hcube``
+            can be used to limit such growth. The default value is 1000;
+            real problems often require 10--1000 times more evaluations
+            than this.
+        alpha (float): Damping parameter controlling the remapping
+            of the integration variables as |vegas| adapts to the
+            integrand. Smaller values slow adaptation, which may be
+            desirable for difficult integrands. Small or zero ``alpha``\s
+            are also sometimes useful after the grid has adapted,
+            to minimize fluctuations away from the optimal grid.
+            The default value is 0.5.
+        beta (float): Damping parameter controlling the redistribution
+            of integrand evaluations across hypercubes in the
+            stratified sampling of the integral (over transformed
+            variables). Smaller values limit the amount of
+            redistribution. The theoretically optimal value is 1;
+            setting ``beta=0`` prevents any redistribution of
+            evaluations. The default value is 0.75.
+        adapt (bool): Setting ``adapt=False`` prevents further
+            adaptation by |vegas|. Typically this would be done
+            after training the |Integrator| on an integrand, in order
+            to stabilize further estimates of the integral. |vegas| uses
+            unweighted averages to combine results from different
+            iterations when ``adapt=False``. The default setting
+            is ``adapt=True``.
+        nhcube_batch (positive int): The number of hypercubes (in |y| space)
+            whose integration points are combined into a single
+            batch to be passed to the integrand, together,
+            when using |vegas| in batch mode.
+            The default value is 1000. Larger values may be
+            lead to faster evaluations, but at the cost of
+            more memory for internal work arrays.
+        minimize_mem (bool): When ``True``, |vegas| minimizes
+            internal workspace at the cost of extra evaluations of
+            the integrand. This can increase execution time by
+            50--100% but might be desirable when the number of
+            evaluations is very large (e.g., ``neval=1e9``). Normally
+            |vegas| uses internal work space that grows in
+            proportion to ``neval``. If that work space exceeds
+            the size of the RAM available to the processor,
+            |vegas| runs much more slowly. Setting ``minimize_mem=True``
+            greatly reduces the internal storage used by |vegas|; in
+            particular memory becomes independent of ``neval``. The default
+            setting (``minimize_mem=False``), however, is much superior
+            unless memory becomes a problem. (The large memory is needed
+            for adaptive stratified sampling, so memory is not
+            an issue if ``beta=0``.)
+        adapt_to_errors (bool): ``adapt_to_errors=False`` causes
+            |vegas| to remap the integration variables to emphasize
+            regions where ``|f(x)|`` is largest. This is
+            the default mode.
 
-        ``adapt_to_errors=True`` causes |vegas| to remap
-        variables to emphasize regions where the Monte Carlo
-        error is largest. This might be superior when
-        the number of the number of stratifications (``self.nstrat``)
-        in the |y| grid is large (> 50?). It is typically
-        useful only in one or two dimensions.
-    :type adapt_to_errors: bool
-    :param maxinc_axis: The maximum number of increments
-        per axis allowed for the |x|-space grid. The default
-        value is 1000; there is probably little need to use
-        other values.
-    :type maxinc_axis: positive int
-    :param max_nhcube: Maximum number of |y|-space hypercubes
-        used for stratified sampling. Setting ``max_nhcube=1``
-        turns stratified sampling off, which is probably never
-        a good idea. The default setting (1e9) was chosen to
-        correspond to the point where internal work arrays
-        become comparable in size to the typical amount of RAM
-        available to a processor (in a laptop in 2014).
-        Internal memory usage is large only when ``beta>0``
-        and ``minimize_mem=False``; therefore ``max_nhcube`` is
-        ignored if ``beta=0`` or ``minimize_mem=True``.
-    :type max_nhcube: positive int
-    :param max_neval_hcube: Maximum number of integrand evaluations
-        per hypercube in the stratification. The default value
-        is 1e7. Larger values might allow for more adaptation
-        (when ``neval`` is larger than ``2 * max_neval_hcube``),
-        but also can result in very large internal work arrays.
-    :type max_neval_hcube: positive int
-    :param rtol: Relative error in the integral estimate
-        at which point the integrator can stop. The default
-        value is 0.0 which turns off this stopping condition.
-        This stopping condition can be quite unreliable
-        in early iterations, before |vegas| has converged.
-        Use with caution, if at all.
-    :type rtol: non-negative float
-    :param atol: Absolute error in the integral estimate
-        at which point the integrator can stop. The default
-        value is 0.0 which turns off this stopping condition.
-        This stopping condition can be quite unreliable
-        in early iterations, before |vegas| has converged.
-        Use with caution, if at all.
-    :type atol: non-negative float
-    :param analyzer: An object with methods
+            ``adapt_to_errors=True`` causes |vegas| to remap
+            variables to emphasize regions where the Monte Carlo
+            error is largest. This might be superior when
+            the number of the number of stratifications (``self.nstrat``)
+            in the |y| grid is large (> 50?). It is typically
+            useful only in one or two dimensions.
+        maxinc_axis (positive int): The maximum number of increments
+            per axis allowed for the |x|-space grid. The default
+            value is 1000; there is probably little need to use
+            other values.
+        max_nhcube (positive int): Maximum number of |y|-space hypercubes
+            used for stratified sampling. Setting ``max_nhcube=1``
+            turns stratified sampling off, which is probably never
+            a good idea. The default setting (1e9) was chosen to
+            correspond to the point where internal work arrays
+            become comparable in size to the typical amount of RAM
+            available to a processor (in a laptop in 2014).
+            Internal memory usage is large only when ``beta>0``
+            and ``minimize_mem=False``; therefore ``max_nhcube`` is
+            ignored if ``beta=0`` or ``minimize_mem=True``.
+        max_neval_hcube (positive int): Maximum number of integrand
+            evaluations per hypercube in the stratification. The default
+            value is 1e7. Larger values might allow for more adaptation
+            (when ``beta>0``), but also can result in very large internal
+            work arrays.
+        rtol (float): Relative error in the integral estimate
+            at which point the integrator can stop. The default
+            value is 0.0 which turns off this stopping condition.
+            This stopping condition can be quite unreliable
+            in early iterations, before |vegas| has converged.
+            Use with caution, if at all.
+        atol (float): Absolute error in the integral estimate
+            at which point the integrator can stop. The default
+            value is 0.0 which turns off this stopping condition.
+            This stopping condition can be quite unreliable
+            in early iterations, before |vegas| has converged.
+            Use with caution, if at all.
+        analyzer: An object with methods
 
-            ``analyzer.begin(itn, integrator)``
+                ``analyzer.begin(itn, integrator)``
 
-            ``analyzer.end(itn_result, result)``
+                ``analyzer.end(itn_result, result)``
 
-        where: ``begin(itn, integrator)`` is called at the start
-        of each |vegas| iteration with ``itn`` equal to the
-        iteration number and ``integrator`` equal to the
-        integrator itself; and ``end(itn_result, result)``
-        is called at the end of each iteration with
-        ``itn_result`` equal to the result for that
-        iteration and ``result`` equal to the cummulative
-        result of all iterations so far.
-        Setting ``analyzer=vegas.reporter()``, for
-        example, causes vegas to print out a running report
-        of its results as they are produced. The default
-        is ``analyzer=None``.
-    :param ran_array_generator: Function that generates
-        :mod:`numpy` arrays of random numbers distributed uniformly
-        between 0 and 1. ``ran_array_generator(shape)`` should
-        create an array whose dimensions are specified by the
-        integer-valued tuple ``shape``. The default generator
-        is ``numpy.random.random``.
-    :param sync_ran: If ``True``, the default random number
-        generator is synchronized across all processors when
-        using MPI. If ``False``, |vegas| does no synchronization
-        (but the random numbers should synchronized some other
-        way).
+            where: ``begin(itn, integrator)`` is called at the start
+            of each |vegas| iteration with ``itn`` equal to the
+            iteration number and ``integrator`` equal to the
+            integrator itself; and ``end(itn_result, result)``
+            is called at the end of each iteration with
+            ``itn_result`` equal to the result for that
+            iteration and ``result`` equal to the cummulative
+            result of all iterations so far.
+            Setting ``analyzer=vegas.reporter()``, for
+            example, causes vegas to print out a running report
+            of its results as they are produced. The default
+            is ``analyzer=None``.
+        ran_array_generator: Function that generates
+            :mod:`numpy` arrays of random numbers distributed uniformly
+            between 0 and 1. ``ran_array_generator(shape)`` should
+            create an array whose dimensions are specified by the
+            integer-valued tuple ``shape``. The default generator
+            is ``numpy.random.random``.
+        sync_ran (bool): If ``True``, the default random number
+            generator is synchronized across all processors when
+            using MPI. If ``False``, |vegas| does no synchronization
+            (but the random numbers should synchronized some other
+            way).
     """
 
 
     # Settings accessible via the constructor and Integrator.set
     defaults = dict(
         map=None,
-        neval=1000,       # number of evaluations per iteration
-        maxinc_axis=1000,  # number of adaptive-map increments per axis
-        nhcube_batch=1000,    # number of h-cubes per batch
-        max_nhcube=1e9,    # max number of h-cubes
-        max_neval_hcube=1e7, # max number of evaluations per h-cube
-        nitn=10,           # number of iterations
+        neval=1000,         # number of evaluations per iteration
+        maxinc_axis=1000,   # number of adaptive-map increments per axis
+        nhcube_batch=1000,  # number of h-cubes per batch
+        max_nhcube=1e9,     # max number of h-cubes
+        max_neval_hcube=1e7,# max number of evaluations per h-cube
+        nitn=10,            # number of iterations
         alpha=0.5,
         beta=0.75,
         adapt=True,
@@ -812,7 +790,7 @@ cdef class Integrator(object):
     def __init__(Integrator self not None, map, **kargs):
         # N.B. All attributes initialized automatically by cython.
         #      This is why self.set() works here.
-        self.sigf = numpy.array([], numpy.float_) # dummy
+        self.nstrat = 0 # dummy (flags action in self.set())
         self.neval_hcube_range = None
         self.last_neval = 0
         if isinstance(map, Integrator):
@@ -927,8 +905,8 @@ cdef class Integrator(object):
         # determine # of strata, # of increments
         self.dim = self.map.dim
         neval_eff = (self.neval / 2.0) if self.beta > 0 else self.neval
-        ns = int((neval_eff / 2.) ** (1. / self.dim))# stratifications/axis
-        ni = int(self.neval / 10.)              # increments/axis
+        ns = int((neval_eff / 2.) ** (1. / self.dim))   # stratifications/axis
+        ni = int(self.neval / 10.)                      # increments/axis
         if ns < 1:
             ns = 1
         elif (
@@ -941,7 +919,7 @@ cdef class Integrator(object):
             ni = 1
         elif ni  > self.maxinc_axis:
             ni = self.maxinc_axis
-        # want even number increments in each stratification
+        # want integer number of increments in each stratification
         # or vise versa
         if ns > ni:
             if ns < self.maxinc_axis:
@@ -959,6 +937,8 @@ cdef class Integrator(object):
         self.map.adapt(ninc=ni)
 
         # determine min number of evaluations per h-cube
+        if self.nstrat != ns:
+            self.sigf = numpy.array([], numpy.float_) # reset sigf (dummy)
         self.nstrat = ns
         self.nhcube = self.nstrat ** self.dim
         self.min_neval_hcube = int(neval_eff // self.nhcube)
@@ -993,11 +973,12 @@ cdef class Integrator(object):
     def settings(Integrator self not None, ngrid=0):
         """ Assemble summary of integrator settings into string.
 
-        :param ngrid: Number of grid nodes in each direction
-            to include in summary.
-            The default is 0.
-        :type ngrid: int
-        :returns: String containing the settings.
+        Args:
+            ngrid (int): Number of grid nodes in each direction
+                to include in summary.
+                The default is 0.
+        Returns:
+            String containing the settings.
         """
         cdef numpy.npy_intp d
         nhcube = self.nstrat ** self.dim
@@ -1006,7 +987,7 @@ cdef class Integrator(object):
         ans = "Integrator Settings:\n"
         if self.beta > 0:
             ans = ans + (
-                "    %.6g (max) integrand evaluations in each of %d iterations\n"
+                "    %.6g (approx) integrand evaluations in each of %d iterations\n"
                 % (self.neval, self.nitn)
                 )
         else:
@@ -1041,9 +1022,10 @@ cdef class Integrator(object):
             "    damping parameters: alpha = %g  beta= %g\n"
             % (self.alpha, self.beta)
             )
+        max_neval_hcube = max(self.max_neval_hcube, self.min_neval_hcube)
         ans += (
             "    limits: h-cubes < %.2g  evaluations/h-cube < %.2g\n"
-            % (float(self.max_nhcube), float(self.max_neval_hcube))
+            % (float(self.max_nhcube), float(max_neval_hcube))
             )
         ans = ans + ("    accuracy: relative = %g" % self.rtol)
         ans = ans + ("  absolute accuracy = %g\n\n" % self.atol)
@@ -1147,10 +1129,13 @@ cdef class Integrator(object):
         cdef double neval_sigf = (
             self.neval / 2. / self.sum_sigf
             if self.beta > 0 and self.sum_sigf > 0
-            else HUGE
+            else 0.0    # use min_neval_hcube
             )
         cdef numpy.npy_intp[::1] neval_hcube = self.neval_hcube
         cdef numpy.npy_intp[::1] y0 = numpy.empty(self.dim, numpy.intp)
+        cdef numpy.npy_intp max_neval_hcube = max(
+            self.max_neval_hcube, self.min_neval_hcube
+            )
         cdef double[::1] sigf
         cdef double[:, ::1] yran
         cdef double[:, ::1] y
@@ -1160,6 +1145,9 @@ cdef class Integrator(object):
         self.neval_hcube_range = numpy.zeros(2, numpy.intp) + self.min_neval_hcube
         if yield_hcube:
             hcube_array = numpy.empty(self.y.shape[0], numpy.intp)
+        if self.beta > 0 and self.minimize_mem and not self.adapt:
+            # can't minimize_mem without also adapting, so force beta=0
+            neval_sigf = 0.0
         for hcube_base in range(0, nhcube, nhcube_batch):
             if (hcube_base + nhcube_batch) > nhcube:
                 nhcube_batch = nhcube - hcube_base
@@ -1167,9 +1155,10 @@ cdef class Integrator(object):
             # determine number of evaluations per h-cube
             if self.beta > 0:
                 if self.minimize_mem:
-                    self._fill_sigf(
-                        fcn=fcn, hcube_base=hcube_base, nhcube_batch=nhcube_batch,
-                        )
+                    if self.adapt:
+                        self._fill_sigf(
+                            fcn=fcn, hcube_base=hcube_base, nhcube_batch=nhcube_batch,
+                            )
                     sigf = self.sigf
                 else:
                     sigf = self.sigf[hcube_base:]
@@ -1178,8 +1167,8 @@ cdef class Integrator(object):
                     neval_hcube[ihcube] = <int> (sigf[ihcube] * neval_sigf)
                     if neval_hcube[ihcube] < self.min_neval_hcube:
                         neval_hcube[ihcube] = self.min_neval_hcube
-                    if neval_hcube[ihcube] > self.max_neval_hcube:
-                        neval_hcube[ihcube] = self.max_neval_hcube
+                    if neval_hcube[ihcube] > max_neval_hcube:
+                        neval_hcube[ihcube] = max_neval_hcube
                     if neval_hcube[ihcube] < self.neval_hcube_range[0]:
                         self.neval_hcube_range[0] = neval_hcube[ihcube]
                     elif neval_hcube[ihcube] > self.neval_hcube_range[1]:
@@ -1389,6 +1378,8 @@ cdef class Integrator(object):
 
         sigf = self.sigf
         for itn in range(self.nitn):
+            # if self.minimize_mem:
+            #     self.set()
             if self.analyzer is not None:
                 self.analyzer.begin(itn, self)
 
@@ -1483,9 +1474,9 @@ class reporter:
     specifies how many x[i]'s to print out from the maps
     for each axis.
 
-    :param ngrid: Number of grid nodes printed out for
-        each direction. Default is 0.
-    :type ngrid: int
+    Args:
+        ngrid (int): Number of grid nodes printed out for
+            each direction. Default is 0.
     """
     def __init__(self, ngrid=0):
         self.ngrid = ngrid

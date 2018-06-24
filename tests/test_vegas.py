@@ -420,7 +420,7 @@ class TestIntegrator(unittest.TestCase):
         np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, -1]], [-1., 1.])
         lines = [
             'Integrator Settings:',
-            '    234 (max) integrand evaluations in each of 123 iterations',
+            '    234 (approx) integrand evaluations in each of 123 iterations',
             '    number of:  strata/axis = 7  increments/axis = 21',
             '                h-cubes = 49  evaluations/h-cube = 2 (min)',
             '                h-cubes/batch = 1000',
@@ -439,7 +439,7 @@ class TestIntegrator(unittest.TestCase):
         I = Integrator([[0.,1.],[-1.,1.]], max_nhcube=1, minimize_mem=True)
         lines = [
             'Integrator Settings:',
-            '    1000 (max) integrand evaluations in each of 10 iterations',
+            '    1000 (approx) integrand evaluations in each of 10 iterations',
             '    number of:  strata/axis = 15  increments/axis = 90',
             '                h-cubes = 225  evaluations/h-cube = 2 (min)',
             '                h-cubes/batch = 1000',

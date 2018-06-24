@@ -1,10 +1,14 @@
-Version 3.3.5 ?????
+Version 3.3.5 2018-06-24
 =========================
+Minor update; minor bug fixes.
 
-- New timing information in vegas.reporter. Also flushes stdout after
+- Documentation fixes.
+
+- Fixed bugs associated with parameters minimize_mem=True and beta=0.
+  These resulted in sub-optimal behavior.
+
+- New timing information in vegas.reporter(). Also flushes stdout after
   each iteration.
-
-- Undid accidental bug when beta=0 that caused sub-optimal stratification.
 
 
 Version 3.3.4 2018-03-18

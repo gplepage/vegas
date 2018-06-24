@@ -54,6 +54,7 @@ The central component of the |vegas| package is the integrator class:
     |Integrator| objects have attributes for each of these parameters.
     In addition they have the following methods:
 
+  Methods:
     .. automethod:: __call__(fcn, **kargs)
 
     .. automethod:: set(ka={}, **kargs)
@@ -158,6 +159,7 @@ fashion, for use in subsequent iterations of the algorithm.
 
 .. autoclass:: vegas.AdaptiveMap
 
+  Attributes and methods:
    .. autoattribute:: dim
 
    .. autoattribute:: ninc
@@ -200,6 +202,7 @@ specialized integrator:
 
 .. autoclass:: vegas.PDFIntegrator(g, limit=1e15, scale=1., svdcut=1e-15)
 
+  Methods:
   .. automethod:: __call__(f, nopdf=False, **kargs)
 
 
@@ -207,6 +210,7 @@ Other Objects and Functions
 ----------------------------
 .. autoclass:: vegas.RAvg
 
+  Attributes and methods:
    .. attribute:: mean
 
       The mean value of the weighted average.
@@ -231,6 +235,7 @@ Other Objects and Functions
 
 .. autoclass:: vegas.RAvgArray
 
+  Attributes and methods:
    .. autoattribute:: chi2
 
    .. autoattribute:: dof
@@ -247,6 +252,7 @@ Other Objects and Functions
 
 .. autoclass:: vegas.RAvgDict
 
+  Attributes and methods:
    .. autoattribute:: chi2
 
    .. autoattribute:: dof
