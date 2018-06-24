@@ -46,14 +46,6 @@ class build_py(_build_py):
             vfile.write("\n__version__ = '%s'\n" % VEGAS_VERSION)
         _build_py.run(self)
 
-
-# # create vegas/version.py so vegas knows its version number
-# with open("src/vegas/_version.py","w") as version_file:
-#     version_file.write(
-#         "# File created by vegas setup.py\nversion = '%s'\n"
-#         % VEGAS_VERSION
-#         )
-
 ext_args = dict(
     libraries=[],
     include_dirs=[],
