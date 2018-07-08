@@ -74,6 +74,10 @@ install_requires = (
     ['numpy>=1.7', 'gvar>=8.0']
     )
 
+# pypi
+with open('README.rst', 'r') as file:
+    long_description = file.read()
+
 setup(
 	name='vegas',
 	version=VEGAS_VERSION,
@@ -90,12 +94,7 @@ setup(
     url="https://github.com/gplepage/vegas.git",
     license='GPLv3+',
     platforms='Any',
-    long_description="""
-    This package provides tools evaluating multidimensional
-    integrals numerically using an enhanced version of
-	the adaptive Monte Carlo vegas algorithm (G. P. Lepage,
-	J. Comput. Phys. 27(1978) 192).
-    """,
+    long_description=long_description,
     classifiers = [                     #
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',

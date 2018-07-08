@@ -14,15 +14,16 @@
 PYTHON = python
 PIP = $(PYTHON) -m pip
 PYTHONVERSION = python`$(PYTHON) -c 'import platform; print(platform.python_version())'`
-VERSION = `$(PYTHON) -c 'import vegas; print vegas.__version__'`
+VERSION = `$(PYTHON) -c 'import vegas; print (vegas.__version__)'`
 
 DOCFILES :=  $(shell ls doc/source/conf.py doc/source/*.{rst,out,png})
 SRCFILES := $(shell ls setup.py src/vegas/*.{py,pyx})
+CYTHONFILES := /src/vegas/_vegas.c
 
-install-user :
+install-user : $(CYTHONFILES)
 	$(PIP) install . --user
 
-install install-sys :
+install install-sys : $(CYTHONFILES)
 	$(PIP) install .
 
 uninstall :			# mostly works (may leave some empty directories)
@@ -44,20 +45,20 @@ doc-html:
 doc/html/index.html : $(SRCFILES) $(DOCFILES)
 	rm -rf doc/html; sphinx-build -b html doc/source doc/html
 
-doc-pdf:
-	make doc/vegas.pdf
+# doc-pdf:
+# 	make doc/vegas.pdf
 
-doc/vegas.pdf : $(SRCFILES) $(DOCFILES)
-	rm -rf doc/vegas.pdf
-	sphinx-build -b latex doc/source doc/latex
-	cd doc/latex; make vegas.pdf; mv vegas.pdf ..
+# doc/vegas.pdf : $(SRCFILES) $(DOCFILES)
+# 	rm -rf doc/vegas.pdf
+# 	sphinx-build -b latex doc/source doc/latex
+# 	cd doc/latex; make vegas.pdf; mv vegas.pdf ..
 
 doc-zip doc.zip:
 	cd doc/html; zip -r doc *; mv doc.zip ../..
 
-doc-all: doc-html doc-pdf
+doc-all: doc-html # doc-pdf
 
-sdist:			# source distribution
+sdist:	$(CYTHONFILES)	# source distribution
 	$(PYTHON) setup.py sdist
 
 .PHONY: tests
@@ -78,16 +79,16 @@ test-linking:
 time:
 	time $(MAKE) -C examples PYTHON=$(PYTHON) PLOT=False run
 
-upload-pypi: src/vegas/_vegas.c
-	# python setup.py register   # used first time only
-	python setup.py sdist upload
+# upload-pypi: src/vegas/_vegas.c
+# 	# python setup.py register   # used first time only
+# 	python setup.py sdist upload
 
-upload-twine:  src/vegas/_vegas.c
+upload-twine:  $(CYTHONFILES)
 	twine upload dist/vegas-$(VERSION).tar.gz
 
-upload-git:  src/vegas/_vegas.c
+upload-git:  $(CYTHONFILES)
 	echo  "version $(VERSION)"
-	make doc-html doc-pdf
+	make doc-html
 	git diff --exit-code
 	git diff --cached --exit-code
 	git push origin master
@@ -100,6 +101,9 @@ tag-git:
 test-download:
 	-$(PIP) uninstall vegas
 	$(PIP) install vegas --no-cache-dir
+
+test-readme:
+	python setup.py --long-description | rst2html.py > README.html
 
 clean:
 	rm -f -r build

@@ -1,3 +1,10 @@
+Version ???
+==============
+
+- Improved pypi documentation.
+
+- Improved makefile.
+
 Version 3.3.5 2018-06-24
 =========================
 Minor update; minor bug fixes.
