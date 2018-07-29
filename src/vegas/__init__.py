@@ -266,10 +266,7 @@ class PDFIntegrator(Integrator):
                 if parg is None:
                     # first time only
                     if self.pdf.shape is None:
-                        if self.pdf.extend:
-                            parg = _gvar.ExtendedDict(self.pdf.g, buf=p)
-                        else:
-                            parg = _gvar.BufferDict(self.pdf.g, buf=p)
+                        parg = _gvar.BufferDict(self.pdf.g, buf=p)
                     else:
                         parg = p.reshape(self.pdf.shape)
                 else:

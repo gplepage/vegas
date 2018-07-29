@@ -1,5 +1,7 @@
-Version ???
-==============
+Version 3.3.6 2018-07-2018
+==========================
+
+- Fix compatibility issue with v11 of lsqfit.
 
 - Improved pypi documentation.
 

@@ -18,7 +18,7 @@ VERSION = `$(PYTHON) -c 'import vegas; print (vegas.__version__)'`
 
 DOCFILES :=  $(shell ls doc/source/conf.py doc/source/*.{rst,out,png})
 SRCFILES := $(shell ls setup.py src/vegas/*.{py,pyx})
-CYTHONFILES := /src/vegas/_vegas.c
+CYTHONFILES := src/vegas/_vegas.c
 
 install-user : $(CYTHONFILES)
 	$(PIP) install . --user
