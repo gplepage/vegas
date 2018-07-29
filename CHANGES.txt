@@ -1,5 +1,6 @@
 Version 3.3.6 2018-07-2018
 ==========================
+Very, very minor update.
 
 - Fix compatibility issue with v11 of lsqfit.
 

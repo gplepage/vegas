@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>How vegas Works &#8212; vegas 3.3.5 documentation</title>
+    <title>How vegas Works &#8212; vegas 3.3.6 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
@@ -40,7 +40,7 @@
         <li class="right" >
           <a href="c_fortran.html" title="Integrands in C or Fortran"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.5 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.6 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -68,7 +68,7 @@ Monte Carlo estimates whose integrand
 samples are uniformly distributed
 in the new variables.
 The idea in one-dimension, for
-example, is to replace the original integral over <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: -1px"/>,</p>
+example, is to replace the original integral over <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: 0px"/>,</p>
 <div class="math">
 <p><img src="_images/math/21c6859c1d87f4cc2639f8e52e7590acc7d56dfd.png" alt="I = \int_a^b dx\; f(x),"/></p>
 </div><p>by an equivalent integral over a new variable <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.png" alt="y" style="vertical-align: -4px"/>,</p>
@@ -102,10 +102,10 @@ A straightforward variational calculation, constrained by</p>
 integrand has high peaks. Since</p>
 <div class="math">
 <p><img src="_images/math/d3ea06ebb04b3e3aace1dffe2ea7d463b40d6db9.png" alt="1/J = \frac{dy}{dx} \propto |f(x)|,"/></p>
-</div><p>the regions in <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: -1px"/> space where <img class="math" src="_images/math/67ce6ea03c2469ca94d76187ce64a35f23c76cf4.png" alt="|f(x)|" style="vertical-align: -4px"/> is large are
+</div><p>the regions in <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: 0px"/> space where <img class="math" src="_images/math/67ce6ea03c2469ca94d76187ce64a35f23c76cf4.png" alt="|f(x)|" style="vertical-align: -4px"/> is large are
 stretched out in <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.png" alt="y" style="vertical-align: -4px"/> space. Consequently, a uniform Monte Carlo in <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.png" alt="y" style="vertical-align: -4px"/> space
 places more samples in the peak regions than it would
-if were we integrating in <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: -1px"/> space — its samples are concentrated
+if were we integrating in <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: 0px"/> space — its samples are concentrated
 in the most important regions, which is why this is called “importance
 sampling.” The product <img class="math" src="_images/math/5553e0e1f32bd35be80b773540dd9964be2945de.png" alt="J(y)\;f(x(y))" style="vertical-align: -4px"/> has no peaks when
 the transformation is optimal.</p>
@@ -129,7 +129,7 @@ if <img class="math" src="_images/math/6a7cdc93af8fcd879bab2e6f3d5d23e7149171aa.
 <div class="section" id="the-vegas-grid">
 <h2>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Grid<a class="headerlink" href="#the-vegas-grid" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> implements the transformation of an integration variable
-<img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: -1px"/> into a new variable <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.png" alt="y" style="vertical-align: -4px"/> using a grid in <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: -1px"/> space:</p>
+<img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: 0px"/> into a new variable <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.png" alt="y" style="vertical-align: -4px"/> using a grid in <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: 0px"/> space:</p>
 <blockquote>
 <div><div class="math">
 <p><img src="_images/math/6c75af87febf234b6b7abd6972bef0553262c3a9.png" alt="x_0 &amp;= a \\
@@ -139,7 +139,7 @@ x_2 &amp;= x_1 + \Delta x_1 \\
 x_N &amp;= x_{N-1} + \Delta x_{N-1} = b"/></p>
 </div></div></blockquote>
 <p>The grid specifies the transformation function at the points
-<img class="math" src="_images/math/b7038e9039b920f2644f6f8e54dda02a605c341b.png" alt="y=i/N" style="vertical-align: -4px"/> for <img class="math" src="_images/math/5772ede77df7ad62f21e2807f74f4e111649653d.png" alt="i=0,1\ldots N" style="vertical-align: -2px"/>:</p>
+<img class="math" src="_images/math/b7038e9039b920f2644f6f8e54dda02a605c341b.png" alt="y=i/N" style="vertical-align: -4px"/> for <img class="math" src="_images/math/5772ede77df7ad62f21e2807f74f4e111649653d.png" alt="i=0,1\ldots N" style="vertical-align: -3px"/>:</p>
 <blockquote>
 <div><div class="math">
 <p><img src="_images/math/68ebb64a30890ea96a5672069291883559273beb.png" alt="x(y\!=\!i/N) = x_i"/></p>
@@ -168,17 +168,17 @@ when</p>
 \int_{x_i}^{x_{i+1}} dx \; f^2(x)
 = N^2 \Delta x_i \int_{x_i}^{x_{i+1}} dx \; f^2(x)
 \; = \; \mbox{constant}"/></p>
-</div><p>for all <img class="math" src="_images/math/432d6ab1307467df5f09ab963d2e78e56500bd38.png" alt="i" style="vertical-align: -1px"/>.</p>
+</div><p>for all <img class="math" src="_images/math/432d6ab1307467df5f09ab963d2e78e56500bd38.png" alt="i" style="vertical-align: 0px"/>.</p>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adjusts the grid until this last condition is
-satisfied.  As a result grid increments <img class="math" src="_images/math/14b2569834f94a8087d900ece6093f5c347a9f19.png" alt="\Delta x_i" style="vertical-align: -4px"/> are
+satisfied.  As a result grid increments <img class="math" src="_images/math/14b2569834f94a8087d900ece6093f5c347a9f19.png" alt="\Delta x_i" style="vertical-align: -3px"/> are
 small in regions where <img class="math" src="_images/math/67ce6ea03c2469ca94d76187ce64a35f23c76cf4.png" alt="|f(x)|" style="vertical-align: -4px"/> is large.
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> typically has no knowledge of the integrand initially, and
-so starts with a uniform <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: -1px"/> grid. As it samples the integrand
+so starts with a uniform <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: 0px"/> grid. As it samples the integrand
 it also estimates the integrals</p>
 <div class="math">
 <p><img src="_images/math/e2fab04f6897076e409bbb9856a6b909e3b3d2b0.png" alt="\int_{x_i}^{x_{i+1}} dx \; f^2(x),"/></p>
 </div><p>and use this information to refine
-its choice of <img class="math" src="_images/math/14b2569834f94a8087d900ece6093f5c347a9f19.png" alt="\Delta x_i" style="vertical-align: -4px"/>s, bringing them closer to their optimal
+its choice of <img class="math" src="_images/math/14b2569834f94a8087d900ece6093f5c347a9f19.png" alt="\Delta x_i" style="vertical-align: -3px"/>s, bringing them closer to their optimal
 values, for use
 in subsequent iterations. The grid usually converges,
 after several iterations,
@@ -197,7 +197,7 @@ Consequently a uniform, <img class="math" src="_images/math/ad3a0bbb24d3caa60298
 number of integrand evaluations, on average, in every rectangle
 of these pictures. (The average number is typically much less one
 in higher dimensions.) Integrand evaluations are concentrated
-in regions where the <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: -1px"/>-space rectangles are small
+in regions where the <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: 0px"/>-space rectangles are small
 (and therefore numerous) —
 here in the vicinity of <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></code>, where the
 peak is.</p>
@@ -278,7 +278,7 @@ the integral by doing a separate Monte Carlo integration in each of
 the hypercubes, and adding the results together to provide an estimate
 for the integral over the entire integration region.
 Typically
-this <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.png" alt="y" style="vertical-align: -4px"/>-space grid is much coarser than the <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: -1px"/>-space grid used to
+this <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.png" alt="y" style="vertical-align: -4px"/>-space grid is much coarser than the <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: 0px"/>-space grid used to
 remap the integration variables. This is because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> needs
 at least two integrand evaluations in each <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.png" alt="y" style="vertical-align: -4px"/>-space hypercube, and
 so must keep the number of hypercubes <img class="math" src="_images/math/200230eeaf7f9ae62edbd3ca038e3c1c44ab4c85.png" alt="M_\mathrm{st}^d" style="vertical-align: -8px"/> smaller than <code class="docutils literal notranslate"><span class="pre">neval/2</span></code>.
@@ -372,7 +372,7 @@ integrals.</p>
         <li class="right" >
           <a href="c_fortran.html" title="Integrands in C or Fortran"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.5 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.6 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

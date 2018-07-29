@@ -1,4 +1,4 @@
-include makefile README INSTALLATION COPYING MANIFEST.in CHANGES
+include makefile README.rst INSTALLATION.txt COPYING MANIFEST.in CHANGES.txt
 include setup.py src/vegas.pxd src/vegas/*.pxd src/vegas/*.pyx
 include src/vegas/*.c
 
