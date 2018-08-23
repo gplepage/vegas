@@ -26,4 +26,4 @@ ffibuilder.set_source(
 
 if __name__ == "__main__":
     # create C code for module and compile it
-    ffibuilder.compile(verbose=True)
+    ffibuilder.compile(verbose=False)

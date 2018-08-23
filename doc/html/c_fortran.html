@@ -244,7 +244,7 @@ the integrand discussed above, stored in file <code class="docutils literal notr
 </pre></div>
 </div>
 <p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> build script (batch version) from the previous section can be
-used over here with only three modifications: 1) the Fortran function must be
+used here with only three modifications: 1) the Fortran function must be
 compiled separately and so is included in a list of object files
 (<code class="docutils literal notranslate"><span class="pre">extra_objects</span></code>); 2) the name of the Fortran function may have an extra
 underscore (or other modification, depending on the compilers used; on UNIX
@@ -312,13 +312,6 @@ module <code class="docutils literal notranslate"><span class="pre">cfcn_ffi</sp
 </div>
 <p>This code runs about as fast as the corresponding C code in the previous
 section.</p>
-<p>Another alternative for using Fortran is provided by the <code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code> module
-distributed with <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code>. Creating a Python module with <code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code>
-can be as simple as</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">f2py</span> <span class="o">-</span><span class="n">m</span> <span class="n">ffcn</span> <span class="o">-</span><span class="n">c</span> <span class="n">ffcn</span><span class="o">.</span><span class="n">f</span>
-</pre></div>
-</div>
-<p>where <code class="docutils literal notranslate"><span class="pre">ffcn.f</span></code> may require some simple markup.</p>
 </div>
 <div class="section" id="cython-for-c-or-c-or-fortran">
 <h2>Cython for C (or C++ or Fortran)<a class="headerlink" href="#cython-for-c-or-c-or-fortran" title="Permalink to this headline">¶</a></h2>

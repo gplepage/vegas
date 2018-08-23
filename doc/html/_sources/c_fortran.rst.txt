@@ -214,7 +214,7 @@ This file is compiled into ``ffcn.o`` using something like ::
   gfortran -c ffcn.c -o ffcn.o
 
 The :mod:`cffi` build script (batch version) from the previous section can be
-used over here with only three modifications: 1) the Fortran function must be
+used here with only three modifications: 1) the Fortran function must be
 compiled separately and so is included in a list of object files
 (``extra_objects``); 2) the name of the Fortran function may have an extra
 underscore (or other modification, depending on the compilers used; on UNIX
@@ -282,14 +282,6 @@ module ``cfcn_ffi`` (see the previous section)::
 
 This code runs about as fast as the corresponding C code in the previous
 section.
-
-Another alternative for using Fortran is provided by the :mod:`f2py` module
-distributed with :mod:`numpy`. Creating a Python module with :mod:`f2py`
-can be as simple as ::
-
-  f2py -m ffcn -c ffcn.f
-
-where ``ffcn.f`` may require some simple markup.
 
 
 Cython for C (or C++ or Fortran)

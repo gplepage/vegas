@@ -14,8 +14,8 @@ def batch_f(x):
 
 def main():
     integ = vegas.Integrator(4 * [[0., 1.]])
-    print(integ(batch_f, neval=1e6, nitn=10).summary())
-    print(integ(batch_f, neval=1e6, nitn=10).summary())
+    print(integ(batch_f, neval=1e5, nitn=10).summary())
+    print(integ(batch_f, neval=1e5, nitn=10).summary())
 
 if __name__ == '__main__':
     import numpy as np

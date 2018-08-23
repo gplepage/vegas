@@ -67,7 +67,7 @@ test-linking:
 	$(PYTHON) cfcn-cython.py > cfcn-cython.tmp
 	- diff -w cfcn.out cfcn-cython.tmp
 	# ----------------------------------------
-	-f2py -m ffcn_f2py -c ffcn.f
+	-f2py -m ffcn_f2py --quiet -c ffcn.f
 	$(PYTHON) ffcn-f2py.py > ffcn-f2py.tmp
 	- diff -w cfcn.out ffcn-f2py.tmp
 
