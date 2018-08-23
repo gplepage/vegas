@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2016 G. Peter Lepage.
+# Copyright (c) 2013-2018 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -11,7 +11,15 @@
 # GNU General Public License for more details.
 
 PYTHON = python
+FORTRAN = gfortran
 PLOT = True
+PYVERSION:=$(shell python -c 'import sys; print(sys.version_info[0])')
+
+ifeq (2, $(PYVERSION))
+	SO = so
+else
+	SO = cpython-36m-darwin.so
+endif
 
 run:
 	$(PYTHON) simple.py $(PLOT) > simple.tmp
@@ -44,27 +52,24 @@ run:
 time:
 	time $(MAKE) PYTHON=$(PYTHON) PLOT=False run
 
-test-linking: cfcn_f2py.so cfcn_ctypes.so ffcn_f2py.so
-	$(PYTHON) cfcn-f2py.py > cfcn-f2py.tmp
-	- diff -w cfcn.out cfcn-f2py.tmp
-	$(PYTHON) cfcn-ctypes.py > cfcn-ctypes.tmp
-	- diff -w cfcn.out cfcn-ctypes.tmp
+test-linking:
+	# ----------------------------------------
+	$(PYTHON) cfcn_cffi-build.py
+	$(PYTHON) cfcn-cffi.py > cfcn-cffi.tmp
+	- diff -w cfcn.out cfcn-cffi.tmp
+	# ----------------------------------------
+	$(FORTRAN) -c ffcn.f -o ffcn.o
+	$(PYTHON) ffcn_cffi-build.py
+	$(PYTHON) ffcn-cffi.py > ffcn-cffi.tmp
+	- diff -w cfcn.out ffcn-cffi.tmp
+	# ----------------------------------------
+	-rm cfcn_cython*.so
 	$(PYTHON) cfcn-cython.py > cfcn-cython.tmp
 	- diff -w cfcn.out cfcn-cython.tmp
+	# ----------------------------------------
+	-f2py -m ffcn_f2py -c ffcn.f
 	$(PYTHON) ffcn-f2py.py > ffcn-f2py.tmp
 	- diff -w cfcn.out ffcn-f2py.tmp
-
-cfcn_f2py.so : cfcn.c cfcn_f2py.pyf
-	f2py -m cfcn_f2py -c cfcn_f2py.pyf cfcn.c
-
-cfcn_ctypes.so : cfcn.c
-	# the following works on OSX and probably also most UNIX systems,
-	# but probably not on windows machines
-	cc -fPIC -shared -o cfcn_ctypes.so cfcn.c
-
-ffcn_f2py.so : ffcn.f
-	f2py -m ffcn_f2py -c ffcn.f
-	-rm ffcn_f2py.pyxbldc
 
 update-all:
 	$(PYTHON) simple.py > simple.out

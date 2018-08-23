@@ -29,7 +29,7 @@ import vegas
 # GPL: 1st is the best production choice; 2nd is fast for use in development
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.imgmath']
 # extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.mathjax']  # much faster
-imgmath_image_format = "png"
+imgmath_image_format = "svg" # "png"
 imgmath_use_preview = True
 imgmath_latex_preamble = "\usepackage{arev}"
 imgmath_dvipng_args = ['-gamma', '0.5', '-D', '110', '-bg', 'Transparent']  #35
@@ -49,7 +49,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'vegas'
-copyright = u'2013-14, G.P. Lepage'
+copyright = u'2013-18, G.P. Lepage'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

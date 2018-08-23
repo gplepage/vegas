@@ -109,9 +109,9 @@ using Python 2, or add</p>
 <h2>Basic Integrals<a class="headerlink" href="#basic-integrals" title="Permalink to this headline">¶</a></h2>
 <p>Here we illustrate the use of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> by estimating the integral</p>
 <div class="math">
-<p><img src="_images/math/347a6e64d0e71a268b3ae441eaaa90e78dabd0b0.png" alt="C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
+<p><img src="_images/math/347a6e64d0e71a268b3ae441eaaa90e78dabd0b0.svg" alt="C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
 \,\,\mathrm{e}^{- 100 \sum_{d}(x_d-0.5)^2}  ,"/></p>
-</div><p>where constant <img class="math" src="_images/math/4953c3ee768240c0f4b03be0a0aa0056bf3dfe6b.png" alt="C" style="vertical-align: 0px"/> is chosen so that the exact integral is 1.
+</div><p>where constant <img class="math" src="_images/math/4953c3ee768240c0f4b03be0a0aa0056bf3dfe6b.svg" alt="C"/> is chosen so that the exact integral is 1.
 The following code shows how this can be done:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -193,23 +193,23 @@ distributions. The distributions are Gaussian provided
 the number of integrand evaluations per iteration (<code class="docutils literal notranslate"><span class="pre">neval</span></code>)
 is sufficiently large, in which case the standard deviation
 is a reliable estimate of the error.
-The weighted average <img class="math" src="_images/math/d21441b29f9b64218bd4f6941f758fe3a4a82bc7.png" alt="\overline I" style="vertical-align: 0px"/>  minimizes</p>
+The weighted average <img class="math" src="_images/math/d21441b29f9b64218bd4f6941f758fe3a4a82bc7.svg" alt="\overline I"/>  minimizes</p>
 <div class="math">
-<p><img src="_images/math/84656924e8c58262eeaa1069a9d4675dcf5ef797.png" alt="\chi^2 \,\equiv\, \sum_i \frac{(I_i - \overline I)^2}{\sigma_{i}^2}"/></p>
-</div><p>where <img class="math" src="_images/math/632e4d02a724b847d4430d76b27ada3087a13156.png" alt="I_i \pm \sigma_{i}" style="vertical-align: -3px"/> are the estimates from
-individual iterations. If the <img class="math" src="_images/math/ef8c876cfb49eae9e3824cacbcdad44393afce6a.png" alt="I_i" style="vertical-align: -3px"/> are Gaussian,
-<img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.png" alt="\chi^2" style="vertical-align: -4px"/> should be of order the number of degrees of
+<p><img src="_images/math/84656924e8c58262eeaa1069a9d4675dcf5ef797.svg" alt="\chi^2 \,\equiv\, \sum_i \frac{(I_i - \overline I)^2}{\sigma_{i}^2}"/></p>
+</div><p>where <img class="math" src="_images/math/632e4d02a724b847d4430d76b27ada3087a13156.svg" alt="I_i \pm \sigma_{i}"/> are the estimates from
+individual iterations. If the <img class="math" src="_images/math/ef8c876cfb49eae9e3824cacbcdad44393afce6a.svg" alt="I_i"/> are Gaussian,
+<img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.svg" alt="\chi^2"/> should be of order the number of degrees of
 freedom (plus or minus the square root of that number);
 here the number of degrees of freedom is the number of
 iterations minus 1.</p>
 <p>The distributions are likely non-Gaussian, and error estimates
-unreliable, if <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.png" alt="\chi^2" style="vertical-align: -4px"/> is
+unreliable, if <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.svg" alt="\chi^2"/> is
 much larger than the number of iterations. This criterion is quantified
-by the <em>Q</em> or <em>p-value</em> of the <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.png" alt="\chi^2" style="vertical-align: -4px"/>,
+by the <em>Q</em> or <em>p-value</em> of the <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.svg" alt="\chi^2"/>,
 which is the probability that a
-larger <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.png" alt="\chi^2" style="vertical-align: -4px"/> could result from random (Gaussian)
+larger <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.svg" alt="\chi^2"/> could result from random (Gaussian)
 fluctuations. A very small <em>Q</em> (less than 0.05-0.1) indicates
-that the <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.png" alt="\chi^2" style="vertical-align: -4px"/> is too large to be accounted for by
+that the <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.svg" alt="\chi^2"/> is too large to be accounted for by
 statistical fluctuations — that is, the estimates of the integral
 from different iterations do not agree with each other to
 within errors. This means that <code class="docutils literal notranslate"><span class="pre">neval</span></code> is not sufficiently
@@ -221,14 +221,14 @@ attributes:</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">result.mean</span></code> — weighted average of all estimates of the integral;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.sdev</span></code> — standard deviation of the weighted average;</p>
-<p><code class="docutils literal notranslate"><span class="pre">result.chi2</span></code> — <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.png" alt="\chi^2" style="vertical-align: -4px"/> of the weighted average;</p>
+<p><code class="docutils literal notranslate"><span class="pre">result.chi2</span></code> — <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.svg" alt="\chi^2"/> of the weighted average;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.dof</span></code> — number of degrees of freedom;</p>
-<p><code class="docutils literal notranslate"><span class="pre">result.Q</span></code> — <em>Q</em> or <em>p-value</em> of the weighted average’s <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.png" alt="\chi^2" style="vertical-align: -4px"/>;</p>
+<p><code class="docutils literal notranslate"><span class="pre">result.Q</span></code> — <em>Q</em> or <em>p-value</em> of the weighted average’s <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.svg" alt="\chi^2"/>;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.itn_results</span></code> — list of the integral estimates
 from each iteration.</p>
 </div></blockquote>
 <p>In this example the final <em>Q</em> is 0.42, indicating that the
-<img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.png" alt="\chi^2" style="vertical-align: -4px"/> for this average is not particularly unlikely and
+<img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.svg" alt="\chi^2"/> for this average is not particularly unlikely and
 thus the error estimate is most likely reliable.</p>
 <p><strong>Precision:</strong> The precision of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimates is
 determined by <code class="docutils literal notranslate"><span class="pre">nitn</span></code>, the number of iterations
@@ -265,7 +265,7 @@ than twice as accurate as increasing <code class="docutils literal notranslate">
 want to use no more than 10 or 20 iterations beyond the
 point where <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> has fully adapted. You want some number of
 iterations so that you can verify Gaussian behavior by
-checking the <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.png" alt="\chi^2" style="vertical-align: -4px"/> and <em>Q</em>, but not too many.</p>
+checking the <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.svg" alt="\chi^2"/> and <em>Q</em>, but not too many.</p>
 <p>It is also generally useful to compare two or more
 results from values of <code class="docutils literal notranslate"><span class="pre">neval</span></code> that differ by a
 significant factor (4–10, say). These should agree within
@@ -279,7 +279,7 @@ effects. The systematic error vanishes like
 the statistical error as <code class="docutils literal notranslate"><span class="pre">neval</span></code> increases.
 The systematic error can bias the Monte Carlo estimate, however,
 if <code class="docutils literal notranslate"><span class="pre">neval</span></code> is insufficiently large. This usually
-results in a large <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.png" alt="\chi^2" style="vertical-align: -4px"/> (and small <em>Q</em>), but a
+results in a large <img class="math" src="_images/math/c3009dc638909a74a78a7f5fee27f154c33da1eb.svg" alt="\chi^2"/> (and small <em>Q</em>), but a
 more reliable check is to compare
 results that use signficantly different values of <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
 The systematic errors due to non-Gaussian behavior are
@@ -474,10 +474,10 @@ been cut in half had we used the integration volume
 <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">[[0.3,</span> <span class="pre">0.7]]</span></code> instead of <code class="docutils literal notranslate"><span class="pre">[[-1,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1]]</span></code>.</p>
 <p>Note, finally, that integration to infinity is also possible:
 map the relevant variable into a different variable
-of finite range. For example,  an integral over <img class="math" src="_images/math/4200f505409326db7748dffbe6de1b7290798456.png" alt="x\equiv b z / (1-z)" style="vertical-align: -4px"/>
+of finite range. For example,  an integral over <img class="math" src="_images/math/4200f505409326db7748dffbe6de1b7290798456.svg" alt="x\equiv b z / (1-z)"/>
 from 0 to infinity is easily reexpressed as
-an integral over <img class="math" src="_images/math/c01c83dbb5157ec8119bfda64a90397cf40714ac.png" alt="z" style="vertical-align: 0px"/> from 0 to 1, where the transformation
-emphasizes the region in <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: 0px"/> of order free parameter <img class="math" src="_images/math/023c5bc057896c7dfb32f25eff78f1707023a2ab.png" alt="b" style="vertical-align: 0px"/>.</p>
+an integral over <img class="math" src="_images/math/c01c83dbb5157ec8119bfda64a90397cf40714ac.svg" alt="z"/> from 0 to 1, where the transformation
+emphasizes the region in <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.svg" alt="x"/> of order free parameter <img class="math" src="_images/math/023c5bc057896c7dfb32f25eff78f1707023a2ab.svg" alt="b"/>.</p>
 <p><strong>Damping:</strong> This result in the previous section
 can be improved somewhat by slowing down
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s adaptation:</p>
@@ -566,7 +566,7 @@ of the resulting integrals as the fluctuations cancel.</p>
 the normalization and first two moments of a
 sharply peaked probability distribution:</p>
 <div class="math">
-<p><img src="_images/math/4f67a9a314c7dbe525e0c1411aa57792d87eaea3.png" alt="I_0 &amp;\equiv \int_0^1 d^4x\;
+<p><img src="_images/math/4f67a9a314c7dbe525e0c1411aa57792d87eaea3.svg" alt="I_0 &amp;\equiv \int_0^1 d^4x\;
     \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2}\\
 I_1 &amp;\equiv \int_0^1 d^4x\; x_0 \;
     \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2} \\
@@ -575,7 +575,7 @@ I_2 &amp;\equiv \int_0^1 d^4x\; x_0^2 \;
 </div><p>From these integrals we determine the mean and width of the distribution
 projected onto one of the axes:</p>
 <div class="math">
-<p><img src="_images/math/908293b332bbb329376f29fe4db04c2b3623b18a.png" alt="\langle x \rangle &amp;\equiv I_1 / I_0 \\[1ex]
+<p><img src="_images/math/908293b332bbb329376f29fe4db04c2b3623b18a.svg" alt="\langle x \rangle &amp;\equiv I_1 / I_0 \\[1ex]
 \sigma_x^2 &amp;\equiv \langle x^2 \rangle - \langle x \rangle^2 \\
            &amp;= I_2 / I_0 - (I_1 / I_0)^2"/></p>
 </div><p>This can be done using the following code:</p>
@@ -628,14 +628,14 @@ of the integrals, taken together.</p>
 </div>
 <p>The estimates for the individual integrals are separately accurate to
 about ±0.07%,
-but the estimate for <img class="math" src="_images/math/a1654f4d87b5754cfd3cf3b6ae00a5c8d0649c5a.png" alt="\langle x \rangle = I_1/I_0" style="vertical-align: -5px"/>
+but the estimate for <img class="math" src="_images/math/a1654f4d87b5754cfd3cf3b6ae00a5c8d0649c5a.svg" alt="\langle x \rangle = I_1/I_0"/>
 is accurate to ±0.01%.
 This is almost an order
 of magnitude (8x) more accurate than we would obtain absent correlations.
 The correlation matrix shows that there is 98% correlation between the
-statistical fluctuations in estimates for <img class="math" src="_images/math/eee065585fd073ea5732f1c0d306b2a48045bfbc.png" alt="I_0" style="vertical-align: -3px"/> and <img class="math" src="_images/math/812bcacbc04ce42772e5b929e4473d734ae138f8.png" alt="I_1" style="vertical-align: -3px"/>,
+statistical fluctuations in estimates for <img class="math" src="_images/math/eee065585fd073ea5732f1c0d306b2a48045bfbc.svg" alt="I_0"/> and <img class="math" src="_images/math/812bcacbc04ce42772e5b929e4473d734ae138f8.svg" alt="I_1"/>,
 and so the bulk of these fluctuations cancel in the ratio.
-The estimate for the variance <img class="math" src="_images/math/320a8afe1a049658b8ee0d348f68086c623df253.png" alt="\sigma^2_x" style="vertical-align: -8px"/>
+The estimate for the variance <img class="math" src="_images/math/320a8afe1a049658b8ee0d348f68086c623df253.svg" alt="\sigma^2_x"/>
 is 51x more accurate than we would
 have obtained had the integrals been evaluated separately. Both estimates
 are correct to within the quoted errors.</p>
@@ -990,9 +990,9 @@ term in the sum for every integration point. Rather we can sample the sum,
 using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to do the sampling. The trick is to replace the sum with
 an equivalent integral:</p>
 <div class="math">
-<p><img src="_images/math/3a49222a043615bab8459a2e596aa05e09aa7357.png" alt="\sum_{i=0}^{N-1} f(i) = N \int_0^1 dx \; f(\mathrm{floor}(x N))"/></p>
-</div><p>where <img class="math" src="_images/math/8011a370b934f8b3eb267cfd901d87db0faf7f05.png" alt="\mathrm{floor}(x)" style="vertical-align: -4px"/> is the largest
-integer smaller than <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.png" alt="x" style="vertical-align: 0px"/>. The
+<p><img src="_images/math/3a49222a043615bab8459a2e596aa05e09aa7357.svg" alt="\sum_{i=0}^{N-1} f(i) = N \int_0^1 dx \; f(\mathrm{floor}(x N))"/></p>
+</div><p>where <img class="math" src="_images/math/8011a370b934f8b3eb267cfd901d87db0faf7f05.svg" alt="\mathrm{floor}(x)"/> is the largest
+integer smaller than <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.svg" alt="x"/>. The
 resulting integral can then be handed to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>. Using this trick,
 the integral in the previous section can be re-cast as a 5-dimensional
 integral:</p>
@@ -1177,7 +1177,7 @@ deviations, and properly correlated with other
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013-14, G.P. Lepage.
+        &#169; Copyright 2013-18, G.P. Lepage.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
     </div>
   </body>

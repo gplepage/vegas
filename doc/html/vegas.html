@@ -426,24 +426,24 @@ integration variables x into new variables y in a unit hypercube.
 Each direction has its own map specified by a grid in x space:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/6c75af87febf234b6b7abd6972bef0553262c3a9.png" alt="x_0 &amp;= a \\
+<p><img src="_images/math/6c75af87febf234b6b7abd6972bef0553262c3a9.svg" alt="x_0 &amp;= a \\
 x_1 &amp;= x_0 + \Delta x_0 \\
 x_2 &amp;= x_1 + \Delta x_1 \\
 \cdots \\
 x_N &amp;= x_{N-1} + \Delta x_{N-1} = b"/></p>
 </div></div></blockquote>
-<p>where <img class="math" src="_images/math/f330b6e5c721c9c9bcd81787bad64159d5d9a990.png" alt="a" style="vertical-align: 0px"/> and <img class="math" src="_images/math/023c5bc057896c7dfb32f25eff78f1707023a2ab.png" alt="b" style="vertical-align: 0px"/> are the limits of integration.
+<p>where <img class="math" src="_images/math/f330b6e5c721c9c9bcd81787bad64159d5d9a990.svg" alt="a"/> and <img class="math" src="_images/math/023c5bc057896c7dfb32f25eff78f1707023a2ab.svg" alt="b"/> are the limits of integration.
 The grid specifies the transformation function at the points
-<img class="math" src="_images/math/b7038e9039b920f2644f6f8e54dda02a605c341b.png" alt="y=i/N" style="vertical-align: -4px"/> for <img class="math" src="_images/math/5772ede77df7ad62f21e2807f74f4e111649653d.png" alt="i=0,1\ldots N" style="vertical-align: -3px"/>:</p>
+<img class="math" src="_images/math/b7038e9039b920f2644f6f8e54dda02a605c341b.svg" alt="y=i/N"/> for <img class="math" src="_images/math/5772ede77df7ad62f21e2807f74f4e111649653d.svg" alt="i=0,1\ldots N"/>:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/68ebb64a30890ea96a5672069291883559273beb.png" alt="x(y\!=\!i/N) = x_i"/></p>
+<p><img src="_images/math/68ebb64a30890ea96a5672069291883559273beb.svg" alt="x(y\!=\!i/N) = x_i"/></p>
 </div></div></blockquote>
 <p>Linear interpolation is used between those points. The Jacobian
 for this transformation is:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/b6c0aed472c7fbb9ffd593752c22f4c4be0234f8.png" alt="J(y) = J_i = N \Delta x_i"/></p>
+<p><img src="_images/math/b6c0aed472c7fbb9ffd593752c22f4c4be0234f8.svg" alt="J(y) = J_i = N \Delta x_i"/></p>
 </div></div></blockquote>
 <p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adjusts the increments sizes to optimize its Monte Carlo
 estimates of the integral. This involves training the grid. To
@@ -1153,13 +1153,7 @@ otherwise straight, unweighted averages are used.</p>
 <dl class="method">
 <dt id="vegas.RAvgDict.add">
 <code class="descname">add</code><span class="sig-paren">(</span><em>g</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict.add" title="Permalink to this definition">¶</a></dt>
-<dd><p>Augment buffer with data <code class="docutils literal notranslate"><span class="pre">v</span></code>, indexed by key <code class="docutils literal notranslate"><span class="pre">k</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">v</span></code> is either a scalar or a <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> array (or a list or
-other data type that can be changed into a numpy.array).
-If <code class="docutils literal notranslate"><span class="pre">v</span></code> is a <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> array, it can have any shape.</p>
-<p>Same as <code class="docutils literal notranslate"><span class="pre">self[k]</span> <span class="pre">=</span> <span class="pre">v</span></code> except when <code class="docutils literal notranslate"><span class="pre">k</span></code> is already used in
-<code class="docutils literal notranslate"><span class="pre">self</span></code>, in which case a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> is raised.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="last method">
 <dt id="vegas.RAvgDict.summary">
@@ -1206,7 +1200,7 @@ points. The meaning of <code class="docutils literal notranslate"><span class="p
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>for the two-dimensional integrand <img class="math" src="_images/math/c634373247cff28de83e3f1a430729caf7cadf09.png" alt="\exp(-x_0 - x_1)" style="vertical-align: -4px"/>.</p>
+<p>for the two-dimensional integrand <img class="math" src="_images/math/c634373247cff28de83e3f1a430729caf7cadf09.svg" alt="\exp(-x_0 - x_1)"/>.</p>
 <p>This decorator provides an alternative to deriving an integrand
 class from <a class="reference internal" href="#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.BatchIntegrand</span></code></a>.</p>
 </dd></dl>
@@ -1240,7 +1234,7 @@ array-valued integrand).</p>
 <span class="n">f</span> <span class="o">=</span> <span class="n">batchf</span><span class="p">()</span>      <span class="c1"># the integrand</span>
 </pre></div>
 </div>
-<p>for the two-dimensional integrand <img class="math" src="_images/math/c634373247cff28de83e3f1a430729caf7cadf09.png" alt="\exp(-x_0 - x_1)" style="vertical-align: -4px"/>.</p>
+<p>for the two-dimensional integrand <img class="math" src="_images/math/c634373247cff28de83e3f1a430729caf7cadf09.svg" alt="\exp(-x_0 - x_1)"/>.</p>
 <p>Deriving from <a class="reference internal" href="#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.BatchIntegrand</span></code></a> is the
 easiest way to construct integrands in Cython, and
 gives the fastest results.</p>
@@ -1309,7 +1303,7 @@ gives the fastest results.</p>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013-14, G.P. Lepage.
+        &#169; Copyright 2013-18, G.P. Lepage.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
     </div>
   </body>

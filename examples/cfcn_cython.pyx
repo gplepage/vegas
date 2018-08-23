@@ -4,7 +4,7 @@ import vegas
 cdef extern double fcn (double[] x, int n)
 
 @vegas.batchintegrand
-def f(double[:, ::1] x):
+def batch_f(double[:, ::1] x):
     cdef double[:] ans
     cdef int i, dim=x.shape[1]
     ans = np.empty(x.shape[0], type(x[0,0]))

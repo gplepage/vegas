@@ -23,10 +23,11 @@ There are
 many ways to access C and Fortran integrands from Python. Here we
 review a few of the options.
 
-:mod:`ctypes` for C
-....................
+
+:mod:`cffi` for C
+...................
 The simplest way to access an integrand coded in C is to use the
-Python :mod:`ctypes` module. To illustrate, consider the following
+:mod:`cffi` module in Python. To illustrate, consider the following
 integrand, written in C and stored in file ``cfcn.c``:
 
 .. code-block:: C
@@ -43,83 +44,260 @@ integrand, written in C and stored in file ``cfcn.c``:
           return exp(-100. * sqrt(xsq)) * pow(100.,dim);
     }
 
-This file needs to be compiled into a shared library using something
-like::
+Running the following Python code creates (in file ``cfcn_cffi.c``) and
+compiles code for a Python module called ``cfcn_cffi`` that provides
+access to ``fcn(x,dim)``::
 
-    cc -fPIC -shared -o cfcn.so cfcn.c
+  # file cfcn_cffi-builder.py
+  from cffi import FFI
+  ffibuilder = FFI()
 
-The exact compilation command depends on the operating system and compiler
-being used. The function in this library is then wrapped in
-Python function ``f``, and integrated using |vegas|::
+  # specify functions, etc to be made available to Python
+  ffibuilder.cdef('double fcn(double x[], int dim);')
 
-    import vegas
-    import numpy as np
+  # specify code needed to build the Python module
+  ffibuilder.set_source(
+      module_name='cfcn_cffi',
+      source='double fcn(double x[], int dim);',
+      sources=['cfcn.c'],     # other sources -- file containing fcn(x, dim)
+      libraries=['m'],        # may need to specify the math library (-lm)
+      )
 
-    import ctypes
+  if __name__ == '__main__':
+      # create C code for module and compile it
+      ffibuilder.compile(verbose=True)
 
-    # import cfcn.so
-    cfcn = ctypes.CDLL('cfcn.so')
-    # specify argument types and result type for cfcn.fcn
-    cfcn.fcn.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.c_int)
-    cfcn.fcn.restype = ctypes.c_double
+We integrate the function in this module by wrapping it in a
+Python function (here ``f(x)``), which is integrated using |vegas|::
 
-    # Python wrapper for function cfcn.fcn
-    def f(x):
-        global cfcn
-        n = len(x)
-        array_type = ctypes.c_double * n
-        return cfcn.fcn(array_type(*x), ctypes.c_int(n))
+  import vegas
 
-    def main():
-        integ = vegas.Integrator(4 * [[0., 1.]])
-        print(integ(f, neval=1e4, nitn=10).summary())
-        print(integ(f, neval=1e4, nitn=10).summary())
+  from cfcn_cffi import ffi, lib
 
-    if __name__ == '__main__':
-        main()
+  def f(x):
+      _x = ffi.cast('double*', x.ctypes.data) # pointer to x's data
+      return lib.fcn(_x, 4)
+
+  def main():
+      integ = vegas.Integrator(4 * [[0., 1.]])
+      print(integ(f, neval=1e6, nitn=10).summary())
+      print(integ(f, neval=1e6, nitn=10).summary())
+
+  if __name__ == '__main__':
+      main()
 
 The output shows 10 iterations that are used to adapt |vegas| to the
 integrand, and then an additional 10 iterations to generate the
 final result::
 
-    itn   integral        wgt average     chi2/dof        Q
-    -------------------------------------------------------
-      1   8.6(7.1)        8.6(7.1)            0.00     1.00
-      2   8.2(1.7)        8.2(1.7)            0.00     0.96
-      3   7.14(76)        7.32(69)            0.18     0.84
-      4   7.88(38)        7.75(33)            0.29     0.84
-      5   7.39(13)        7.44(12)            0.47     0.76
-      6   7.359(81)       7.383(68)           0.43     0.82
-      7   7.400(55)       7.393(43)           0.37     0.90
-      8   7.392(51)       7.393(33)           0.32     0.95
-      9   7.427(48)       7.404(27)           0.32     0.96
-     10   7.388(41)       7.399(23)           0.30     0.98
+  itn   integral        wgt average     chi2/dof        Q
+  -------------------------------------------------------
+    1   4.1(2.1)        4.1(2.1)            0.00     1.00
+    2   7.403(42)       7.401(42)           2.52     0.11
+    3   7.366(27)       7.376(23)           1.51     0.22
+    4   7.4041(73)      7.4014(70)          1.48     0.22
+    5   7.4046(36)      7.4039(32)          1.15     0.33
+    6   7.4003(23)      7.4015(19)          1.09     0.37
+    7   7.4036(20)      7.4025(14)          1.01     0.42
+    8   7.4017(16)      7.4022(10)          0.89     0.52
+    9   7.4010(14)      7.40174(83)         0.84     0.57
+   10   7.4017(13)      7.40174(70)         0.74     0.67
 
-    itn   integral        wgt average     chi2/dof        Q
-    -------------------------------------------------------
-      1   7.429(34)       7.429(34)           0.00     1.00
-      2   7.412(32)       7.420(24)           0.13     0.72
-      3   7.413(28)       7.417(18)           0.08     0.92
-      4   7.366(25)       7.400(15)           0.96     0.41
-      5   7.366(23)       7.390(12)           1.12     0.34
-      6   7.410(22)       7.395(11)           1.02     0.40
-      7   7.395(20)       7.3951(95)          0.85     0.53
-      8   7.425(19)       7.4011(85)          1.02     0.42
-      9   7.394(19)       7.3998(77)          0.91     0.51
-     10   7.386(17)       7.3976(71)          0.86     0.56
+  itn   integral        wgt average     chi2/dof        Q
+  -------------------------------------------------------
+    1   7.4016(12)      7.4016(12)          0.00     1.00
+    2   7.4030(11)      7.40239(81)         0.79     0.37
+    3   7.4020(10)      7.40224(63)         0.44     0.64
+    4   7.40249(92)     7.40232(52)         0.31     0.82
+    5   7.40258(86)     7.40239(44)         0.25     0.91
+    6   7.40093(81)     7.40205(39)         0.70     0.62
+    7   7.40228(76)     7.40210(35)         0.60     0.73
+    8   7.40276(72)     7.40222(31)         0.61     0.75
+    9   7.40181(71)     7.40216(29)         0.57     0.80
+   10   7.40178(70)     7.40210(27)         0.53     0.85
 
-The final estimate for the integral is ``7.3976(71)``
-(1000 times more accurate than the very first iteration).
+The final estimate for the integral is ``7.40210(27)`` (about 10,000
+times more accurate than the first iteration).
 
-The :mod:`ctypes` implementation is probably the slowest of the
-implementations shown here.
+This code can be made substantially faster by converting the
+integrand into a batch integrand. We do this by adding a batch
+version of the integrand function to the ``cfcn_cffi`` module::
 
-Cython for C
-.....................
-A more flexible (and often faster) interface to a C integrand can be
-created using Cython. To increase efficiency (slightly, in this case),
-we use Cython code in file ``cfcn.pyx`` to convert the orginal
-function (in ``cfcn.c``) into a batch integral:
+  # file cfcn_cffi-builder.py
+  from cffi import FFI
+  ffibuilder = FFI()
+
+  # specify functions, etc made available to Python
+  ffibuilder.cdef("""
+      void batch_fcn(double ans[], double x[], int n, int dim);
+      """)
+
+  # specify code needed to build the module
+  ffibuilder.set_source(
+      module_name='cfcn_cffi',
+      source="""
+      // code for module
+      double fcn(double x[], int dim);
+
+      void batch_fcn(double ans[], double x[], int n, int dim)
+      {
+          int i;
+          for(i=0; i<n; i++)
+              ans[i] = fcn(&x[i * dim], dim);
+      }
+      """,
+      sources=['cfcn.c'],     # other sources -- file containing fcn(x, dim)
+      libraries=['m'],        # may need to specify the math library (-lm)
+      )
+
+  if __name__ == '__main__':
+      # create C code for module and compile it
+      ffibuilder.compile(verbose=True)
+
+The resulting module is then used by the following integration code::
+
+  import vegas
+  import numpy as np
+
+  from cfcn_cffi import ffi, lib
+
+  @vegas.batchintegrand
+  def batch_f(x):
+      n, dim = x.shape
+      ans = np.empty(n, float)
+      _x = ffi.cast('double*', x.ctypes.data)
+      _ans = ffi.cast('double*', ans.ctypes.data)
+      lib.batch_fcn(_ans, _x, n, dim)
+      return ans
+
+  def main():
+      integ = vegas.Integrator(4 * [[0., 1.]])
+      print(integ(batch_f, neval=1e6, nitn=10).summary())
+      print(integ(batch_f, neval=1e6, nitn=10).summary())
+
+  if __name__ == '__main__':
+      main()
+
+Running this code gives identical results to those above, but in about 1/10
+the time.
+
+Obviously :mod:`cffi` can also be used to access C++ functions by
+creating C wrappers for those functions.
+Another option for accessing C code is
+the :mod:`ctypes` module, but it is more complicated to use and typically
+gives slower code.
+
+
+:mod:`cffi` for Fortran
+.........................
+Module :mod:`cffi` can be used for Fortran integrands by calling the
+Fortran function from C code. Consider a Fortran implementation of
+the integrand discussed above, stored in file ``ffcn.f``:
+
+.. code-block:: Fortran
+
+    c file ffcn.f
+    c
+          function fcn(x, dim)
+          integer i, dim
+          real*8 x(dim), xsq, fcn
+          xsq = 0.0
+          do i=1,dim
+            xsq = xsq + x(i) ** 2
+          end do
+          fcn = exp(-100. * sqrt(xsq)) * 100. ** dim
+          return
+          end
+
+This file is compiled into ``ffcn.o`` using something like ::
+
+  gfortran -c ffcn.c -o ffcn.o
+
+The :mod:`cffi` build script (batch version) from the previous section can be
+used over here with only three modifications: 1) the Fortran function must be
+compiled separately and so is included in a list of object files
+(``extra_objects``); 2) the name of the Fortran function may have an extra
+underscore (or other modification, depending on the compilers used; on UNIX
+systems ``nm ffcn.o`` lists the names in the file); and 3) the Fortran
+function's arguments are passed by address and so are pointers in C. The
+modified script is::
+
+  # file ffcn_cffi-builder.py
+  from cffi import FFI
+  ffibuilder = FFI()
+
+  # specify functions, etc needed by Python
+  ffibuilder.cdef("""
+      void batch_fcn(double ans[], double x[], int n, int dim);
+      """)
+
+  # specify code needed to build the module
+  ffibuilder.set_source(
+      module_name='ffcn_cffi',
+      source="""
+      // code for module
+      double fcn_(double* x, int* dim);   // Fortran function in ffcn.o
+
+      void batch_fcn(double ans[], double x[], int n, int dim)
+      {
+          int i;
+          for(i=0; i<n; i++)
+              ans[i] = fcn_(&x[i * dim], &dim);
+      }
+      """,
+      extra_objects=['ffcn.o'],   # compiled Fortran
+      libraries=['m'],            # may need to specify the math library (-lm)
+      )
+
+  if __name__ == "__main__":
+      # create C code for module and compile it
+      ffibuilder.compile(verbose=True)
+
+The new Python module is used exactly
+the same way as for C code, with module ``ffcn_cffi`` replacing
+module ``cfcn_ffi`` (see the previous section)::
+
+  import vegas
+  import numpy as np
+
+  from ffcn_cffi import ffi, lib
+
+  @vegas.batchintegrand
+  def batch_f(x):
+      n, dim = x.shape
+      ans = np.empty(n, float)
+      _x = ffi.cast('double*', x.ctypes.data)
+      _ans = ffi.cast('double*', ans.ctypes.data)
+      lib.batch_fcn(_ans, _x, n, dim)
+      return ans
+
+  def main():
+      integ = vegas.Integrator(4 * [[0., 1.]])
+      print(integ(batch_f, neval=1e6, nitn=10).summary())
+      print(integ(batch_f, neval=1e6, nitn=10).summary())
+
+  if __name__ == '__main__':
+      import numpy as np
+      np.random.seed(12)
+
+This code runs about as fast as the corresponding C code in the previous
+section.
+
+Another alternative for using Fortran is provided by the :mod:`f2py` module
+distributed with :mod:`numpy`. Creating a Python module with :mod:`f2py`
+can be as simple as ::
+
+  f2py -m ffcn -c ffcn.f
+
+where ``ffcn.f`` may require some simple markup.
+
+
+Cython for C (or C++ or Fortran)
+................................
+A more flexible interface to a C integrand can be
+created using Cython. To increase efficiency,
+we use Cython code in file ``cfcn.pyx`` to convert the original
+function (in ``cfcn.c``) into a batch integral (again):
 
 .. code-block:: Cython
 
@@ -130,7 +308,7 @@ function (in ``cfcn.c``) into a batch integral:
     cdef extern double fcn (double[] x, int n)
 
     @vegas.batchintegrand
-    def f(double[:, ::1] x):
+    def batch_f(double[:, ::1] x):
         cdef double[:] ans
         cdef int i, dim=x.shape[1]
         ans = np.empty(x.shape[0], type(x[0,0]))
@@ -168,8 +346,8 @@ Finally the integral is evaluated using the Python code ::
 
     def main():
         integ = vegas.Integrator(4 *[[0,1]])
-        print(integ(cfcn.f, neval=1e4, nitn=10).summary())
-        print(integ(cfcn.f, neval=1e4, nitn=10).summary())
+        print(integ(cfcn.batch_f, neval=1e4, nitn=10).summary())
+        print(integ(cfcn.batch_f, neval=1e4, nitn=10).summary())
 
     if __name__ == '__main__':
         main()
@@ -177,33 +355,17 @@ Finally the integral is evaluated using the Python code ::
 where, again, :mod:`pyximport` guarantees that the ``cfcn`` module
 is compiled the first time the code is run.
 
-This implementation is probably the fastest of those presented here.
-Cython also works with C++.
+This implementation is as fast as the other batch implementations, above.
+Cython also works with C++. It can also work with Fortran code, analogously
+to :mod:`cffi`.
 
 
 :mod:`f2py` for Fortran
 .........................
 The :mod:`f2py` package, which is distributed with :mod:`numpy`,
 makes it relatively easy to compile Fortran
-code directly into Python modules. Consider a Fortran implementation of
-integrand discussed above, stored in file ``ffcn.f``:
-
-.. code-block:: Fortran
-
-    c file ffcn.f
-    c
-          function fcn(x, dim)
-          integer i, dim
-          real*8 x(dim), x2, fcn
-          x2 = 0.0
-          do i=1,dim
-            x2 = x2 + x(i) ** 2
-          end do
-          fcn = exp(-100. * sqrt(x2)) * 100. ** dim
-          return
-          end
-
-This code is compiled into a Python module using ::
+code directly into Python modules. Using the same Fortran code as
+above (in ``ffcn.f``), the code is compiled into a Python module using ::
 
     f2py -m ffcn -c ffcn.f
 
@@ -257,49 +419,10 @@ is then::
     def main():
         integ = vegas.Integrator(4 *[[0,1]])
         batch_fcn = vegas.batchintegrand(ffcn_f2py.batch_fcn)
-        print(integ(batch_fcn, neval=1e4, nitn=10).summary())
-        print(integ(batch_fcn, neval=1e4, nitn=10).summary())
+        print(integ(batch_fcn, neval=1e6, nitn=10).summary())
+        print(integ(batch_fcn, neval=1e6, nitn=10).summary())
 
     if __name__ == '__main__':
         main()
 
-This runs roughly twice as fast as the original
-when ``neval`` is large (eg, 1e6).
-
-:mod:`f2py` for C
-..................
-:mod:`f2py` can also be used to compile C code directly into Python
-modules, but usually needs an interface file to specify how the
-C is turned into Python. The interface file ``cfcn.pyf`` for
-the C file ``cfcn.c`` (above) is::
-
-    python module cfcn
-    interface
-      real*8 function fcn(x, n)
-        intent(c) fcn                 ! fcn is a C function
-        intent(c)                     ! all fcn arguments are
-                                      ! considered as C based
-        integer intent(hide), depend(x) :: n=len(x)  ! n is the length
-                                                     ! of input array x
-        real*8 intent(in) :: x(n)     ! x is input array
-      end function fcn
-    end interface
-    end python module cfcn
-
-More information is available in the documentation for :mod:`f2py`.
-The module is created using ::
-
-    f2py -m cfcn -c cfcn.pyf cfcn.c
-
-and the integral evaluated using Python code::
-
-    import vegas
-    import cfcn
-
-    def main():
-        integ = vegas.Integrator(4 *[[0,1]])
-        print(integ(cfcn.fcn, neval=1e4, nitn=10).summary())
-        print(integ(cfcn.fcn, neval=1e4, nitn=10).summary())
-
-    if __name__ == '__main__':
-        main()
+This runs roughly twice as fast as the original.

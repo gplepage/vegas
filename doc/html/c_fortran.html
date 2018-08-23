@@ -61,10 +61,10 @@ speed to optimized Cython code.
 There are
 many ways to access C and Fortran integrands from Python. Here we
 review a few of the options.</p>
-<div class="section" id="ctypes-for-c">
-<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">ctypes</span></code> for C<a class="headerlink" href="#ctypes-for-c" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cffi-for-c">
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> for C<a class="headerlink" href="#cffi-for-c" title="Permalink to this headline">¶</a></h2>
 <p>The simplest way to access an integrand coded in C is to use the
-Python <code class="xref py py-mod docutils literal notranslate"><span class="pre">ctypes</span></code> module. To illustrate, consider the following
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> module in Python. To illustrate, consider the following
 integrand, written in C and stored in file <code class="docutils literal notranslate"><span class="pre">cfcn.c</span></code>:</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="c1">// file cfcn.c</span>
 <span class="cp">#include</span> <span class="cpf">&lt;math.h&gt;</span><span class="cp"></span>
@@ -79,36 +79,43 @@ integrand, written in C and stored in file <code class="docutils literal notrans
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>This file needs to be compiled into a shared library using something
-like:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cc</span> <span class="o">-</span><span class="n">fPIC</span> <span class="o">-</span><span class="n">shared</span> <span class="o">-</span><span class="n">o</span> <span class="n">cfcn</span><span class="o">.</span><span class="n">so</span> <span class="n">cfcn</span><span class="o">.</span><span class="n">c</span>
+<p>Running the following Python code creates (in file <code class="docutils literal notranslate"><span class="pre">cfcn_cffi.c</span></code>) and
+compiles code for a Python module called <code class="docutils literal notranslate"><span class="pre">cfcn_cffi</span></code> that provides
+access to <code class="docutils literal notranslate"><span class="pre">fcn(x,dim)</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># file cfcn_cffi-builder.py</span>
+<span class="kn">from</span> <span class="nn">cffi</span> <span class="k">import</span> <span class="n">FFI</span>
+<span class="n">ffibuilder</span> <span class="o">=</span> <span class="n">FFI</span><span class="p">()</span>
+
+<span class="c1"># specify functions, etc to be made available to Python</span>
+<span class="n">ffibuilder</span><span class="o">.</span><span class="n">cdef</span><span class="p">(</span><span class="s1">&#39;double fcn(double x[], int dim);&#39;</span><span class="p">)</span>
+
+<span class="c1"># specify code needed to build the Python module</span>
+<span class="n">ffibuilder</span><span class="o">.</span><span class="n">set_source</span><span class="p">(</span>
+    <span class="n">module_name</span><span class="o">=</span><span class="s1">&#39;cfcn_cffi&#39;</span><span class="p">,</span>
+    <span class="n">source</span><span class="o">=</span><span class="s1">&#39;double fcn(double x[], int dim);&#39;</span><span class="p">,</span>
+    <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cfcn.c&#39;</span><span class="p">],</span>     <span class="c1"># other sources -- file containing fcn(x, dim)</span>
+    <span class="n">libraries</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">],</span>        <span class="c1"># may need to specify the math library (-lm)</span>
+    <span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># create C code for module and compile it</span>
+    <span class="n">ffibuilder</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The exact compilation command depends on the operating system and compiler
-being used. The function in this library is then wrapped in
-Python function <code class="docutils literal notranslate"><span class="pre">f</span></code>, and integrated using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>:</p>
+<p>We integrate the function in this module by wrapping it in a
+Python function (here <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>), which is integrated using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">ctypes</span>
+<span class="kn">from</span> <span class="nn">cfcn_cffi</span> <span class="k">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
 
-<span class="c1"># import cfcn.so</span>
-<span class="n">cfcn</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="s1">&#39;cfcn.so&#39;</span><span class="p">)</span>
-<span class="c1"># specify argument types and result type for cfcn.fcn</span>
-<span class="n">cfcn</span><span class="o">.</span><span class="n">fcn</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">POINTER</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">)</span>
-<span class="n">cfcn</span><span class="o">.</span><span class="n">fcn</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span>
-
-<span class="c1"># Python wrapper for function cfcn.fcn</span>
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">global</span> <span class="n">cfcn</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">array_type</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_double</span> <span class="o">*</span> <span class="n">n</span>
-    <span class="k">return</span> <span class="n">cfcn</span><span class="o">.</span><span class="n">fcn</span><span class="p">(</span><span class="n">array_type</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">_x</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;double*&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="c1"># pointer to x&#39;s data</span>
+    <span class="k">return</span> <span class="n">lib</span><span class="o">.</span><span class="n">fcn</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
@@ -119,42 +126,206 @@ integrand, and then an additional 10 iterations to generate the
 final result:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">8.6</span><span class="p">(</span><span class="mf">7.1</span><span class="p">)</span>        <span class="mf">8.6</span><span class="p">(</span><span class="mf">7.1</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">8.2</span><span class="p">(</span><span class="mf">1.7</span><span class="p">)</span>        <span class="mf">8.2</span><span class="p">(</span><span class="mf">1.7</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">0.96</span>
-  <span class="mi">3</span>   <span class="mf">7.14</span><span class="p">(</span><span class="mi">76</span><span class="p">)</span>        <span class="mf">7.32</span><span class="p">(</span><span class="mi">69</span><span class="p">)</span>            <span class="mf">0.18</span>     <span class="mf">0.84</span>
-  <span class="mi">4</span>   <span class="mf">7.88</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>        <span class="mf">7.75</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>            <span class="mf">0.29</span>     <span class="mf">0.84</span>
-  <span class="mi">5</span>   <span class="mf">7.39</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>        <span class="mf">7.44</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>            <span class="mf">0.47</span>     <span class="mf">0.76</span>
-  <span class="mi">6</span>   <span class="mf">7.359</span><span class="p">(</span><span class="mi">81</span><span class="p">)</span>       <span class="mf">7.383</span><span class="p">(</span><span class="mi">68</span><span class="p">)</span>           <span class="mf">0.43</span>     <span class="mf">0.82</span>
-  <span class="mi">7</span>   <span class="mf">7.400</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span>       <span class="mf">7.393</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>           <span class="mf">0.37</span>     <span class="mf">0.90</span>
-  <span class="mi">8</span>   <span class="mf">7.392</span><span class="p">(</span><span class="mi">51</span><span class="p">)</span>       <span class="mf">7.393</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>           <span class="mf">0.32</span>     <span class="mf">0.95</span>
-  <span class="mi">9</span>   <span class="mf">7.427</span><span class="p">(</span><span class="mi">48</span><span class="p">)</span>       <span class="mf">7.404</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>           <span class="mf">0.32</span>     <span class="mf">0.96</span>
- <span class="mi">10</span>   <span class="mf">7.388</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>       <span class="mf">7.399</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>           <span class="mf">0.30</span>     <span class="mf">0.98</span>
+  <span class="mi">1</span>   <span class="mf">4.1</span><span class="p">(</span><span class="mf">2.1</span><span class="p">)</span>        <span class="mf">4.1</span><span class="p">(</span><span class="mf">2.1</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">7.403</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>       <span class="mf">7.401</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>           <span class="mf">2.52</span>     <span class="mf">0.11</span>
+  <span class="mi">3</span>   <span class="mf">7.366</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>       <span class="mf">7.376</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>           <span class="mf">1.51</span>     <span class="mf">0.22</span>
+  <span class="mi">4</span>   <span class="mf">7.4041</span><span class="p">(</span><span class="mi">73</span><span class="p">)</span>      <span class="mf">7.4014</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span>          <span class="mf">1.48</span>     <span class="mf">0.22</span>
+  <span class="mi">5</span>   <span class="mf">7.4046</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>      <span class="mf">7.4039</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>          <span class="mf">1.15</span>     <span class="mf">0.33</span>
+  <span class="mi">6</span>   <span class="mf">7.4003</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>      <span class="mf">7.4015</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>          <span class="mf">1.09</span>     <span class="mf">0.37</span>
+  <span class="mi">7</span>   <span class="mf">7.4036</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>      <span class="mf">7.4025</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>          <span class="mf">1.01</span>     <span class="mf">0.42</span>
+  <span class="mi">8</span>   <span class="mf">7.4017</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>      <span class="mf">7.4022</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>          <span class="mf">0.89</span>     <span class="mf">0.52</span>
+  <span class="mi">9</span>   <span class="mf">7.4010</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>      <span class="mf">7.40174</span><span class="p">(</span><span class="mi">83</span><span class="p">)</span>         <span class="mf">0.84</span>     <span class="mf">0.57</span>
+ <span class="mi">10</span>   <span class="mf">7.4017</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>      <span class="mf">7.40174</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span>         <span class="mf">0.74</span>     <span class="mf">0.67</span>
 
 <span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">7.429</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>       <span class="mf">7.429</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">7.412</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>       <span class="mf">7.420</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>           <span class="mf">0.13</span>     <span class="mf">0.72</span>
-  <span class="mi">3</span>   <span class="mf">7.413</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span>       <span class="mf">7.417</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>           <span class="mf">0.08</span>     <span class="mf">0.92</span>
-  <span class="mi">4</span>   <span class="mf">7.366</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>       <span class="mf">7.400</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>           <span class="mf">0.96</span>     <span class="mf">0.41</span>
-  <span class="mi">5</span>   <span class="mf">7.366</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>       <span class="mf">7.390</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>           <span class="mf">1.12</span>     <span class="mf">0.34</span>
-  <span class="mi">6</span>   <span class="mf">7.410</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>       <span class="mf">7.395</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">1.02</span>     <span class="mf">0.40</span>
-  <span class="mi">7</span>   <span class="mf">7.395</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>       <span class="mf">7.3951</span><span class="p">(</span><span class="mi">95</span><span class="p">)</span>          <span class="mf">0.85</span>     <span class="mf">0.53</span>
-  <span class="mi">8</span>   <span class="mf">7.425</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>       <span class="mf">7.4011</span><span class="p">(</span><span class="mi">85</span><span class="p">)</span>          <span class="mf">1.02</span>     <span class="mf">0.42</span>
-  <span class="mi">9</span>   <span class="mf">7.394</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>       <span class="mf">7.3998</span><span class="p">(</span><span class="mi">77</span><span class="p">)</span>          <span class="mf">0.91</span>     <span class="mf">0.51</span>
- <span class="mi">10</span>   <span class="mf">7.386</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>       <span class="mf">7.3976</span><span class="p">(</span><span class="mi">71</span><span class="p">)</span>          <span class="mf">0.86</span>     <span class="mf">0.56</span>
+  <span class="mi">1</span>   <span class="mf">7.4016</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>      <span class="mf">7.4016</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>          <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">7.4030</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>      <span class="mf">7.40239</span><span class="p">(</span><span class="mi">81</span><span class="p">)</span>         <span class="mf">0.79</span>     <span class="mf">0.37</span>
+  <span class="mi">3</span>   <span class="mf">7.4020</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>      <span class="mf">7.40224</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>         <span class="mf">0.44</span>     <span class="mf">0.64</span>
+  <span class="mi">4</span>   <span class="mf">7.40249</span><span class="p">(</span><span class="mi">92</span><span class="p">)</span>     <span class="mf">7.40232</span><span class="p">(</span><span class="mi">52</span><span class="p">)</span>         <span class="mf">0.31</span>     <span class="mf">0.82</span>
+  <span class="mi">5</span>   <span class="mf">7.40258</span><span class="p">(</span><span class="mi">86</span><span class="p">)</span>     <span class="mf">7.40239</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>         <span class="mf">0.25</span>     <span class="mf">0.91</span>
+  <span class="mi">6</span>   <span class="mf">7.40093</span><span class="p">(</span><span class="mi">81</span><span class="p">)</span>     <span class="mf">7.40205</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span>         <span class="mf">0.70</span>     <span class="mf">0.62</span>
+  <span class="mi">7</span>   <span class="mf">7.40228</span><span class="p">(</span><span class="mi">76</span><span class="p">)</span>     <span class="mf">7.40210</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span>         <span class="mf">0.60</span>     <span class="mf">0.73</span>
+  <span class="mi">8</span>   <span class="mf">7.40276</span><span class="p">(</span><span class="mi">72</span><span class="p">)</span>     <span class="mf">7.40222</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>         <span class="mf">0.61</span>     <span class="mf">0.75</span>
+  <span class="mi">9</span>   <span class="mf">7.40181</span><span class="p">(</span><span class="mi">71</span><span class="p">)</span>     <span class="mf">7.40216</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>         <span class="mf">0.57</span>     <span class="mf">0.80</span>
+ <span class="mi">10</span>   <span class="mf">7.40178</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span>     <span class="mf">7.40210</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>         <span class="mf">0.53</span>     <span class="mf">0.85</span>
 </pre></div>
 </div>
-<p>The final estimate for the integral is <code class="docutils literal notranslate"><span class="pre">7.3976(71)</span></code>
-(1000 times more accurate than the very first iteration).</p>
-<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">ctypes</span></code> implementation is probably the slowest of the
-implementations shown here.</p>
+<p>The final estimate for the integral is <code class="docutils literal notranslate"><span class="pre">7.40210(27)</span></code> (about 10,000
+times more accurate than the first iteration).</p>
+<p>This code can be made substantially faster by converting the
+integrand into a batch integrand. We do this by adding a batch
+version of the integrand function to the <code class="docutils literal notranslate"><span class="pre">cfcn_cffi</span></code> module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># file cfcn_cffi-builder.py</span>
+<span class="kn">from</span> <span class="nn">cffi</span> <span class="k">import</span> <span class="n">FFI</span>
+<span class="n">ffibuilder</span> <span class="o">=</span> <span class="n">FFI</span><span class="p">()</span>
+
+<span class="c1"># specify functions, etc made available to Python</span>
+<span class="n">ffibuilder</span><span class="o">.</span><span class="n">cdef</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    void batch_fcn(double ans[], double x[], int n, int dim);</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="c1"># specify code needed to build the module</span>
+<span class="n">ffibuilder</span><span class="o">.</span><span class="n">set_source</span><span class="p">(</span>
+    <span class="n">module_name</span><span class="o">=</span><span class="s1">&#39;cfcn_cffi&#39;</span><span class="p">,</span>
+    <span class="n">source</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    // code for module</span>
+<span class="s2">    double fcn(double x[], int dim);</span>
+
+<span class="s2">    void batch_fcn(double ans[], double x[], int n, int dim)</span>
+<span class="s2">    {</span>
+<span class="s2">        int i;</span>
+<span class="s2">        for(i=0; i&lt;n; i++)</span>
+<span class="s2">            ans[i] = fcn(&amp;x[i * dim], dim);</span>
+<span class="s2">    }</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cfcn.c&#39;</span><span class="p">],</span>     <span class="c1"># other sources -- file containing fcn(x, dim)</span>
+    <span class="n">libraries</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">],</span>        <span class="c1"># may need to specify the math library (-lm)</span>
+    <span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># create C code for module and compile it</span>
+    <span class="n">ffibuilder</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
 </div>
-<div class="section" id="cython-for-c">
-<h2>Cython for C<a class="headerlink" href="#cython-for-c" title="Permalink to this headline">¶</a></h2>
-<p>A more flexible (and often faster) interface to a C integrand can be
-created using Cython. To increase efficiency (slightly, in this case),
-we use Cython code in file <code class="docutils literal notranslate"><span class="pre">cfcn.pyx</span></code> to convert the orginal
-function (in <code class="docutils literal notranslate"><span class="pre">cfcn.c</span></code>) into a batch integral:</p>
+<p>The resulting module is then used by the following integration code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">cfcn_cffi</span> <span class="k">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
+
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
+<span class="k">def</span> <span class="nf">batch_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">_x</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;double*&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">_ans</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;double*&#39;</span><span class="p">,</span> <span class="n">ans</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">lib</span><span class="o">.</span><span class="n">batch_fcn</span><span class="p">(</span><span class="n">_ans</span><span class="p">,</span> <span class="n">_x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ans</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">batch_f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">batch_f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Running this code gives identical results to those above, but in about 1/10
+the time.</p>
+<p>Obviously <code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> can also be used to access C++ functions by
+creating C wrappers for those functions.
+Another option for accessing C code is
+the <code class="xref py py-mod docutils literal notranslate"><span class="pre">ctypes</span></code> module, but it is more complicated to use and typically
+gives slower code.</p>
+</div>
+<div class="section" id="cffi-for-fortran">
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> for Fortran<a class="headerlink" href="#cffi-for-fortran" title="Permalink to this headline">¶</a></h2>
+<p>Module <code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> can be used for Fortran integrands by calling the
+Fortran function from C code. Consider a Fortran implementation of
+the integrand discussed above, stored in file <code class="docutils literal notranslate"><span class="pre">ffcn.f</span></code>:</p>
+<div class="highlight-Fortran notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="k">file </span><span class="n">ffcn</span><span class="p">.</span><span class="n">f</span>
+<span class="n">c</span>
+      <span class="k">function </span><span class="n">fcn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">dim</span><span class="p">)</span>
+      <span class="kt">integer </span><span class="n">i</span><span class="p">,</span> <span class="nb">dim</span>
+<span class="nb">      </span><span class="kt">real</span><span class="o">*</span><span class="mi">8</span> <span class="n">x</span><span class="p">(</span><span class="nb">dim</span><span class="p">),</span> <span class="n">xsq</span><span class="p">,</span> <span class="n">fcn</span>
+      <span class="n">xsq</span> <span class="o">=</span> <span class="mf">0.0</span>
+      <span class="k">do </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="nb">dim</span>
+<span class="nb">        </span><span class="n">xsq</span> <span class="o">=</span> <span class="n">xsq</span> <span class="o">+</span> <span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+      <span class="k">end do</span>
+<span class="k">      </span><span class="n">fcn</span> <span class="o">=</span> <span class="nb">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="mf">0.</span> <span class="o">*</span> <span class="nb">sqrt</span><span class="p">(</span><span class="n">xsq</span><span class="p">))</span> <span class="o">*</span> <span class="mi">10</span><span class="mf">0.</span> <span class="o">**</span> <span class="nb">dim</span>
+<span class="nb">      </span><span class="k">return</span>
+<span class="k">      end</span>
+</pre></div>
+</div>
+<p>This file is compiled into <code class="docutils literal notranslate"><span class="pre">ffcn.o</span></code> using something like</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gfortran</span> <span class="o">-</span><span class="n">c</span> <span class="n">ffcn</span><span class="o">.</span><span class="n">c</span> <span class="o">-</span><span class="n">o</span> <span class="n">ffcn</span><span class="o">.</span><span class="n">o</span>
+</pre></div>
+</div>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> build script (batch version) from the previous section can be
+used over here with only three modifications: 1) the Fortran function must be
+compiled separately and so is included in a list of object files
+(<code class="docutils literal notranslate"><span class="pre">extra_objects</span></code>); 2) the name of the Fortran function may have an extra
+underscore (or other modification, depending on the compilers used; on UNIX
+systems <code class="docutils literal notranslate"><span class="pre">nm</span> <span class="pre">ffcn.o</span></code> lists the names in the file); and 3) the Fortran
+function’s arguments are passed by address and so are pointers in C. The
+modified script is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># file ffcn_cffi-builder.py</span>
+<span class="kn">from</span> <span class="nn">cffi</span> <span class="k">import</span> <span class="n">FFI</span>
+<span class="n">ffibuilder</span> <span class="o">=</span> <span class="n">FFI</span><span class="p">()</span>
+
+<span class="c1"># specify functions, etc needed by Python</span>
+<span class="n">ffibuilder</span><span class="o">.</span><span class="n">cdef</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    void batch_fcn(double ans[], double x[], int n, int dim);</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="c1"># specify code needed to build the module</span>
+<span class="n">ffibuilder</span><span class="o">.</span><span class="n">set_source</span><span class="p">(</span>
+    <span class="n">module_name</span><span class="o">=</span><span class="s1">&#39;ffcn_cffi&#39;</span><span class="p">,</span>
+    <span class="n">source</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    // code for module</span>
+<span class="s2">    double fcn_(double* x, int* dim);   // Fortran function in ffcn.o</span>
+
+<span class="s2">    void batch_fcn(double ans[], double x[], int n, int dim)</span>
+<span class="s2">    {</span>
+<span class="s2">        int i;</span>
+<span class="s2">        for(i=0; i&lt;n; i++)</span>
+<span class="s2">            ans[i] = fcn_(&amp;x[i * dim], &amp;dim);</span>
+<span class="s2">    }</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">extra_objects</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ffcn.o&#39;</span><span class="p">],</span>   <span class="c1"># compiled Fortran</span>
+    <span class="n">libraries</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">],</span>            <span class="c1"># may need to specify the math library (-lm)</span>
+    <span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># create C code for module and compile it</span>
+    <span class="n">ffibuilder</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The new Python module is used exactly
+the same way as for C code, with module <code class="docutils literal notranslate"><span class="pre">ffcn_cffi</span></code> replacing
+module <code class="docutils literal notranslate"><span class="pre">cfcn_ffi</span></code> (see the previous section):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">ffcn_cffi</span> <span class="k">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
+
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
+<span class="k">def</span> <span class="nf">batch_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">_x</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;double*&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">_ans</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;double*&#39;</span><span class="p">,</span> <span class="n">ans</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">lib</span><span class="o">.</span><span class="n">batch_fcn</span><span class="p">(</span><span class="n">_ans</span><span class="p">,</span> <span class="n">_x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ans</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">batch_f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">batch_f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This code runs about as fast as the corresponding C code in the previous
+section.</p>
+<p>Another alternative for using Fortran is provided by the <code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code> module
+distributed with <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code>. Creating a Python module with <code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code>
+can be as simple as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">f2py</span> <span class="o">-</span><span class="n">m</span> <span class="n">ffcn</span> <span class="o">-</span><span class="n">c</span> <span class="n">ffcn</span><span class="o">.</span><span class="n">f</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">ffcn.f</span></code> may require some simple markup.</p>
+</div>
+<div class="section" id="cython-for-c-or-c-or-fortran">
+<h2>Cython for C (or C++ or Fortran)<a class="headerlink" href="#cython-for-c-or-c-or-fortran" title="Permalink to this headline">¶</a></h2>
+<p>A more flexible interface to a C integrand can be
+created using Cython. To increase efficiency,
+we use Cython code in file <code class="docutils literal notranslate"><span class="pre">cfcn.pyx</span></code> to convert the original
+function (in <code class="docutils literal notranslate"><span class="pre">cfcn.c</span></code>) into a batch integral (again):</p>
 <div class="highlight-Cython notranslate"><div class="highlight"><pre><span></span><span class="c"># file cfcn.pyx</span>
 <span class="k">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="k">import</span> <span class="nn">vegas</span>
@@ -162,7 +333,7 @@ function (in <code class="docutils literal notranslate"><span class="pre">cfcn.c
 <span class="k">cdef</span> <span class="kr">extern</span> <span class="kt">double</span> <span class="nf">fcn</span> <span class="p">(</span><span class="n">double</span><span class="p">[]</span> <span class="n">x</span><span class="p">,</span> <span class="nb">int</span> <span class="n">n</span><span class="p">)</span>
 
 <span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
-<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">double</span><span class="p">[:,</span> <span class="p">::</span><span class="mf">1</span><span class="p">]</span> <span class="n">x</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">batch_f</span><span class="p">(</span><span class="n">double</span><span class="p">[:,</span> <span class="p">::</span><span class="mf">1</span><span class="p">]</span> <span class="n">x</span><span class="p">):</span>
     <span class="k">cdef</span> <span class="kt">double</span>[<span class="p">:]</span> <span class="n">ans</span>
     <span class="k">cdef</span> <span class="kt">int</span> <span class="nf">i</span><span class="p">,</span> <span class="nf">dim</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span>
     <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mf">0</span><span class="p">],</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="mf">0</span><span class="p">]))</span>
@@ -200,8 +371,8 @@ from <code class="docutils literal notranslate"><span class="pre">cfcn.c</span><
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">cfcn</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">cfcn</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">cfcn</span><span class="o">.</span><span class="n">batch_f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">cfcn</span><span class="o">.</span><span class="n">batch_f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
@@ -209,30 +380,16 @@ from <code class="docutils literal notranslate"><span class="pre">cfcn.c</span><
 </div>
 <p>where, again, <code class="xref py py-mod docutils literal notranslate"><span class="pre">pyximport</span></code> guarantees that the <code class="docutils literal notranslate"><span class="pre">cfcn</span></code> module
 is compiled the first time the code is run.</p>
-<p>This implementation is probably the fastest of those presented here.
-Cython also works with C++.</p>
+<p>This implementation is as fast as the other batch implementations, above.
+Cython also works with C++. It can also work with Fortran code, analogously
+to <code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code>.</p>
 </div>
 <div class="section" id="f2py-for-fortran">
 <h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code> for Fortran<a class="headerlink" href="#f2py-for-fortran" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code> package, which is distributed with <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code>,
 makes it relatively easy to compile Fortran
-code directly into Python modules. Consider a Fortran implementation of
-integrand discussed above, stored in file <code class="docutils literal notranslate"><span class="pre">ffcn.f</span></code>:</p>
-<div class="highlight-Fortran notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="k">file </span><span class="n">ffcn</span><span class="p">.</span><span class="n">f</span>
-<span class="n">c</span>
-      <span class="k">function </span><span class="n">fcn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">dim</span><span class="p">)</span>
-      <span class="kt">integer </span><span class="n">i</span><span class="p">,</span> <span class="nb">dim</span>
-<span class="nb">      </span><span class="kt">real</span><span class="o">*</span><span class="mi">8</span> <span class="n">x</span><span class="p">(</span><span class="nb">dim</span><span class="p">),</span> <span class="n">x2</span><span class="p">,</span> <span class="n">fcn</span>
-      <span class="n">x2</span> <span class="o">=</span> <span class="mf">0.0</span>
-      <span class="k">do </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="nb">dim</span>
-<span class="nb">        </span><span class="n">x2</span> <span class="o">=</span> <span class="n">x2</span> <span class="o">+</span> <span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-      <span class="k">end do</span>
-<span class="k">      </span><span class="n">fcn</span> <span class="o">=</span> <span class="nb">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="mf">0.</span> <span class="o">*</span> <span class="nb">sqrt</span><span class="p">(</span><span class="n">x2</span><span class="p">))</span> <span class="o">*</span> <span class="mi">10</span><span class="mf">0.</span> <span class="o">**</span> <span class="nb">dim</span>
-<span class="nb">      </span><span class="k">return</span>
-<span class="k">      end</span>
-</pre></div>
-</div>
-<p>This code is compiled into a Python module using</p>
+code directly into Python modules. Using the same Fortran code as
+above (in <code class="docutils literal notranslate"><span class="pre">ffcn.f</span></code>), the code is compiled into a Python module using</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">f2py</span> <span class="o">-</span><span class="n">m</span> <span class="n">ffcn</span> <span class="o">-</span><span class="n">c</span> <span class="n">ffcn</span><span class="o">.</span><span class="n">f</span>
 </pre></div>
 </div>
@@ -283,54 +440,14 @@ is then:</p>
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
     <span class="n">batch_fcn</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">batchintegrand</span><span class="p">(</span><span class="n">ffcn_f2py</span><span class="o">.</span><span class="n">batch_fcn</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">batch_fcn</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">batch_fcn</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">batch_fcn</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">batch_fcn</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>This runs roughly twice as fast as the original
-when <code class="docutils literal notranslate"><span class="pre">neval</span></code> is large (eg, 1e6).</p>
-</div>
-<div class="section" id="f2py-for-c">
-<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code> for C<a class="headerlink" href="#f2py-for-c" title="Permalink to this headline">¶</a></h2>
-<p><code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code> can also be used to compile C code directly into Python
-modules, but usually needs an interface file to specify how the
-C is turned into Python. The interface file <code class="docutils literal notranslate"><span class="pre">cfcn.pyf</span></code> for
-the C file <code class="docutils literal notranslate"><span class="pre">cfcn.c</span></code> (above) is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>python module cfcn
-interface
-  real*8 function fcn(x, n)
-    intent(c) fcn                 ! fcn is a C function
-    intent(c)                     ! all fcn arguments are
-                                  ! considered as C based
-    integer intent(hide), depend(x) :: n=len(x)  ! n is the length
-                                                 ! of input array x
-    real*8 intent(in) :: x(n)     ! x is input array
-  end function fcn
-end interface
-end python module cfcn
-</pre></div>
-</div>
-<p>More information is available in the documentation for <code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code>.
-The module is created using</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">f2py</span> <span class="o">-</span><span class="n">m</span> <span class="n">cfcn</span> <span class="o">-</span><span class="n">c</span> <span class="n">cfcn</span><span class="o">.</span><span class="n">pyf</span> <span class="n">cfcn</span><span class="o">.</span><span class="n">c</span>
-</pre></div>
-</div>
-<p>and the integral evaluated using Python code:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
-<span class="kn">import</span> <span class="nn">cfcn</span>
-
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">cfcn</span><span class="o">.</span><span class="n">fcn</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="p">(</span><span class="n">cfcn</span><span class="o">.</span><span class="n">fcn</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">main</span><span class="p">()</span>
-</pre></div>
-</div>
+<p>This runs roughly twice as fast as the original.</p>
 </div>
 </div>
 
@@ -343,10 +460,10 @@ The module is created using</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Integrands in C or Fortran</a><ul>
-<li><a class="reference internal" href="#ctypes-for-c"><code class="docutils literal notranslate"><span class="pre">ctypes</span></code> for C</a></li>
-<li><a class="reference internal" href="#cython-for-c">Cython for C</a></li>
+<li><a class="reference internal" href="#cffi-for-c"><code class="docutils literal notranslate"><span class="pre">cffi</span></code> for C</a></li>
+<li><a class="reference internal" href="#cffi-for-fortran"><code class="docutils literal notranslate"><span class="pre">cffi</span></code> for Fortran</a></li>
+<li><a class="reference internal" href="#cython-for-c-or-c-or-fortran">Cython for C (or C++ or Fortran)</a></li>
 <li><a class="reference internal" href="#f2py-for-fortran"><code class="docutils literal notranslate"><span class="pre">f2py</span></code> for Fortran</a></li>
-<li><a class="reference internal" href="#f2py-for-c"><code class="docutils literal notranslate"><span class="pre">f2py</span></code> for C</a></li>
 </ul>
 </li>
 </ul>
@@ -399,7 +516,7 @@ The module is created using</p>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013-14, G.P. Lepage.
+        &#169; Copyright 2013-18, G.P. Lepage.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
     </div>
   </body>

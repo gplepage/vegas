@@ -2,12 +2,12 @@ c Sample vegas integrand written in Fortran
 
       function fcn(x, dim)
       integer i, dim
-      real*8 x(dim), x2, fcn
-      x2 = 0.0
+      real*8 x(dim), xsq, fcn
+      xsq = 0.0
       do i=1,dim
-        x2 = x2 + x(i) ** 2
+        xsq = xsq + x(i) ** 2
       end do
-      fcn = exp(-100. * sqrt(x2)) * 100. ** dim
+      fcn = exp(-100. * sqrt(xsq)) * 100. ** dim
       return
       end
 
@@ -25,7 +25,7 @@ cf2py intent(out) ans
       end do
       end
 
-c Copyright (c) 2016 G. Peter Lepage.
+c Copyright (c) 2016-18 G. Peter Lepage.
 c
 c This program is free software: you can redistribute it and/or modify
 c it under the terms of the GNU General Public License as published by
