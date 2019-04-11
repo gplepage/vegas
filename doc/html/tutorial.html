@@ -646,7 +646,7 @@ also can be statistically correlated with other <code class="xref py py-class do
 Such correlations are handled automatically by <code class="xref py py-mod docutils literal notranslate"><span class="pre">gvar</span></code> when
 <code class="xref py py-class docutils literal notranslate"><span class="pre">gvar.GVar</span></code>s are combined with each other or with numbers in
 arithmetical expressions. (Documentation for <code class="xref py py-mod docutils literal notranslate"><span class="pre">gvar</span></code> can be found
-at <a class="reference external" href="http://pythonhosted.org/gvar">http://pythonhosted.org/gvar</a> or with the source code
+at <a class="reference external" href="https://gvar.readthedocs.io">https://gvar.readthedocs.io</a> or with the source code
 at <a class="reference external" href="https://github.com/gplepage/gvar.git">https://github.com/gplepage/gvar.git</a>.)</p>
 <p>Integrands can return dictionaries instead of arrays. The example above,
 for example, can be rewritten as</p>
@@ -692,25 +692,27 @@ therefore, easier to write  and maintain. Here the values in the integrand’s
 dictionary are all numbers; in general, values can be  either numbers or
 arrays (of any shape).</p>
 </div>
-<div class="section" id="distributions-with-vegas">
-<h2>Distributions with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#distributions-with-vegas" title="Permalink to this headline">¶</a></h2>
-<p>A common application of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is to compute distributions. The following
+<div class="section" id="calculating-distributions">
+<h2>Calculating Distributions<a class="headerlink" href="#calculating-distributions" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is often used to calculate distributions. The following
 code, for example, evaluates both an integral <code class="docutils literal notranslate"><span class="pre">I</span></code> and the contributions
-<code class="docutils literal notranslate"><span class="pre">dI</span></code> to the integral from each of five different intervals <code class="docutils literal notranslate"><span class="pre">dr</span></code>
+<code class="docutils literal notranslate"><span class="pre">dI</span></code> to the integral coming from each of five different intervals <code class="docutils literal notranslate"><span class="pre">dr</span></code>
 in the radius measured
 from the center of the integration volume. The normalized contributions
 <code class="docutils literal notranslate"><span class="pre">dI/I</span></code> are then tabulated:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="n">RMAX</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">0.5</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+
 <span class="k">def</span> <span class="nf">fcn</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
         <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
     <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dx2</span><span class="p">)</span>
+    <span class="c1"># add I to appropriate bin in dI</span>
     <span class="n">dI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-    <span class="n">rmax</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">0.5</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
-    <span class="n">dr</span> <span class="o">=</span> <span class="n">rmax</span> <span class="o">/</span> <span class="mf">5.</span>
+    <span class="n">dr</span> <span class="o">=</span> <span class="n">RMAX</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">dI</span><span class="p">)</span>
     <span class="n">j</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dx2</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="n">dr</span><span class="p">)</span>
     <span class="n">dI</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">I</span>
     <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">I</span><span class="o">=</span><span class="n">I</span><span class="p">,</span> <span class="n">dI</span><span class="o">=</span><span class="n">dI</span><span class="p">)</span>
@@ -726,7 +728,7 @@ from the center of the integration volume. The normalized contributions
 </pre></div>
 </div>
 <p>Note the check at the end, to verify that the sum of the
-<code class="docutils literal notranslate"><span class="pre">dI</span></code>s equals the original integral. Running this script gives
+<code class="docutils literal notranslate"><span class="pre">dI[i]</span></code>s equals the original integral. Running this script gives
 the following output:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
@@ -746,7 +748,9 @@ the following output:</p>
 <span class="n">check</span><span class="p">:</span> <span class="mi">1</span> <span class="o">+-</span> <span class="mf">1.7e-08</span>
 </pre></div>
 </div>
-<p>Typically one has more than five bins.</p>
+<p>The integrator adapts to the full integral <code class="docutils literal notranslate"><span class="pre">I</span></code> but also gives
+accurate results for the distribution <code class="docutils literal notranslate"><span class="pre">dI</span></code>. Typically one has
+more than five bins.</p>
 </div>
 <div class="section" id="faster-integrands">
 <h2>Faster Integrands<a class="headerlink" href="#faster-integrands" title="Permalink to this headline">¶</a></h2>
@@ -1176,7 +1180,7 @@ deviations, and properly correlated with other
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#basic-integrals">Basic Integrals</a></li>
 <li><a class="reference internal" href="#multiple-integrands-simultaneously">Multiple Integrands Simultaneously</a></li>
-<li><a class="reference internal" href="#distributions-with-vegas">Distributions with <code class="docutils literal notranslate"><span class="pre">vegas</span></code></a></li>
+<li><a class="reference internal" href="#calculating-distributions">Calculating Distributions</a></li>
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>
 <li><a class="reference internal" href="#multiple-processors">Multiple Processors</a></li>
 <li><a class="reference internal" href="#sums-with-vegas">Sums with <code class="docutils literal notranslate"><span class="pre">vegas</span></code></a></li>

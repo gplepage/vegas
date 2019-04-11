@@ -565,7 +565,7 @@ also can be statistically correlated with other :class:`gvar.GVar`\s.
 Such correlations are handled automatically by :mod:`gvar` when
 :class:`gvar.GVar`\s are combined with each other or with numbers in
 arithmetical expressions. (Documentation for :mod:`gvar` can be found
-at http://pythonhosted.org/gvar or with the source code
+at https://gvar.readthedocs.io or with the source code
 at https://github.com/gplepage/gvar.git.)
 
 Integrands can return dictionaries instead of arrays. The example above,
@@ -608,11 +608,11 @@ therefore, easier to write  and maintain. Here the values in the integrand's
 dictionary are all numbers; in general, values can be  either numbers or
 arrays (of any shape).
 
-Distributions with |vegas|
+Calculating Distributions
 ----------------------------
-A common application of |vegas| is to compute distributions. The following
+|vegas| is often used to calculate distributions. The following
 code, for example, evaluates both an integral ``I`` and the contributions
-``dI`` to the integral from each of five different intervals ``dr``
+``dI`` to the integral coming from each of five different intervals ``dr``
 in the radius measured
 from the center of the integration volume. The normalized contributions
 ``dI/I`` are then tabulated::
@@ -644,7 +644,7 @@ from the center of the integration volume. The normalized contributions
     print('check:', sum(result['dI']) / result['I'])
 
 Note the check at the end, to verify that the sum of the
-``dI``\s equals the original integral. Running this script gives
+``dI[i]``\s equals the original integral. Running this script gives
 the following output::
 
     itn   integral        wgt average     chi2/dof        Q
@@ -664,7 +664,9 @@ the following output::
     dI/I = [0.0700(15) 0.2169(25) 0.3199(30) 0.3218(27) 0.0713(15)]
     check: 1 +- 1.7e-08
 
-Typically one has more than five bins.
+The integrator adapts to the full integral ``I`` but also gives
+accurate results for the distribution ``dI``. Typically one has
+more than five bins.
 
 
 Faster Integrands
