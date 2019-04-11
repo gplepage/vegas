@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Tutorial &#8212; vegas 3.3.6 documentation</title>
+    <title>Tutorial &#8212; vegas 3.4 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
@@ -40,7 +40,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.6 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -692,6 +692,62 @@ therefore, easier to write  and maintain. Here the values in the integrand’s
 dictionary are all numbers; in general, values can be  either numbers or
 arrays (of any shape).</p>
 </div>
+<div class="section" id="distributions-with-vegas">
+<h2>Distributions with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#distributions-with-vegas" title="Permalink to this headline">¶</a></h2>
+<p>A common application of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is to compute distributions. The following
+code, for example, evaluates both an integral <code class="docutils literal notranslate"><span class="pre">I</span></code> and the contributions
+<code class="docutils literal notranslate"><span class="pre">dI</span></code> to the integral from each of five different intervals <code class="docutils literal notranslate"><span class="pre">dr</span></code>
+in the radius measured
+from the center of the integration volume. The normalized contributions
+<code class="docutils literal notranslate"><span class="pre">dI/I</span></code> are then tabulated:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">def</span> <span class="nf">fcn</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dx2</span><span class="p">)</span>
+    <span class="n">dI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">rmax</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">0.5</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+    <span class="n">dr</span> <span class="o">=</span> <span class="n">rmax</span> <span class="o">/</span> <span class="mf">5.</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dx2</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="n">dr</span><span class="p">)</span>
+    <span class="n">dI</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">I</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">I</span><span class="o">=</span><span class="n">I</span><span class="p">,</span> <span class="n">dI</span><span class="o">=</span><span class="n">dI</span><span class="p">)</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)])</span>
+
+<span class="c1"># results returned in a dictionary</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">fcn</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;   I =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;dI/I =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;dI&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;check:&#39;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;dI&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Note the check at the end, to verify that the sum of the
+<code class="docutils literal notranslate"><span class="pre">dI</span></code>s equals the original integral. Running this script gives
+the following output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">0.85198</span><span class="p">(</span><span class="mi">62</span><span class="p">)</span>     <span class="mf">0.85198</span><span class="p">(</span><span class="mi">62</span><span class="p">)</span>         <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.85068</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>     <span class="mf">0.85116</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>         <span class="mf">0.58</span>     <span class="mf">0.75</span>
+  <span class="mi">3</span>   <span class="mf">0.85112</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span>     <span class="mf">0.85113</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>         <span class="mf">1.06</span>     <span class="mf">0.39</span>
+  <span class="mi">4</span>   <span class="mf">0.85153</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>     <span class="mf">0.85124</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>         <span class="mf">0.95</span>     <span class="mf">0.52</span>
+  <span class="mi">5</span>   <span class="mf">0.85057</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>     <span class="mf">0.85103</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>         <span class="mf">0.95</span>     <span class="mf">0.53</span>
+  <span class="mi">6</span>   <span class="mf">0.85140</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>     <span class="mf">0.85118</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>         <span class="mf">0.80</span>     <span class="mf">0.77</span>
+  <span class="mi">7</span>   <span class="mf">0.85131</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span>     <span class="mf">0.85119</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>         <span class="mf">0.86</span>     <span class="mf">0.71</span>
+  <span class="mi">8</span>   <span class="mf">0.85123</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>     <span class="mf">0.85119</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>         <span class="mf">0.78</span>     <span class="mf">0.84</span>
+  <span class="mi">9</span>   <span class="mf">0.85112</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>     <span class="mf">0.85118</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>         <span class="mf">0.79</span>     <span class="mf">0.85</span>
+ <span class="mi">10</span>   <span class="mf">0.85115</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>     <span class="mf">0.85117</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>         <span class="mf">0.78</span>     <span class="mf">0.88</span>
+
+   <span class="n">I</span> <span class="o">=</span> <span class="mf">0.85117</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">dI</span><span class="o">/</span><span class="n">I</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0700</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span> <span class="mf">0.2169</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span> <span class="mf">0.3199</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span> <span class="mf">0.3218</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.0713</span><span class="p">(</span><span class="mi">15</span><span class="p">)]</span>
+<span class="n">check</span><span class="p">:</span> <span class="mi">1</span> <span class="o">+-</span> <span class="mf">1.7e-08</span>
+</pre></div>
+</div>
+<p>Typically one has more than five bins.</p>
+</div>
 <div class="section" id="faster-integrands">
 <h2>Faster Integrands<a class="headerlink" href="#faster-integrands" title="Permalink to this headline">¶</a></h2>
 <p>The computational cost of a realistic multidimensional integral
@@ -1120,6 +1176,7 @@ deviations, and properly correlated with other
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#basic-integrals">Basic Integrals</a></li>
 <li><a class="reference internal" href="#multiple-integrands-simultaneously">Multiple Integrands Simultaneously</a></li>
+<li><a class="reference internal" href="#distributions-with-vegas">Distributions with <code class="docutils literal notranslate"><span class="pre">vegas</span></code></a></li>
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>
 <li><a class="reference internal" href="#multiple-processors">Multiple Processors</a></li>
 <li><a class="reference internal" href="#sums-with-vegas">Sums with <code class="docutils literal notranslate"><span class="pre">vegas</span></code></a></li>
@@ -1173,7 +1230,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.6 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

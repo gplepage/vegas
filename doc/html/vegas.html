@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>vegas Module &#8212; vegas 3.3.6 documentation</title>
+    <title>vegas Module &#8212; vegas 3.4 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.6 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -257,11 +257,15 @@ between 0 and 1. <code class="docutils literal notranslate"><span class="pre">ra
 create an array whose dimensions are specified by the
 integer-valued tuple <code class="docutils literal notranslate"><span class="pre">shape</span></code>. The default generator
 is <code class="docutils literal notranslate"><span class="pre">numpy.random.random</span></code>.</li>
-<li><strong>sync_ran</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the default random number
+<li><strong>sync_ran</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the default random number
 generator is synchronized across all processors when
 using MPI. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> does no synchronization
 (but the random numbers should synchronized some other
 way).</li>
+<li><strong>mpi</strong> – Setting <code class="docutils literal notranslate"><span class="pre">mpi=False</span></code> disables <code class="docutils literal notranslate"><span class="pre">mpi</span></code> support in
+<code class="docutils literal notranslate"><span class="pre">vegas</span></code> even if <code class="docutils literal notranslate"><span class="pre">mpi</span></code> is available; setting <code class="docutils literal notranslate"><span class="pre">mpi=True</span></code>
+(default) allows use of <code class="docutils literal notranslate"><span class="pre">mpi</span></code> provided module <code class="xref py py-mod docutils literal notranslate"><span class="pre">mpi4py</span></code>
+is installed.</li>
 </ul>
 </td>
 </tr>
@@ -1299,7 +1303,7 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.3.6 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

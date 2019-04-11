@@ -608,6 +608,63 @@ therefore, easier to write  and maintain. Here the values in the integrand's
 dictionary are all numbers; in general, values can be  either numbers or
 arrays (of any shape).
 
+Distributions with |vegas|
+----------------------------
+A common application of |vegas| is to compute distributions. The following
+code, for example, evaluates both an integral ``I`` and the contributions
+``dI`` to the integral from each of five different intervals ``dr``
+in the radius measured
+from the center of the integration volume. The normalized contributions
+``dI/I`` are then tabulated::
+
+    import vegas
+    import numpy as np
+
+    def fcn(x):
+        dx2 = 0.0
+        for d in range(2):
+            dx2 += (x[d] - 0.5) ** 2
+        I = np.exp(-dx2)
+        dI = np.zeros(5, dtype=float)
+        rmax = (2 * 0.5**2) ** 0.5
+        dr = rmax / 5.
+        j = int(dx2 ** 0.5 / dr)
+        dI[j] = I
+        return dict(I=I, dI=dI)
+
+    integ = vegas.Integrator(2 * [(0,1)])
+
+    # results returned in a dictionary
+    result = integ(fcn)
+    print(result.summary())
+    print('   I =', result['I'])
+    print('dI/I =', result['dI'] / result['I'])
+    print('check:', sum(result['dI']) / result['I'])
+
+Note the check at the end, to verify that the sum of the
+``dI``\s equals the original integral. Running this script gives
+the following output::
+
+    itn   integral        wgt average     chi2/dof        Q
+    -------------------------------------------------------
+      1   0.85198(62)     0.85198(62)         0.00     1.00
+      2   0.85068(49)     0.85116(38)         0.58     0.75
+      3   0.85112(39)     0.85113(27)         1.06     0.39
+      4   0.85153(38)     0.85124(22)         0.95     0.52
+      5   0.85057(32)     0.85103(18)         0.95     0.53
+      6   0.85140(23)     0.85118(14)         0.80     0.77
+      7   0.85131(39)     0.85119(13)         0.86     0.71
+      8   0.85123(31)     0.85119(12)         0.78     0.84
+      9   0.85112(31)     0.85118(11)         0.79     0.85
+     10   0.85115(21)     0.85117(10)         0.78     0.88
+
+       I = 0.85117(10)
+    dI/I = [0.0700(15) 0.2169(25) 0.3199(30) 0.3218(27) 0.0713(15)]
+    check: 1 +- 1.7e-08
+
+Typically one has more than five bins.
+
+
 Faster Integrands
 -------------------------
 The computational cost of a realistic multidimensional integral

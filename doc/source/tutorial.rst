@@ -620,14 +620,16 @@ from the center of the integration volume. The normalized contributions
     import vegas
     import numpy as np
 
+    RMAX = (2 * 0.5**2) ** 0.5
+
     def fcn(x):
         dx2 = 0.0
         for d in range(2):
             dx2 += (x[d] - 0.5) ** 2
         I = np.exp(-dx2)
+        # add I to appropriate bin in dI
         dI = np.zeros(5, dtype=float)
-        rmax = (2 * 0.5**2) ** 0.5
-        dr = rmax / 5.
+        dr = RMAX / len(dI)
         j = int(dx2 ** 0.5 / dr)
         dI[j] = I
         return dict(I=I, dI=dI)
