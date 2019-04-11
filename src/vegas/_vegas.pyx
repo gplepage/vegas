@@ -763,6 +763,10 @@ cdef class Integrator(object):
             using MPI. If ``False``, |vegas| does no synchronization
             (but the random numbers should synchronized some other
             way).
+        mpi (bool): Setting ``mpi=False`` disables ``mpi`` support in
+            ``vegas`` even if ``mpi`` is available; setting ``mpi=True``
+            (default) allows use of ``mpi`` provided module :mod:`mpi4py`
+            is installed.
     """
 
 
@@ -785,6 +789,7 @@ cdef class Integrator(object):
         analyzer=None,
         ran_array_generator=numpy.random.random,
         sync_ran=True,
+        mpi=True,
         )
 
     def __init__(Integrator self not None, map, **kargs):
@@ -900,7 +905,8 @@ cdef class Integrator(object):
                 self.sync_ran = kargs[k]
             elif k == 'mpi':
                 # for legacy code
-                pass
+                old_val[k] = self.mpi
+                self.mpi = kargs[k]
             else:
                 raise AttributeError('no attribute named "%s"' % str(k))
 
@@ -1084,7 +1090,10 @@ cdef class Integrator(object):
             sigf[ihcube] = sigf2 ** (self.beta / 2.)
 
     def _get_mpi_rank(self):
-        return 0 if mpi4py is None else mpi4py.MPI.COMM_WORLD.Get_rank()
+        return (
+            0 if (mpi4py is None or not self.mpi) else
+            mpi4py.MPI.COMM_WORLD.Get_rank()
+            )
 
     mpi_rank = property(_get_mpi_rank, doc="MPI rank (>=0)")
 
@@ -1371,11 +1380,11 @@ cdef class Integrator(object):
             self.set(kargs)
 
         # synchronize random numbers across all processes (mpi)
-        if self.sync_ran:
+        if self.sync_ran and self.mpi:
             self.synchronize_random()
 
         # Put integrand into standard form
-        fcn = VegasIntegrand(fcn)
+        fcn = VegasIntegrand(fcn, mpi=self.mpi)
 
         sigf = self.sigf
         for itn in range(self.nitn):
@@ -2011,12 +2020,12 @@ cdef class VegasIntegrand:
         nproc: Number of processors (=1 if no MPI)
         rank: MPI rank of processors (=0 if no MPI)
     """
-    def __init__(self, fcn):
+    def __init__(self, fcn, mpi=True):
         if isinstance(fcn, type(BatchIntegrand)):
             raise ValueError(
                 'integrand given is a class, not an object -- need parentheses?'
                 )
-        if mpi4py is None:
+        if mpi4py is None or not mpi:
             self.nproc = 1
         else:
             self.comm = mpi4py.MPI.COMM_WORLD
@@ -2224,12 +2233,12 @@ cdef class BatchIntegrand:
         self.fcntype = 'batch'
         self.fcn = None
 
-    def _get_rank(self):
-        return 0 if mpi4py is None else mpi4py.MPI.COMM_WORLD.Get_rank()
+    # def _get_rank(self):
+    #     return 0 if mpi4py is None else mpi4py.MPI.COMM_WORLD.Get_rank()
 
-    rank = property(
-        _get_rank, doc='MPI rank (deprecated - use Integrator.mpi_rank)'
-        )
+    # rank = property(
+    #     _get_rank, doc='MPI rank (deprecated - use Integrator.mpi_rank)'
+    #     )
 
     def __call__(self, x):
         try:
@@ -2264,7 +2273,7 @@ def batchintegrand(f):
     """
     try:
         f.fcntype = 'batch'
-        f.rank = 0 if mpi4py is None else mpi4py.MPI.COMM_WORLD.Get_rank()
+        # f.rank = 0 if mpi4py is None else mpi4py.MPI.COMM_WORLD.Get_rank()
         return f
     except:
         ans = BatchIntegrand()

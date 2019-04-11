@@ -1,4 +1,17 @@
-Version 3.3.6 2018-07-2018
+Version 3.4 2019-04-11
+=======================
+Again a very minor update, to respond to a feature request.
+
+- Adds mpi keyword to Integrator. Setting mpi=False disables mpi support in
+  vegas even if mpi is available; setting mpi=True (default) uses mpi
+  automatically (so long as it is installed).
+
+- Improved documentation on the use of C and Fortran with vegas.
+
+- A new section in the tutorial on how to calculate distributions with vegas.
+
+
+Version 3.3.6 2018-07
 ==========================
 Very, very minor update.
 

@@ -52,6 +52,7 @@ cdef class Integrator:
     cdef readonly object analyzer
     cdef readonly object ran_array_generator
     cdef readonly bint sync_ran
+    cdef readonly bint mpi
     # generated
     cdef readonly AdaptiveMap map
     cdef readonly double sum_sigf

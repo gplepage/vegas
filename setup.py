@@ -14,7 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
-VEGAS_VERSION = '3.3.6'
+VEGAS_VERSION = '3.4'
 
 from distutils.core import setup
 from distutils.extension import Extension

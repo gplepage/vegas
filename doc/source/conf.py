@@ -32,7 +32,8 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.imgmath']
 imgmath_image_format = "svg" # "png"
 imgmath_use_preview = True
 imgmath_latex_preamble = "\usepackage{arev}"
-imgmath_dvipng_args = ['-gamma', '0.5', '-D', '110', '-bg', 'Transparent']  #35
+# imgmath_dvipng_args = ['-gamma', '0.5', '-D', '110', '-bg', 'Transparent']  #35
+# imgmath_dvisvgm_args = ['-TT 0cm,0.1cm']
 # imgmath_font_size = 12
 
 # Add any paths that contain templates here, relative to this directory.

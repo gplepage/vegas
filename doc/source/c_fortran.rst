@@ -417,4 +417,5 @@ is then::
     if __name__ == '__main__':
         main()
 
-This runs roughly twice as fast as the original.
+This runs roughly twice as fast as the original, and about the same
+speed as the batch versions of the C code, above.
