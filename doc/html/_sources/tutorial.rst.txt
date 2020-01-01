@@ -489,20 +489,20 @@ the normalization and first two moments of a
 sharply peaked probability distribution:
 
 .. math::
-    I_0 &\equiv \int_0^1 d^4x\;
+    I_0  &\equiv  \int_0^1 d^4x\;
         \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2}\\
-    I_1 &\equiv \int_0^1 d^4x\; x_0 \;
+    I_1  &\equiv \int_0^1 d^4x\; x_0 \;
         \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2} \\
     I_2 &\equiv \int_0^1 d^4x\; x_0^2 \;
         \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2}
 
-From these integrals we determine the mean and width of the distribution
+From these integrals we determine the mean and width of the  distribution
 projected onto one of the axes:
 
 .. math::
-    \langle x \rangle &\equiv I_1 / I_0 \\[1ex]
-    \sigma_x^2 &\equiv \langle x^2 \rangle - \langle x \rangle^2 \\
-               &= I_2 / I_0 - (I_1 / I_0)^2
+    \langle x \rangle  &\equiv I_1 / I_0 \\[1ex]
+    \sigma_x^2  &\equiv \langle x^2 \rangle - \langle x \rangle^2 \\
+               &= I_2 / I_0  - (I_1 / I_0)^2
 
 This can be done using the following code::
 
@@ -641,31 +641,20 @@ from the center of the integration volume. The normalized contributions
     print(result.summary())
     print('   I =', result['I'])
     print('dI/I =', result['dI'] / result['I'])
-    print('check:', sum(result['dI']) / result['I'])
+    print('sum(dI/I) =', sum(result['dI']) / result['I'])
 
 Note the check at the end, to verify that the sum of the
 ``dI[i]``\s equals the original integral. Running this script gives
-the following output::
+the following output:
 
-    itn   integral        wgt average     chi2/dof        Q
-    -------------------------------------------------------
-      1   0.85198(62)     0.85198(62)         0.00     1.00
-      2   0.85068(49)     0.85116(38)         0.58     0.75
-      3   0.85112(39)     0.85113(27)         1.06     0.39
-      4   0.85153(38)     0.85124(22)         0.95     0.52
-      5   0.85057(32)     0.85103(18)         0.95     0.53
-      6   0.85140(23)     0.85118(14)         0.80     0.77
-      7   0.85131(39)     0.85119(13)         0.86     0.71
-      8   0.85123(31)     0.85119(12)         0.78     0.84
-      9   0.85112(31)     0.85118(11)         0.79     0.85
-     10   0.85115(21)     0.85117(10)         0.78     0.88
-
-       I = 0.85117(10)
-    dI/I = [0.0700(15) 0.2169(25) 0.3199(30) 0.3218(27) 0.0713(15)]
-    check: 1 +- 1.7e-08
+.. literalinclude:: eg4.out
 
 The integrator adapts to the full integral ``I`` but also gives
-accurate results for the distribution ``dI``. Typically one has
+accurate results for the distribution ``dI`` (though not quite as
+accurate). Note that ``sum(dI/I)`` is much more accurate than
+any individual ``dI/I``, because of correlations between
+the different ``dI/I`` values. (The uncertainty on ``sum(dI/I)`` would
+be exactly zero absent roundoff errors.) Typically one has
 more than five bins.
 
 

@@ -1,18 +1,17 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>Tutorial &#8212; vegas 3.4 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Integrands in C or Fortran" href="c_fortran.html" />
@@ -566,18 +565,18 @@ of the resulting integrals as the fluctuations cancel.</p>
 the normalization and first two moments of a
 sharply peaked probability distribution:</p>
 <div class="math">
-<p><img src="_images/math/4f67a9a314c7dbe525e0c1411aa57792d87eaea3.svg" alt="I_0 &amp;\equiv \int_0^1 d^4x\;
+<p><img src="_images/math/7e1e49dd17aa36dbd47a1e2f98691d18b91d5660.svg" alt="I_0  &amp;\equiv  \int_0^1 d^4x\;
     \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2}\\
-I_1 &amp;\equiv \int_0^1 d^4x\; x_0 \;
+I_1  &amp;\equiv \int_0^1 d^4x\; x_0 \;
     \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2} \\
 I_2 &amp;\equiv \int_0^1 d^4x\; x_0^2 \;
     \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2}"/></p>
-</div><p>From these integrals we determine the mean and width of the distribution
+</div><p>From these integrals we determine the mean and width of the  distribution
 projected onto one of the axes:</p>
 <div class="math">
-<p><img src="_images/math/908293b332bbb329376f29fe4db04c2b3623b18a.svg" alt="\langle x \rangle &amp;\equiv I_1 / I_0 \\[1ex]
-\sigma_x^2 &amp;\equiv \langle x^2 \rangle - \langle x \rangle^2 \\
-           &amp;= I_2 / I_0 - (I_1 / I_0)^2"/></p>
+<p><img src="_images/math/b75b4e2d1b2cca7de67655d775827396510d72ef.svg" alt="\langle x \rangle  &amp;\equiv I_1 / I_0 \\[1ex]
+\sigma_x^2  &amp;\equiv \langle x^2 \rangle - \langle x \rangle^2 \\
+           &amp;= I_2 / I_0  - (I_1 / I_0)^2"/></p>
 </div><p>This can be done using the following code:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -724,7 +723,7 @@ from the center of the integration volume. The normalized contributions
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;   I =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;dI/I =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;dI&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;check:&#39;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;dI&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;sum(dI/I) =&#39;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;dI&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>Note the check at the end, to verify that the sum of the
@@ -732,24 +731,28 @@ from the center of the integration volume. The normalized contributions
 the following output:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">0.85198</span><span class="p">(</span><span class="mi">62</span><span class="p">)</span>     <span class="mf">0.85198</span><span class="p">(</span><span class="mi">62</span><span class="p">)</span>         <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">0.85068</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>     <span class="mf">0.85116</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>         <span class="mf">0.58</span>     <span class="mf">0.75</span>
-  <span class="mi">3</span>   <span class="mf">0.85112</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span>     <span class="mf">0.85113</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>         <span class="mf">1.06</span>     <span class="mf">0.39</span>
-  <span class="mi">4</span>   <span class="mf">0.85153</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>     <span class="mf">0.85124</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>         <span class="mf">0.95</span>     <span class="mf">0.52</span>
-  <span class="mi">5</span>   <span class="mf">0.85057</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>     <span class="mf">0.85103</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>         <span class="mf">0.95</span>     <span class="mf">0.53</span>
-  <span class="mi">6</span>   <span class="mf">0.85140</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>     <span class="mf">0.85118</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>         <span class="mf">0.80</span>     <span class="mf">0.77</span>
-  <span class="mi">7</span>   <span class="mf">0.85131</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span>     <span class="mf">0.85119</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>         <span class="mf">0.86</span>     <span class="mf">0.71</span>
-  <span class="mi">8</span>   <span class="mf">0.85123</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>     <span class="mf">0.85119</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>         <span class="mf">0.78</span>     <span class="mf">0.84</span>
-  <span class="mi">9</span>   <span class="mf">0.85112</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>     <span class="mf">0.85118</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>         <span class="mf">0.79</span>     <span class="mf">0.85</span>
- <span class="mi">10</span>   <span class="mf">0.85115</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>     <span class="mf">0.85117</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>         <span class="mf">0.78</span>     <span class="mf">0.88</span>
+  <span class="mi">1</span>   <span class="mf">0.85179</span><span class="p">(</span><span class="mi">56</span><span class="p">)</span>     <span class="mf">0.85179</span><span class="p">(</span><span class="mi">56</span><span class="p">)</span>         <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.85130</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>     <span class="mf">0.85160</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>         <span class="mf">0.89</span>     <span class="mf">0.50</span>
+  <span class="mi">3</span>   <span class="mf">0.85147</span><span class="p">(</span><span class="mi">53</span><span class="p">)</span>     <span class="mf">0.85155</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>         <span class="mf">0.52</span>     <span class="mf">0.91</span>
+  <span class="mi">4</span>   <span class="mf">0.85164</span><span class="p">(</span><span class="mi">67</span><span class="p">)</span>     <span class="mf">0.85150</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>         <span class="mf">1.10</span>     <span class="mf">0.34</span>
+  <span class="mi">5</span>   <span class="mf">0.85144</span><span class="p">(</span><span class="mi">56</span><span class="p">)</span>     <span class="mf">0.85146</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>         <span class="mf">1.11</span>     <span class="mf">0.32</span>
+  <span class="mi">6</span>   <span class="mf">0.85159</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span>     <span class="mf">0.85150</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>         <span class="mf">0.97</span>     <span class="mf">0.51</span>
+  <span class="mi">7</span>   <span class="mf">0.85086</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>     <span class="mf">0.85137</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>         <span class="mf">0.97</span>     <span class="mf">0.52</span>
+  <span class="mi">8</span>   <span class="mf">0.85139</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>     <span class="mf">0.85137</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>         <span class="mf">0.90</span>     <span class="mf">0.66</span>
+  <span class="mi">9</span>   <span class="mf">0.85089</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>     <span class="mf">0.85122</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>         <span class="mf">0.79</span>     <span class="mf">0.84</span>
+ <span class="mi">10</span>   <span class="mf">0.85101</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>     <span class="mf">0.85116</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>         <span class="mf">0.78</span>     <span class="mf">0.87</span>
 
-   <span class="n">I</span> <span class="o">=</span> <span class="mf">0.85117</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">dI</span><span class="o">/</span><span class="n">I</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0700</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span> <span class="mf">0.2169</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span> <span class="mf">0.3199</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span> <span class="mf">0.3218</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.0713</span><span class="p">(</span><span class="mi">15</span><span class="p">)]</span>
-<span class="n">check</span><span class="p">:</span> <span class="mi">1</span> <span class="o">+-</span> <span class="mf">1.7e-08</span>
+   <span class="n">I</span> <span class="o">=</span> <span class="mf">0.85116</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
+<span class="n">dI</span><span class="o">/</span><span class="n">I</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0729</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span> <span class="mf">0.2116</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.3246</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span> <span class="mf">0.3193</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.0716</span><span class="p">(</span><span class="mi">15</span><span class="p">)]</span>
+<span class="nb">sum</span><span class="p">(</span><span class="n">dI</span><span class="o">/</span><span class="n">I</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+-</span> <span class="mf">1.7e-08</span>
 </pre></div>
 </div>
 <p>The integrator adapts to the full integral <code class="docutils literal notranslate"><span class="pre">I</span></code> but also gives
-accurate results for the distribution <code class="docutils literal notranslate"><span class="pre">dI</span></code>. Typically one has
+accurate results for the distribution <code class="docutils literal notranslate"><span class="pre">dI</span></code> (though not quite as
+accurate). Note that <code class="docutils literal notranslate"><span class="pre">sum(dI/I)</span></code> is much more accurate than
+any individual <code class="docutils literal notranslate"><span class="pre">dI/I</span></code>, because of correlations between
+the different <code class="docutils literal notranslate"><span class="pre">dI/I</span></code> values. (The uncertainty on <code class="docutils literal notranslate"><span class="pre">sum(dI/I)</span></code> would
+be exactly zero absent roundoff errors.) Typically one has
 more than five bins.</p>
 </div>
 <div class="section" id="faster-integrands">
@@ -1174,7 +1177,7 @@ deviations, and properly correlated with other
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Tutorial</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
@@ -1183,8 +1186,8 @@ deviations, and properly correlated with other
 <li><a class="reference internal" href="#calculating-distributions">Calculating Distributions</a></li>
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>
 <li><a class="reference internal" href="#multiple-processors">Multiple Processors</a></li>
-<li><a class="reference internal" href="#sums-with-vegas">Sums with <code class="docutils literal notranslate"><span class="pre">vegas</span></code></a></li>
-<li><a class="reference internal" href="#vegas-as-a-random-number-generator"><code class="docutils literal notranslate"><span class="pre">vegas</span></code> as a Random Number Generator</a></li>
+<li><a class="reference internal" href="#sums-with-vegas">Sums with <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a></li>
+<li><a class="reference internal" href="#vegas-as-a-random-number-generator"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> as a Random Number Generator</a></li>
 <li><a class="reference internal" href="#implementation-notes">Implementation Notes</a></li>
 </ul>
 </li>
@@ -1209,8 +1212,6 @@ deviations, and properly correlated with other
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -1239,7 +1240,7 @@ deviations, and properly correlated with other
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-18, G.P. Lepage.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
     </div>
   </body>
 </html>

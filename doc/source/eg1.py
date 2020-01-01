@@ -1,11 +1,11 @@
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-14 G. Peter Lepage. 
+# Copyright (c) 2013-19 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # any later version (see <http://www.gnu.org/licenses/>).
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -15,14 +15,14 @@ from __future__ import print_function   # makes this work for python2 and 3
 
 import vegas
 import math
-import gvar as gv 
-from outputsplitter import log_stdout, unlog_stdout 
+import gvar as gv
+from outputsplitter import log_stdout, unlog_stdout
 
 SAVE_OUTPUT = True
 
-def f(x): 
-    dx2 = 0 
-    for i in range(4): 
+def f(x):
+    dx2 = 0
+    for i in range(4):
         dx2 += (x[i] - 0.5) ** 2
     return math.exp(-dx2 * 100.) * 1013.2118364296088
 
@@ -31,20 +31,20 @@ def g(x):
 
 def f_sphere(x):
     dx2 = 0
-    for i in range(4): 
+    for i in range(4):
         dx2 += (x[i] - 0.5) ** 2
     if dx2 < 0.2 ** 2:
         return math.exp(-dx2 * 100.) * [1027.5938263789689227 ,1115.3539360527281318, 3834.4215518273048636][1]
     else:
         return 0.0
 
-def f2(x): 
-    dx2 = 0 
-    for i in range(4): 
+def f2(x):
+    dx2 = 0
+    for i in range(4):
         dx2 += (x[i] - 1/3.) ** 2
     ans = math.exp(-dx2 * 100.) * 1013.2167575422921535
-    dx2 = 0 
-    for i in range(4): 
+    dx2 = 0
+    for i in range(4):
         dx2 += (x[i] - 2/3.) ** 2
     ans +=  math.exp(-dx2 * 100.) * 1013.2167575422921535
     return ans / 2.
@@ -60,18 +60,18 @@ def main():
         )
 
     if SAVE_OUTPUT:
-        log_stdout('eg1a.out') 
+        log_stdout('eg1a.out')
     result = integ(f, nitn=10, neval=1000)
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
     integ.map.show_grid(
-        30, 
-        axes=[(0, 1), (2, 3), (0, None), (None, 1), (2, 0), (3, 0)], 
+        30,
+        axes=[(0, 1), (2, 3), (0, None), (None, 1), (2, 0), (3, 0)],
         shrink=False
         )
 
     if SAVE_OUTPUT:
-        unlog_stdout() 
+        unlog_stdout()
         log_stdout('eg1b.out')
     result = integ(f, nitn=100, neval=1000 )
     print('larger nitn  => %s    Q = %.2f' % (result, result.Q))
@@ -85,8 +85,8 @@ def main():
     # integ.set(map=[[-2., 2.], [0, 2.], [0, 2.], [0., 2.]])
     integ = vegas.Integrator(
       [[-2., 2.], [0, 2.], [0, 2.], [0., 2.]],
-      )    
-    result = integ(f, nitn=10, neval=1000) 
+      )
+    result = integ(f, nitn=10, neval=1000)
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
 
