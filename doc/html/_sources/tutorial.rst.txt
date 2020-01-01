@@ -162,7 +162,7 @@ There are several things to note here:
     where :math:`I_i \pm \sigma_{i}` are the estimates from
     individual iterations. If the :math:`I_i` are Gaussian,
     :math:`\chi^2` should be of order the number of degrees of
-    freedom (plus or minus the square root of that number);
+    freedom (plus or minus the square root of double that number);
     here the number of degrees of freedom is the number of
     iterations minus 1.
 

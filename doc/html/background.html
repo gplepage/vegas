@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>How vegas Works &#8212; vegas 3.4 documentation</title>
+    <title>How vegas Works &#8212; vegas 3.4.1 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="c_fortran.html" title="Integrands in C or Fortran"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.1 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -67,117 +67,117 @@ Monte Carlo estimates whose integrand
 samples are uniformly distributed
 in the new variables.
 The idea in one-dimension, for
-example, is to replace the original integral over <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.svg" alt="x"/>,</p>
+example, is to replace the original integral over <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x" style="vertical-align: 0px"/>,</p>
 <div class="math">
-<p><img src="_images/math/21c6859c1d87f4cc2639f8e52e7590acc7d56dfd.svg" alt="I = \int_a^b dx\; f(x),"/></p>
-</div><p>by an equivalent integral over a new variable <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/>,</p>
+<p><img src="_images/math/a3019882ef6a001b2780d06cd439ed558f084631.svg" alt="I = \int_a^b dx\; f(x),"/></p>
+</div><p>by an equivalent integral over a new variable <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/>,</p>
 <div class="math">
-<p><img src="_images/math/bb745e5666fce7136e6b127d1bba343356a6f93a.svg" alt="I = \int_0^1 dy\; J(y)\; f(x(y)),"/></p>
-</div><p>where <img class="math" src="_images/math/f0228ae1e69d712beef8bb963a7f52934f4ae25f.svg" alt="J(y)"/> is the Jacobian of the transformation.
+<p><img src="_images/math/acaba53ce1f542f34ef3a27524d4d2718fa9a220.svg" alt="I = \int_0^1 dy\; J(y)\; f(x(y)),"/></p>
+</div><p>where <img class="math" src="_images/math/567c8fdd5c3ac156592bd5e758b5ca3ee1051d5a.svg" alt="J(y)" style="vertical-align: -3px"/> is the Jacobian of the transformation.
 A simple Monte Carlo estimate of the transformed
 integral is given by</p>
 <div class="math">
-<p><img src="_images/math/6719ead63a277f83af0de8b9908df498ece5781c.svg" alt="I \approx S^{(1)} \equiv \frac{1}{M} \sum_y \;J(y)\; f(x(y))"/></p>
-</div><p>where the sum is over <img class="math" src="_images/math/23eed6668bd1be208ee3ceab6ef9737a7d3ec704.svg" alt="M"/> random points
+<p><img src="_images/math/3f1723da9fbbc5e425e9ffa9f2a44478adaa4a68.svg" alt="I \approx S^{(1)} \equiv \frac{1}{M} \sum_y \;J(y)\; f(x(y))"/></p>
+</div><p>where the sum is over <img class="math" src="_images/math/53d306b3c2ac13819b3709a962858ecc743801c2.svg" alt="M" style="vertical-align: 0px"/> random points
 uniformly distributed between 0 and 1.</p>
-<p>The estimate <img class="math" src="_images/math/674bd94f734b384d1c86cfe2c8e79038df290f14.svg" alt="S^{(1)}"/> is a itself a random number from a distribution
+<p>The estimate <img class="math" src="_images/math/2c9fe6cf9e901014ea0306e3f0b93cba33220b35.svg" alt="S^{(1)}" style="vertical-align: 0px"/> is a itself a random number from a distribution
 whose mean is the exact integral and whose variance is:</p>
 <div class="math">
-<p><img src="_images/math/961fb3d30089ff4c4a215ef2cb0a32115c503db2.svg" alt="\sigma_I^2 &amp;= \frac{1}{M}\left(
+<p><img src="_images/math/b5c70cb059c32aa9a0cb45800b7fe1913c8653c5.svg" alt="\sigma_I^2 &amp;= \frac{1}{M}\left(
 \int_0^1 dy\; J^2(y) \; f^2(x(y)) - I^2
 \right) \\
 &amp;= \frac{1}{M}\left(
 \int_a^b dx \;J(y(x))\; f^2(x) - I^2
 \right)"/></p>
-</div><p>The standard deviation <img class="math" src="_images/math/b202d774343945f2bd6f06255a6fe47bd9367e01.svg" alt="\sigma_I"/> is an estimate of the possible
+</div><p>The standard deviation <img class="math" src="_images/math/e0353bd02fb4e9dcd6c4f36aa2851e457854f72a.svg" alt="\sigma_I" style="vertical-align: -2px"/> is an estimate of the possible
 error in the Monte Carlo estimate.
 A straightforward variational calculation, constrained by</p>
 <div class="math">
-<p><img src="_images/math/da23f0abe2cf64185b56cad3428109f76d8f9559.svg" alt="\int_a^b \frac{dx}{J(y(x))} = \int_0^1 dy = 1,"/></p>
-</div><p>shows that <img class="math" src="_images/math/b202d774343945f2bd6f06255a6fe47bd9367e01.svg" alt="\sigma_I"/> is minimized if</p>
+<p><img src="_images/math/84b0b3aa943af247b98624a6577fdc585bf2ae5d.svg" alt="\int_a^b \frac{dx}{J(y(x))} = \int_0^1 dy = 1,"/></p>
+</div><p>shows that <img class="math" src="_images/math/e0353bd02fb4e9dcd6c4f36aa2851e457854f72a.svg" alt="\sigma_I" style="vertical-align: -2px"/> is minimized if</p>
 <div class="math">
-<p><img src="_images/math/edc29b99e6a897fe984f0d16352c5a9cde351941.svg" alt="J(y(x)) = \frac{\int_a^b dx\;|f(x)|}{|f(x)|}."/></p>
+<p><img src="_images/math/e99e99b3b0f14d4c04b4dd581128cc441155e4bb.svg" alt="J(y(x)) = \frac{\int_a^b dx\;|f(x)|}{|f(x)|}."/></p>
 </div><p>Such transformations greatly reduce the standard deviation when the
 integrand has high peaks. Since</p>
 <div class="math">
-<p><img src="_images/math/d3ea06ebb04b3e3aace1dffe2ea7d463b40d6db9.svg" alt="1/J = \frac{dy}{dx} \propto |f(x)|,"/></p>
-</div><p>the regions in <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.svg" alt="x"/> space where <img class="math" src="_images/math/67ce6ea03c2469ca94d76187ce64a35f23c76cf4.svg" alt="|f(x)|"/> is large are
-stretched out in <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/> space. Consequently, a uniform Monte Carlo in <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/> space
+<p><img src="_images/math/4ca09f14d848c3052861843362b550070f0d45e1.svg" alt="1/J = \frac{dy}{dx} \propto |f(x)|,"/></p>
+</div><p>the regions in <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x" style="vertical-align: 0px"/> space where <img class="math" src="_images/math/ee4102d80c08c2b31f7d170eac98d357945bddc7.svg" alt="|f(x)|" style="vertical-align: -3px"/> is large are
+stretched out in <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/> space. Consequently, a uniform Monte Carlo in <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/> space
 places more samples in the peak regions than it would
-if were we integrating in <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.svg" alt="x"/> space — its samples are concentrated
+if were we integrating in <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x" style="vertical-align: 0px"/> space — its samples are concentrated
 in the most important regions, which is why this is called “importance
-sampling.” The product <img class="math" src="_images/math/5553e0e1f32bd35be80b773540dd9964be2945de.svg" alt="J(y)\;f(x(y))"/> has no peaks when
+sampling.” The product <img class="math" src="_images/math/27b8605e1aeb84c0c27829a98a6a447a632b8445.svg" alt="J(y)\;f(x(y))" style="vertical-align: -3px"/> has no peaks when
 the transformation is optimal.</p>
-<p>The distribution of the Monte Carlo estimates <img class="math" src="_images/math/674bd94f734b384d1c86cfe2c8e79038df290f14.svg" alt="S^{(1)}"/> becomes
-Gaussian in the limit of large <img class="math" src="_images/math/23eed6668bd1be208ee3ceab6ef9737a7d3ec704.svg" alt="M"/>. Non-Gaussian corrections
-vanish like <img class="math" src="_images/math/0b435f9ce903bedf34e9594a045c32652fa1fbe7.svg" alt="1/M"/>. For example, it is easy to show that</p>
+<p>The distribution of the Monte Carlo estimates <img class="math" src="_images/math/2c9fe6cf9e901014ea0306e3f0b93cba33220b35.svg" alt="S^{(1)}" style="vertical-align: 0px"/> becomes
+Gaussian in the limit of large <img class="math" src="_images/math/53d306b3c2ac13819b3709a962858ecc743801c2.svg" alt="M" style="vertical-align: 0px"/>. Non-Gaussian corrections
+vanish like <img class="math" src="_images/math/436283fc02d996c1684161f306e95df05c278572.svg" alt="1/M" style="vertical-align: -1px"/>. For example, it is easy to show that</p>
 <div class="math">
-<p><img src="_images/math/9d2b14c839991d9f00ff1fc7efe95ba7b4f70268.svg" alt="\langle (S^{(1)} - I) ^ 4 \rangle
+<p><img src="_images/math/9e4782f57f533cd2e93bff0c232872e0da274915.svg" alt="\langle (S^{(1)} - I) ^ 4 \rangle
 =
 3\sigma_I^4\left( 1 - \frac{1}{M}\right)
 + \frac{1}{M^3} \int_0^1 dy \;
 (J(y)\;f(x(y)) - I)^4"/></p>
-</div><p>This moment would equal <img class="math" src="_images/math/66502f2386b92a20880b44bc915de441eb55d3f5.svg" alt="3\sigma_I^4"/>, which falls like <img class="math" src="_images/math/f311065837ac4c44fe50a26759a7e042de546924.svg" alt="1/M^2"/>,
+</div><p>This moment would equal <img class="math" src="_images/math/668acb2e80076bb787ff0580763ba263ee2d5f9e.svg" alt="3\sigma_I^4" style="vertical-align: -7px"/>, which falls like <img class="math" src="_images/math/87ead0ea7ef0bac8e338b69e5552f06654bc4c48.svg" alt="1/M^2" style="vertical-align: -2px"/>,
 if the distribution was Gaussian. The corrections to the Gaussian result
-fall as <img class="math" src="_images/math/c61f3aa46aa7f7fe4bb8f62ec0fed48fe9eea9bc.svg" alt="1/M^3"/> and so become negligible at large <img class="math" src="_images/math/23eed6668bd1be208ee3ceab6ef9737a7d3ec704.svg" alt="M"/>.
+fall as <img class="math" src="_images/math/ad726d1a24f34c1eb646ca707887e53e2b96627d.svg" alt="1/M^3" style="vertical-align: -2px"/> and so become negligible at large <img class="math" src="_images/math/53d306b3c2ac13819b3709a962858ecc743801c2.svg" alt="M" style="vertical-align: 0px"/>.
 These results assume
-that <img class="math" src="_images/math/9acad5a904e3771ce13b44b27f3d237d176af059.svg" alt="(J(y)\:f(x(y)))^n"/> is integrable for all <img class="math" src="_images/math/622294f9c7da12e4b75b04806ea563a27f8b9a09.svg" alt="n"/>,
+that <img class="math" src="_images/math/cd41a74f29ff542365c351ffdfd922124c5f411f.svg" alt="(J(y)\:f(x(y)))^n" style="vertical-align: -3px"/> is integrable for all <img class="math" src="_images/math/931bea88f3909b4bf85497758345b3ef3dde868b.svg" alt="n" style="vertical-align: 0px"/>,
 which need not be the case
-if <img class="math" src="_images/math/6a7cdc93af8fcd879bab2e6f3d5d23e7149171aa.svg" alt="f(x)"/> has (integrable) singularities.</p>
+if <img class="math" src="_images/math/fb62ba1e89ca6200f224a445c3f4a567fc451fe1.svg" alt="f(x)" style="vertical-align: -3px"/> has (integrable) singularities.</p>
 </div>
 <div class="section" id="the-vegas-grid">
 <h2>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Grid<a class="headerlink" href="#the-vegas-grid" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> implements the transformation of an integration variable
-<img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.svg" alt="x"/> into a new variable <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/> using a grid in <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.svg" alt="x"/> space:</p>
+<img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x" style="vertical-align: 0px"/> into a new variable <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/> using a grid in <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x" style="vertical-align: 0px"/> space:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/6c75af87febf234b6b7abd6972bef0553262c3a9.svg" alt="x_0 &amp;= a \\
+<p><img src="_images/math/530e5cb1976f764189866fce2e85424d78e6d201.svg" alt="x_0 &amp;= a \\
 x_1 &amp;= x_0 + \Delta x_0 \\
 x_2 &amp;= x_1 + \Delta x_1 \\
 \cdots \\
 x_N &amp;= x_{N-1} + \Delta x_{N-1} = b"/></p>
 </div></div></blockquote>
 <p>The grid specifies the transformation function at the points
-<img class="math" src="_images/math/b7038e9039b920f2644f6f8e54dda02a605c341b.svg" alt="y=i/N"/> for <img class="math" src="_images/math/5772ede77df7ad62f21e2807f74f4e111649653d.svg" alt="i=0,1\ldots N"/>:</p>
+<img class="math" src="_images/math/4011b7a530d6ec1b95ffad04de4ed07502a3f8b0.svg" alt="y=i/N" style="vertical-align: -3px"/> for <img class="math" src="_images/math/dda86e9e64f520a61e58012f9e1638c0a93fa1a6.svg" alt="i=0,1\ldots N" style="vertical-align: -2px"/>:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/68ebb64a30890ea96a5672069291883559273beb.svg" alt="x(y\!=\!i/N) = x_i"/></p>
+<p><img src="_images/math/1ad1f2a16147f5fee5b6ccdbe551bc9512841c6f.svg" alt="x(y\!=\!i/N) = x_i"/></p>
 </div></div></blockquote>
 <p>Linear interpolation is used between those points.
 The Jacobian for this transformation function is piecewise constant:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/b6c0aed472c7fbb9ffd593752c22f4c4be0234f8.svg" alt="J(y) = J_i = N \Delta x_i"/></p>
+<p><img src="_images/math/43b71c97d41ce6b26dd55bb3f1538e17839a09e3.svg" alt="J(y) = J_i = N \Delta x_i"/></p>
 </div></div></blockquote>
-<p>for <img class="math" src="_images/math/e7f864a84808025bfc91108de3bced4cd2cd2945.svg" alt="i/N &lt; y &lt; (i+1)/N"/>.</p>
+<p>for <img class="math" src="_images/math/190e2638deb7a40413118dd3225bbb297d3ffffe.svg" alt="i/N &lt; y &lt; (i+1)/N" style="vertical-align: -3px"/>.</p>
 <p>The variance for a Monte Carlo estimate using this transformation
 becomes</p>
 <div class="math">
-<p><img src="_images/math/7e24001cabe7aa796e895b85e2229beede072943.svg" alt="\sigma_I^2 = \frac{1}{M}\left(
+<p><img src="_images/math/e828632d3d36fd8481d975ebee83abab18a12fa6.svg" alt="\sigma_I^2 = \frac{1}{M}\left(
 \sum_i J_i \int_{x_i}^{x_{i+1}} dx \; f^2(x) - I^2
 \right)"/></p>
-</div><p>Treating the <img class="math" src="_images/math/dab1daf8a54e58eb5d78e68d9c6a1d4304aa2282.svg" alt="J_i"/> as independent variables, with the
+</div><p>Treating the <img class="math" src="_images/math/06eea0dc8173cd4493476dd4f8d93479a04b7f6c.svg" alt="J_i" style="vertical-align: -3px"/> as independent variables, with the
 constraint</p>
 <div class="math">
-<p><img src="_images/math/ee3c2e072b52c4e86080742b67361b05406cbf91.svg" alt="\sum_i \frac{\Delta x_i}{J_i} = \sum_i \Delta y_i = 1,"/></p>
+<p><img src="_images/math/6327303e0b977605c226a00644a35fd4cdcec237.svg" alt="\sum_i \frac{\Delta x_i}{J_i} = \sum_i \Delta y_i = 1,"/></p>
 </div><p>it is trivial to show that the standard deviation is minimized
 when</p>
 <div class="math">
-<p><img src="_images/math/898ee8bb7f9b017e19aaf95637b6e94c9e7ae723.svg" alt="\frac{J_i^2}{\Delta x_i}
+<p><img src="_images/math/247dc3ca7489f1ac988aa3d3bc5d0279b6908062.svg" alt="\frac{J_i^2}{\Delta x_i}
 \int_{x_i}^{x_{i+1}} dx \; f^2(x)
 = N^2 \Delta x_i \int_{x_i}^{x_{i+1}} dx \; f^2(x)
 \; = \; \mbox{constant}"/></p>
-</div><p>for all <img class="math" src="_images/math/432d6ab1307467df5f09ab963d2e78e56500bd38.svg" alt="i"/>.</p>
+</div><p>for all <img class="math" src="_images/math/1d3281cebb8754e7e73548ba20ee6e76df713b24.svg" alt="i" style="vertical-align: 0px"/>.</p>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adjusts the grid until this last condition is
-satisfied.  As a result grid increments <img class="math" src="_images/math/14b2569834f94a8087d900ece6093f5c347a9f19.svg" alt="\Delta x_i"/> are
-small in regions where <img class="math" src="_images/math/67ce6ea03c2469ca94d76187ce64a35f23c76cf4.svg" alt="|f(x)|"/> is large.
+satisfied.  As a result grid increments <img class="math" src="_images/math/7bae7296ff6f9c7d0fc3919dd85ca3fe71a01635.svg" alt="\Delta x_i" style="vertical-align: -3px"/> are
+small in regions where <img class="math" src="_images/math/ee4102d80c08c2b31f7d170eac98d357945bddc7.svg" alt="|f(x)|" style="vertical-align: -3px"/> is large.
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> typically has no knowledge of the integrand initially, and
-so starts with a uniform <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.svg" alt="x"/> grid. As it samples the integrand
+so starts with a uniform <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x" style="vertical-align: 0px"/> grid. As it samples the integrand
 it also estimates the integrals</p>
 <div class="math">
-<p><img src="_images/math/e2fab04f6897076e409bbb9856a6b909e3b3d2b0.svg" alt="\int_{x_i}^{x_{i+1}} dx \; f^2(x),"/></p>
+<p><img src="_images/math/9c53b32b43830c23832364c9b45965380e5ed069.svg" alt="\int_{x_i}^{x_{i+1}} dx \; f^2(x),"/></p>
 </div><p>and use this information to refine
-its choice of <img class="math" src="_images/math/14b2569834f94a8087d900ece6093f5c347a9f19.svg" alt="\Delta x_i"/>s, bringing them closer to their optimal
+its choice of <img class="math" src="_images/math/7bae7296ff6f9c7d0fc3919dd85ca3fe71a01635.svg" alt="\Delta x_i" style="vertical-align: -3px"/>s, bringing them closer to their optimal
 values, for use
 in subsequent iterations. The grid usually converges,
 after several iterations,
@@ -191,12 +191,12 @@ the optimal grid for the four-dimensional Gaussian integral
 in the previous section looks like:</p>
 <a class="reference internal image-reference" href="_images/eg1a-plt1.png"><img alt="_images/eg1a-plt1.png" src="_images/eg1a-plt1.png" style="width: 80%;" /></a>
 <a class="reference internal image-reference" href="_images/eg1a-plt2.png"><img alt="_images/eg1a-plt2.png" src="_images/eg1a-plt2.png" style="width: 80%;" /></a>
-<p>These grids transform into uniformly-spaced grids in <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/> space.
-Consequently a uniform, <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/>-space Monte Carlo places the same
+<p>These grids transform into uniformly-spaced grids in <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/> space.
+Consequently a uniform, <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/>-space Monte Carlo places the same
 number of integrand evaluations, on average, in every rectangle
 of these pictures. (The average number is typically much less one
 in higher dimensions.) Integrand evaluations are concentrated
-in regions where the <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.svg" alt="x"/>-space rectangles are small
+in regions where the <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x" style="vertical-align: 0px"/>-space rectangles are small
 (and therefore numerous) —
 here in the vicinity of <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">[0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5]</span></code>, where the
 peak is.</p>
@@ -269,25 +269,25 @@ strategy will always have difficulty adapting to structures that
 lie along diagonals of the integration volume. To address such problems,
 the new version of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> introduces a second adaptive strategy,
 based upon another standard Monte Carlo technique called “stratified
-sampling.” <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> divides the <img class="math" src="_images/math/76a4036c406c483d6e6d28079007a6ea0632d567.svg" alt="d"/>-dimensional
-<img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/>-space volume into <img class="math" src="_images/math/200230eeaf7f9ae62edbd3ca038e3c1c44ab4c85.svg" alt="M_\mathrm{st}^d"/> hypercubes using
-a uniform <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/>-space grid with <img class="math" src="_images/math/d22c9a57f76d5eefed64ae549089d226d033f04a.svg" alt="M_\mathrm{st}"/> stratifications on each
+sampling.” <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> divides the <img class="math" src="_images/math/71ad8370b0b8e9dafe0121a2623e940d29f4cae5.svg" alt="d" style="vertical-align: 0px"/>-dimensional
+<img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/>-space volume into <img class="math" src="_images/math/b6fc47babc37e10d5df1d35c768963e673f3a39a.svg" alt="M_\mathrm{st}^d" style="vertical-align: -7px"/> hypercubes using
+a uniform <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/>-space grid with <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}" style="vertical-align: -3px"/> stratifications on each
 axis. It estimates
 the integral by doing a separate Monte Carlo integration in each of
 the hypercubes, and adding the results together to provide an estimate
 for the integral over the entire integration region.
 Typically
-this <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/>-space grid is much coarser than the <img class="math" src="_images/math/c9501e18ba03c321050397f259b98c38f5f52583.svg" alt="x"/>-space grid used to
+this <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/>-space grid is much coarser than the <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x" style="vertical-align: 0px"/>-space grid used to
 remap the integration variables. This is because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> needs
-at least two integrand evaluations in each <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/>-space hypercube, and
-so must keep the number of hypercubes <img class="math" src="_images/math/200230eeaf7f9ae62edbd3ca038e3c1c44ab4c85.svg" alt="M_\mathrm{st}^d"/> smaller than <code class="docutils literal notranslate"><span class="pre">neval/2</span></code>.
-This can restrict <img class="math" src="_images/math/d22c9a57f76d5eefed64ae549089d226d033f04a.svg" alt="M_\mathrm{st}"/> severely when <img class="math" src="_images/math/76a4036c406c483d6e6d28079007a6ea0632d567.svg" alt="d"/> is large.</p>
-<p>Older versions of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> also divide <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/>-space into hypercubes and
+at least two integrand evaluations in each <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/>-space hypercube, and
+so must keep the number of hypercubes <img class="math" src="_images/math/b6fc47babc37e10d5df1d35c768963e673f3a39a.svg" alt="M_\mathrm{st}^d" style="vertical-align: -7px"/> smaller than <code class="docutils literal notranslate"><span class="pre">neval/2</span></code>.
+This can restrict <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}" style="vertical-align: -3px"/> severely when <img class="math" src="_images/math/71ad8370b0b8e9dafe0121a2623e940d29f4cae5.svg" alt="d" style="vertical-align: 0px"/> is large.</p>
+<p>Older versions of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> also divide <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/>-space into hypercubes and
 do Monte Carlo estimates in the separate hypercubes. These versions, however,
 use the same number of integrand evaluations in each hypercube.
 In the new version, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adjusts the number of evaluations used
 in a hypercube in proportion to the standard deviation of
-the integrand estimates (in <img class="math" src="_images/math/ad3a0bbb24d3caa60298f5aa5c19129f263adb0a.svg" alt="y"/> space) from that hypercube.
+the integrand estimates (in <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y" style="vertical-align: -3px"/> space) from that hypercube.
 It uses information about the hypercube’s standard deviation in one
 iteration to set the number of evaluations for that hypercube
 in the next iteration. In this way it concentrates
@@ -301,7 +301,7 @@ the error comes from. This improves <a class="reference internal" href="vegas.ht
 the contributions from the real peaks and
 reduces statistical errors,
 provided <code class="docutils literal notranslate"><span class="pre">neval</span></code> is large enough to permit a large number  (more
-than 2 or 3) <img class="math" src="_images/math/d22c9a57f76d5eefed64ae549089d226d033f04a.svg" alt="M_\mathrm{st}"/> of
+than 2 or 3) <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}" style="vertical-align: -3px"/> of
 stratifications on each axis. With <code class="docutils literal notranslate"><span class="pre">neval=4e4</span></code>,
 statistical errors for the two-Gaussian
 integral are reduced by more than a factor of 3 relative to what older
@@ -341,10 +341,10 @@ integrals.</p>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -369,12 +369,12 @@ integrals.</p>
         <li class="right" >
           <a href="c_fortran.html" title="Integrands in C or Fortran"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.1 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-18, G.P. Lepage.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
     </div>
   </body>
 </html>
