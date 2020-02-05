@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Tutorial &#8212; vegas 3.4.1 documentation</title>
+    <title>Tutorial &#8212; vegas 3.4.2 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.2 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -99,7 +99,7 @@ things change.</p>
 <p><em>About Printing:</em> The examples in this tutorial use the print function as it is
 used in Python 3. Drop the outermost parenthesis in each print statement if
 using Python 2, or add</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
 </pre></div>
 </div>
 <p>at the start of your file.</p>
@@ -110,7 +110,7 @@ using Python 2, or add</p>
 <div class="math">
 <p><img src="_images/math/10f15d585cec02bd9848ecd8a7a12b7ce6a0c0b5.svg" alt="C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
 \,\,\mathrm{e}^{- 100 \sum_{d}(x_d-0.5)^2}  ,"/></p>
-</div><p>where constant <img class="math" src="_images/math/eee0c581e3899b4942c271cc92121d38cc88bcb5.svg" alt="C" style="vertical-align: 0px"/> is chosen so that the exact integral is 1.
+</div><p>where constant <img class="math" src="_images/math/eee0c581e3899b4942c271cc92121d38cc88bcb5.svg" alt="C"/> is chosen so that the exact integral is 1.
 The following code shows how this can be done:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -192,23 +192,23 @@ distributions. The distributions are Gaussian provided
 the number of integrand evaluations per iteration (<code class="docutils literal notranslate"><span class="pre">neval</span></code>)
 is sufficiently large, in which case the standard deviation
 is a reliable estimate of the error.
-The weighted average <img class="math" src="_images/math/3e7c8bf10db39edb6ea695d7a489d65f99e6f0a6.svg" alt="\overline I" style="vertical-align: 0px"/>  minimizes</p>
+The weighted average <img class="math" src="_images/math/3e7c8bf10db39edb6ea695d7a489d65f99e6f0a6.svg" alt="\overline I"/>  minimizes</p>
 <div class="math">
 <p><img src="_images/math/48eb852541f4f71434b6607c0bb076bb4580fb64.svg" alt="\chi^2 \,\equiv\, \sum_i \frac{(I_i - \overline I)^2}{\sigma_{i}^2}"/></p>
-</div><p>where <img class="math" src="_images/math/77d7a0fb0bf211ded83f0a8942792a6e8b80e04c.svg" alt="I_i \pm \sigma_{i}" style="vertical-align: -3px"/> are the estimates from
-individual iterations. If the <img class="math" src="_images/math/ad9237e5266db3b68290fb53b678017e9bc184b8.svg" alt="I_i" style="vertical-align: -3px"/> are Gaussian,
-<img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2" style="vertical-align: -4px"/> should be of order the number of degrees of
+</div><p>where <img class="math" src="_images/math/77d7a0fb0bf211ded83f0a8942792a6e8b80e04c.svg" alt="I_i \pm \sigma_{i}"/> are the estimates from
+individual iterations. If the <img class="math" src="_images/math/ad9237e5266db3b68290fb53b678017e9bc184b8.svg" alt="I_i"/> are Gaussian,
+<img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> should be of order the number of degrees of
 freedom (plus or minus the square root of double that number);
 here the number of degrees of freedom is the number of
 iterations minus 1.</p>
 <p>The distributions are likely non-Gaussian, and error estimates
-unreliable, if <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2" style="vertical-align: -4px"/> is
+unreliable, if <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> is
 much larger than the number of iterations. This criterion is quantified
-by the <em>Q</em> or <em>p-value</em> of the <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2" style="vertical-align: -4px"/>,
+by the <em>Q</em> or <em>p-value</em> of the <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/>,
 which is the probability that a
-larger <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2" style="vertical-align: -4px"/> could result from random (Gaussian)
+larger <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> could result from random (Gaussian)
 fluctuations. A very small <em>Q</em> (less than 0.05-0.1) indicates
-that the <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2" style="vertical-align: -4px"/> is too large to be accounted for by
+that the <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> is too large to be accounted for by
 statistical fluctuations — that is, the estimates of the integral
 from different iterations do not agree with each other to
 within errors. This means that <code class="docutils literal notranslate"><span class="pre">neval</span></code> is not sufficiently
@@ -220,14 +220,14 @@ attributes:</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">result.mean</span></code> — weighted average of all estimates of the integral;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.sdev</span></code> — standard deviation of the weighted average;</p>
-<p><code class="docutils literal notranslate"><span class="pre">result.chi2</span></code> — <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2" style="vertical-align: -4px"/> of the weighted average;</p>
+<p><code class="docutils literal notranslate"><span class="pre">result.chi2</span></code> — <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> of the weighted average;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.dof</span></code> — number of degrees of freedom;</p>
-<p><code class="docutils literal notranslate"><span class="pre">result.Q</span></code> — <em>Q</em> or <em>p-value</em> of the weighted average’s <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2" style="vertical-align: -4px"/>;</p>
+<p><code class="docutils literal notranslate"><span class="pre">result.Q</span></code> — <em>Q</em> or <em>p-value</em> of the weighted average’s <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/>;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.itn_results</span></code> — list of the integral estimates
 from each iteration.</p>
 </div></blockquote>
 <p>In this example the final <em>Q</em> is 0.42, indicating that the
-<img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2" style="vertical-align: -4px"/> for this average is not particularly unlikely and
+<img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> for this average is not particularly unlikely and
 thus the error estimate is most likely reliable.</p>
 <p><strong>Precision:</strong> The precision of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimates is
 determined by <code class="docutils literal notranslate"><span class="pre">nitn</span></code>, the number of iterations
@@ -264,7 +264,7 @@ than twice as accurate as increasing <code class="docutils literal notranslate">
 want to use no more than 10 or 20 iterations beyond the
 point where <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> has fully adapted. You want some number of
 iterations so that you can verify Gaussian behavior by
-checking the <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2" style="vertical-align: -4px"/> and <em>Q</em>, but not too many.</p>
+checking the <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> and <em>Q</em>, but not too many.</p>
 <p>It is also generally useful to compare two or more
 results from values of <code class="docutils literal notranslate"><span class="pre">neval</span></code> that differ by a
 significant factor (4–10, say). These should agree within
@@ -278,7 +278,7 @@ effects. The systematic error vanishes like
 the statistical error as <code class="docutils literal notranslate"><span class="pre">neval</span></code> increases.
 The systematic error can bias the Monte Carlo estimate, however,
 if <code class="docutils literal notranslate"><span class="pre">neval</span></code> is insufficiently large. This usually
-results in a large <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2" style="vertical-align: -4px"/> (and small <em>Q</em>), but a
+results in a large <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> (and small <em>Q</em>), but a
 more reliable check is to compare
 results that use signficantly different values of <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
 The systematic errors due to non-Gaussian behavior are
@@ -473,10 +473,10 @@ been cut in half had we used the integration volume
 <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">[[0.3,</span> <span class="pre">0.7]]</span></code> instead of <code class="docutils literal notranslate"><span class="pre">[[-1,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1]]</span></code>.</p>
 <p>Note, finally, that integration to infinity is also possible:
 map the relevant variable into a different variable
-of finite range. For example,  an integral over <img class="math" src="_images/math/2364a1b4da9be013cbc21d70565f4d4f2bb8d36a.svg" alt="x\equiv b z / (1-z)" style="vertical-align: -3px"/>
+of finite range. For example,  an integral over <img class="math" src="_images/math/2364a1b4da9be013cbc21d70565f4d4f2bb8d36a.svg" alt="x\equiv b z / (1-z)"/>
 from 0 to infinity is easily reexpressed as
-an integral over <img class="math" src="_images/math/ee2481120b689ebecdf833b153b1e44372af448e.svg" alt="z" style="vertical-align: 0px"/> from 0 to 1, where the transformation
-emphasizes the region in <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x" style="vertical-align: 0px"/> of order free parameter <img class="math" src="_images/math/5cf70d30bed668864d41ac882237465737e7f20f.svg" alt="b" style="vertical-align: 0px"/>.</p>
+an integral over <img class="math" src="_images/math/ee2481120b689ebecdf833b153b1e44372af448e.svg" alt="z"/> from 0 to 1, where the transformation
+emphasizes the region in <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/> of order free parameter <img class="math" src="_images/math/5cf70d30bed668864d41ac882237465737e7f20f.svg" alt="b"/>.</p>
 <p><strong>Damping:</strong> This result in the previous section
 can be improved somewhat by slowing down
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s adaptation:</p>
@@ -627,14 +627,14 @@ of the integrals, taken together.</p>
 </div>
 <p>The estimates for the individual integrals are separately accurate to
 about ±0.07%,
-but the estimate for <img class="math" src="_images/math/b785fc9691be3f36efb57cce04fb51a9dfec3f31.svg" alt="\langle x \rangle = I_1/I_0" style="vertical-align: -3px"/>
+but the estimate for <img class="math" src="_images/math/b785fc9691be3f36efb57cce04fb51a9dfec3f31.svg" alt="\langle x \rangle = I_1/I_0"/>
 is accurate to ±0.01%.
 This is almost an order
 of magnitude (8x) more accurate than we would obtain absent correlations.
 The correlation matrix shows that there is 98% correlation between the
-statistical fluctuations in estimates for <img class="math" src="_images/math/d25d10db2f48c689f2f1828bd46bd83bb2cb39fc.svg" alt="I_0" style="vertical-align: -3px"/> and <img class="math" src="_images/math/f606987c7e9ceb513a97df8072fed44ceedd7548.svg" alt="I_1" style="vertical-align: -2px"/>,
+statistical fluctuations in estimates for <img class="math" src="_images/math/d25d10db2f48c689f2f1828bd46bd83bb2cb39fc.svg" alt="I_0"/> and <img class="math" src="_images/math/f606987c7e9ceb513a97df8072fed44ceedd7548.svg" alt="I_1"/>,
 and so the bulk of these fluctuations cancel in the ratio.
-The estimate for the variance <img class="math" src="_images/math/870b49e4c0f492ceb54b077b1dce6d609980a228.svg" alt="\sigma^2_x" style="vertical-align: -7px"/>
+The estimate for the variance <img class="math" src="_images/math/870b49e4c0f492ceb54b077b1dce6d609980a228.svg" alt="\sigma^2_x"/>
 is 51x more accurate than we would
 have obtained had the integrals been evaluated separately. Both estimates
 are correct to within the quoted errors.</p>
@@ -824,11 +824,11 @@ behaves like a batch integrand:</p>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="k">class</span> <span class="nc">f_batch</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">BatchIntegrand</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="c1"># evaluate integrand at multiple points simultaneously</span>
         <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">):</span>
@@ -883,7 +883,7 @@ of the (batch) integrand is:</p>
 <span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">vegas</span>
-<span class="kn">from</span> <span class="nn">cython_integrand</span> <span class="kn">import</span> <span class="n">f_batch</span>
+<span class="kn">from</span> <span class="nn">cython_integrand</span> <span class="k">import</span> <span class="n">f_batch</span>
 <span class="n">f</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">batchintegrand</span><span class="p">(</span><span class="n">f_batch</span><span class="p">)</span>
 
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
@@ -1017,16 +1017,16 @@ but where Python’s
 
 <span class="sd">    Integrand should return a numpy array.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fcn</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fcn</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
         <span class="s2">&quot; Save integrand; create pool of nproc processes. &quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fcn</span> <span class="o">=</span> <span class="n">fcn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nproc</span> <span class="o">=</span> <span class="n">nproc</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">nproc</span><span class="p">)</span>
-    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="s2">&quot; Standard cleanup. &quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="s2">&quot; Divide x into self.nproc chunks, feeding one to each process. &quot;</span>
         <span class="n">nx</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">nproc</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="c1"># launch evaluation of self.fcn for each chunk, in parallel</span>
@@ -1054,8 +1054,8 @@ using <a class="reference internal" href="vegas.html#module-vegas" title="vegas:
 an equivalent integral:</p>
 <div class="math">
 <p><img src="_images/math/9a5394e0df1f463c51e712d0115022a007e92b9e.svg" alt="\sum_{i=0}^{N-1} f(i) = N \int_0^1 dx \; f(\mathrm{floor}(x N))"/></p>
-</div><p>where <img class="math" src="_images/math/114017b7ca9787a241a654b2e85845ef4db6908c.svg" alt="\mathrm{floor}(x)" style="vertical-align: -3px"/> is the largest
-integer smaller than <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x" style="vertical-align: 0px"/>. The
+</div><p>where <img class="math" src="_images/math/114017b7ca9787a241a654b2e85845ef4db6908c.svg" alt="\mathrm{floor}(x)"/> is the largest
+integer smaller than <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/>. The
 resulting integral can then be handed to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>. Using this trick,
 the integral in the previous section can be re-cast as a 5-dimensional
 integral:</p>
@@ -1235,12 +1235,12 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.2 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-18, G.P. Lepage.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
     </div>
   </body>
 </html>

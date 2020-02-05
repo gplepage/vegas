@@ -1,7 +1,7 @@
 """ to build modules in module_list:   python setup.py build_ext --inplace
 
 Created by G. Peter Lepage (Cornell University) in 12/2013.
-Copyright (c) 2013-18 G. Peter Lepage.
+Copyright (c) 2013-20 G. Peter Lepage.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
-VEGAS_VERSION = '3.4.1'
+VEGAS_VERSION = '3.4.2'
 
 from distutils.core import setup
 from distutils.extension import Extension

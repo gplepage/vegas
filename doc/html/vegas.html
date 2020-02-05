@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>vegas Module &#8212; vegas 3.4.1 documentation</title>
+    <title>vegas Module &#8212; vegas 3.4.2 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.2 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -289,7 +289,7 @@ integrands: e.g.,</p>
 <p>The return arrays can have any shape. Dictionary-valued
 integrands are also supported: e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]]}</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
 </pre></div>
 </div>
 <p>Integrand functions that return arrays or dictionaries
@@ -429,9 +429,9 @@ x_2 &amp;= x_1 + \Delta x_1 \\
 \cdots \\
 x_N &amp;= x_{N-1} + \Delta x_{N-1} = b"/></p>
 </div></div></blockquote>
-<p>where <img class="math" src="_images/math/34934efedf7cb6cf31f0333b486c4ab43e90855d.svg" alt="a" style="vertical-align: 0px"/> and <img class="math" src="_images/math/5cf70d30bed668864d41ac882237465737e7f20f.svg" alt="b" style="vertical-align: 0px"/> are the limits of integration.
+<p>where <img class="math" src="_images/math/34934efedf7cb6cf31f0333b486c4ab43e90855d.svg" alt="a"/> and <img class="math" src="_images/math/5cf70d30bed668864d41ac882237465737e7f20f.svg" alt="b"/> are the limits of integration.
 The grid specifies the transformation function at the points
-<img class="math" src="_images/math/4011b7a530d6ec1b95ffad04de4ed07502a3f8b0.svg" alt="y=i/N" style="vertical-align: -3px"/> for <img class="math" src="_images/math/dda86e9e64f520a61e58012f9e1638c0a93fa1a6.svg" alt="i=0,1\ldots N" style="vertical-align: -2px"/>:</p>
+<img class="math" src="_images/math/4011b7a530d6ec1b95ffad04de4ed07502a3f8b0.svg" alt="y=i/N"/> for <img class="math" src="_images/math/dda86e9e64f520a61e58012f9e1638c0a93fa1a6.svg" alt="i=0,1\ldots N"/>:</p>
 <blockquote>
 <div><div class="math">
 <p><img src="_images/math/1ad1f2a16147f5fee5b6ccdbe551bc9512841c6f.svg" alt="x(y\!=\!i/N) = x_i"/></p>
@@ -1153,7 +1153,7 @@ points. The meaning of <code class="docutils literal notranslate"><span class="p
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>for the two-dimensional integrand <img class="math" src="_images/math/84b2eb1fcb99afba0bb57bf5e59fd86a51e913f8.svg" alt="\exp(-x_0 - x_1)" style="vertical-align: -3px"/>.</p>
+<p>for the two-dimensional integrand <img class="math" src="_images/math/84b2eb1fcb99afba0bb57bf5e59fd86a51e913f8.svg" alt="\exp(-x_0 - x_1)"/>.</p>
 <p>This decorator provides an alternative to deriving an integrand
 class from <a class="reference internal" href="#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.BatchIntegrand</span></code></a>.</p>
 </dd></dl>
@@ -1181,13 +1181,13 @@ array-valued integrand).</p>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="k">class</span> <span class="nc">batchf</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">BatchIntegrand</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
 
 <span class="n">f</span> <span class="o">=</span> <span class="n">batchf</span><span class="p">()</span>      <span class="c1"># the integrand</span>
 </pre></div>
 </div>
-<p>for the two-dimensional integrand <img class="math" src="_images/math/84b2eb1fcb99afba0bb57bf5e59fd86a51e913f8.svg" alt="\exp(-x_0 - x_1)" style="vertical-align: -3px"/>.</p>
+<p>for the two-dimensional integrand <img class="math" src="_images/math/84b2eb1fcb99afba0bb57bf5e59fd86a51e913f8.svg" alt="\exp(-x_0 - x_1)"/>.</p>
 <p>Deriving from <a class="reference internal" href="#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.BatchIntegrand</span></code></a> is the
 easiest way to construct integrands in Cython, and
 gives the fastest results.</p>
@@ -1250,12 +1250,12 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.2 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-18, G.P. Lepage.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
     </div>
   </body>
 </html>

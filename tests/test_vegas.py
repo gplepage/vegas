@@ -771,6 +771,16 @@ class TestIntegrator(unittest.TestCase):
                 result = I(f)
                 self.assertEqual(result.nitn, nitn)
 
+    def test_constant(self):
+        " integral of a constant "
+        @batchintegrand
+        def g(x):
+            return np.ones(x.shape[0], np.float_)
+        integ = Integrator([(0,1)])
+        res = integ(g, nitn=4, neval=1e2)
+        self.assertTrue(np.isnan(res.chi2))
+        self.assertAlmostEqual(res.itn_results[0].sdev / res.sdev, 2.0)
+
 class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
     # @unittest.skipIf(FAST,"skipping test_expval for speed")
     def test_expval(self):

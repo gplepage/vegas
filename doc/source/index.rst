@@ -6,6 +6,9 @@
 vegas Documentation
 =================================
 
+.. image:: https://zenodo.org/badge/15354897.svg
+   :target: https://zenodo.org/badge/latestdoi/15354897
+
 Contents:
 
 .. toctree::

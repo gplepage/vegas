@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Integrands in C or Fortran &#8212; vegas 3.4.1 documentation</title>
+    <title>Integrands in C or Fortran &#8212; vegas 3.4.2 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.2 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -82,7 +82,7 @@ integrand, written in C and stored in file <code class="docutils literal notrans
 compiles code for a Python module called <code class="docutils literal notranslate"><span class="pre">cfcn_cffi</span></code> that provides
 access to <code class="docutils literal notranslate"><span class="pre">fcn(x,dim)</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># file cfcn_cffi-builder.py</span>
-<span class="kn">from</span> <span class="nn">cffi</span> <span class="kn">import</span> <span class="n">FFI</span>
+<span class="kn">from</span> <span class="nn">cffi</span> <span class="k">import</span> <span class="n">FFI</span>
 <span class="n">ffibuilder</span> <span class="o">=</span> <span class="n">FFI</span><span class="p">()</span>
 
 <span class="c1"># specify functions, etc to be made available to Python</span>
@@ -105,7 +105,7 @@ access to <code class="docutils literal notranslate"><span class="pre">fcn(x,dim
 Python function (here <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>), which is integrated using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 
-<span class="kn">from</span> <span class="nn">cfcn_cffi</span> <span class="kn">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">cfcn_cffi</span> <span class="k">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
 
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">_x</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;double*&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="c1"># pointer to x&#39;s data</span>
@@ -156,7 +156,7 @@ times more accurate than the first iteration).</p>
 integrand into a batch integrand. We do this by adding a batch
 version of the integrand function to the <code class="docutils literal notranslate"><span class="pre">cfcn_cffi</span></code> module:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># file cfcn_cffi-builder.py</span>
-<span class="kn">from</span> <span class="nn">cffi</span> <span class="kn">import</span> <span class="n">FFI</span>
+<span class="kn">from</span> <span class="nn">cffi</span> <span class="k">import</span> <span class="n">FFI</span>
 <span class="n">ffibuilder</span> <span class="o">=</span> <span class="n">FFI</span><span class="p">()</span>
 
 <span class="c1"># specify functions, etc made available to Python</span>
@@ -191,7 +191,7 @@ version of the integrand function to the <code class="docutils literal notransla
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">cfcn_cffi</span> <span class="kn">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">cfcn_cffi</span> <span class="k">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
 
 <span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
 <span class="k">def</span> <span class="nf">batch_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -251,7 +251,7 @@ systems <code class="docutils literal notranslate"><span class="pre">nm</span> <
 function’s arguments are passed by address and so are pointers in C. The
 modified script is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># file ffcn_cffi-builder.py</span>
-<span class="kn">from</span> <span class="nn">cffi</span> <span class="kn">import</span> <span class="n">FFI</span>
+<span class="kn">from</span> <span class="nn">cffi</span> <span class="k">import</span> <span class="n">FFI</span>
 <span class="n">ffibuilder</span> <span class="o">=</span> <span class="n">FFI</span><span class="p">()</span>
 
 <span class="c1"># specify functions, etc needed by Python</span>
@@ -288,7 +288,7 @@ module <code class="docutils literal notranslate"><span class="pre">cfcn_ffi</sp
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">ffcn_cffi</span> <span class="kn">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">ffcn_cffi</span> <span class="k">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
 
 <span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
 <span class="k">def</span> <span class="nf">batch_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -341,7 +341,7 @@ from <code class="docutils literal notranslate"><span class="pre">cfcn.c</span><
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="k">def</span> <span class="nf">make_ext</span><span class="p">(</span><span class="n">modname</span><span class="p">,</span> <span class="n">pyxfilename</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">distutils.extension</span> <span class="kn">import</span> <span class="n">Extension</span>
+    <span class="kn">from</span> <span class="nn">distutils.extension</span> <span class="k">import</span> <span class="n">Extension</span>
     <span class="k">return</span> <span class="n">Extension</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="n">modname</span><span class="p">,</span>
                      <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">pyxfilename</span><span class="p">,</span> <span class="s1">&#39;cfcn.c&#39;</span><span class="p">],</span>
                      <span class="n">libraries</span><span class="o">=</span><span class="p">[],</span>
@@ -503,12 +503,12 @@ speed as the batch versions of the C code, above.</p>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.2 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-18, G.P. Lepage.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
     </div>
   </body>
 </html>

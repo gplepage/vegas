@@ -1,7 +1,8 @@
+# cython: language_level=3
 # c#ython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-18 G. Peter Lepage.
+# Copyright (c) 2013-20 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,6 +35,7 @@ except ImportError:
 
 cdef double TINY = 10 ** (sys.float_info.min_10_exp + 50)  # smallest and biggest
 cdef double HUGE = 10 ** (sys.float_info.max_10_exp - 50)  # with extra headroom
+cdef double EPSILON = sys.float_info.epsilon * 10.         # roundoff error threshold
 
 # AdaptiveMap is used by Integrator
 cdef class AdaptiveMap:
@@ -1068,7 +1070,7 @@ cdef class Integrator(object):
             tmp_hcube = hcube
             for d in range(self.dim):
                 y0[d] = tmp_hcube % self.nstrat
-                tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
+                tmp_hcube = (tmp_hcube - y0[d]) // self.nstrat
             for d in range(self.dim):
                 for i in range(i_start, i_start + neval_hcube):
                     y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
@@ -1209,7 +1211,7 @@ cdef class Integrator(object):
                 tmp_hcube = hcube
                 for d in range(self.dim):
                     y0[d] = tmp_hcube % self.nstrat
-                    tmp_hcube = (tmp_hcube - y0[d]) / self.nstrat
+                    tmp_hcube = (tmp_hcube - y0[d]) // self.nstrat
                 for d in range(self.dim):
                     for i in range(i_start, i_start + neval_hcube[ihcube]):
                         y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
@@ -1321,8 +1323,7 @@ cdef class Integrator(object):
         integrands are also supported: e.g., ::
 
             def f(x):
-                return {'a':x[0] ** 2, 'b':[x[0] / x[1], x[1] / x[0]]}
-
+                return dict(a=x[0] ** 2, b=[x[0] / x[1], x[1] / x[0]])
 
         Integrand functions that return arrays or dictionaries
         are useful for multiple integrands that are closely related,
@@ -1372,6 +1373,7 @@ cdef class Integrator(object):
         cdef double[:, ::1] sum_wf2
         cdef double[::1] mean = numpy.empty(1, numpy.float_)
         cdef double[:, ::1] var = numpy.empty((1, 1), numpy.float_)
+        cdef double[::1] dvar = numpy.empty(1, numpy.float_)
         cdef numpy.npy_intp itn, i, j, s, t, neval, neval_batch
         cdef double sum_sigf, sigf2
         cdef bint firsteval = True
@@ -1415,6 +1417,7 @@ cdef class Integrator(object):
                     sum_wf2 = numpy.empty((fcn.size, fcn.size), numpy.float_)
                     mean = numpy.empty(fcn.size, numpy.float_)
                     var = numpy.empty((fcn.size, fcn.size), numpy.float_)
+                    dvar = numpy.empty(fcn.size, numpy.float_)
                     mean[:] = 0.0
                     var[:, :] = 0.0
                     result = VegasResult(fcn, weighted=self.adapt)
@@ -1439,11 +1442,15 @@ cdef class Integrator(object):
                     for s in range(fcn.size):
                         mean[s] += sum_wf[s]
                         for t in range(s + 1):
-                            var[s, t] += (
+                            dvar[t] = (
                                 sum_wf2[s, t] * neval - sum_wf[s] * sum_wf[t]
                                 ) / (neval - 1.)
-                        if var[s, s] <= 0:
-                            var[s, s] = mean[s] ** 2 * 1e-15 + TINY
+                        if EPSILON * sum_wf2[s, s] > dvar[s]:
+                            # roundoff error ==> add only on diagonal (uncorrelated)
+                            var[s, s] += EPSILON * sum_wf2[s, s]
+                        else:
+                            for t in range(s + 1):
+                                var[s, t] += dvar[t]
                     sigf2 = abs(sum_wf2[0, 0] * neval - sum_wf[0] * sum_wf[0])
                     if self.beta > 0 and self.adapt:
                         if not self.minimize_mem:
@@ -1556,9 +1563,15 @@ class RAvg(gvar.GVar):
         if len(self.itn_results) <= 1:
             return 0.0
         if self.weighted:
-            return self._v2_s2 - self._v_s2 ** 2 / self._1_s2
+            ans = self._v2_s2 - self._v_s2 ** 2 / self._1_s2
+            if ans < 0 or self._v2_s2 * EPSILON > ans:
+                ans = float('nan')
+            return ans 
         else:
-            return (self._v2 - self.mean ** 2 * self._n) * self._n / self._s2
+            ans = (self._v2 - self.mean ** 2 * self._n) * self._n / self._s2
+            if ans < 0 or self._v2 * EPSILON > ans * self._s2:
+                ans = float('nan')
+            return ans
     chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
 
     def _dof(self):
@@ -1594,9 +1607,8 @@ class RAvg(gvar.GVar):
     def add(self, g):
         """ Add estimate ``g`` to the running average. """
         self.itn_results.append(g)
-        tiny = sys.float_info.epsilon * 10 * g.mean ** 2 + TINY
         if self.weighted:
-            var = g.sdev ** 2 + tiny
+            var = g.sdev ** 2 if g.sdev > 0 else TINY
             self._v_s2 +=   g.mean / var
             self._v2_s2 +=  g.mean ** 2 / var
             self._1_s2 +=  1. / var
@@ -1607,7 +1619,7 @@ class RAvg(gvar.GVar):
         else:
             self._v += g.mean
             self._v2 += g.mean ** 2
-            self._s2 += g.var + tiny
+            self._s2 += g.var if g.var > 0 else TINY
             self._n += 1
             super(RAvg, self).__init__(*gvar.gvar(
                 self._v / self._n,
@@ -1795,7 +1807,7 @@ class RAvgArray(numpy.ndarray):
 
     def _inv(self, matrix):
         " Invert matrix, with protection against singular matrices. "
-        return numpy.linalg.pinv(matrix, rcond=sys.float_info.epsilon * 10)
+        return numpy.linalg.pinv(matrix, rcond=EPSILON)
         # svd = gvar_SVD(matrix, svdcut=sys.float_info.epsilon * 10, rescale=True)
         # w = svd.decomp(-1)
         # return numpy.sum(
@@ -1813,12 +1825,18 @@ class RAvgArray(numpy.ndarray):
             return 0.0
         if self.weighted:
             cov = self._inv(self._invcov)
-            return self._v_invcov_v - self._invcov_v.dot(cov.dot(self._invcov_v))
+            ans = self._v_invcov_v - self._invcov_v.dot(cov.dot(self._invcov_v))
+            if ans < 0 or self._v_invcov_v * EPSILON > ans:
+                ans = float('nan')
+            return ans
         else:
             invcov = self._inv(self._cov / self._n)
-            return numpy.trace(   # inefficient -- fix at some point
+            ans = numpy.trace(   # inefficient -- fix at some point
                 (self._v2 - numpy.outer(self._v, self._v) / self._n).dot(invcov)
                 )
+            if ans < 0 or numpy.trace(self._v2.dot(invcov)) * EPSILON > ans:
+                ans = float('nan')
+            return ans
     chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
 
     def _dof(self):
@@ -1850,12 +1868,9 @@ class RAvgArray(numpy.ndarray):
         self.itn_results.append(g)
         g = g.reshape((-1,))
         gmean = gvar.mean(g)
-        tiny = sys.float_info.epsilon * 10
         gcov = gvar.evalcov(g)
-        gcov[numpy.diag_indices_from(gcov)] = (
-            abs(gcov[numpy.diag_indices_from(gcov)])
-            + tiny * gmean ** 2 + TINY
-            )
+        idx = (gcov[numpy.diag_indices_from(gcov)] <= 0.0)
+        gcov[numpy.diag_indices_from(gcov)][idx] = TINY
         if self.weighted:
             invcov = self._inv(gcov)
             v = gvar.mean(g)

@@ -1,3 +1,11 @@
+Version 3.4.2 2020-02-05
+========================
+Bug fix for situations where the error in the answer 
+is smaller than 1e-8 times the answer -- ie, unlikely 
+to affect many existing codes. The old code reported 
+cumulative errors that were too large. (Thanks to 
+Gabriele Spada for pointing this out.)
+
 Version 3.4.1 2020-01-01
 ========================
 Minor documentation update; can be ignored otherwise.
