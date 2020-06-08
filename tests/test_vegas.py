@@ -776,9 +776,16 @@ class TestIntegrator(unittest.TestCase):
         @batchintegrand
         def g(x):
             return np.ones(x.shape[0], np.float_)
+        # test weighted results
         integ = Integrator([(0,1)])
         res = integ(g, nitn=4, neval=1e2)
         self.assertTrue(np.isnan(res.chi2))
+        self.assertTrue(np.isnan(res.Q))
+        self.assertAlmostEqual(res.itn_results[0].sdev / res.sdev, 2.0)
+        # test unweighted results
+        res = integ(g, nitn=4, neval=1e2, adapt=False)
+        self.assertTrue(np.isnan(res.chi2))
+        self.assertTrue(np.isnan(res.Q))
         self.assertAlmostEqual(res.itn_results[0].sdev / res.sdev, 2.0)
 
 class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
@@ -821,6 +828,10 @@ class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
                     self.assertTrue(abs(s.ex_kurt.mean) < 10. * s.ex_kurt.sdev)
 
         # covariance test
+        # N.B. Integrand has two entries that are identical, 
+        #   which leads to a singular covariance -- so SVD
+        #   is essential here. The off-diagonal elements 
+        #   of np.outer(x, x) are what cause the singularity.
         def fcov(x):
             return dict(x=x, xx=np.outer(x, x))
         integ = PDFIntegrator(xarray)

@@ -1592,7 +1592,7 @@ class RAvg(gvar.GVar):
         return (
             gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
             if self.dof > 0 and self.chi2 > 0
-            else 1
+            else float('nan')
             )
     Q = property(
         _Q,
@@ -1807,13 +1807,12 @@ class RAvgArray(numpy.ndarray):
 
     def _inv(self, matrix):
         " Invert matrix, with protection against singular matrices. "
-        return numpy.linalg.pinv(matrix, rcond=EPSILON)
-        # svd = gvar_SVD(matrix, svdcut=sys.float_info.epsilon * 10, rescale=True)
-        # w = svd.decomp(-1)
-        # return numpy.sum(
-        #     [numpy.outer(wi, wi) for wi in reversed(svd.decomp(-1))],
-        #     axis=0
-        #     )
+        # # not using this because want rescaling
+        #     ans = numpy.linalg.pinv(matrix, rcond=EPSILON * len(matrix))
+        #     return (ans.T + ans) / 2.
+        svd = gvar.SVD(matrix, svdcut=-EPSILON * len(matrix), rescale=True)
+        w = svd.decomp(-1)
+        return (w.T).dot(w)
 
     def converged(self, rtol, atol):
         return numpy.all(
@@ -1855,7 +1854,7 @@ class RAvgArray(numpy.ndarray):
 
     def _Q(self):
         if self.dof <= 0 or self.chi2 <= 0:
-            return 1.
+            return float('nan')
         return gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
     Q = property(
         _Q, None, None,

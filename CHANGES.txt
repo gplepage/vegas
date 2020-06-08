@@ -1,3 +1,16 @@
+Version 3.4.3 2020-06-08
+=========================
+Small bug fixes.
+
+- Adds left-out part of the bug fix in 3.4.2. 
+
+- Fixes problem that could sometimes lead 
+  gvar to complain about non-symmetric 
+  covariance matrices. Thanks to 
+  Jolyon Bloomfield for pointing this 
+  out.
+
+
 Version 3.4.2 2020-02-05
 ========================
 Bug fix for situations where the error in the answer 

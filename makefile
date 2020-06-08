@@ -29,6 +29,13 @@ install install-sys : $(CYTHONFILES)
 uninstall :			# mostly works (may leave some empty directories)
 	- $(PIP) uninstall vegas
 
+update :
+	make uninstall install
+
+rebuild:
+    rm -rf $(CYTHONFILES)
+    make uninstall install 
+
 src/vegas/_vegas.c : src/vegas/_vegas.pyx src/vegas/_vegas.pxd
 	cd src/vegas; cython _vegas.pyx
 
