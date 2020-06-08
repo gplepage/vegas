@@ -33,8 +33,8 @@ update :
 	make uninstall install
 
 rebuild:
-    rm -rf $(CYTHONFILES)
-    make uninstall install 
+	rm -rf $(CYTHONFILES)
+	make uninstall install 
 
 src/vegas/_vegas.c : src/vegas/_vegas.pyx src/vegas/_vegas.pxd
 	cd src/vegas; cython _vegas.pyx
