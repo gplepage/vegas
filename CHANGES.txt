@@ -1,3 +1,7 @@
+Version 3.4.4 2020-06-14
+========================
+Small bug fix to previous bug fix.
+
 Version 3.4.3 2020-06-08
 =========================
 Small bug fixes.

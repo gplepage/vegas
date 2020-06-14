@@ -1807,12 +1807,8 @@ class RAvgArray(numpy.ndarray):
 
     def _inv(self, matrix):
         " Invert matrix, with protection against singular matrices. "
-        # # not using this because want rescaling
-        #     ans = numpy.linalg.pinv(matrix, rcond=EPSILON * len(matrix))
-        #     return (ans.T + ans) / 2.
-        svd = gvar.SVD(matrix, svdcut=-EPSILON * len(matrix), rescale=True)
-        w = svd.decomp(-1)
-        return (w.T).dot(w)
+        ans = numpy.linalg.pinv(matrix, rcond=EPSILON * len(matrix))
+        return (ans.T + ans) / 2.
 
     def converged(self, rtol, atol):
         return numpy.all(
