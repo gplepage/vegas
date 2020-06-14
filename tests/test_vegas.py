@@ -701,6 +701,21 @@ class TestIntegrator(unittest.TestCase):
             self.assertLess(abs(ratio.mean - 0.5), 5 * ratio.sdev)
             self.assertLess(ratio.sdev, 1e-2)
 
+    def test_multi_corrd(self):
+        " correlated multi-integrand "
+        def f(x):
+            f1 = np.sin(x[0]) * x[1]
+            f2 = np.cos(x[1]) * x[0]
+            fs = f1 + f2
+            return [fs, f1, f2]
+        integ = Integrator([(0,1), (0,1)])
+        integ(f,neval=1e3, nitn=5)
+        rs, r1, r2 = integ(f, neval=1e3, nitn=5)
+        diff = rs - r1 - r2 
+        r12 = r1 + r2
+        self.assertLess(diff.mean / r12.mean, 1e-9)
+        self.assertLess(diff.sdev / r12.mean, 1e-9)
+        
     def test_adaptive(self):
         " adaptive? "
         def f(x):
