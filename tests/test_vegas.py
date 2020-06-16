@@ -807,7 +807,7 @@ class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
     # @unittest.skipIf(FAST,"skipping test_expval for speed")
     def test_expval(self):
         " integrator(f ...) "
-        xarray = gv.gvar([5., 3.], [[4., 0.9], [0.9, 1.]])
+        xarray = gv.gvar([5., 3.], [[400., 0.9], [0.9, 1.]])
         xdict = gv.BufferDict([(0, 1), (1, 1)])
         xdict = gv.BufferDict(xdict, buf=xarray)
         xscalar = xarray[0]
@@ -838,7 +838,7 @@ class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
                         r = r.buf
                     s = gv.PDFStatistics(r)
                     self.assertTrue(abs(s.mean.mean - 5.) < 10. * s.mean.sdev)
-                    self.assertTrue(abs(s.sdev.mean - 2.) < 10. * s.sdev.sdev)
+                    self.assertTrue(abs(s.sdev.mean - 20.) < 10. * s.sdev.sdev)
                     self.assertTrue(abs(s.skew.mean) < 10. * s.skew.sdev)
                     self.assertTrue(abs(s.ex_kurt.mean) < 10. * s.ex_kurt.sdev)
 

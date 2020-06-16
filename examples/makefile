@@ -30,6 +30,8 @@ run:
 	- diff -w faster.out faster.tmp
 	$(PYTHON) fastest.py > fastest.tmp
 	- diff -w fastest.out fastest.tmp
+	$(PYTHON) distribution.py > distribution.tmp
+	- diff -w distribution.out distribution.tmp
 	$(PYTHON) path-integral.py $(PLOT) > path-integral.tmp  # about 16s
 	- diff -w path-integral.out path-integral.tmp
 	- $(PYTHON) parallel-pools.py > parallel-pools.tmp
@@ -76,6 +78,7 @@ update-all:
 	$(PYTHON) slow.py > slow.out
 	$(PYTHON) faster.py > faster.out
 	$(PYTHON) fastest.py > fastest.out
+	$(PYTHON) distribution.py > distribution.out
 	$(PYTHON) parallel-pools.py > parallel-pools.out
 	$(PYTHON) ridge.py > ridge.out
 	- mpirun -np 2 $(PYTHON) ridge.py > mpi-ridge.out
