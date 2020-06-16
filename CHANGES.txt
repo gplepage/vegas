@@ -1,3 +1,15 @@
+Version 3.4.5 2020-06-16
+========================
+Still trying to fix that bug. Problem was in RAvgArray._inv
+which is used when computing weighted averages of results 
+from different iterations when there are multiple integrands.
+Specifically the issue is what to do when there is a linear 
+combination of the multiple integrands that is exactly zero 
+(which turns out to be natural in certain contexts), since 
+this leads to a singular covariance matrix (whose inverse 
+is needed for the weighted average). Current fix is 
+similar to scipy.linalg.pinvh.
+
 Version 3.4.4 2020-06-14
 ========================
 Small bug fix to previous bug fix.
