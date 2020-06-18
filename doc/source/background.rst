@@ -231,6 +231,8 @@ of
 the grid in each direction. (The grid uses 99 nodes in all
 on each axis, but that is too many to display at low resolution.)
 
+.. _adaptive-stratified-sampling:
+
 Adaptive Stratified Sampling
 -------------------------------
 

@@ -29,7 +29,7 @@ in the next iteration.
 
 Monte Carlo integration makes few assumptions about the
 integrand --- it needn't be analytic nor even continuous. This
-makes Monte Carlo integation unusually robust. It also makes it well suited
+makes Monte Carlo integration unusually robust. It also makes it well suited
 for adaptive integration. Adaptive strategies are essential for
 multidimensional integration, especially in high dimensions, because
 multidimensional space is large, with  lots of corners, making it
@@ -42,7 +42,7 @@ estimate of an integral is a random number from a distribution
 whose mean is the correct value of the integral. This distribution is
 Gaussian or normal provided
 the number of integrand samples is sufficiently large.
-In practive we generate multiple
+In practice we generate multiple
 estimates of the integral
 in order to verify that the distribution is indeed Gaussian.
 Error analysis is straightforward if the
@@ -61,7 +61,7 @@ compiled language), as discussed below.
 
 The following sections describe how to use |vegas|. Almost every
 example shown is a complete code, which can be copied into a file
-and run with python. It is worthwhile playing with the parameters to see how
+and run with Python. It is worthwhile playing with the parameters to see how
 things change.
 
 *About Printing:* The examples in this tutorial use the print function as it is
@@ -205,7 +205,7 @@ There are several things to note here:
     **Precision:** The precision of |vegas| estimates is
     determined by ``nitn``, the number of iterations
     of the |vegas| algorithm,
-    and by ``neval``, the maximum number of integrand evaluation
+    and by ``neval``, the maximum number of integrand evaluations
     made per iteration.
     The computing cost is typically proportional to the
     product of ``nitn`` and ``neval``.
@@ -408,7 +408,7 @@ There are several things to note here:
     an integral over :math:`z` from 0 to 1, where the transformation
     emphasizes the region in :math:`x` of order free parameter :math:`b`.
 
-    **Damping:** This result in the previous section
+    **Damping:** The result in the previous section
     can be improved somewhat by slowing down
     |vegas|’s adaptation::
 
@@ -467,7 +467,7 @@ There are several things to note here:
     Training the integrator and then setting ``adapt=False`` for the
     final results works best if the number of evaluations per iteration
     (``neval``) is the same in both steps. This is because the second
-    of |vegas|'s adaptation strategies (adaptive stratified sampling) is
+    of |vegas|'s adaptation strategies (:ref:`adaptive-stratified-sampling`) is
     usually reinitialized when ``neval`` changes, and so is not
     used at all when ``neval`` is changed at the same time ``adapt=False``
     is set.

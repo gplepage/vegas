@@ -66,7 +66,7 @@ is collected during one iteration is used to  improve the transformation used
 in the next iteration.</p>
 <p>Monte Carlo integration makes few assumptions about the
 integrand — it needn’t be analytic nor even continuous. This
-makes Monte Carlo integation unusually robust. It also makes it well suited
+makes Monte Carlo integration unusually robust. It also makes it well suited
 for adaptive integration. Adaptive strategies are essential for
 multidimensional integration, especially in high dimensions, because
 multidimensional space is large, with  lots of corners, making it
@@ -78,7 +78,7 @@ estimate of an integral is a random number from a distribution
 whose mean is the correct value of the integral. This distribution is
 Gaussian or normal provided
 the number of integrand samples is sufficiently large.
-In practive we generate multiple
+In practice we generate multiple
 estimates of the integral
 in order to verify that the distribution is indeed Gaussian.
 Error analysis is straightforward if the
@@ -94,7 +94,7 @@ C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.</p>
 <p>The following sections describe how to use <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>. Almost every
 example shown is a complete code, which can be copied into a file
-and run with python. It is worthwhile playing with the parameters to see how
+and run with Python. It is worthwhile playing with the parameters to see how
 things change.</p>
 <p><em>About Printing:</em> The examples in this tutorial use the print function as it is
 used in Python 3. Drop the outermost parenthesis in each print statement if
@@ -232,7 +232,7 @@ thus the error estimate is most likely reliable.</p>
 <p><strong>Precision:</strong> The precision of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimates is
 determined by <code class="docutils literal notranslate"><span class="pre">nitn</span></code>, the number of iterations
 of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> algorithm,
-and by <code class="docutils literal notranslate"><span class="pre">neval</span></code>, the maximum number of integrand evaluation
+and by <code class="docutils literal notranslate"><span class="pre">neval</span></code>, the maximum number of integrand evaluations
 made per iteration.
 The computing cost is typically proportional to the
 product of <code class="docutils literal notranslate"><span class="pre">nitn</span></code> and <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
@@ -477,7 +477,7 @@ of finite range. For example,  an integral over <img class="math" src="_images/m
 from 0 to infinity is easily reexpressed as
 an integral over <img class="math" src="_images/math/ee2481120b689ebecdf833b153b1e44372af448e.svg" alt="z"/> from 0 to 1, where the transformation
 emphasizes the region in <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/> of order free parameter <img class="math" src="_images/math/5cf70d30bed668864d41ac882237465737e7f20f.svg" alt="b"/>.</p>
-<p><strong>Damping:</strong> This result in the previous section
+<p><strong>Damping:</strong> The result in the previous section
 can be improved somewhat by slowing down
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s adaptation:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
@@ -544,7 +544,7 @@ integrand evaluations <code class="docutils literal notranslate"><span class="pr
 <p>Training the integrator and then setting <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code> for the
 final results works best if the number of evaluations per iteration
 (<code class="docutils literal notranslate"><span class="pre">neval</span></code>) is the same in both steps. This is because the second
-of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s adaptation strategies (adaptive stratified sampling) is
+of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s adaptation strategies (<a class="reference internal" href="background.html#adaptive-stratified-sampling"><span class="std std-ref">Adaptive Stratified Sampling</span></a>) is
 usually reinitialized when <code class="docutils literal notranslate"><span class="pre">neval</span></code> changes, and so is not
 used at all when <code class="docutils literal notranslate"><span class="pre">neval</span></code> is changed at the same time <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code>
 is set.</p>
