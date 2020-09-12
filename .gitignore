@@ -23,6 +23,8 @@ nose-uncovered.py
 yyy*
 xxx*
 zzz*
+zyx 
+zyx.py
 git-instructions
 *.sublime-*
 references/
@@ -31,3 +33,5 @@ README.html
 examples/f2py-problem.pdf
 paper/
 variations/
+.gitignore
+
