@@ -1,4 +1,4 @@
-# cython: language_level=3
+# cython: language_level=3, binding=True
 # c#ython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
@@ -76,24 +76,30 @@ cdef class AdaptiveMap:
     ``(0.5,1)`` respectively, while ``x[1]`` intervals ``(-1,0)``
     and ``(0,1)`` map into ``y[1]`` intervals ``(0,0.5)`` and  ``(0.5,1)``.
 
-    More typically an initially uniform map is trained with data
-    ``f[j]`` corresponding to ``ny`` points ``y[j, d]``,
-    with ``j=0...ny-1``, uniformly distributed in |y| space:
+    More typically, an uniform map with ``ninc`` increments 
+    is first created: for example, ::
+
+        m = AdaptiveMap([[0, 1], [-1, 1]], ninc=1000)
+
+    creates a two-dimensional grid, with 1000 increments in each direction, 
+    that spans the volume ``0<=x[0]<=1``, ``-1<=x[1]<=1``. This map is then 
+    trained with data ``f[j]`` corresponding to ``ny`` points ``y[j, d]``,
+    with ``j=0...ny-1``, (usually) uniformly distributed in |y| space:
     for example, ::
 
         m.add_training_data(y, f)
         m.adapt(alpha=1.5)
 
     ``m.adapt(alpha=1.5)`` shrinks grid increments where ``f[j]``
-    is large, and expands them where ``f[j]`` is small. Typically
+    is large, and expands them where ``f[j]`` is small. Usually 
     one has to iterate over several sets of ``y``\s and ``f``\s
     before the grid has fully adapted.
 
     The speed with which the grid adapts is determined by parameter ``alpha``.
     Large (positive) values imply rapid adaptation, while small values (much
-    less than one) imply slow adaptation. As in any iterative process, it is
-    usually a good idea to slow adaptation down in order to avoid
-    instabilities.
+    less than one) imply slow adaptation. As in any iterative process that  
+    involves random numbers, it is  usually a good idea to slow adaptation 
+    down in order to avoid instabilities caused by random fluctuations.
 
     Args:
         grid (array): Initial ``x`` grid, where ``grid[d, i]``
@@ -265,24 +271,24 @@ cdef class AdaptiveMap:
         double[::1] jac,
         numpy.npy_intp ny=-1
         ):
-        """ Map y to x, where jac is the Jacobian.
+        """ Map y to x, where jac is the Jacobian  (``dx/dy``).
 
         ``y[j, d]`` is an array of ``ny`` ``y``-values for direction ``d``.
         ``x[j, d]`` is filled with the corresponding ``x`` values,
         and ``jac[j]`` is filled with the corresponding Jacobian
         values. ``x`` and ``jac`` must be preallocated: for example, ::
 
-            x = numpy.empty(y.shape, numpy.float_)
-            jac = numpy.empty(y.shape[0], numpy.float_)
+            x = numpy.empty(y.shape, float)
+            jac = numpy.empty(y.shape[0], float)
 
         Args:
             y (array): ``y`` values to be mapped. ``y`` is a contiguous
                 2-d array, where ``y[j, d]`` contains values for points
                 along direction ``d``.
             x (array): Container for ``x[j, d]`` values corresponding
-                to ``y[j, d]``.
-            jac (array): Container for Jacobian values ``jac[j] corresponding
-                to ``y[j, d]``.
+                to ``y[j, d]``. Must be a contiguous 2-d array.
+            jac (array): Container for Jacobian values ``jac[j]`` (``= dx/dy``)
+                corresponding to ``y[j, d]``. Must be a contiguous 1-d array.
             ny (int): Number of ``y`` points: ``y[j, d]`` for ``d=0...dim-1``
                 and ``j=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
                 omitted (or negative).
@@ -308,6 +314,62 @@ cdef class AdaptiveMap:
                     x[i, d] = self.grid[d, ninc]
                     jac[i] *= self.inc[d, ninc - 1] * ninc
         return
+
+    cpdef invmap(
+        self,
+        double[:, ::1] x,
+        double[:, ::1] y,
+        double[::1] jac,
+        numpy.npy_intp nx=-1
+        ):
+        """ Map x to y, where jac is the Jacobian (``dx/dy``).
+
+        ``y[j, d]`` is an array of ``ny`` ``y``-values for direction ``d``.
+        ``x[j, d]`` is filled with the corresponding ``x`` values,
+        and ``jac[j]`` is filled with the corresponding Jacobian
+        values. ``x`` and ``jac`` must be preallocated: for example, ::
+
+            x = numpy.empty(y.shape, float)
+            jac = numpy.empty(y.shape[0], float)
+
+        Args:
+            x (array): ``x`` values to be mapped to ``y``-space. ``x`` 
+                is a contiguous 2-d array, where ``x[j, d]`` contains 
+                values for points along direction ``d``.
+            y (array): Container for ``y[j, d]`` values corresponding
+                to ``x[j, d]``. Must be a contiguous 2-d array
+            jac (array): Container for Jacobian values ``jac[j]`` (``= dx/dy``)
+                corresponding to ``y[j, d]``. Must be a contiguous 1-d array
+            nx (int): Number of ``x`` points: ``x[j, d]`` for ``d=0...dim-1``
+                and ``j=0...nx-1``. ``nx`` is set to ``x.shape[0]`` if it is
+                omitted (or negative).
+        """
+        cdef numpy.npy_intp ninc = self.inc.shape[1]
+        cdef numpy.npy_intp dim = self.inc.shape[0]
+        cdef numpy.npy_intp[:] iy
+        cdef numpy.npy_intp i, iyi, d
+        cdef double y_ninc, dy_ninc, tmp_jac
+        if nx < 0:
+            nx = x.shape[0]
+        elif nx > x.shape[0]:
+            raise ValueError('nx > x.shape[0]: %d > %d' % (nx, x.shape[0]))
+        for i in range(nx):
+            jac[i] = 1. 
+        for d in range(dim):
+            iy = numpy.searchsorted(self.grid[d, :], x[:, d], side='right')
+            for i in range(nx):
+                if iy[i] > 0 and iy[i] <= ninc:
+                    iyi = iy[i] - 1
+                    y[i, d] = (iyi + (x[i, d] - self.grid[d, iyi]) / self.inc[d, iyi]) / ninc
+                    jac[i] *= self.inc[d, iyi] * ninc
+                elif iy[i] <= 0:
+                    y[i, d] = 0. 
+                    jac[i] *= self.inc[d, 0] * ninc 
+                elif iy[i] > ninc:
+                    y[i, d] = 1.0 
+                    jac[i] *= self.inc[d, -1] * ninc 
+        return               
+
 
     # @cython.boundscheck(False)
     # @cython.wraparound(False)
@@ -348,9 +410,10 @@ cdef class AdaptiveMap:
             raise ValueError('ny > y.shape[0]: %d > %d' % (ny, y.shape[0]))
         for d in range(dim):
             for i in range(ny):
-                iy = <int> floor(y[i, d] * ninc)
-                self.sum_f[d, iy] += abs(f[i])
-                self.n_f[d, iy] += 1
+                if y[i, d] > 0 and y[i, d] < 1:
+                    iy = <int> floor(y[i, d] * ninc)
+                    self.sum_f[d, iy] += abs(f[i])
+                    self.n_f[d, iy] += 1
         return
 
     # @cython.boundscheck(False)
@@ -417,8 +480,8 @@ cdef class AdaptiveMap:
                 for i in range(old_ninc):
                     avg_f[i] = self.sum_f[d, i] / self.n_f[d, i]
             if alpha > 0 and old_ninc > 1:
-                tmp_f[0] = (3. * avg_f[0] + avg_f[1]) / 4.
-                tmp_f[-1] = (3. * avg_f[-1] + avg_f[-2]) / 4.
+                tmp_f[0] = (7. * avg_f[0] + avg_f[1]) / 8.
+                tmp_f[-1] = (7. * avg_f[-1] + avg_f[-2]) / 8.
                 sum_f = tmp_f[0] + tmp_f[-1]
                 for i in range(1, old_ninc - 1):
                     tmp_f[i] = (6. * avg_f[i] + avg_f[i-1] + avg_f[i+1]) / 8.
@@ -461,7 +524,7 @@ cdef class AdaptiveMap:
         self.sum_f = None
         self.n_f = None
 
-    def show_grid(self, ngrid=40, axes=None, shrink=False):
+    def show_grid(self, ngrid=40, axes=None, shrink=False, plotter=None):
         """ Display plots showing the current grid.
 
         Args:
@@ -476,12 +539,18 @@ cdef class AdaptiveMap:
                 if ``False``; otherwise shrink range to include
                 just the nodes being displayed. The default is
                 ``False``.
+            plotter: :mod:`matplotlib` plotter to use for plots; plots
+                are not displayed if set. Ignored if ``None``, and 
+                plots are displayed using ``matplotlib.pyplot``.
         """
-        try:
-            import matplotlib.pyplot as plt
-        except ImportError:
-            warnings.warn('matplotlib not installed; cannot show_grid')
-            return
+        if plotter is not None:
+            plt = plotter
+        else:
+            try:
+                import matplotlib.pyplot as plt
+            except ImportError:
+                warnings.warn('matplotlib not installed; cannot show_grid')
+                return
         dim = self.dim
         if axes is None:
             axes = []
@@ -575,7 +644,52 @@ cdef class AdaptiveMap:
 
         fig.canvas.mpl_connect('key_press_event', onpress)
         plotdata(idx)
-        plt.show()
+        if plotter is None:
+            plt.show()
+        else:
+            return plt
+
+    def adapt_to_samples(self, x, f, nitn=5, alpha=1.0, ninc=None):
+        """ Adapt map to data ``{x, f(x)}``.
+
+        Replace grid with one that is optimized for integrating 
+        function ``f(x)``. New grid is found iteratively
+
+        Args:
+            x (array): ``x[:, d]`` are the components of the sample points 
+                in direction ``d=0,1...self.dim-1``.
+            f (callable or array): Function ``f(x)`` to be adapted to. If 
+                ``f`` is an array, it is assumes to contain values ``f[i]``
+                corresponding to the function evaluated at points ``x[i]``.
+            nitn (int): Number of iterations to use in adaptation. Default
+                is ``nitn=5``.
+            alpha (float): Damping parameter for adaptation. Default 
+                is ``alpha=1.0``. Smaller values slow the iterative 
+                adaptation, to improve stability of convergence.
+        """
+        cdef numpy.intp_t i, tmp_ninc, old_ninc
+        x = numpy.ascontiguousarray(x)
+        if len(x.shape) != 2 or x.shape[1] != self.dim:
+            raise ValueError('incompatible shape of x: {}'.format(x.shape))
+        if callable(f):
+            fx = numpy.ascontiguousarray(f(x))
+        else:
+            fx = numpy.ascontiguousarray(f)
+        if fx.shape[0] != x.shape[0]:
+            raise ValueError('shape of x and f(x) mismatch: {} vs {}'.format(x.shape, fx.shape))
+        old_ninc = max(self.grid.shape[1] - 1, Integrator.defaults['maxinc_axis'])
+        tmp_ninc = min(old_ninc, x.shape[0] / 10.) 
+        if tmp_ninc < 2:
+            raise ValueError('not enough samples: {}'.format(x.shape[0]))
+        y = numpy.empty(x.shape, float)
+        jac = numpy.empty(x.shape[0], float)
+        for i in range(nitn):
+            self.invmap(x, y, jac)
+            self.add_training_data(y, (jac * fx) ** 2)
+            self.adapt(alpha=alpha, ninc=tmp_ninc)
+        if tmp_ninc != old_ninc:
+            self.adapt(ninc=old_ninc)
+
 
 
 cdef class Integrator(object):
@@ -611,7 +725,7 @@ cdef class Integrator(object):
     built from classes derived from :class:`vegas.BatchIntegrand`, or
     integrand functions decorated by :func:`vegas.batchintegrand`. Batch
     integrands are typically much faster, especially if they are coded in
-    Cython.
+    Cython or C/C++ or Fortran.
 
     |Integrator|\s have a large number of parameters but the
     only ones that most people will care about are: the
@@ -760,17 +874,16 @@ cdef class Integrator(object):
             create an array whose dimensions are specified by the
             integer-valued tuple ``shape``. The default generator
             is ``numpy.random.random``.
-        sync_ran (bool): If ``True``, the default random number
-            generator is synchronized across all processors when
+        sync_ran (bool): If ``True`` (default), the default random
+            number generator is synchronized across all processors when
             using MPI. If ``False``, |vegas| does no synchronization
             (but the random numbers should synchronized some other
-            way).
+            way). 
         mpi (bool): Setting ``mpi=False`` disables ``mpi`` support in
             ``vegas`` even if ``mpi`` is available; setting ``mpi=True``
             (default) allows use of ``mpi`` provided module :mod:`mpi4py`
-            is installed.
+            is installed. 
     """
-
 
     # Settings accessible via the constructor and Integrator.set
     defaults = dict(
@@ -914,16 +1027,13 @@ cdef class Integrator(object):
 
         # determine # of strata, # of increments
         self.dim = self.map.dim
+        # need extra evaluations if beta>0 so can adapt
         neval_eff = (self.neval / 2.0) if self.beta > 0 else self.neval
         ns = int((neval_eff / 2.) ** (1. / self.dim))   # stratifications/axis
         ni = int(self.neval / 10.)                      # increments/axis
         if ns < 1:
             ns = 1
-        elif (
-            self.beta > 0 and
-            ns ** self.dim > self.max_nhcube and
-            not self.minimize_mem
-            ):
+        elif ns ** self.dim > self.max_nhcube and not self.minimize_mem:
             ns = int(self.max_nhcube ** (1. / self.dim))
         if ni < 1:
             ni = 1
@@ -946,7 +1056,7 @@ cdef class Integrator(object):
         # rebuild map with correct number of increments
         self.map.adapt(ninc=ni)
 
-        # determine min number of evaluations per h-cube
+        # determine min number of evaluations per h-cube (usually 2)
         if self.nstrat != ns:
             # need to recalculate stratification distribution for beta>0
             self.sum_sigf = HUGE
@@ -1029,7 +1139,7 @@ cdef class Integrator(object):
             )
         ans = ans + (
             "    damping parameters: alpha = %g  beta= %g\n"
-            % (self.alpha, self.beta)
+            % ((self.alpha, self.beta) if self.adapt else (0., 0.))
             )
         max_neval_hcube = max(self.max_neval_hcube, self.min_neval_hcube)
         ans += (
@@ -1360,7 +1470,6 @@ cdef class Integrator(object):
         Any |vegas| parameter can also be reset: e.g.,
         ``self(fcn, nitn=20, neval=1e6)``.
         """
-        # cdef double[::1] wgt
         cdef numpy.ndarray[numpy.double_t, ndim=2] x
         cdef numpy.ndarray[numpy.double_t, ndim=1] wgt
         cdef numpy.ndarray[numpy.intp_t, ndim=1] hcube
@@ -1423,7 +1532,7 @@ cdef class Integrator(object):
                     result = VegasResult(fcn, weighted=self.adapt)
 
                 # compute integral and variance for each h-cube
-                # j is index of hcube within batch, i is absolute index
+                # j is index of point within batch, i is hcube index
                 j = 0
                 for i in range(hcube[0], hcube[-1] + 1):
                     # iterate over h-cubes
@@ -1472,7 +1581,7 @@ cdef class Integrator(object):
                     var[t, s] = var[s, t]
 
             # accumulate result from this iteration
-            result.update(mean, var)
+            result.update(mean, var, self.last_neval)
 
             if self.beta > 0 and self.adapt:
                 self.sum_sigf = sum_sigf
@@ -1609,6 +1718,8 @@ class RAvg(gvar.GVar):
         self.itn_results.append(g)
         if self.weighted:
             var = g.sdev ** 2 if g.sdev > 0 else TINY
+            if var < TINY:
+                var = TINY
             self._v_s2 +=   g.mean / var
             self._v2_s2 +=  g.mean ** 2 / var
             self._1_s2 +=  1. / var
@@ -1954,11 +2065,14 @@ cdef class VegasResult:
     cdef readonly object integrand
     cdef readonly object shape
     cdef readonly object result
+    cdef readonly numpy.intp_t sum_neval
     """ Accumulated result object --- standard interface for integration results.
 
     Integrands are flattened into 2-d arrays in |vegas|. This object
     accumulates integration results from multiple iterations of |vegas|
-    and can convert them to the original integrand format.
+    and can convert them to the original integrand format. It also counts
+    the number of integrand evaluations used in all and adds it to the 
+    result (``sum_neval``).
 
     Args:
         integrand: :class:`VegasIntegrand` object.
@@ -1974,6 +2088,7 @@ cdef class VegasResult:
     def __init__(self, integrand=None, weighted=None):
         self.integrand = integrand
         self.shape = integrand.shape
+        self.sum_neval = 0
         if self.shape is None:
             self.result = RAvgDict(integrand.bdict, weighted=weighted)
         elif self.shape == ():
@@ -1981,7 +2096,7 @@ cdef class VegasResult:
         else:
             self.result = RAvgArray(self.shape, weighted=weighted)
 
-    def update(self, mean, var):
+    def update(self, mean, var, last_neval=None):
         if self.shape is None:
             ans = gvar.BufferDict(self.integrand.bdict, buf=gvar.gvar(mean, var))
             self.result.add(ans)
@@ -1989,11 +2104,13 @@ cdef class VegasResult:
             self.result.add(gvar.gvar(mean[0], var[0,0] ** 0.5))
         else:
             self.result.add(gvar.gvar(mean, var).reshape(self.shape))
+        if last_neval is not None:
+            self.sum_neval += last_neval
+            self.result.sum_neval = self.sum_neval
 
     def update_analyzer(self, analyzer):
         """ Update analyzer at end of an iteration. """
         analyzer.end(self.result.itn_results[-1], self.result)
-
 
     def converged(self, rtol, atol):
         " Convergence test. "

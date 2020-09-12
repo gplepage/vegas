@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Tutorial &#8212; vegas 3.4.5 documentation</title>
+    <title>Tutorial &#8212; vegas 3.5 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.5 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -224,7 +224,8 @@ attributes:</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.dof</span></code> — number of degrees of freedom;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.Q</span></code> — <em>Q</em> or <em>p-value</em> of the weighted average’s <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/>;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.itn_results</span></code> — list of the integral estimates
-from each iteration.</p>
+from each iteration;</p>
+<p><code class="docutils literal notranslate"><span class="pre">result.sum_neval</span></code> — total number of integrand evaluations used.</p>
 </div></blockquote>
 <p>In this example the final <em>Q</em> is 0.42, indicating that the
 <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> for this average is not particularly unlikely and
@@ -1092,6 +1093,125 @@ the code on two processors with MPI again cuts the time almost in half.)</p>
 to infinity. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> will provide Monte Carlo estimates of the sums, emphasizing
 the more important terms.</p>
 </div>
+<div class="section" id="preconditioning-vegas-vegas-maps">
+<h2>Preconditioning <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>; <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Maps<a class="headerlink" href="#preconditioning-vegas-vegas-maps" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adapts by remapping the integration variables (see <a class="reference internal" href="background.html#importance-sampling"><span class="std std-ref">Importance Sampling</span></a>). It
+is possible to precondition this map, before creating a <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>.
+Preconditioned maps can improve <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> results when
+much is known about the integrand ahead of time. Consider,
+for example, the integral</p>
+<div class="math">
+<p><img src="_images/math/aecd6cba1132b855db75f14a3b885b7338d451c8.svg" alt="C\int_0^1 \!d^5x\,
+\,\sum_{i=1}^2 \mathrm{e}^{-50 |\mathbf{x} - \mathbf{r}_i|},"/></p>
+</div><p>which has high, narrow peaks at</p>
+<div class="math">
+<p><img src="_images/math/18d5a0cdc61eefff2ceb835e168b3e5e2883637d.svg" alt="\mathbf{r}_1 = (0.45, 0.45, 0.45, 0.45, 0.45),"/></p>
+</div><div class="math">
+<p><img src="_images/math/fb07bef831b1dee26b9d1d806630c4c0872f9a91.svg" alt="\mathbf{r}_2 = (0.7, 0.7, 0.7, 0.7, 0.7)."/></p>
+</div><p>Given the locations of the peaks we can create a <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map before integrating
+that emphasizes the regions around them:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.45</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]:</span>
+        <span class="n">dx2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ans</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dx2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ans</span> <span class="o">*</span> <span class="mf">247366.171</span>
+
+<span class="n">dim</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="nb">map</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">AdaptiveMap</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>     <span class="c1"># uniform map</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span>                        <span class="c1"># 2000 points near peaks</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.45</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">3</span><span class="o">/</span><span class="mi">50</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">dim</span><span class="p">)),</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">3</span><span class="o">/</span><span class="mi">50</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">dim</span><span class="p">)),</span>
+    <span class="p">])</span>
+<span class="nb">map</span><span class="o">.</span><span class="n">adapt_to_samples</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>       <span class="c1"># precondition map</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="nb">map</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> maps are objects of type <a class="reference internal" href="vegas.html#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.AdaptiveMap</span></code></a>. Here we
+create a uniform map object <code class="docutils literal notranslate"><span class="pre">map</span></code>. We then
+generate 2000 random points <code class="docutils literal notranslate"><span class="pre">x</span></code> from normal distributions centered around
+the peak locations. <code class="docutils literal notranslate"><span class="pre">map.adapt_to_samples(x,</span> <span class="pre">f(x),</span> <span class="pre">nitn=5)</span></code> optimizes
+the map for integrating <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> based on information about the integrand
+at the random
+points <code class="docutils literal notranslate"><span class="pre">x</span></code>. As a result, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is almost fully adapted to the
+integrand already in its first iteration:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">1.029</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>       <span class="mf">1.029</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.988</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">0.992</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">0.96</span>     <span class="mf">0.33</span>
+  <span class="mi">3</span>   <span class="mf">1.011</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">1.0009</span><span class="p">(</span><span class="mi">82</span><span class="p">)</span>          <span class="mf">1.19</span>     <span class="mf">0.30</span>
+  <span class="mi">4</span>   <span class="mf">1.001</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">1.0008</span><span class="p">(</span><span class="mi">68</span><span class="p">)</span>          <span class="mf">0.79</span>     <span class="mf">0.50</span>
+  <span class="mi">5</span>   <span class="mf">0.995</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">0.9994</span><span class="p">(</span><span class="mi">58</span><span class="p">)</span>          <span class="mf">0.64</span>     <span class="mf">0.64</span>
+
+</pre></div>
+</div>
+<p>This can be contrasted with what happens without preconditioning, where
+the integrator is still far from converged by the fifth iteration:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">4.9</span><span class="p">(</span><span class="mf">4.4</span><span class="p">)</span>        <span class="mf">4.9</span><span class="p">(</span><span class="mf">4.4</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.520</span><span class="p">(</span><span class="mi">76</span><span class="p">)</span>       <span class="mf">0.522</span><span class="p">(</span><span class="mi">76</span><span class="p">)</span>           <span class="mf">1.00</span>     <span class="mf">0.32</span>
+  <span class="mi">3</span>   <span class="mf">0.85</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>        <span class="mf">0.583</span><span class="p">(</span><span class="mi">68</span><span class="p">)</span>           <span class="mf">2.27</span>     <span class="mf">0.10</span>
+  <span class="mi">4</span>   <span class="mf">1.13</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>        <span class="mf">0.689</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>           <span class="mf">5.67</span>     <span class="mf">0.00</span>
+  <span class="mi">5</span>   <span class="mf">0.798</span><span class="p">(</span><span class="mi">56</span><span class="p">)</span>       <span class="mf">0.749</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>           <span class="mf">4.68</span>     <span class="mf">0.00</span>
+
+</pre></div>
+</div>
+<p>The exact distribution of random points <code class="docutils literal notranslate"><span class="pre">x</span></code> isn’t important; what
+matters is that they cover and are concentrated in
+the dominant regions contributing to the integral.</p>
+<p>Note that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> maps can be used with integrators other than <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.
+The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map maps the integration variables <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> into
+new variables <code class="docutils literal notranslate"><span class="pre">y[d]</span></code> (where <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;</span> <span class="pre">y[d]</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>) that make the integrand
+easier to integrate. The integrator is used
+to evaluate the integral in <code class="docutils literal notranslate"><span class="pre">y</span></code>-space. To illustrate how this
+works, we replace the last three lines of the code above with
+the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">smc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+    <span class="s2">&quot; integrates f(y) over dim-dimensional unit hypercube &quot;</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">neval</span><span class="p">,</span> <span class="n">dim</span><span class="p">))</span>
+    <span class="n">fy</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">fy</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">fy</span><span class="p">)</span> <span class="o">/</span> <span class="n">neval</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+    <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="nb">map</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">jac</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1"># with map</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">smc</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="mi">50_000</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;   SMC + map:&#39;</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{r[0]:.3f}</span><span class="s1"> +- </span><span class="si">{r[1]:.3f}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># without map</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">smc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">50_000</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;SMC (no map):&#39;</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{r[0]:.3f}</span><span class="s1"> +- </span><span class="si">{r[1]:.3f}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">smc</span></code> is a Simple Monte Carlo (SMC) integrator and <code class="docutils literal notranslate"><span class="pre">g(y)</span></code> is the
+integrand in <code class="docutils literal notranslate"><span class="pre">y</span></code>-space that corresponds to <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> in <code class="docutils literal notranslate"><span class="pre">x</span></code>-space.
+The mapping is done by <code class="docutils literal notranslate"><span class="pre">map.map(y,</span> <span class="pre">x,</span> <span class="pre">jac)</span></code> which fills the arrays
+<code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">jac</span></code> with the <code class="docutils literal notranslate"><span class="pre">x</span></code> values and Jacobian corresponding
+to integration points <code class="docutils literal notranslate"><span class="pre">y</span></code>. The result is</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">SMC</span> <span class="o">+</span> <span class="nb">map</span><span class="p">:</span> <span class="mf">1.022</span> <span class="o">+-</span> <span class="mf">0.021</span>
+<span class="n">SMC</span> <span class="p">(</span><span class="n">no</span> <span class="nb">map</span><span class="p">):</span> <span class="mf">1.703</span> <span class="o">+-</span> <span class="mf">0.535</span>
+</pre></div>
+</div>
+<p>where we give results from SMC with and without using
+the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map. The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map greatly improves
+the SMC result, which, not surprisingly, is significantly
+less accurate the the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> result above.
+Maps for use with other integrators can be built
+directly, as above, or they can be built for a particular
+integrand by running several iterations of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> with
+the integrand and using the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator’s map: <code class="docutils literal notranslate"><span class="pre">integ.map</span></code>.</p>
+</div>
 <div class="section" id="vegas-as-a-random-number-generator">
 <h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> as a Random Number Generator<a class="headerlink" href="#vegas-as-a-random-number-generator" title="Permalink to this headline">¶</a></h2>
 <p>A <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator generates random points in its integration volume from a
@@ -1187,6 +1307,7 @@ deviations, and properly correlated with other
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>
 <li><a class="reference internal" href="#multiple-processors">Multiple Processors</a></li>
 <li><a class="reference internal" href="#sums-with-vegas">Sums with <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a></li>
+<li><a class="reference internal" href="#preconditioning-vegas-vegas-maps">Preconditioning <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code>; <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Maps</a></li>
 <li><a class="reference internal" href="#vegas-as-a-random-number-generator"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> as a Random Number Generator</a></li>
 <li><a class="reference internal" href="#implementation-notes">Implementation Notes</a></li>
 </ul>
@@ -1235,7 +1356,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.5 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -79,6 +79,7 @@ update-all:
 	$(PYTHON) faster.py > faster.out
 	$(PYTHON) fastest.py > fastest.out
 	$(PYTHON) distribution.py > distribution.out
+	$(PYTHON) path-integral.py > path-integral.out
 	$(PYTHON) parallel-pools.py > parallel-pools.out
 	$(PYTHON) ridge.py > ridge.out
 	- mpirun -np 2 $(PYTHON) ridge.py > mpi-ridge.out

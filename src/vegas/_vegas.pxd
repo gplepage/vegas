@@ -32,6 +32,7 @@ cdef class AdaptiveMap:
     cdef double[:, ::1] n_f
 
     cpdef map(self, double[:, ::1] y, double[:, ::1] x, double[::1] J, numpy.npy_intp ny=*)
+    cpdef invmap(self, double[:, ::1] x, double[:, ::1] y, double[::1] J, numpy.npy_intp nx=*)
     cpdef add_training_data(self, double[:, ::1] y, double[::1] f, numpy.npy_intp ny=*)
 
 cdef class Integrator:

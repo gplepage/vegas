@@ -22,6 +22,8 @@ How :mod:`vegas` Works
 adaptive stratified sampling. Here we discuss the ideas behind each,
 in turn.
 
+.. _importance_sampling:
+
 Importance Sampling
 ------------------------------------------------
 The most important adaptive strategy |vegas| uses is

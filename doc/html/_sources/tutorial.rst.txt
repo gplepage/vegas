@@ -196,7 +196,9 @@ There are several things to note here:
       ``result.Q`` --- *Q* or *p-value* of the weighted average's |chi2|;
 
       ``result.itn_results`` --- list of the integral estimates
-      from each iteration.
+      from each iteration;
+
+      ``result.sum_neval`` --- total number of integrand evaluations used.
 
     In this example the final *Q* is 0.42, indicating that the
     :math:`\chi^2` for this average is not particularly unlikely and
@@ -1007,6 +1009,117 @@ the code on two processors with MPI again cuts the time almost in half.)
 The same trick can be generalized to sums over multiple indices, including sums
 to infinity. |vegas| will provide Monte Carlo estimates of the sums, emphasizing
 the more important terms.
+
+
+Preconditioning |vegas|; |vegas| Maps
+-------------------------------------------
+|vegas| adapts by remapping the integration variables (see :ref:`importance_sampling`). It 
+is possible to precondition this map, before creating a :class:`vegas.Integrator`.
+Preconditioned maps can improve |vegas| results when 
+much is known about the integrand ahead of time. Consider,
+for example, the integral
+
+.. math:: 
+    C\int_0^1 \!d^5x\,
+    \,\sum_{i=1}^2 \mathrm{e}^{-50 |\mathbf{x} - \mathbf{r}_i|},
+
+which has high, narrow peaks at 
+
+.. math::
+    \mathbf{r}_1 = (0.45, 0.45, 0.45, 0.45, 0.45),
+    
+.. math::
+    \mathbf{r}_2 = (0.7, 0.7, 0.7, 0.7, 0.7).
+
+Given the locations of the peaks we can create a |vegas| map before integrating
+that emphasizes the regions around them::
+
+    import vegas 
+    import numpy as np 
+
+    @vegas.batchintegrand
+    def f(x):
+        ans = 0
+        for c in [0.45, 0.7]:
+            dx2 = np.sum((x - c) ** 2, axis=1)
+            ans += np.exp(-50 * np.sqrt(dx2))
+        return ans * 247366.171
+
+    dim = 5 
+    map = vegas.AdaptiveMap(dim * [(0, 1)])     # uniform map
+    x = np.concatenate([                        # 2000 points near peaks
+        np.random.normal(loc=0.45, scale=3/50, size=(1000, dim)),
+        np.random.normal(loc=0.7, scale=3/50, size=(1000, dim)),
+        ])
+    map.adapt_to_samples(x, f(x), nitn=5)       # precondition map
+    integ = vegas.Integrator(map, alpha=0.1)
+    r = integ(f, neval=1e4, nitn=5)
+    print(r.summary())
+
+|vegas| maps are objects of type :class:`vegas.AdaptiveMap`. Here we
+create a uniform map object ``map``. We then 
+generate 2000 random points ``x`` from normal distributions centered around 
+the peak locations. ``map.adapt_to_samples(x, f(x), nitn=5)`` optimizes 
+the map for integrating ``f(x)`` based on information about the integrand
+at the random 
+points ``x``. As a result, |vegas| is almost fully adapted to the 
+integrand already in its first iteration: 
+
+.. literalinclude:: eg5b.out
+
+This can be contrasted with what happens without preconditioning, where 
+the integrator is still far from converged by the fifth iteration:
+
+.. literalinclude:: eg5a.out
+
+The exact distribution of random points ``x`` isn't important; what 
+matters is that they cover and are concentrated in 
+the dominant regions contributing to the integral.
+
+Note that |vegas| maps can be used with integrators other than |vegas|.
+The |vegas| map maps the integration variables ``x[d]`` into 
+new variables ``y[d]`` (where ``0 < y[d] < 1``) that make the integrand 
+easier to integrate. The integrator is used 
+to evaluate the integral in ``y``-space. To illustrate how this 
+works, we replace the last three lines of the code above with 
+the following::
+
+    def smc(f, neval, dim):
+        " integrates f(y) over dim-dimensional unit hypercube "
+        y = np.random.uniform(0,1, (neval, dim))
+        fy = f(y)
+        return (np.average(fy), np.std(fy) / neval ** 0.5)
+
+    def g(y):
+        jac = np.empty(y.shape[0], float)
+        x = np.empty(y.shape, float)
+        map.map(y, x, jac)
+        return jac * f(x)
+
+    # with map
+    r = smc(g, 50_000, dim)
+    print('   SMC + map:', f'{r[0]:.3f} +- {r[1]:.3f}')
+
+    # without map
+    r = smc(f, 50_000, dim)
+    print('SMC (no map):', f'{r[0]:.3f} +- {r[1]:.3f}')
+
+Here ``smc`` is a Simple Monte Carlo (SMC) integrator and ``g(y)`` is the 
+integrand in ``y``-space that corresponds to ``f(x)`` in ``x``-space.
+The mapping is done by ``map.map(y, x, jac)`` which fills the arrays
+``x`` and ``jac`` with the ``x`` values and Jacobian corresponding 
+to integration points ``y``. The result is 
+
+.. literalinclude:: eg5c.out
+
+where we give results from SMC with and without using 
+the |vegas| map. The |vegas| map greatly improves 
+the SMC result, which, not surprisingly, is significantly
+less accurate the the |vegas| result above.
+Maps for use with other integrators can be built 
+directly, as above, or they can be built for a particular 
+integrand by running several iterations of |vegas| with 
+the integrand and using the |vegas| integrator's map: ``integ.map``.
 
 
 |vegas| as a Random Number Generator

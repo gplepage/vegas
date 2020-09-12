@@ -1,3 +1,23 @@
+Version 3.5 ???
+=================
+
+- vegas results now include result.sum_neval which equals the 
+  number of integrand evaluations used to obtain the result.
+
+- New: AdaptiveMap.adapt_to_samples(x, f) optimizes the 
+  vegas map for integrals of function f(x). See 
+  "Preconditioning vegas; vegas Maps" in the tutorial.
+  This also shows how to use vegas maps with integrators
+  other than vegas.
+
+- New: AdpativeMap.invmap(x, y, jac) computes the y values 
+  and Jacobian corresponding to points x. It is the 
+  inverse of AdaptiveMap.map(y, x, jac), although 
+  jac is dx/dy in both cases.
+
+- AdaptiveMap.show_grid has a new keyword argument: plotter.
+
+
 Version 3.4.5 2020-06-16
 ========================
 Still trying to fix that bug. Problem was in RAvgArray._inv

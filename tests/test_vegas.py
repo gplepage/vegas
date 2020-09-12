@@ -81,6 +81,23 @@ class TestAdaptiveMap(unittest.TestCase):
             )
         np_assert_allclose(m(y), x)
         np_assert_allclose(m.jac(y), jac)
+    
+    def test_invmap(self):
+        " invmap(...) "
+        m = AdaptiveMap(grid=[[0., 1., 3.], [-2., 0., 6.]])
+        # 5 x values
+        x = np.array([[0., -2.], [0.5, -1], [1, 0], [2, 3], [3, 6]])
+        ytrue = np.array(
+            [[0, 0], [0.25, 0.25], [0.5, 0.5], [0.75, 0.75], [1.0, 1.0]]
+            )
+        jactrue = np.array([8., 8, 48, 48, 48])
+        y = np.empty(x.shape, float)
+        jac = np.empty(x.shape[0], float)
+        m.invmap(x, y, jac)
+        np_assert_allclose(y, ytrue)
+        np_assert_allclose(jac, jactrue)
+        np_assert_allclose(m(y), x)
+        np_assert_allclose(m.jac(y), jac)
 
     def test_region(self):
         " region(...) "
@@ -98,6 +115,17 @@ class TestAdaptiveMap(unittest.TestCase):
         output = "    grid[ 0] = [ 0.5  2. ]\n"
         output += "    grid[ 1] = [-1.  3.]\n"
         self.assertEqual(m.settings(2).replace(' ', ''), output.replace(' ', ''))
+
+    def test_adapt_to_samples(self):
+        " adapt_to_samples(...) "
+        m1  = AdaptiveMap([[0, 2], [0, 1]])
+        x = np.random.normal(0,.1, (1000, 2))
+        def F(x):
+            return np.exp(-np.sum(x**2, axis=1) * 100 / 2)
+        Fx = F(x)
+        m1.adapt_to_samples(x, Fx, nitn=5)
+        m1.adapt(ninc=2)
+        np_assert_allclose(m1.grid, [[0., 0.071, 2.0], [0., 0.073, 1.]], rtol=0.4)
 
     def test_training_data_adapt(self):
         "add_training_data(...)  adapt(...) "

@@ -180,6 +180,8 @@ fashion, for use in subsequent iterations of the algorithm.
 
    .. automethod:: add_training_data(y, f, ny=-1)
 
+   .. automethod:: adapt_to_samples(x, f, nitn=5, alpha=1.0)
+
    .. automethod:: __call__(y)
 
    .. automethod:: jac(y)
@@ -187,6 +189,8 @@ fashion, for use in subsequent iterations of the algorithm.
    .. automethod:: make_uniform(ninc=None)
 
    .. automethod:: map(y, x, jac, ny=-1)
+
+   .. automethod:: invmap(x, y, jac, nx=-1)
 
    .. automethod:: show_grid(ngrid=40, shrink=False)
 
@@ -229,6 +233,10 @@ Other Objects and Functions
 
       A list of the results from each iteration.
 
+   .. attribute:: sum_neval 
+
+      Total number of integrand evaluations used in all iterations.
+
    .. automethod:: add(g)
 
    .. automethod:: summary(weighted=None)
@@ -246,6 +254,10 @@ Other Objects and Functions
 
       A list of the results from each iteration.
 
+   .. attribute:: sum_neval 
+
+      Total number of integrand evaluations used in all iterations.
+
    .. automethod:: add(g)
 
    .. automethod:: summary(extended=False, weighted=None)
@@ -262,6 +274,10 @@ Other Objects and Functions
    .. attribute:: itn_results
 
       A list of the results from each iteration.
+
+   .. attribute:: sum_neval 
+
+      Total number of integrand evaluations used in all iterations.
 
    .. automethod:: add(g)
 

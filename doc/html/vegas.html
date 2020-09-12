@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>vegas Module &#8212; vegas 3.4.5 documentation</title>
+    <title>vegas Module &#8212; vegas 3.5 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.5 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -107,7 +107,7 @@ the first key.</p>
 built from classes derived from <a class="reference internal" href="#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.BatchIntegrand</span></code></a>, or
 integrand functions decorated by <a class="reference internal" href="#vegas.batchintegrand" title="vegas.batchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.batchintegrand()</span></code></a>. Batch
 integrands are typically much faster, especially if they are coded in
-Cython.</p>
+Cython or C/C++ or Fortran.</p>
 <p><a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>s have a large number of parameters but the
 only ones that most people will care about are: the
 number <code class="docutils literal notranslate"><span class="pre">nitn</span></code> of iterations of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> algorithm;
@@ -255,8 +255,8 @@ between 0 and 1. <code class="docutils literal notranslate"><span class="pre">ra
 create an array whose dimensions are specified by the
 integer-valued tuple <code class="docutils literal notranslate"><span class="pre">shape</span></code>. The default generator
 is <code class="docutils literal notranslate"><span class="pre">numpy.random.random</span></code>.</p></li>
-<li><p><strong>sync_ran</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the default random number
-generator is synchronized across all processors when
+<li><p><strong>sync_ran</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), the default random
+number generator is synchronized across all processors when
 using MPI. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> does no synchronization
 (but the random numbers should synchronized some other
 way).</p></li>
@@ -560,23 +560,29 @@ when the map is created: for example,</p>
 and <code class="docutils literal notranslate"><span class="pre">(0.1,1)</span></code> map into the <code class="docutils literal notranslate"><span class="pre">y[0]</span></code> intervals <code class="docutils literal notranslate"><span class="pre">(0,0.5)</span></code> and
 <code class="docutils literal notranslate"><span class="pre">(0.5,1)</span></code> respectively, while <code class="docutils literal notranslate"><span class="pre">x[1]</span></code> intervals <code class="docutils literal notranslate"><span class="pre">(-1,0)</span></code>
 and <code class="docutils literal notranslate"><span class="pre">(0,1)</span></code> map into <code class="docutils literal notranslate"><span class="pre">y[1]</span></code> intervals <code class="docutils literal notranslate"><span class="pre">(0,0.5)</span></code> and  <code class="docutils literal notranslate"><span class="pre">(0.5,1)</span></code>.</p>
-<p>More typically an initially uniform map is trained with data
-<code class="docutils literal notranslate"><span class="pre">f[j]</span></code> corresponding to <code class="docutils literal notranslate"><span class="pre">ny</span></code> points <code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code>,
-with <code class="docutils literal notranslate"><span class="pre">j=0...ny-1</span></code>, uniformly distributed in y space:
+<p>More typically, an uniform map with <code class="docutils literal notranslate"><span class="pre">ninc</span></code> increments
+is first created: for example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">AdaptiveMap</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">ninc</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>creates a two-dimensional grid, with 1000 increments in each direction,
+that spans the volume <code class="docutils literal notranslate"><span class="pre">0&lt;=x[0]&lt;=1</span></code>, <code class="docutils literal notranslate"><span class="pre">-1&lt;=x[1]&lt;=1</span></code>. This map is then
+trained with data <code class="docutils literal notranslate"><span class="pre">f[j]</span></code> corresponding to <code class="docutils literal notranslate"><span class="pre">ny</span></code> points <code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code>,
+with <code class="docutils literal notranslate"><span class="pre">j=0...ny-1</span></code>, (usually) uniformly distributed in y space:
 for example,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">add_training_data</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 <span class="n">m</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">m.adapt(alpha=1.5)</span></code> shrinks grid increments where <code class="docutils literal notranslate"><span class="pre">f[j]</span></code>
-is large, and expands them where <code class="docutils literal notranslate"><span class="pre">f[j]</span></code> is small. Typically
+is large, and expands them where <code class="docutils literal notranslate"><span class="pre">f[j]</span></code> is small. Usually
 one has to iterate over several sets of <code class="docutils literal notranslate"><span class="pre">y</span></code>s and <code class="docutils literal notranslate"><span class="pre">f</span></code>s
 before the grid has fully adapted.</p>
 <p>The speed with which the grid adapts is determined by parameter <code class="docutils literal notranslate"><span class="pre">alpha</span></code>.
 Large (positive) values imply rapid adaptation, while small values (much
-less than one) imply slow adaptation. As in any iterative process, it is
-usually a good idea to slow adaptation down in order to avoid
-instabilities.</p>
+less than one) imply slow adaptation. As in any iterative process that
+involves random numbers, it is  usually a good idea to slow adaptation
+down in order to avoid instabilities caused by random fluctuations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -681,6 +687,30 @@ omitted (or negative).</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="vegas.AdaptiveMap.adapt_to_samples">
+<code class="sig-name descname">adapt_to_samples</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">f</em>, <em class="sig-param">nitn=5</em>, <em class="sig-param">alpha=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.adapt_to_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adapt map to data <code class="docutils literal notranslate"><span class="pre">{x,</span> <span class="pre">f(x)}</span></code>.</p>
+<p>Replace grid with one that is optimized for integrating
+function <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>. New grid is found iteratively</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array</em>) – <code class="docutils literal notranslate"><span class="pre">x[:,</span> <span class="pre">d]</span></code> are the components of the sample points
+in direction <code class="docutils literal notranslate"><span class="pre">d=0,1...self.dim-1</span></code>.</p></li>
+<li><p><strong>f</strong> (<em>callable</em><em> or </em><em>array</em>) – Function <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> to be adapted to. If
+<code class="docutils literal notranslate"><span class="pre">f</span></code> is an array, it is assumes to contain values <code class="docutils literal notranslate"><span class="pre">f[i]</span></code>
+corresponding to the function evaluated at points <code class="docutils literal notranslate"><span class="pre">x[i]</span></code>.</p></li>
+<li><p><strong>nitn</strong> (<em>int</em>) – Number of iterations to use in adaptation. Default
+is <code class="docutils literal notranslate"><span class="pre">nitn=5</span></code>.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Damping parameter for adaptation. Default
+is <code class="docutils literal notranslate"><span class="pre">alpha=1.0</span></code>. Smaller values slow the iterative
+adaptation, to improve stability of convergence.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="vegas.AdaptiveMap.__call__">
 <code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">x</span></code> values corresponding to <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
@@ -710,13 +740,13 @@ increments as the old grid.</p>
 <dl class="method">
 <dt id="vegas.AdaptiveMap.map">
 <code class="sig-name descname">map</code><span class="sig-paren">(</span><em class="sig-param">y</em>, <em class="sig-param">x</em>, <em class="sig-param">jac</em>, <em class="sig-param">ny=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Map y to x, where jac is the Jacobian.</p>
+<dd><p>Map y to x, where jac is the Jacobian  (<code class="docutils literal notranslate"><span class="pre">dx/dy</span></code>).</p>
 <p><code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code> is an array of <code class="docutils literal notranslate"><span class="pre">ny</span></code> <code class="docutils literal notranslate"><span class="pre">y</span></code>-values for direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.
 <code class="docutils literal notranslate"><span class="pre">x[j,</span> <span class="pre">d]</span></code> is filled with the corresponding <code class="docutils literal notranslate"><span class="pre">x</span></code> values,
 and <code class="docutils literal notranslate"><span class="pre">jac[j]</span></code> is filled with the corresponding Jacobian
 values. <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">jac</span></code> must be preallocated: for example,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
-<span class="n">jac</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+<span class="n">jac</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -726,11 +756,41 @@ values. <code class="docutils literal notranslate"><span class="pre">x</span></c
 2-d array, where <code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code> contains values for points
 along direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p></li>
 <li><p><strong>x</strong> (<em>array</em>) – Container for <code class="docutils literal notranslate"><span class="pre">x[j,</span> <span class="pre">d]</span></code> values corresponding
-to <code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code>.</p></li>
-<li><p><strong>jac</strong> (<em>array</em>) – Container for Jacobian values <code class="docutils literal notranslate"><span class="pre">jac[j]</span> <span class="pre">corresponding</span>
-<span class="pre">to</span> <span class="pre">``y[j,</span> <span class="pre">d]</span></code>.</p></li>
+to <code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code>. Must be a contiguous 2-d array.</p></li>
+<li><p><strong>jac</strong> (<em>array</em>) – Container for Jacobian values <code class="docutils literal notranslate"><span class="pre">jac[j]</span></code> (<code class="docutils literal notranslate"><span class="pre">=</span> <span class="pre">dx/dy</span></code>)
+corresponding to <code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code>. Must be a contiguous 1-d array.</p></li>
 <li><p><strong>ny</strong> (<em>int</em>) – Number of <code class="docutils literal notranslate"><span class="pre">y</span></code> points: <code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code> for <code class="docutils literal notranslate"><span class="pre">d=0...dim-1</span></code>
 and <code class="docutils literal notranslate"><span class="pre">j=0...ny-1</span></code>. <code class="docutils literal notranslate"><span class="pre">ny</span></code> is set to <code class="docutils literal notranslate"><span class="pre">y.shape[0]</span></code> if it is
+omitted (or negative).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.AdaptiveMap.invmap">
+<code class="sig-name descname">invmap</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">jac</em>, <em class="sig-param">nx=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.invmap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Map x to y, where jac is the Jacobian (<code class="docutils literal notranslate"><span class="pre">dx/dy</span></code>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code> is an array of <code class="docutils literal notranslate"><span class="pre">ny</span></code> <code class="docutils literal notranslate"><span class="pre">y</span></code>-values for direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.
+<code class="docutils literal notranslate"><span class="pre">x[j,</span> <span class="pre">d]</span></code> is filled with the corresponding <code class="docutils literal notranslate"><span class="pre">x</span></code> values,
+and <code class="docutils literal notranslate"><span class="pre">jac[j]</span></code> is filled with the corresponding Jacobian
+values. <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">jac</span></code> must be preallocated: for example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+<span class="n">jac</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array</em>) – <code class="docutils literal notranslate"><span class="pre">x</span></code> values to be mapped to <code class="docutils literal notranslate"><span class="pre">y</span></code>-space. <code class="docutils literal notranslate"><span class="pre">x</span></code>
+is a contiguous 2-d array, where <code class="docutils literal notranslate"><span class="pre">x[j,</span> <span class="pre">d]</span></code> contains
+values for points along direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p></li>
+<li><p><strong>y</strong> (<em>array</em>) – Container for <code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code> values corresponding
+to <code class="docutils literal notranslate"><span class="pre">x[j,</span> <span class="pre">d]</span></code>. Must be a contiguous 2-d array</p></li>
+<li><p><strong>jac</strong> (<em>array</em>) – Container for Jacobian values <code class="docutils literal notranslate"><span class="pre">jac[j]</span></code> (<code class="docutils literal notranslate"><span class="pre">=</span> <span class="pre">dx/dy</span></code>)
+corresponding to <code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code>. Must be a contiguous 1-d array</p></li>
+<li><p><strong>nx</strong> (<em>int</em>) – Number of <code class="docutils literal notranslate"><span class="pre">x</span></code> points: <code class="docutils literal notranslate"><span class="pre">x[j,</span> <span class="pre">d]</span></code> for <code class="docutils literal notranslate"><span class="pre">d=0...dim-1</span></code>
+and <code class="docutils literal notranslate"><span class="pre">j=0...nx-1</span></code>. <code class="docutils literal notranslate"><span class="pre">nx</span></code> is set to <code class="docutils literal notranslate"><span class="pre">x.shape[0]</span></code> if it is
 omitted (or negative).</p></li>
 </ul>
 </dd>
@@ -755,6 +815,9 @@ set of pairings to be used.</p></li>
 if <code class="docutils literal notranslate"><span class="pre">False</span></code>; otherwise shrink range to include
 just the nodes being displayed. The default is
 <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>plotter</strong> – <code class="xref py py-mod docutils literal notranslate"><span class="pre">matplotlib</span></code> plotter to use for plots; plots
+are not displayed if set. Ignored if <code class="docutils literal notranslate"><span class="pre">None</span></code>, and
+plots are displayed using <code class="docutils literal notranslate"><span class="pre">matplotlib.pyplot</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -982,6 +1045,12 @@ otherwise straight, unweighted averages are used.</p>
 <dd><p>A list of the results from each iteration.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="vegas.RAvg.sum_neval">
+<code class="sig-name descname">sum_neval</code><a class="headerlink" href="#vegas.RAvg.sum_neval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total number of integrand evaluations used in all iterations.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="vegas.RAvg.add">
 <code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">g</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg.add" title="Permalink to this definition">¶</a></dt>
@@ -1041,6 +1110,12 @@ otherwise straight, unweighted averages are used.</p>
 <dt id="vegas.RAvgArray.itn_results">
 <code class="sig-name descname">itn_results</code><a class="headerlink" href="#vegas.RAvgArray.itn_results" title="Permalink to this definition">¶</a></dt>
 <dd><p>A list of the results from each iteration.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.RAvgArray.sum_neval">
+<code class="sig-name descname">sum_neval</code><a class="headerlink" href="#vegas.RAvgArray.sum_neval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total number of integrand evaluations used in all iterations.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1105,6 +1180,12 @@ otherwise straight, unweighted averages are used.</p>
 <dt id="vegas.RAvgDict.itn_results">
 <code class="sig-name descname">itn_results</code><a class="headerlink" href="#vegas.RAvgDict.itn_results" title="Permalink to this definition">¶</a></dt>
 <dd><p>A list of the results from each iteration.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="vegas.RAvgDict.sum_neval">
+<code class="sig-name descname">sum_neval</code><a class="headerlink" href="#vegas.RAvgDict.sum_neval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total number of integrand evaluations used in all iterations.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1250,7 +1331,7 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.4.5 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
