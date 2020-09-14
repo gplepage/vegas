@@ -30,6 +30,8 @@ run:
 	- diff -w faster.out faster.tmp
 	$(PYTHON) fastest.py > fastest.tmp
 	- diff -w fastest.out fastest.tmp
+	$(PYTHON) bayes.py > bayes.tmp
+	- diff -w bayes.out bayes.tmp
 	$(PYTHON) distribution.py > distribution.tmp
 	- diff -w distribution.out distribution.tmp
 	$(PYTHON) path-integral.py $(PLOT) > path-integral.tmp  # about 16s
@@ -78,6 +80,7 @@ update-all:
 	$(PYTHON) slow.py > slow.out
 	$(PYTHON) faster.py > faster.out
 	$(PYTHON) fastest.py > fastest.out
+	$(PYTHON) bayes.py > bayes.tmp
 	$(PYTHON) distribution.py > distribution.out
 	$(PYTHON) path-integral.py > path-integral.out
 	$(PYTHON) parallel-pools.py > parallel-pools.out

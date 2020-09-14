@@ -14,6 +14,8 @@ starts at doc/html/index.html):
 
     fastest.py - An integrand coded in Cython, for even greater speed.
 
+    bayes.py - Bayesian curve fitting in 3 and 21 dimensions.
+
     path-integral.py - Quantum mechanics using Feynman's path integral.
 
     parallel-pools.py - Parallel processing using Python's multiprocessing module

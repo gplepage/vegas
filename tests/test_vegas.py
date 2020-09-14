@@ -485,6 +485,26 @@ class TestIntegrator(unittest.TestCase):
             ]
         for i, l in enumerate(I.settings().split('\n')):
             self.assertEqual(l, lines[i])
+        I = Integrator([[0., 1.], [-1., 1.]], nstrat=[10, 10])
+        lines = [
+            'Integrator Settings:',
+            '    400 (approx) integrand evaluations in each of 10 iterations',
+            '    number of:  strata/axis = [10 10]',
+            '                increments/axis = 40',
+            '                h-cubes = 100  evaluations/h-cube = 2 (min)',
+            '                h-cubes/batch = 1000',
+            '    minimize_mem = False',
+            '    adapt_to_errors = False',
+            '    damping parameters: alpha = 0.5  beta= 0.75',
+            '    limits: h-cubes < 1e+09  evaluations/h-cube < 1e+07',
+            '    accuracy: relative = 0  absolute accuracy = 0',
+            '',
+            '    axis 0 covers (0.0, 1.0)',
+            '    axis 1 covers (-1.0, 1.0)',
+            '',
+            ]
+        for i, l in enumerate(I.settings().split('\n')):
+            self.assertEqual(l, lines[i])
 
     def test_pickle(self):
         I1 = Integrator([[0.,1.],[-1.,1.]], neval=234, nitn=123)
