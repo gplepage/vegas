@@ -449,7 +449,8 @@ class TestIntegrator(unittest.TestCase):
         lines = [
             'Integrator Settings:',
             '    234 (approx) integrand evaluations in each of 123 iterations',
-            '    number of:  strata/axis = 7  increments/axis = 21',
+            '    number of:  strata/axis = [7 7]',
+            '                increments/axis = 21',
             '                h-cubes = 49  evaluations/h-cube = 2 (min)',
             '                h-cubes/batch = 1000',
             '    minimize_mem = False',
@@ -468,7 +469,8 @@ class TestIntegrator(unittest.TestCase):
         lines = [
             'Integrator Settings:',
             '    1000 (approx) integrand evaluations in each of 10 iterations',
-            '    number of:  strata/axis = 15  increments/axis = 90',
+            '    number of:  strata/axis = [15 15]',
+            '                increments/axis = 90',
             '                h-cubes = 225  evaluations/h-cube = 2 (min)',
             '                h-cubes/batch = 1000',
             '    minimize_mem = True',

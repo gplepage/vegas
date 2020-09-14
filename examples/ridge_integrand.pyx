@@ -1,3 +1,4 @@
+# cython: language_level=3
 from libc.math cimport exp      # use exp() from C library
 import numpy as np
 

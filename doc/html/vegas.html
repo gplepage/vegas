@@ -145,7 +145,16 @@ evaluations can be substantially larger than <code class="docutils literal notra
 for challenging integrands; parameter <code class="docutils literal notranslate"><span class="pre">max_neval_hcube</span></code>
 can be used to limit such growth. The default value is 1000;
 real problems often require 10–1000 times more evaluations
-than this.</p></li>
+than this. Ignored if parameter <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> is specified.</p></li>
+<li><p><strong>nstrat</strong> (<em>int array</em>) – (Optional) <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> specifies the number
+of stratifications to use in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. If specified,
+parameter <code class="docutils literal notranslate"><span class="pre">neval</span></code> is ignored; the number of integrand
+evaluations per iteration is set between two and four times
+the product <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code>s over all directions . This parameter
+makes it possible to concentrate stratifications in directions
+where they are most needed. If it is not specified,
+the number of evaluations is determined from parameter
+<code class="docutils literal notranslate"><span class="pre">neval</span></code>, and <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> is the same for all <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – Damping parameter controlling the remapping
 of the integration variables as <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adapts to the
 integrand. Smaller values slow adaptation, which may be

@@ -1,7 +1,6 @@
 import vegas 
 import numpy as np 
 from outputsplitter import log_stdout, unlog_stdout
-from tools import *
 
 dim = 20
 r = np.array([
@@ -33,7 +32,7 @@ def main():
     itg = vegas.Integrator(dim * [[0, 1]], alpha=0.25)
     neval = 2e6
     itg(f, nitn=15, neval=neval)
-    r = itg(f, nitn=15, neval=neval)
+    r = itg(f, nitn=5, neval=neval)
     print(r.summary())
     print('nstrat =', np.array(itg.nstrat))
     unlog_stdout()
@@ -42,6 +41,7 @@ def main():
 
 
 
+# from tools import *
 
 
 def xmain():

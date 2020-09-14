@@ -1041,6 +1041,10 @@ cdef class Integrator(object):
         # determine # of strata, # of increments
         self.dim = self.map.dim
         if 'nstrat' in old_val:
+            if len(self.nstrat) != self.dim:
+                raise ValueError('nstrat[d] has wrong length: %d not %d' % (len(self.nstrat), self.dim))
+            if numpy.any(numpy.asarray(self.nstrat) < 1):
+                raise ValueError('bad nstrat: ' + str(numpy.asarray(self.nstrat)))
             old_val['neval'] = old_val.get('neval', self.neval)
             old_val['adapt_to_errors'] = self.adapt_to_errors
             self.adapt_to_errors = False
@@ -1141,10 +1145,10 @@ cdef class Integrator(object):
                 % (neval, self.nitn)
                 )
         ans = ans + (
-            "    number of strata/axis = %s\n" % str(numpy.array(self.nstrat))
+            "    number of:  strata/axis = %s\n" % str(numpy.array(self.nstrat))
             )
         ans = ans + (
-            "    increments/axis = %d\n"
+            "                increments/axis = %d\n"
             % self.map.ninc
             )
         if self.beta > 0:
