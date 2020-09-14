@@ -53,7 +53,10 @@ available in many programming languages, including Fortran (the original
 version), C and C++. The algorithm used here is significantly improved over
 the original implementation, and that used in most other implementations.
 It uses two adaptive strategies: importance sampling, as in the original
-implementation, and adaptive stratified sampling, which is new.
+implementation, and adaptive stratified sampling, which is new. The 
+new algorithm is described in G. P. Lepage, arXiv_2009.05112_.
+
+.. _arXiv_2009.05112: https://arxiv.org/abs/2009.05112
 
 This module is written in Cython, so it is almost as fast as compiled Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
