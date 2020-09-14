@@ -1,22 +1,31 @@
-Version 3.5 ???
-=================
+Version 3.5 2020-09-14
+=========================
+This update adds new functionality. First, the new 
+method AdaptiveMap.adapt_to_samples(x, f) optimizes the 
+vegas map for integrals of function f(x). This can be 
+used to precondition vegas before integrating. 
+See "vegas Maps and Preconditioning vegas" 
+in the tutorial for more details.
 
-- vegas results now include result.sum_neval which equals the 
-  number of integrand evaluations used to obtain the result.
+Second, the number of stratifications used by vegas for 
+its adaptive stratified sampling can now be set for each 
+direction separately. This is particularly useful in 
+high dimensions where it becomes increasingly 
+difficult to have more than one stratification per 
+axis. See "vegas Stratifications" in the tutorial
+for more information.
 
-- New: AdaptiveMap.adapt_to_samples(x, f) optimizes the 
-  vegas map for integrals of function f(x). See 
-  "Preconditioning vegas; vegas Maps" in the tutorial.
-  This also shows how to use vegas maps with integrators
-  other than vegas.
+Other changes:
 
-- New: AdpativeMap.invmap(x, y, jac) computes the y values 
+- New method AdpativeMap.invmap(x, y, jac) computes the y values 
   and Jacobian corresponding to points x. It is the 
   inverse of AdaptiveMap.map(y, x, jac), although 
   jac is dx/dy in both cases.
 
 - AdaptiveMap.show_grid has a new keyword argument: plotter.
 
+- vegas results now include result.sum_neval which equals the 
+  total number of integrand evaluations used to obtain the result.
 
 Version 3.4.5 2020-06-16
 ========================

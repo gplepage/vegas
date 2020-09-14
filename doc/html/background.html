@@ -125,8 +125,8 @@ that <img class="math" src="_images/math/cd41a74f29ff542365c351ffdfd922124c5f411
 which need not be the case
 if <img class="math" src="_images/math/fb62ba1e89ca6200f224a445c3f4a567fc451fe1.svg" alt="f(x)"/> has (integrable) singularities.</p>
 </div>
-<div class="section" id="the-vegas-grid">
-<h2>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Grid<a class="headerlink" href="#the-vegas-grid" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="the-vegas-map">
+<h2>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Map<a class="headerlink" href="#the-vegas-map" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> implements the transformation of an integration variable
 <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/> into a new variable <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/> using a grid in <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/> space:</p>
 <blockquote>
@@ -269,8 +269,8 @@ strategy will always have difficulty adapting to structures that
 lie along diagonals of the integration volume. To address such problems,
 the new version of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> introduces a second adaptive strategy,
 based upon another standard Monte Carlo technique called “stratified
-sampling.” <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> divides the <img class="math" src="_images/math/71ad8370b0b8e9dafe0121a2623e940d29f4cae5.svg" alt="d"/>-dimensional
-<img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space volume into <img class="math" src="_images/math/b6fc47babc37e10d5df1d35c768963e673f3a39a.svg" alt="M_\mathrm{st}^d"/> hypercubes using
+sampling.” <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> divides the <img class="math" src="_images/math/46d6d6c574dd6eb0fec02c32d61a984a06878317.svg" alt="D"/>-dimensional
+<img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space volume into <img class="math" src="_images/math/daa9c4e26a01ec8a5cf8e31e2651d7e70d544b1e.svg" alt="M_\mathrm{st}^D"/> hypercubes using
 a uniform <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space grid with <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}"/> stratifications on each
 axis. It estimates
 the integral by doing a separate Monte Carlo integration in each of
@@ -280,8 +280,8 @@ Typically
 this <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space grid is much coarser than the <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/>-space grid used to
 remap the integration variables. This is because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> needs
 at least two integrand evaluations in each <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space hypercube, and
-so must keep the number of hypercubes <img class="math" src="_images/math/b6fc47babc37e10d5df1d35c768963e673f3a39a.svg" alt="M_\mathrm{st}^d"/> smaller than <code class="docutils literal notranslate"><span class="pre">neval/2</span></code>.
-This can restrict <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}"/> severely when <img class="math" src="_images/math/71ad8370b0b8e9dafe0121a2623e940d29f4cae5.svg" alt="d"/> is large.</p>
+so must keep the number of hypercubes <img class="math" src="_images/math/daa9c4e26a01ec8a5cf8e31e2651d7e70d544b1e.svg" alt="M_\mathrm{st}^D"/> smaller than <code class="docutils literal notranslate"><span class="pre">neval/2</span></code>.
+This can restrict <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}"/> severely when <img class="math" src="_images/math/46d6d6c574dd6eb0fec02c32d61a984a06878317.svg" alt="D"/> is large.</p>
 <p>Older versions of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> also divide <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space into hypercubes and
 do Monte Carlo estimates in the separate hypercubes. These versions, however,
 use the same number of integrand evaluations in each hypercube.
@@ -321,7 +321,7 @@ integrals.</p>
   <ul>
 <li><a class="reference internal" href="#">How <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Works</a><ul>
 <li><a class="reference internal" href="#importance-sampling">Importance Sampling</a></li>
-<li><a class="reference internal" href="#the-vegas-grid">The <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Grid</a></li>
+<li><a class="reference internal" href="#the-vegas-map">The <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Map</a></li>
 <li><a class="reference internal" href="#adaptive-stratified-sampling">Adaptive Stratified Sampling</a></li>
 </ul>
 </li>

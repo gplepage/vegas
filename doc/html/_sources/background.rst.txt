@@ -15,8 +15,8 @@ How :mod:`vegas` Works
 .. |sigmaI| replace:: :math:`\sigma_I`
 .. |x(y)| replace:: :math:`x(y)`
 .. |Ms| replace:: :math:`M_\mathrm{st}`
-.. |Msd| replace:: :math:`M_\mathrm{st}^d`
-.. |d| replace:: :math:`d`
+.. |Msd| replace:: :math:`M_\mathrm{st}^D`
+.. |d| replace:: :math:`D`
 
 |vegas| uses two adaptive strategies: importance sampling, and
 adaptive stratified sampling. Here we discuss the ideas behind each,
@@ -123,7 +123,7 @@ that :math:`(J(y)\:f(x(y)))^n` is integrable for all :math:`n`,
 which need not be the case
 if :math:`f(x)` has (integrable) singularities.
 
-The |vegas| Grid
+The |vegas| Map
 --------------------
 |vegas| implements the transformation of an integration variable
 |x| into a new variable |y| using a grid in |x| space:

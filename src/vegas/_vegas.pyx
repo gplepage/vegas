@@ -764,7 +764,16 @@ cdef class Integrator(object):
             for challenging integrands; parameter ``max_neval_hcube``
             can be used to limit such growth. The default value is 1000;
             real problems often require 10--1000 times more evaluations
-            than this.
+            than this. Ignored if parameter ``nstrat`` is specified.
+        nstrat (int array): (Optional) ``nstrat[d]`` specifies the number 
+            of stratifications to use in direction ``d``. If specified,
+            parameter ``neval`` is ignored; the number of integrand 
+            evaluations per iteration is set between two and four times 
+            the product ``nstrat[d]``\s over all directions . This parameter 
+            makes it possible to concentrate stratifications in directions
+            where they are most needed. If it is not specified,
+            the number of evaluations is determined from parameter
+            ``neval``, and ``nstrat[d]`` is the same for all ``d``.
         alpha (float): Damping parameter controlling the remapping
             of the integration variables as |vegas| adapts to the
             integrand. Smaller values slow adaptation, which may be
@@ -910,7 +919,6 @@ cdef class Integrator(object):
     def __init__(Integrator self not None, map, **kargs):
         # N.B. All attributes initialized automatically by cython.
         #      This is why self.set() works here.
-        self.nstrat = 0 # dummy (flags action in self.set())
         self.sigf = numpy.array([], numpy.float_) # reset sigf (dummy)
         self.sum_sigf = HUGE
         self.neval_hcube_range = None
@@ -920,12 +928,14 @@ cdef class Integrator(object):
             for k in Integrator.defaults:
                 args[k] = getattr(map, k)
             args.update(kargs)
+            self.nstrat = numpy.full(map.map.dim, 0) # dummy (flags action in self.set())
             self.set(args)
         else:
             args = dict(Integrator.defaults)
             del args['map']
             args.update(kargs)
             self.map = AdaptiveMap(map)
+            self.nstrat = numpy.full(self.map.dim, 0) # dummy (flags action in self.set())
             self.set(args)
 
     def __reduce__(Integrator self not None):
@@ -973,6 +983,9 @@ cdef class Integrator(object):
             elif k == 'neval':
                 old_val[k] = self.neval
                 self.neval = kargs[k]
+            elif k == 'nstrat':
+                old_val[k] = self.nstrat 
+                self.nstrat = numpy.array(kargs[k])
             elif k == 'maxinc_axis':
                 old_val[k] = self.maxinc_axis
                 self.maxinc_axis = kargs[k]
@@ -1027,41 +1040,54 @@ cdef class Integrator(object):
 
         # determine # of strata, # of increments
         self.dim = self.map.dim
-        # need extra evaluations if beta>0 so can adapt
-        neval_eff = (self.neval / 2.0) if self.beta > 0 else self.neval
-        ns = int((neval_eff / 2.) ** (1. / self.dim))   # stratifications/axis
-        ni = int(self.neval / 10.)                      # increments/axis
-        if ns < 1:
-            ns = 1
-        elif ns ** self.dim > self.max_nhcube and not self.minimize_mem:
-            ns = int(self.max_nhcube ** (1. / self.dim))
-        if ni < 1:
-            ni = 1
-        elif ni  > self.maxinc_axis:
-            ni = self.maxinc_axis
-        # want integer number of increments in each stratification
-        # or vise versa
-        if ns > ni:
-            if ns < self.maxinc_axis:
-                ni = ns
-            else:
-                ns = int(ns // ni) * ni
+        if 'nstrat' in old_val:
+            old_val['neval'] = old_val.get('neval', self.neval)
+            old_val['adapt_to_errors'] = self.adapt_to_errors
+            self.adapt_to_errors = False
+            self.neval = 4 * numpy.product(self.nstrat)
+            neval_eff = self.neval / 2
+            ni = min(max(int(self.neval / 10.), 1), self.maxinc_axis)
+            self.map.adapt(ninc=ni)
+            if not numpy.all(numpy.equal(self.nstrat, old_val['nstrat'])):
+                # need to recalculate stratification distribution for beta>0
+                self.sum_sigf = HUGE
         else:
-            ni = int(ni // ns) * ns
-        if self.adapt_to_errors:
-            # ni > ns makes no sense with this mode
-            if ni > ns:
-                ni = ns
+            # need extra evaluations if beta>0 so can adapt
+            neval_eff = (self.neval / 2.0) if self.beta > 0 else self.neval
+            ns = int((neval_eff / 2.) ** (1. / self.dim))   # stratifications/axis
+            ni = int(self.neval / 10.)                      # increments/axis
+            if ns < 1:
+                ns = 1
+            elif ns ** self.dim > self.max_nhcube and not self.minimize_mem:
+                ns = int(self.max_nhcube ** (1. / self.dim))
+            if ni < 1:
+                ni = 1
+            elif ni  > self.maxinc_axis:
+                ni = self.maxinc_axis
+            # want integer number of increments in each stratification
+            # or vise versa
+            if ns > ni:
+                if ns < self.maxinc_axis:
+                    ni = ns
+                else:
+                    ns = int(ns // ni) * ni
+            else:
+                ni = int(ni // ns) * ns
+            if self.adapt_to_errors:
+                # ni > ns makes no sense with this mode
+                if ni > ns:
+                    ni = ns
 
-        # rebuild map with correct number of increments
-        self.map.adapt(ninc=ni)
+            # rebuild map with correct number of increments
+            self.map.adapt(ninc=ni)
+
+            if not numpy.all(numpy.equal(self.nstrat, ns)):
+                # need to recalculate stratification distribution for beta>0
+                self.sum_sigf = HUGE
+            self.nstrat[:] = ns
 
         # determine min number of evaluations per h-cube (usually 2)
-        if self.nstrat != ns:
-            # need to recalculate stratification distribution for beta>0
-            self.sum_sigf = HUGE
-        self.nstrat = ns
-        self.nhcube = self.nstrat ** self.dim
+        self.nhcube = numpy.product(self.nstrat) 
         self.min_neval_hcube = int(neval_eff // self.nhcube)
         if self.min_neval_hcube < 2:
             self.min_neval_hcube = 2
@@ -1100,7 +1126,7 @@ cdef class Integrator(object):
             String containing the settings.
         """
         cdef numpy.npy_intp d
-        nhcube = self.nstrat ** self.dim
+        nhcube = numpy.product(self.nstrat)
         neval = nhcube * self.min_neval_hcube if self.beta <= 0 else self.neval
         ans = ""
         ans = "Integrator Settings:\n"
@@ -1115,8 +1141,11 @@ cdef class Integrator(object):
                 % (neval, self.nitn)
                 )
         ans = ans + (
-            "    number of:  strata/axis = %d  increments/axis = %d\n"
-            % (self.nstrat, self.map.ninc)
+            "    number of strata/axis = %s\n" % str(numpy.array(self.nstrat))
+            )
+        ans = ans + (
+            "    increments/axis = %d\n"
+            % self.map.ninc
             )
         if self.beta > 0:
             ans = ans + (
@@ -1166,7 +1195,7 @@ cdef class Integrator(object):
         cdef numpy.npy_intp neval_hcube = self.min_neval_hcube
         cdef numpy.npy_intp neval_batch = nhcube_batch * neval_hcube
         cdef double[:, ::1] yran = self.ran_array_generator((neval_batch, self.dim))
-        cdef double dv_y = (1./self.nstrat) ** self.dim
+        cdef double dv_y = 1. / numpy.product(self.nstrat)
         cdef double sum_fdv, sum_fdv2, sigf2, fdv
         cdef numpy.ndarray[numpy.double_t, ndim=1] fx
         cdef double[:, ::1] y = self.y[:neval_batch, :]
@@ -1179,11 +1208,11 @@ cdef class Integrator(object):
             hcube = hcube_base + ihcube
             tmp_hcube = hcube
             for d in range(self.dim):
-                y0[d] = tmp_hcube % self.nstrat
-                tmp_hcube = (tmp_hcube - y0[d]) // self.nstrat
+                y0[d] = tmp_hcube % self.nstrat[d]
+                tmp_hcube = (tmp_hcube - y0[d]) // self.nstrat[d]
             for d in range(self.dim):
                 for i in range(i_start, i_start + neval_hcube):
-                    y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
+                    y[i, d] = (y0[d] + yran[i, d]) / self.nstrat[d]
             i_start += neval_hcube
         self.map.map(y, x, jac, neval_batch)
         fx = fcn.training(numpy.asarray(x))
@@ -1241,7 +1270,7 @@ cdef class Integrator(object):
         corresponds to a single iteration. The number in a batch
         is controlled by parameter ``nhcube_batch``.
         """
-        cdef numpy.npy_intp nhcube = self.nstrat ** self.dim
+        cdef numpy.npy_intp nhcube = numpy.product(self.nstrat)
         cdef double dv_y = 1. / nhcube
         cdef numpy.npy_intp nhcube_batch = min(self.nhcube_batch, nhcube)
         cdef numpy.npy_intp neval_batch
@@ -1320,11 +1349,11 @@ cdef class Integrator(object):
                 hcube = hcube_base + ihcube
                 tmp_hcube = hcube
                 for d in range(self.dim):
-                    y0[d] = tmp_hcube % self.nstrat
-                    tmp_hcube = (tmp_hcube - y0[d]) // self.nstrat
+                    y0[d] = tmp_hcube % self.nstrat[d]
+                    tmp_hcube = (tmp_hcube - y0[d]) // self.nstrat[d]
                 for d in range(self.dim):
                     for i in range(i_start, i_start + neval_hcube[ihcube]):
-                        y[i, d] = (y0[d] + yran[i, d]) / self.nstrat
+                        y[i, d] = (y0[d] + yran[i, d]) / self.nstrat[d]
                 i_start += neval_hcube[ihcube]
             self.map.map(y, x, jac, neval_batch)
 

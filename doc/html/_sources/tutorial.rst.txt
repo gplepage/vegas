@@ -1011,7 +1011,7 @@ to infinity. |vegas| will provide Monte Carlo estimates of the sums, emphasizing
 the more important terms.
 
 
-Preconditioning |vegas|; |vegas| Maps
+|vegas| Maps and Preconditioning |vegas| 
 -------------------------------------------
 |vegas| adapts by remapping the integration variables (see :ref:`importance_sampling`). It 
 is possible to precondition this map, before creating a :class:`vegas.Integrator`.
@@ -1046,7 +1046,7 @@ that emphasizes the regions around them::
         return ans * 247366.171
 
     dim = 5 
-    map = vegas.AdaptiveMap(dim * [(0, 1)])     # uniform map
+    map = vegas.AdaptiveMap(dim * [[0, 1]])     # uniform map
     x = np.concatenate([                        # 2000 points near peaks
         np.random.normal(loc=0.45, scale=3/50, size=(1000, dim)),
         np.random.normal(loc=0.7, scale=3/50, size=(1000, dim)),
@@ -1121,6 +1121,96 @@ directly, as above, or they can be built for a particular
 integrand by running several iterations of |vegas| with 
 the integrand and using the |vegas| integrator's map: ``integ.map``.
 
+
+|vegas| Stratifications
+-------------------------
+Having mapped the integration variables ``x[d]`` to new variables ``y[d]``,
+|vegas| evaluates the integral in ``y``-space using stratified Monte 
+Carlo sampling (see :ref:`adaptive-stratified-sampling`). This is 
+done by dividing each axis into ``nstrat`` equal stratifications, 
+which divide the ``D``-dimensional integration volume into 
+``nstrat**D`` sub-volumes. |vegas| does a separate integral 
+in each sub-volume, adjusting the number of integrand samples 
+used in each one to minimize errors. By default,
+the number ``nstrat`` of stratifications per direction is the same 
+in every direction and is set automatically 
+based on the number ``neval`` of integrand evaluations per 
+iteration. It is possible, however, to specify the number of 
+stratifications ``nstrat[d]`` for each direction separately. 
+
+Requiring the same number of stratifications in each direction 
+greatly limits the number of stratifications in very high 
+dimensions, since the product of the ``nstrat[d]`` must be 
+less than ``neval/2`` (so there are at least two integrand 
+samples in each sub-volume). This restricts |vegas|'s ability to 
+adapt. Often there is a subset of integration directions 
+that are more challenging than the others. In high 
+dimensions (and possibly lower dimensions) 
+it is worthwhile using larger values 
+for ``nstrat[d]`` for those directions.
+
+An example is the 20-dimensional integral 
+
+.. math:: 
+    C\int_0^1 \!d^{20}x\,
+    \,\sum_{i=1}^2 \mathrm{e}^{-100 (\mathbf{x} - \mathbf{r}_i)^2},
+
+which has high, narrow peaks at 
+
+.. math::
+    \mathbf{r}_1 = (0.39, 0.39, 0.39, 0.39, 0.39, 0.45, \ldots, 0.45),
+    
+.. math::
+    \mathbf{r}_2 = (0.74, 0.74, 0.74, 0.74, 0.74, 0.45, \ldots, 0.45).
+
+These peaks are aligned along the diagonal of the integration volume for the 
+first five directions, but are on top of each other in the remaining directions.
+This makes the integrals over the first five directions much more challenging
+than the remaining integrals.
+
+To integrate this function, we specify ``nstrat[d]`` rather than ``neval``. 
+We set ``nstrat[d]=12`` for the first five directions, and ``nstrat[d]=1`` 
+for all the rest. This fixes the number of function evaluations to be 
+between two and four times the number of sub-volumes created by 
+the stratifications (i.e., the product of the ``nstrat[d]``, here 248,832).  
+The following code ::
+
+    import vegas 
+    import numpy as np 
+
+    dim = 20
+    r = np.array([
+        5 * [0.39] + (dim - 5) * [0.45],
+        5 * [0.74] + (dim - 5) * [0.45],
+        ])
+
+    @vegas.batchintegrand
+    def f(x):
+        ans = 0
+        for ri in r:
+            dx2 = np.sum((x - ri[None, :]) ** 2, axis=1)
+            ans += np.exp(-100 * dx2)
+        return ans * 534071568726932.4
+
+    integ = vegas.Integrator(dim * [[0, 1]], alpha=0.25)
+    nstrat = 5 * [12] + (dim - 5) * [1]
+    integ(f, nitn=15, nstrat=nstrat)            # warmup
+    r = integ(f, nitn=5, nstrat=nstrat)
+    print(r.summary())
+    print('nstrat =', np.array(integ.nstrat))
+
+gives excellent results:
+
+.. literalinclude:: eg6a.out
+
+|vegas| struggles to converge, and is much less accurate,
+when in its default mode with the same number of 
+integrand evaluations (about ``1e6`` per iteration):
+
+.. literalinclude:: eg6b.out 
+
+
+    
 
 |vegas| as a Random Number Generator
 -------------------------------------

@@ -55,10 +55,10 @@ cdef class Integrator:
     cdef readonly object ran_array_generator
     cdef readonly bint sync_ran
     cdef readonly bint mpi
+    cdef readonly numpy.npy_intp[::1] nstrat
     # generated
     cdef readonly AdaptiveMap map
     cdef readonly double sum_sigf
-    cdef readonly numpy.npy_intp nstrat
     cdef readonly numpy.npy_intp min_neval_hcube
     cdef readonly numpy.npy_intp dim
     cdef readonly numpy.npy_intp last_neval
