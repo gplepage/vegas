@@ -1077,7 +1077,19 @@ the integrator is still far from converged by the fifth iteration:
 
 The exact distribution of random points ``x`` isn't important; what 
 matters is that they cover and are concentrated in 
-the dominant regions contributing to the integral.
+the dominant regions contributing to the integral. Should it be needed,
+a sample ``xsample=(x, f(x))`` 
+in ``x``-space is easily converted to the equivalent sample in ``y``-space using::
+
+    x, fx = xsample
+    y = np.empty(x.shape, float)
+    jac = np.empty(x.shape[0], float)
+    map.invmap(x, y, jac)
+    ysample = (y, jac * fx)
+
+where ``map.invmap(x, y, jac)`` fills array ``y`` with the ``y``-space 
+points corresponding to ``x``, and array ``jac`` with the transformation's
+Jacobian.
 
 Note that |vegas| maps can be used with integrators other than |vegas|.
 The |vegas| map maps the integration variables ``x[d]`` into 

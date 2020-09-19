@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Tutorial &#8212; vegas 3.5 documentation</title>
+    <title>Tutorial &#8212; vegas 3.5.1 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5.1 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -1166,7 +1166,19 @@ the integrator is still far from converged by the fifth iteration:</p>
 </div>
 <p>The exact distribution of random points <code class="docutils literal notranslate"><span class="pre">x</span></code> isn’t important; what
 matters is that they cover and are concentrated in
-the dominant regions contributing to the integral.</p>
+the dominant regions contributing to the integral. Should it be needed,
+a sample <code class="docutils literal notranslate"><span class="pre">xsample=(x,</span> <span class="pre">f(x))</span></code>
+in <code class="docutils literal notranslate"><span class="pre">x</span></code>-space is easily converted to the equivalent sample in <code class="docutils literal notranslate"><span class="pre">y</span></code>-space using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="p">,</span> <span class="n">fx</span> <span class="o">=</span> <span class="n">xsample</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+<span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+<span class="nb">map</span><span class="o">.</span><span class="n">invmap</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span>
+<span class="n">ysample</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">jac</span> <span class="o">*</span> <span class="n">fx</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">map.invmap(x,</span> <span class="pre">y,</span> <span class="pre">jac)</span></code> fills array <code class="docutils literal notranslate"><span class="pre">y</span></code> with the <code class="docutils literal notranslate"><span class="pre">y</span></code>-space
+points corresponding to <code class="docutils literal notranslate"><span class="pre">x</span></code>, and array <code class="docutils literal notranslate"><span class="pre">jac</span></code> with the transformation’s
+Jacobian.</p>
 <p>Note that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> maps can be used with integrators other than <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.
 The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map maps the integration variables <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> into
 new variables <code class="docutils literal notranslate"><span class="pre">y[d]</span></code> (where <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;</span> <span class="pre">y[d]</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>) that make the integrand
@@ -1454,7 +1466,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5.1 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
