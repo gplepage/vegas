@@ -928,14 +928,14 @@ cdef class Integrator(object):
             for k in Integrator.defaults:
                 args[k] = getattr(map, k)
             args.update(kargs)
-            self.nstrat = numpy.full(map.map.dim, 0) # dummy (flags action in self.set())
+            self.nstrat = numpy.full(map.map.dim, 0, dtype=numpy.intp) # dummy (flags action in self.set())
             self.set(args)
         else:
             args = dict(Integrator.defaults)
             del args['map']
             args.update(kargs)
             self.map = AdaptiveMap(map)
-            self.nstrat = numpy.full(self.map.dim, 0) # dummy (flags action in self.set())
+            self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.int) # dummy (flags action in self.set())
             self.set(args)
 
     def __reduce__(Integrator self not None):
@@ -985,7 +985,7 @@ cdef class Integrator(object):
                 self.neval = kargs[k]
             elif k == 'nstrat':
                 old_val[k] = self.nstrat 
-                self.nstrat = numpy.array(kargs[k])
+                self.nstrat = numpy.array(kargs[k], dtype=numpy.intp)
             elif k == 'maxinc_axis':
                 old_val[k] = self.maxinc_axis
                 self.maxinc_axis = kargs[k]
