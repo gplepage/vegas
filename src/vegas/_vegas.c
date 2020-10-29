@@ -3059,7 +3059,6 @@ static const char __pyx_k_fmt[] = "fmt";
 static const char __pyx_k_fxs[] = "fxs";
 static const char __pyx_k_get[] = "get";
 static const char __pyx_k_idx[] = "idx";
-static const char __pyx_k_int[] = "int";
 static const char __pyx_k_inv[] = "_inv";
 static const char __pyx_k_itn[] = "itn";
 static const char __pyx_k_jac[] = "jac";
@@ -3905,7 +3904,6 @@ static PyObject *__pyx_n_s_init___locals_eval;
 static PyObject *__pyx_n_s_init___locals_eval_locals__mpi;
 static PyObject *__pyx_n_s_init_grid;
 static PyObject *__pyx_n_s_initinc;
-static PyObject *__pyx_n_s_int;
 static PyObject *__pyx_n_s_integral;
 static PyObject *__pyx_n_u_integral;
 static PyObject *__pyx_n_s_integrand;
@@ -16305,7 +16303,7 @@ static int __pyx_pf_5vegas_6_vegas_10Integrator___init__(struct __pyx_obj_5vegas
  *             del args['map']
  *             args.update(kargs)             # <<<<<<<<<<<<<<
  *             self.map = AdaptiveMap(map)
- *             self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.int) # dummy (flags action in self.set())
+ *             self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.intp) # dummy (flags action in self.set())
  */
     __pyx_t_7 = __Pyx_CallUnboundCMethod1(&__pyx_umethod_PyDict_Type_update, __pyx_v_args, __pyx_v_kargs); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 936, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
@@ -16315,7 +16313,7 @@ static int __pyx_pf_5vegas_6_vegas_10Integrator___init__(struct __pyx_obj_5vegas
  *             del args['map']
  *             args.update(kargs)
  *             self.map = AdaptiveMap(map)             # <<<<<<<<<<<<<<
- *             self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.int) # dummy (flags action in self.set())
+ *             self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.intp) # dummy (flags action in self.set())
  *             self.set(args)
  */
     __pyx_t_7 = __Pyx_PyObject_CallOneArg(((PyObject *)__pyx_ptype_5vegas_6_vegas_AdaptiveMap), __pyx_v_map); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 937, __pyx_L1_error)
@@ -16329,7 +16327,7 @@ static int __pyx_pf_5vegas_6_vegas_10Integrator___init__(struct __pyx_obj_5vegas
     /* "vegas/_vegas.pyx":938
  *             args.update(kargs)
  *             self.map = AdaptiveMap(map)
- *             self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.int) # dummy (flags action in self.set())             # <<<<<<<<<<<<<<
+ *             self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.intp) # dummy (flags action in self.set())             # <<<<<<<<<<<<<<
  *             self.set(args)
  * 
  */
@@ -16352,7 +16350,7 @@ static int __pyx_pf_5vegas_6_vegas_10Integrator___init__(struct __pyx_obj_5vegas
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_numpy); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 938, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_int); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 938, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_intp); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 938, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 938, __pyx_L1_error)
@@ -16371,7 +16369,7 @@ static int __pyx_pf_5vegas_6_vegas_10Integrator___init__(struct __pyx_obj_5vegas
 
     /* "vegas/_vegas.pyx":939
  *             self.map = AdaptiveMap(map)
- *             self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.int) # dummy (flags action in self.set())
+ *             self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.intp) # dummy (flags action in self.set())
  *             self.set(args)             # <<<<<<<<<<<<<<
  * 
  *     def __reduce__(Integrator self not None):
@@ -68546,7 +68544,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_init___locals_eval_locals__mpi, __pyx_k_init___locals_eval_locals__mpi, sizeof(__pyx_k_init___locals_eval_locals__mpi), 0, 0, 1, 1},
   {&__pyx_n_s_init_grid, __pyx_k_init_grid, sizeof(__pyx_k_init_grid), 0, 0, 1, 1},
   {&__pyx_n_s_initinc, __pyx_k_initinc, sizeof(__pyx_k_initinc), 0, 0, 1, 1},
-  {&__pyx_n_s_int, __pyx_k_int, sizeof(__pyx_k_int), 0, 0, 1, 1},
   {&__pyx_n_s_integral, __pyx_k_integral, sizeof(__pyx_k_integral), 0, 0, 1, 1},
   {&__pyx_n_u_integral, __pyx_k_integral, sizeof(__pyx_k_integral), 0, 1, 0, 1},
   {&__pyx_n_s_integrand, __pyx_k_integrand, sizeof(__pyx_k_integrand), 0, 0, 1, 1},

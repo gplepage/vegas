@@ -935,7 +935,7 @@ cdef class Integrator(object):
             del args['map']
             args.update(kargs)
             self.map = AdaptiveMap(map)
-            self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.int) # dummy (flags action in self.set())
+            self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.intp) # dummy (flags action in self.set())
             self.set(args)
 
     def __reduce__(Integrator self not None):
