@@ -1,7 +1,7 @@
 These .py files are simple examples showing how to use vegas. Use 'make run'
 to run most of them, and compare their output against the corresponding .out
 files. This will also try to run code on multiple processors, using MPI
-(assumes MPI installed).
+(assumes MPI installed); the makefile assumes the openmpi version of mpirun.
 
 Some of these examples are discussed in the vegas documentation (which
 starts at doc/html/index.html):
