@@ -485,13 +485,13 @@ class TestIntegrator(unittest.TestCase):
             ]
         for i, l in enumerate(I.settings().split('\n')):
             self.assertEqual(l, lines[i])
-        I = Integrator([[0., 1.], [-1., 1.]], nstrat=[10, 10])
+        I = Integrator([[0., 1.], [-1., 1.]], nstrat=[10, 11])
         lines = [
             'Integrator Settings:',
-            '    400 (approx) integrand evaluations in each of 10 iterations',
-            '    number of:  strata/axis = [10 10]',
-            '                increments/axis = 40',
-            '                h-cubes = 100  evaluations/h-cube = 2 (min)',
+            '    440 (approx) integrand evaluations in each of 10 iterations',
+            '    number of:  strata/axis = [10 11]',
+            '                increments/axis = 44',
+            '                h-cubes = 110  evaluations/h-cube = 2 (min)',
             '                h-cubes/batch = 1000',
             '    minimize_mem = False',
             '    adapt_to_errors = False',
@@ -527,11 +527,13 @@ class TestIntegrator(unittest.TestCase):
         " set "
         new_defaults = dict(
             map=AdaptiveMap([[1,2],[0,1]]),
-            neval=100,       # number of evaluations per iteration
-            maxinc_axis=100,  # number of adaptive-map increments per axis
+            neval=100,          # number of evaluations per iteration
+            maxinc_axis=100,    # number of adaptive-map increments per axis
             nhcube_batch=10,    # number of h-cubes per batch
-            max_nhcube=5e2,    # max number of h-cubes
+            max_nhcube=5e2,     # max number of h-cubes
             max_neval_hcube=1e1, # max number of evaluations per h-cube
+            neval_nstrat=12,    # for use when nstrat set
+            max_mem=100,        # memory limit
             nitn=100,           # number of iterations
             alpha=0.35,
             beta=0.25,
@@ -852,6 +854,13 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(np.isnan(res.chi2))
         self.assertTrue(np.isnan(res.Q))
         self.assertAlmostEqual(res.itn_results[0].sdev / res.sdev, 2.0)
+
+    def test_mem(self):
+        " max_mem "
+        def f(x): return np.prod(x)
+        I = Integrator(3 * [(0,1)]), max_mem=10)
+        with self.assertRaises(MemoryError):
+            I(f, neval=1e4)
 
 class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
     # @unittest.skipIf(FAST,"skipping test_expval for speed")
