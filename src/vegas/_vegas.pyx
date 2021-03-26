@@ -2,7 +2,7 @@
 # c#ython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-20 G. Peter Lepage.
+# Copyright (c) 2013-21 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -478,13 +478,16 @@ cdef class AdaptiveMap:
         for d in range(dim):
             if self.sum_f is not None and alpha != 0:
                 for i in range(old_ninc):
-                    avg_f[i] = self.sum_f[d, i] / self.n_f[d, i]
+                    if self.n_f[d, i] > 0:
+                        avg_f[i] = self.sum_f[d, i] / self.n_f[d, i]
+                    else:
+                        avg_f[i] = 0.
             if alpha > 0 and old_ninc > 1:
-                tmp_f[0] = (7. * avg_f[0] + avg_f[1]) / 8.
-                tmp_f[-1] = (7. * avg_f[-1] + avg_f[-2]) / 8.
+                tmp_f[0] = abs(7. * avg_f[0] + avg_f[1]) / 8.
+                tmp_f[-1] = abs(7. * avg_f[-1] + avg_f[-2]) / 8.
                 sum_f = tmp_f[0] + tmp_f[-1]
                 for i in range(1, old_ninc - 1):
-                    tmp_f[i] = (6. * avg_f[i] + avg_f[i-1] + avg_f[i+1]) / 8.
+                    tmp_f[i] = abs(6. * avg_f[i] + avg_f[i-1] + avg_f[i+1]) / 8.
                     sum_f += tmp_f[i]
                 if sum_f > 0:
                     for i in range(old_ninc):
@@ -493,7 +496,8 @@ cdef class AdaptiveMap:
                     for i in range(old_ninc):
                         avg_f[i] = TINY
                 for i in range(old_ninc):
-                    avg_f[i] = (-(1 - avg_f[i]) / log(avg_f[i])) ** alpha
+                    if avg_f[i] > 0 and avg_f[i] <= 0.99999999:
+                        avg_f[i] = (-(1 - avg_f[i]) / log(avg_f[i])) ** alpha
 
             # regrid
             new_grid[d, 0] = self.grid[d, 0]
@@ -768,12 +772,17 @@ cdef class Integrator(object):
         nstrat (int array): (Optional) ``nstrat[d]`` specifies the number 
             of stratifications to use in direction ``d``. If specified,
             parameter ``neval`` is ignored; the number of integrand 
-            evaluations per iteration is set between two and four times 
-            the product ``nstrat[d]``\s over all directions . This parameter 
-            makes it possible to concentrate stratifications in directions
-            where they are most needed. If it is not specified,
-            the number of evaluations is determined from parameter
-            ``neval``, and ``nstrat[d]`` is the same for all ``d``.
+            evaluations per iteration is set between ``neval_nstrat/2`` and 
+            ``neval_strat`` times the product ``nstrat[d]``\s over all 
+            directions. This parameter makes it possible to concentrate 
+            stratifications in directions where they are most needed. 
+            If ``nstrat`` is not specified, the number of evaluations is 
+            determined from parameter ``neval``, and ``nstrat[d]`` 
+            is the same for all ``d``.
+        neval_nstrat (positive int >= 2): When ``nstrat`` is specified,
+            ``neval`` is set to a value between ``neval_nstrat/2`` and 
+            ``neval_strat`` times the product ``nstrat[d]``\s over all 
+            directions; otherwise it is ignored. The default value is 4.
         alpha (float): Damping parameter controlling the remapping
             of the integration variables as |vegas| adapts to the
             integrand. Smaller values slow adaptation, which may be
@@ -844,9 +853,15 @@ cdef class Integrator(object):
             ignored if ``beta=0`` or ``minimize_mem=True``.
         max_neval_hcube (positive int): Maximum number of integrand
             evaluations per hypercube in the stratification. The default
-            value is 1e7. Larger values might allow for more adaptation
-            (when ``beta>0``), but also can result in very large internal
+            value is 1e5. Larger values might allow for more adaptation
+            (when ``beta>0``), but also can result in large internal
             work arrays.
+        max_mem (positive int): Maximum number of floats allowed in 
+            internal work arrays (approx.). A ``MemoryError`` is 
+            raised if the work arrays are too large, in which case
+            one might want to reduce ``max_neval_hcube`` or 
+            ``max_nhcube`` (or increase ``max_mem`` if there is 
+            enough RAM). Default value is 1e9.
         rtol (float): Relative error in the integral estimate
             at which point the integrator can stop. The default
             value is 0.0 which turns off this stopping condition.
@@ -901,7 +916,9 @@ cdef class Integrator(object):
         maxinc_axis=1000,   # number of adaptive-map increments per axis
         nhcube_batch=1000,  # number of h-cubes per batch
         max_nhcube=1e9,     # max number of h-cubes
-        max_neval_hcube=1e7,# max number of evaluations per h-cube
+        max_neval_hcube=1e5,# max number of evaluations per h-cube
+        max_mem=1e9,        # memory cutoff (# of floats)
+        neval_nstrat=4,     # neval = neval_nstrat * prod(nstrat) when nstrat specified
         nitn=10,            # number of iterations
         alpha=0.5,
         beta=0.75,
@@ -998,6 +1015,14 @@ cdef class Integrator(object):
             elif k == 'max_neval_hcube':
                 old_val[k] = self.max_neval_hcube
                 self.max_neval_hcube = int(kargs[k])
+            elif k == 'max_mem':
+                old_val[k] = self.max_mem
+                self.max_mem = int(kargs[k])
+            elif k == 'neval_nstrat':
+                old_val[k] = self.neval_nstrat 
+                self.neval_nstrat = int(kargs[k]) 
+                if self.neval_nstrat < 2:
+                    raise ValueError('neval_nstrat must be 2 or larger')
             elif k == 'nitn':
                 old_val[k] = self.nitn
                 self.nitn = kargs[k]
@@ -1048,8 +1073,11 @@ cdef class Integrator(object):
             old_val['neval'] = old_val.get('neval', self.neval)
             old_val['adapt_to_errors'] = self.adapt_to_errors
             self.adapt_to_errors = False
-            self.neval = 4 * numpy.product(self.nstrat)
-            neval_eff = self.neval / 2
+            self.neval = self.neval_nstrat * numpy.product(self.nstrat)
+            if self.neval > self.neval_nstrat:
+                neval_eff = self.neval / 2
+            else:
+                neval_eff = self.neval
             ni = min(max(int(self.neval / 10.), 1), self.maxinc_axis)
             self.map.adapt(ninc=ni)
             if not numpy.all(numpy.equal(self.nstrat, old_val['nstrat'])):
@@ -1092,7 +1120,11 @@ cdef class Integrator(object):
 
         # determine min number of evaluations per h-cube (usually 2)
         self.nhcube = numpy.product(self.nstrat) 
-        self.min_neval_hcube = int(neval_eff // self.nhcube)
+        if self.nhcube > 1:
+            self.min_neval_hcube = int(neval_eff // self.nhcube)
+        else:
+            self.min_neval_hcube = self.neval
+        # N.B. min_neval_hcube > max_neval_hcube possible but later code checks
         if self.min_neval_hcube < 2:
             self.min_neval_hcube = 2
 
@@ -1233,6 +1265,7 @@ cdef class Integrator(object):
             mean = sum_fdv / neval_hcube
             sigf2 = abs(sum_fdv2 / neval_hcube - mean * mean)
             sigf[ihcube] = sigf2 ** (self.beta / 2.)
+            i_start += neval_hcube
 
     def _get_mpi_rank(self):
         return (
@@ -1333,6 +1366,9 @@ cdef class Integrator(object):
                 neval_hcube[:] = self.min_neval_hcube
                 neval_batch = nhcube_batch * self.min_neval_hcube
             self.last_neval += neval_batch
+
+            if (3*self.dim + 3) * neval_batch > self.max_mem:
+                raise MemoryError('work arrays too large; reduce max_neval_hcube or nhcube_batch (or increase max_mem)')
 
             # resize work arrays if needed
             if neval_batch > self.y.shape[0]:
@@ -1516,7 +1552,7 @@ cdef class Integrator(object):
         cdef double[::1] mean = numpy.empty(1, numpy.float_)
         cdef double[:, ::1] var = numpy.empty((1, 1), numpy.float_)
         cdef double[::1] dvar = numpy.empty(1, numpy.float_)
-        cdef numpy.npy_intp itn, i, j, s, t, neval, neval_batch
+        cdef numpy.npy_intp itn, i, j, s, t, neval 
         cdef double sum_sigf, sigf2
         cdef bint firsteval = True
 
@@ -1602,6 +1638,7 @@ cdef class Integrator(object):
                             sum_sigf += sigf2 ** (self.beta / 2.)
                     if self.adapt_to_errors and self.adapt:
                         # replace fdv2 with variance
+                        # only one piece of data (from current hcube)
                         fdv2[j - 1] = sigf2
                         self.map.add_training_data(
                             y[j - 1:, :], fdv2[j - 1:], 1

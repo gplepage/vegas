@@ -43,6 +43,8 @@ cdef class Integrator:
     cdef readonly numpy.npy_intp maxinc_axis
     cdef readonly numpy.npy_intp max_nhcube
     cdef readonly numpy.npy_intp max_neval_hcube
+    cdef readonly numpy.npy_intp neval_nstrat
+    cdef readonly numpy.npy_intp max_mem
     cdef readonly numpy.npy_intp nitn
     cdef readonly double alpha
     cdef readonly double rtol

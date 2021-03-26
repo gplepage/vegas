@@ -149,12 +149,17 @@ than this. Ignored if parameter <code class="docutils literal notranslate"><span
 <li><p><strong>nstrat</strong> (<em>int array</em>) – (Optional) <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> specifies the number
 of stratifications to use in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. If specified,
 parameter <code class="docutils literal notranslate"><span class="pre">neval</span></code> is ignored; the number of integrand
-evaluations per iteration is set between two and four times
-the product <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code>s over all directions . This parameter
-makes it possible to concentrate stratifications in directions
-where they are most needed. If it is not specified,
-the number of evaluations is determined from parameter
-<code class="docutils literal notranslate"><span class="pre">neval</span></code>, and <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> is the same for all <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p></li>
+evaluations per iteration is set between <code class="docutils literal notranslate"><span class="pre">neval_nstrat/2</span></code> and
+<code class="docutils literal notranslate"><span class="pre">neval_strat</span></code> times the product <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code>s over all
+directions. This parameter makes it possible to concentrate
+stratifications in directions where they are most needed.
+If <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> is not specified, the number of evaluations is
+determined from parameter <code class="docutils literal notranslate"><span class="pre">neval</span></code>, and <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code>
+is the same for all <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p></li>
+<li><p><strong>neval_nstrat</strong> (<em>positive int &gt;= 2</em>) – When <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> is specified,
+<code class="docutils literal notranslate"><span class="pre">neval</span></code> is set to a value between <code class="docutils literal notranslate"><span class="pre">neval_nstrat/2</span></code> and
+<code class="docutils literal notranslate"><span class="pre">neval_strat</span></code> times the product <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code>s over all
+directions; otherwise it is ignored. The default value is 4.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – Damping parameter controlling the remapping
 of the integration variables as <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adapts to the
 integrand. Smaller values slow adaptation, which may be
@@ -225,9 +230,15 @@ and <code class="docutils literal notranslate"><span class="pre">minimize_mem=Fa
 ignored if <code class="docutils literal notranslate"><span class="pre">beta=0</span></code> or <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>.</p></li>
 <li><p><strong>max_neval_hcube</strong> (<em>positive int</em>) – Maximum number of integrand
 evaluations per hypercube in the stratification. The default
-value is 1e7. Larger values might allow for more adaptation
-(when <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>), but also can result in very large internal
+value is 1e5. Larger values might allow for more adaptation
+(when <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>), but also can result in large internal
 work arrays.</p></li>
+<li><p><strong>max_mem</strong> (<em>positive int</em>) – Maximum number of floats allowed in
+internal work arrays (approx.). A <code class="docutils literal notranslate"><span class="pre">MemoryError</span></code> is
+raised if the work arrays are too large, in which case
+one might want to reduce <code class="docutils literal notranslate"><span class="pre">max_neval_hcube</span></code> or
+<code class="docutils literal notranslate"><span class="pre">max_nhcube</span></code> (or increase <code class="docutils literal notranslate"><span class="pre">max_mem</span></code> if there is
+enough RAM). Default value is 1e9.</p></li>
 <li><p><strong>rtol</strong> (<em>float</em>) – Relative error in the integral estimate
 at which point the integrator can stop. The default
 value is 0.0 which turns off this stopping condition.
