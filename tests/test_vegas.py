@@ -858,7 +858,7 @@ class TestIntegrator(unittest.TestCase):
     def test_mem(self):
         " max_mem "
         def f(x): return np.prod(x)
-        I = Integrator(3 * [(0,1)]), max_mem=10)
+        I = Integrator(3 * [(0,1)], max_mem=10)
         with self.assertRaises(MemoryError):
             I(f, neval=1e4)
 

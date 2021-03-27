@@ -779,10 +779,6 @@ cdef class Integrator(object):
             If ``nstrat`` is not specified, the number of evaluations is 
             determined from parameter ``neval``, and ``nstrat[d]`` 
             is the same for all ``d``.
-        neval_nstrat (positive int >= 2): When ``nstrat`` is specified,
-            ``neval`` is set to a value between ``neval_nstrat/2`` and 
-            ``neval_strat`` times the product ``nstrat[d]``\s over all 
-            directions; otherwise it is ignored. The default value is 4.
         alpha (float): Damping parameter controlling the remapping
             of the integration variables as |vegas| adapts to the
             integrand. Smaller values slow adaptation, which may be

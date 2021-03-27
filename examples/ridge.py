@@ -10,7 +10,7 @@ pyximport.install(inplace=True)
 import ridge_integrand
 
 def main():
-    integ = vegas.Integrator(4 * [[0, 1]], sync_ran=True)
+    integ = vegas.Integrator(4 * [[0, 1]], sync_ran=False)
     # adapt
     # f = vegas.batchintegrand(ridge_integrand.fbatch)
     f = ridge_integrand.f
