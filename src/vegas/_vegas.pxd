@@ -37,31 +37,33 @@ cdef class AdaptiveMap:
 
 cdef class Integrator:
     # inputs
-    cdef readonly numpy.npy_intp neval
-    cdef readonly numpy.npy_intp[::1] neval_hcube_range
-    cdef readonly numpy.npy_intp nhcube_batch
-    cdef readonly numpy.npy_intp maxinc_axis
-    cdef readonly numpy.npy_intp max_nhcube
-    cdef readonly numpy.npy_intp max_neval_hcube
-    cdef readonly numpy.npy_intp neval_nstrat
-    cdef readonly numpy.npy_intp max_mem
-    cdef readonly numpy.npy_intp nitn
-    cdef readonly double alpha
-    cdef readonly double rtol
-    cdef readonly double atol
-    cdef readonly bint minimize_mem
-    cdef readonly bint adapt_to_errors
-    cdef readonly double beta
-    cdef readonly bint adapt
-    cdef readonly object analyzer
-    cdef readonly object ran_array_generator
-    cdef readonly bint sync_ran
-    cdef readonly bint mpi
+    cdef public numpy.npy_intp neval
+    cdef public numpy.npy_intp[::1] neval_hcube_range
+    cdef public numpy.npy_intp nhcube_batch
+    cdef public numpy.npy_intp maxinc_axis
+    cdef public numpy.npy_intp max_nhcube
+    cdef public numpy.npy_intp max_neval_hcube
+    cdef public numpy.npy_intp avg_neval_hcube
+    cdef public numpy.npy_intp min_neval_hcube
+    cdef public numpy.npy_intp neval_nstrat   # 
+    cdef public numpy.npy_intp max_mem
+    cdef public numpy.npy_intp nitn
+    cdef public double alpha
+    cdef public double rtol
+    cdef public double atol
+    cdef public bint minimize_mem
+    cdef public bint adapt_to_errors
+    cdef public double beta
+    cdef public bint adapt
+    cdef public object analyzer
+    cdef public object ran_array_generator
+    cdef public bint sync_ran
+    cdef public bint mpi
+    cdef public bint switchset
     cdef readonly numpy.npy_intp[::1] nstrat
     # generated
     cdef readonly AdaptiveMap map
     cdef readonly double sum_sigf
-    cdef readonly numpy.npy_intp min_neval_hcube
     cdef readonly numpy.npy_intp dim
     cdef readonly numpy.npy_intp last_neval
     cdef readonly numpy.npy_intp nhcube

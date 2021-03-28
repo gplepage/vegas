@@ -779,6 +779,10 @@ cdef class Integrator(object):
             If ``nstrat`` is not specified, the number of evaluations is 
             determined from parameter ``neval``, and ``nstrat[d]`` 
             is the same for all ``d``.
+        neval_nstrat (positive int >= 2): When ``nstrat`` is specified,
+            ``neval`` is set to a value between ``neval_nstrat/2`` and 
+            ``neval_strat`` times the product ``nstrat[d]``\s over all 
+            directions; otherwise it is ignored. The default value is 4.
         alpha (float): Damping parameter controlling the remapping
             of the integration variables as |vegas| adapts to the
             integrand. Smaller values slow adaptation, which may be
@@ -913,6 +917,8 @@ cdef class Integrator(object):
         nhcube_batch=1000,  # number of h-cubes per batch
         max_nhcube=1e9,     # max number of h-cubes
         max_neval_hcube=1e5,# max number of evaluations per h-cube
+        avg_neval_hcube=4,  # min avg number of evaluations per h-cube
+        min_neval_hcube=2,  # min number of evaluations per h-cube
         max_mem=1e9,        # memory cutoff (# of floats)
         neval_nstrat=4,     # neval = neval_nstrat * prod(nstrat) when nstrat specified
         nitn=10,            # number of iterations
@@ -936,6 +942,7 @@ cdef class Integrator(object):
         self.sum_sigf = HUGE
         self.neval_hcube_range = None
         self.last_neval = 0
+        # self.switchset = True
         if isinstance(map, Integrator):
             args = {}
             for k in Integrator.defaults:
@@ -964,7 +971,7 @@ cdef class Integrator(object):
         """ Set state for unpickling. """
         self.set(odict)
 
-    def set(Integrator self not None, ka={}, **kargs):
+    def oldset(Integrator self not None, ka={}, **kargs):
         """ Reset default parameters in integrator.
 
         Usage is analogous to the constructor
@@ -1056,6 +1063,9 @@ cdef class Integrator(object):
                 # for legacy code
                 old_val[k] = self.mpi
                 self.mpi = kargs[k]
+            elif k == 'avg_neval_hcube':
+                old_val[k] = self.avg_neval_hcube
+                self.avg_neval_hcube = kargs[k]
             else:
                 raise AttributeError('no attribute named "%s"' % str(k))
 
@@ -1140,6 +1150,167 @@ cdef class Integrator(object):
                 self.sigf = numpy.ones(nsigf, numpy.float_) * (self.sum_sigf / nsigf)
         self.neval_hcube = (
             numpy.zeros(self.nhcube_batch, numpy.intp) + self.min_neval_hcube
+            )
+        self.y = numpy.empty((neval_batch, self.dim), numpy.float_)
+        self.x = numpy.empty((neval_batch, self.dim), numpy.float_)
+        self.jac = numpy.empty(neval_batch, numpy.float_)
+        self.fdv2 = numpy.empty(neval_batch, numpy.float_)
+        return old_val
+
+    def set(Integrator self not None, ka={}, **kargs):
+        """ Reset default parameters in integrator.
+
+        Usage is analogous to the constructor
+        for |Integrator|: for example, ::
+
+            old_defaults = integ.set(neval=1e6, nitn=20)
+
+        resets the default values for ``neval`` and ``nitn``
+        in |Integrator| ``integ``. A dictionary, here
+        ``old_defaults``, is returned. It can be used
+        to restore the old defaults using, for example::
+
+            integ.set(old_defaults)
+        """
+        if self.switchset:
+            return self.oldset(ka=ka, **kargs)
+        # reset parameters
+        if kargs:
+            kargs.update(ka)
+        else:
+            kargs = ka
+        old_val = dict()
+        for k in kargs:
+            if k == 'map':
+                old_val[k] = self.map
+                self.map = AdaptiveMap(kargs[k])
+            elif k == 'nstrat' and not numpy.all(kargs[k] == self.nstrat):
+                old_val[k] = self.nstrat 
+                self.nstrat = numpy.array(kargs[k], dtype=numpy.intp)
+            elif k == 'neval' and kargs[k] != self.neval:
+                old_val[k] = self.neval 
+                self.neval = kargs[k]
+            elif k == 'avg_neval_hcube' and kargs[k] != self.avg_neval_hcube:
+                old_val[k] = self.neval 
+                self.avg_neval_hcube = kargs[k]
+            elif k in Integrator.defaults:
+                if not numpy.all(kargs[k] == getattr(self, k)):
+                    old_val[k] = getattr(self, k)
+                    setattr(self, k, kargs[k])
+                continue 
+            else:
+                raise AttributeError('no attribute named "%s"' % str(k))
+        
+        # sanity checks
+        if self.avg_neval_hcube < 2:
+            raise ValueError('avg_neval_hcube must be 2 or larger')
+
+        self.dim = self.map.dim
+
+        # set avg neval per h-cube
+        # if self.beta > 0 and not self.adapt_to_errors:
+        #     avg_neval_hcube = (
+        #         self.avg_neval_hcube
+        #         if self.avg_neval_hcube > self.min_neval_hcube else 
+        #         self.min_neval_hcube + 1
+        #         )
+        # else:
+        #     avg_neval_hcube = self.min_neval_hcube 
+        if self.neval < self.avg_neval_hcube:
+            old_val['neval'] = old_val.get('neval', self.neval)
+            self.neval = self.avg_neval_hcube 
+
+        # determine # strata in each direction
+        if 'nstrat' in old_val:
+            # nstrat specified
+            if len(self.nstrat) != self.dim:
+                raise ValueError('nstrat[d] has wrong length: %d not %d' % (len(self.nstrat), self.dim))
+            if numpy.any(numpy.asarray(self.nstrat) < 1):
+                raise ValueError('bad nstrat: ' + str(numpy.asarray(self.nstrat)))
+            old_val['neval'] = old_val.get('neval', self.neval)
+            old_val['adapt_to_errors'] = self.adapt_to_errors
+            self.adapt_to_errors = False
+            self.neval = self.avg_neval_hcube * numpy.product(self.nstrat)
+            if not numpy.all(numpy.equal(self.nstrat, old_val['nstrat'])):
+                # need to recalculate stratification distribution for beta>0
+                self.sum_sigf = HUGE
+        elif self.adapt_to_errors:
+            # adapt to errors needs a uniform grid
+            ns = int((self.neval / 2) ** (1. / self.dim))
+            if not numpy.all(numpy.equal(self.nstrat, ns)):
+                # need to recalculate stratification distribution for beta>0
+                self.sum_sigf = HUGE
+                old_val['nstrat'] = old_val.get('nstrat', self.nstrat)
+                self.nstrat[:] = ns 
+        elif 'neval' in old_val:
+            # determine stratification from neval
+            ns = int((self.neval / self.avg_neval_hcube) ** (1. / self.dim)) # stratifications / axis
+            d = int(
+                (numpy.log(self.neval / self.avg_neval_hcube) - self.dim * numpy.log(ns))
+                / numpy.log(1 + 1. / ns)
+                )
+            if ((ns + 1)**d * ns**(self.dim-d)) > self.max_nhcube and not self.minimize_mem:
+                ns = int(self.max_nhcube ** (1. / self.dim)) - 1
+                if ns < 1:
+                    ns = 1
+                d = int(
+                    (numpy.log(self.neval / self.avg_neval_hcube) - self.dim * numpy.log(ns))
+                    / numpy.log(1 + 1. / ns)
+                    )
+            nstrat = numpy.empty(self.dim, numpy.intp)    
+            nstrat[:d] = ns + 1        
+            nstrat[d:] = ns 
+            if not numpy.all(numpy.equal(self.nstrat, nstrat)):
+                # need to recalculate stratification distribution for beta>0
+                self.sum_sigf = HUGE
+                old_val['nstrat'] = old_val.get('nstrat', self.nstrat)
+                self.nstrat = nstrat
+        
+        if 'neval' in old_val:
+            ni = int(self.neval / 10.)                  # increments/axis
+            if self.adapt_to_errors:
+                ni = ns
+            if ni > self.maxinc_axis:
+                ni = self.maxinc_axis
+            nfac = numpy.product(list(set(self.nstrat)))
+            if ni > nfac:
+                ni = int(ni / nfac) * nfac
+            self.map.adapt(ninc=ni)
+
+        # determine min number of evaluations per h-cube (usually 2)
+
+        self.nhcube = numpy.product(self.nstrat) 
+        self.min_neval_hcube = self.avg_neval_hcube
+
+        # if self.nhcube > 1:
+        #     self.min_neval_hcube = int(neval_eff // self.nhcube)
+        # else:
+        #     self.min_neval_hcube = self.neval
+        # # N.B. min_neval_hcube > max_neval_hcube possible but later code checks
+        # if self.min_neval_hcube < 2:
+        #     self.min_neval_hcube = 2
+
+        # allocate work arrays -- these are stored in the
+        # the Integrator so that the storage is held between
+        # iterations, thereby minimizing the amount of allocating
+        # that goes on
+
+        # neval_batch = self.nhcube_batch * self.min_neval_hcube
+        neval_batch = self.nhcube_batch * self.avg_neval_hcube
+        nsigf = (
+            self.nhcube_batch if self.minimize_mem else
+            self.nhcube
+            )
+        if self.beta > 0 and len(self.sigf) != nsigf:
+            if self.minimize_mem:
+                self.sigf = numpy.empty(nsigf, numpy.float_)
+            else:
+                self.sigf = numpy.ones(nsigf, numpy.float_) * (self.sum_sigf / nsigf)
+        # self.neval_hcube = (
+        #     numpy.zeros(self.nhcube_batch, numpy.intp) + self.min_neval_hcube
+        #     )
+        self.neval_hcube = (
+            numpy.zeros(self.nhcube_batch, numpy.intp) + self.avg_neval_hcube
             )
         self.y = numpy.empty((neval_batch, self.dim), numpy.float_)
         self.x = numpy.empty((neval_batch, self.dim), numpy.float_)
