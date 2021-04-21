@@ -27,7 +27,7 @@ pyximport.install(
 
 from fastest_integrand import f_cython
 
-np.random.seed((1,2))   # causes reproducible random numbers
+np.random.seed((1,2, 3))   # causes reproducible random numbers
 
 def main():
     # create integrand and integrator

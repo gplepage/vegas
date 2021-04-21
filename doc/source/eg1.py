@@ -50,9 +50,7 @@ def f2(x):
     return ans / 2.
 
 def main():
-    print(gv.ranseed(
-        (5751754790502652836, 7676372623888309739, 7570829798026950508)
-        ))
+    print(gv.ranseed(1))
 
     integ = vegas.Integrator(
         [[-1., 1.], [0., 1.], [0., 1.], [0., 1.]],
@@ -73,6 +71,7 @@ def main():
     if SAVE_OUTPUT:
         unlog_stdout()
         log_stdout('eg1b.out')
+    gv.ranseed(1)
     result = integ(f, nitn=100, neval=1000 )
     print('larger nitn  => %s    Q = %.2f' % (result, result.Q))
     result = integ(f, nitn=10, neval=1e4)
@@ -97,6 +96,7 @@ def main():
     if SAVE_OUTPUT:
         unlog_stdout()
         log_stdout('eg1d.out')
+    gv.ranseed(11)
     integ(f, nitn=7, neval=1000)
     result = integ(f, nitn=10, neval=1000)
     print(result.summary())
@@ -105,6 +105,7 @@ def main():
     if SAVE_OUTPUT:
         unlog_stdout()
         log_stdout('eg1e.out')
+    gv.ranseed(1)
     integ = vegas.Integrator([[-1,1]] + 3 * [[0, 1]])
     integ(f, nitn=10, neval=1000)
     def g(x):
@@ -116,25 +117,30 @@ def main():
     if SAVE_OUTPUT:
         unlog_stdout()
         log_stdout('eg1f.out')
+    gv.ranseed(55)
     # integ(f_sphere, nitn=10, neval=400000, alpha=0.25)
     # result = integ(f_sphere, nitn=10, neval=400000, alpha=0.25, beta=0.75)#, analyzer=vegas.reporter(5))
+    integ = vegas.Integrator([[-1,1]] + 3 * [[0, 1]])
     integ(f_sphere, nitn=10, neval=1000, alpha=0.5)
     result = integ(f_sphere, nitn=10, neval=1000, alpha=0.5)#, analyzer=vegas.reporter(5))
     # print(integ.settings())
     print(result.summary())
     print('result = %s    Q = %.2f' % (result, result.Q))
 
-    if SAVE_OUTPUT:
-        unlog_stdout()
-        log_stdout('eg1g.out')
-    integ(f_sphere, nitn=10, neval=1000, alpha=0.1)
-    result = integ(f_sphere, nitn=10, neval=1000, adapt=False) # alpha=0.1)
-    print(result.summary())
-    print('result = %s    Q = %.2f' % (result, result.Q))
+    # if SAVE_OUTPUT:
+    #     unlog_stdout()
+    #     log_stdout('eg1g.out')
+    # integ = vegas.Integrator([[-1,1]] + 3 * [[0, 1]])
+    # integ(f_sphere, nitn=10, neval=1000, alpha=0.1)
+    # result = integ(f_sphere, nitn=10, neval=1000, adapt=False) # alpha=0.1)
+    # print(result.summary())
+    # print('result = %s    Q = %.2f' % (result, result.Q))
 
     if SAVE_OUTPUT:
         unlog_stdout()
         log_stdout('eg1h.out')
+    gv.ranseed(12345)
+    integ = vegas.Integrator([[-1,1]] + 3 * [[0, 1]])
     integ(f_sphere, nitn=10, neval=1000, alpha=0.1)
     result = integ(f_sphere, nitn=10, neval=1000, alpha=0.1)
     print(result.summary())

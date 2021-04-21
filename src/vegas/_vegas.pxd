@@ -1,6 +1,6 @@
 # cython: language_level=3
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-20 G. Peter Lepage.
+# Copyright (c) 2013-21 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ cdef class AdaptiveMap:
     # first index is direction, second is increment
     cdef readonly double[:, ::1] grid
     cdef readonly double[:, ::1] inc
+    cdef readonly numpy.npy_intp[::1] ninc
     cdef double[:, ::1] sum_f
     cdef double[:, ::1] n_f
 
@@ -43,10 +44,8 @@ cdef class Integrator:
     cdef public numpy.npy_intp maxinc_axis
     cdef public numpy.npy_intp max_nhcube
     cdef public numpy.npy_intp max_neval_hcube
-    cdef public numpy.npy_intp avg_neval_hcube
-    cdef public numpy.npy_intp min_neval_hcube
-    cdef public numpy.npy_intp neval_nstrat   # 
-    cdef public numpy.npy_intp max_mem
+    cdef public double neval_frac
+    cdef public double max_mem
     cdef public numpy.npy_intp nitn
     cdef public double alpha
     cdef public double rtol
@@ -59,13 +58,14 @@ cdef class Integrator:
     cdef public object ran_array_generator
     cdef public bint sync_ran
     cdef public bint mpi
-    cdef public bint switchset
+    cdef public bint uniform_nstrat
     cdef readonly numpy.npy_intp[::1] nstrat
     # generated
     cdef readonly AdaptiveMap map
     cdef readonly double sum_sigf
     cdef readonly numpy.npy_intp dim
     cdef readonly numpy.npy_intp last_neval
+    cdef readonly numpy.npy_intp min_neval_hcube
     cdef readonly numpy.npy_intp nhcube
     # internal work areas
     cdef double[:, ::1] y

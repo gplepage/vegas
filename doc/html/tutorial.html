@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Tutorial &#8212; vegas 3.5.4 documentation</title>
+    <title>Tutorial &#8212; vegas 4.0 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5.4 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 4.0 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -106,7 +106,7 @@ using Python 2, or add</p>
 <p>at the start of your file.</p>
 </div>
 <div class="section" id="basic-integrals">
-<h2>Basic Integrals<a class="headerlink" href="#basic-integrals" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Basic Integrals<a class="headerlink" href="#basic-integrals" title="Permalink to this headline">¶</a></h2>
 <p>Here we illustrate the use of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> by estimating the integral</p>
 <div class="math">
 <p><img src="_images/math/10f15d585cec02bd9848ecd8a7a12b7ce6a0c0b5.svg" alt="C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
@@ -144,18 +144,18 @@ a summary of results from each iteration.</p>
 <p>This code produces the following output:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">2.4</span><span class="p">(</span><span class="mf">1.9</span><span class="p">)</span>        <span class="mf">2.4</span><span class="p">(</span><span class="mf">1.9</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">1.19</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>        <span class="mf">1.23</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>            <span class="mf">0.42</span>     <span class="mf">0.52</span>
-  <span class="mi">3</span>   <span class="mf">0.910</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span>       <span class="mf">0.934</span><span class="p">(</span><span class="mi">87</span><span class="p">)</span>           <span class="mf">0.68</span>     <span class="mf">0.51</span>
-  <span class="mi">4</span>   <span class="mf">1.041</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span>       <span class="mf">0.999</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span>           <span class="mf">0.76</span>     <span class="mf">0.52</span>
-  <span class="mi">5</span>   <span class="mf">1.090</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>       <span class="mf">1.055</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>           <span class="mf">1.00</span>     <span class="mf">0.41</span>
-  <span class="mi">6</span>   <span class="mf">0.984</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>       <span class="mf">1.020</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>           <span class="mf">1.24</span>     <span class="mf">0.29</span>
-  <span class="mi">7</span>   <span class="mf">1.036</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>       <span class="mf">1.027</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>           <span class="mf">1.07</span>     <span class="mf">0.38</span>
-  <span class="mi">8</span>   <span class="mf">0.987</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>       <span class="mf">1.011</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>           <span class="mf">1.20</span>     <span class="mf">0.30</span>
-  <span class="mi">9</span>   <span class="mf">0.995</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>       <span class="mf">1.005</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">1.11</span>     <span class="mf">0.35</span>
- <span class="mi">10</span>   <span class="mf">0.993</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>       <span class="mf">1.0015</span><span class="p">(</span><span class="mi">91</span><span class="p">)</span>          <span class="mf">1.02</span>     <span class="mf">0.42</span>
+  <span class="mi">1</span>   <span class="mf">2.6</span><span class="p">(</span><span class="mf">1.4</span><span class="p">)</span>        <span class="mf">2.6</span><span class="p">(</span><span class="mf">1.4</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">1.32</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>        <span class="mf">1.36</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>            <span class="mf">0.75</span>     <span class="mf">0.39</span>
+  <span class="mi">3</span>   <span class="mf">0.909</span><span class="p">(</span><span class="mi">96</span><span class="p">)</span>       <span class="mf">0.968</span><span class="p">(</span><span class="mi">89</span><span class="p">)</span>           <span class="mf">1.79</span>     <span class="mf">0.17</span>
+  <span class="mi">4</span>   <span class="mf">1.039</span><span class="p">(</span><span class="mi">69</span><span class="p">)</span>       <span class="mf">1.012</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span>           <span class="mf">1.32</span>     <span class="mf">0.26</span>
+  <span class="mi">5</span>   <span class="mf">0.929</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>       <span class="mf">0.952</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>           <span class="mf">1.41</span>     <span class="mf">0.23</span>
+  <span class="mi">6</span>   <span class="mf">1.003</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>       <span class="mf">0.980</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>           <span class="mf">1.47</span>     <span class="mf">0.20</span>
+  <span class="mi">7</span>   <span class="mf">0.994</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>       <span class="mf">0.988</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>           <span class="mf">1.27</span>     <span class="mf">0.27</span>
+  <span class="mi">8</span>   <span class="mf">0.998</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>       <span class="mf">0.9922</span><span class="p">(</span><span class="mi">98</span><span class="p">)</span>          <span class="mf">1.13</span>     <span class="mf">0.34</span>
+  <span class="mi">9</span>   <span class="mf">1.020</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">1.0035</span><span class="p">(</span><span class="mi">75</span><span class="p">)</span>          <span class="mf">1.39</span>     <span class="mf">0.20</span>
+ <span class="mi">10</span>   <span class="mf">1.011</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">1.0057</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>          <span class="mf">1.27</span>     <span class="mf">0.25</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="mf">1.0015</span><span class="p">(</span><span class="mi">91</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.42</span>
+<span class="n">result</span> <span class="o">=</span> <span class="mf">1.0057</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.25</span>
 </pre></div>
 </div>
 <p>There are several things to note here:</p>
@@ -163,9 +163,9 @@ a summary of results from each iteration.</p>
 <div><p><strong>Adaptation:</strong> Integration estimates are shown for
 each of the 10 iterations,
 giving both the estimate from just that iteration, and the weighted
-average of results from all iterations up to that point. The
+average of results from all iterations up to that point.  The
 estimates from the first two iterations are not accurate at
-all, with errors equal to 30–190% of the final result.
+all, with errors equal to 25–140% of the final result.
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> initially has no information about the integrand
 and so does a relatively poor job of estimating the integral.
 It uses information from the samples in one iteration, however,
@@ -173,13 +173,13 @@ to remap the integration variables for subsequent iterations,
 concentrating samples where the function is largest and reducing
 errors.
 As a result, the per-iteration error
-is reduced to 4.3% by the fifth iteration, and below 2% by
-the end — an improvement by almost two orders of
-magnitude from the start. Eventually the per-iteration error
+is reduced to 3.4% by the fifth iteration, and almost to 1% by
+the end — an improvement by a factor of more than 100 from the start.
+Eventually the per-iteration error
 stops decreasing because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> has found the optimal remapping,
 at which point
-it has fully adapted to the integrand.</p>
-<p><strong>Weighted Average:</strong> The final result, 1.0015 ± 0.0091,
+it is fully adapted to the integrand.</p>
+<p><strong>Weighted Average:</strong> The final result, 1.0057 ± 0.0064,
 is obtained from a weighted
 average of the separate results from each iteration:
 estimates are weighted by the inverse variance, thereby giving
@@ -224,13 +224,13 @@ attributes:</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.chi2</span></code> — <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> of the weighted average;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.dof</span></code> — number of degrees of freedom;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.Q</span></code> — <em>Q</em> or <em>p-value</em> of the weighted average’s <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/>;</p>
-<p><code class="docutils literal notranslate"><span class="pre">result.itn_results</span></code> — list of the integral estimates
-from each iteration;</p>
+<p><code class="docutils literal notranslate"><span class="pre">result.itn_results</span></code> — list of the integral estimates from each iteration;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.sum_neval</span></code> — total number of integrand evaluations used.</p>
+<p><code class="docutils literal notranslate"><span class="pre">result.avg_neval</span></code> — average number of integrand evaluations per iteration</p>
 </div></blockquote>
-<p>In this example the final <em>Q</em> is 0.42, indicating that the
+<p>In this example the final <em>Q</em> is 0.25, indicating that the
 <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> for this average is not particularly unlikely and
-thus the error estimate is most likely reliable.</p>
+thus the error estimate is likely reliable.</p>
 <p><strong>Precision:</strong> The precision of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimates is
 determined by <code class="docutils literal notranslate"><span class="pre">nitn</span></code>, the number of iterations
 of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> algorithm,
@@ -241,7 +241,7 @@ product of <code class="docutils literal notranslate"><span class="pre">nitn</sp
 The number of integrand
 evaluations per iteration
 varies from iteration to iteration,
-here between 486 and 959. Typically <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> needs more
+here between 860 and 960. Typically <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> needs more
 integration points in early iterations, before it has fully
 adapted to the integrand.</p>
 <p>We can increase precision by increasing either <code class="docutils literal notranslate"><span class="pre">nitn</span></code> or <code class="docutils literal notranslate"><span class="pre">neval</span></code>,
@@ -256,8 +256,8 @@ adding the following lines to the code above</p>
 </pre></div>
 </div>
 <p>generates the following results:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">larger</span> <span class="n">nitn</span>  <span class="o">=&gt;</span> <span class="mf">0.9968</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.43</span>
-<span class="n">larger</span> <span class="n">neval</span> <span class="o">=&gt;</span> <span class="mf">0.99978</span><span class="p">(</span><span class="mi">67</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.42</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">larger</span> <span class="n">nitn</span>  <span class="o">=&gt;</span> <span class="mf">1.0003</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.79</span>
+<span class="n">larger</span> <span class="n">neval</span> <span class="o">=&gt;</span> <span class="mf">0.99981</span><span class="p">(</span><span class="mi">53</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.28</span>
 </pre></div>
 </div>
 <p>The total number of integrand evaluations, <code class="docutils literal notranslate"><span class="pre">nitn</span> <span class="pre">*</span> <span class="pre">neval</span></code>, is
@@ -276,13 +276,13 @@ estimates have two sources of error. One is the statistical
 error, which is what is quoted by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>. The other is
 a systematic error due to residual non-Gaussian
 effects. The systematic error vanishes like
-<code class="docutils literal notranslate"><span class="pre">1/neval</span></code> and so becomes negligible compared with
+<code class="docutils literal notranslate"><span class="pre">1/neval</span></code> or faster, and so becomes negligible compared with
 the statistical error as <code class="docutils literal notranslate"><span class="pre">neval</span></code> increases.
 The systematic error can bias the Monte Carlo estimate, however,
 if <code class="docutils literal notranslate"><span class="pre">neval</span></code> is insufficiently large. This usually
 results in a large <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> (and small <em>Q</em>), but a
 more reliable check is to compare
-results that use signficantly different values of <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
+results that use significantly different values of <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
 The systematic errors due to non-Gaussian behavior are
 likely negligible if the different estimates agree to
 within the statistical errors.</p>
@@ -291,24 +291,22 @@ is another reason for increasing <code class="docutils literal notranslate"><spa
 rather than <code class="docutils literal notranslate"><span class="pre">nitn</span></code> to obtain more precision.
 Making <code class="docutils literal notranslate"><span class="pre">neval</span></code> larger and larger is guaranteed
 to improve the Monte Carlo estimate, as the statistical
-error decreases (at least as fast as <code class="docutils literal notranslate"><span class="pre">sqrt(1/neval)</span></code>
-and often faster) and the
-systematic error decreases even more quickly (like
-<code class="docutils literal notranslate"><span class="pre">1/neval</span></code>).
+error decreases and the
+systematic error decreases even more quickly.
 Making <code class="docutils literal notranslate"><span class="pre">nitn</span></code> larger and larger, on the other hand,
 is guaranteed eventually to give the wrong
 answer. This is because at some point the statistical error
 (which falls as <code class="docutils literal notranslate"><span class="pre">sqrt(1/nitn)</span></code>) will no longer
 mask the systematic error (which is unaffected by <code class="docutils literal notranslate"><span class="pre">nitn</span></code>).
 The systematic error for the integral
-above (with <code class="docutils literal notranslate"><span class="pre">neval=1000</span></code>) is about -0.0008(1), which
+above (with <code class="docutils literal notranslate"><span class="pre">neval=1000</span></code>) is about -0.0008, which
 is negligible compared to the statistical error unless
 <code class="docutils literal notranslate"><span class="pre">nitn</span></code> is of order 1500 or larger — so systematic errors
 aren’t a problem with <code class="docutils literal notranslate"><span class="pre">nitn=10</span></code>.</p>
 <p><strong>Early Iterations:</strong> Integral estimates from early iterations,
 before <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> has adapted, can be quite
 crude. With very peaky integrands, these are often far from
-the correct answer with highly unreliable error estimates. For
+the correct answer with highly unreliable error  estimates. For
 example, the integral above becomes more
 difficult if we double the length of each side of the
 integration volume by redefining <code class="docutils literal notranslate"><span class="pre">integ</span></code> as:</p>
@@ -318,23 +316,23 @@ integration volume by redefining <code class="docutils literal notranslate"><spa
 <p>The code above then gives:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">0.013</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>       <span class="mf">0.013</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">0.0165</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span>      <span class="mf">0.0154</span><span class="p">(</span><span class="mi">67</span><span class="p">)</span>          <span class="mf">0.07</span>     <span class="mf">0.79</span>
-  <span class="mi">3</span>   <span class="mf">2.07</span><span class="p">(</span><span class="mi">96</span><span class="p">)</span>        <span class="mf">0.0155</span><span class="p">(</span><span class="mi">67</span><span class="p">)</span>          <span class="mf">2.31</span>     <span class="mf">0.10</span>
-  <span class="mi">4</span>   <span class="mf">0.86</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>        <span class="mf">0.0160</span><span class="p">(</span><span class="mi">67</span><span class="p">)</span>          <span class="mf">5.06</span>     <span class="mf">0.00</span>
-  <span class="mi">5</span>   <span class="mf">1.01</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>        <span class="mf">0.0199</span><span class="p">(</span><span class="mi">67</span><span class="p">)</span>         <span class="mf">25.01</span>     <span class="mf">0.00</span>
-  <span class="mi">6</span>   <span class="mf">0.963</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>       <span class="mf">0.0302</span><span class="p">(</span><span class="mi">67</span><span class="p">)</span>         <span class="mf">63.06</span>     <span class="mf">0.00</span>
-  <span class="mi">7</span>   <span class="mf">1.032</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>       <span class="mf">0.0561</span><span class="p">(</span><span class="mi">66</span><span class="p">)</span>        <span class="mf">149.77</span>     <span class="mf">0.00</span>
-  <span class="mi">8</span>   <span class="mf">0.924</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>       <span class="mf">0.0924</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>        <span class="mf">232.41</span>     <span class="mf">0.00</span>
-  <span class="mi">9</span>   <span class="mf">1.037</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span>       <span class="mf">0.1410</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>        <span class="mf">341.52</span>     <span class="mf">0.00</span>
- <span class="mi">10</span>   <span class="mf">0.976</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>       <span class="mf">0.2026</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>        <span class="mf">448.77</span>     <span class="mf">0.00</span>
+  <span class="mi">1</span>   <span class="mf">0.0011</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>      <span class="mf">0.0011</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>          <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.074</span><span class="p">(</span><span class="mi">56</span><span class="p">)</span>       <span class="mf">0.0011</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>          <span class="mf">1.71</span>     <span class="mf">0.19</span>
+  <span class="mi">3</span>   <span class="mf">0.250</span><span class="p">(</span><span class="mi">59</span><span class="p">)</span>       <span class="mf">0.0012</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>          <span class="mf">9.65</span>     <span class="mf">0.00</span>
+  <span class="mi">4</span>   <span class="mf">0.93</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>        <span class="mf">0.0013</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>         <span class="mf">21.40</span>     <span class="mf">0.00</span>
+  <span class="mi">5</span>   <span class="mf">0.874</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span>       <span class="mf">0.0015</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>         <span class="mf">54.87</span>     <span class="mf">0.00</span>
+  <span class="mi">6</span>   <span class="mf">0.949</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span>       <span class="mf">0.0021</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>        <span class="mf">162.08</span>     <span class="mf">0.00</span>
+  <span class="mi">7</span>   <span class="mf">0.949</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>       <span class="mf">0.0033</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>        <span class="mf">301.18</span>     <span class="mf">0.00</span>
+  <span class="mi">8</span>   <span class="mf">0.985</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>       <span class="mf">0.0050</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>        <span class="mf">484.50</span>     <span class="mf">0.00</span>
+  <span class="mi">9</span>   <span class="mf">0.967</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>       <span class="mf">0.0078</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>        <span class="mf">738.53</span>     <span class="mf">0.00</span>
+ <span class="mi">10</span>   <span class="mf">0.988</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>       <span class="mf">0.0125</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>       <span class="mf">1131.46</span>     <span class="mf">0.00</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="mf">0.2026</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.00</span>
+<span class="n">result</span> <span class="o">=</span> <span class="mf">0.0125</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.00</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> misses the peak completely in the first two iterations,
-giving estimates that are completely
-wrong (by 76 and 123 standard deviations!).
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> misses the peak completely in the first iteration,
+giving an estimate that is completely
+wrong (by 1000 standard deviations!).
 Some of its samples hit the peak’s shoulders, so <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is
 eventually able to find the peak (by iterations 5–6), but
 the integrand estimates are wildly non-Gaussian before that
@@ -347,7 +345,7 @@ final result in this way. This is done by replacing the
 single call to <code class="docutils literal notranslate"><span class="pre">integ(f...)</span></code> in the original code
 with two calls:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># step 1 -- adapt to f; discard results</span>
-<span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
 <span class="c1"># step 2 -- integ has adapted to f; keep results</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
@@ -360,18 +358,18 @@ step, as it adapts to the integrand, and so is more or less
 fully adapted from the start in the second step, which yields:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">1.042</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>       <span class="mf">1.042</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">1.010</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>       <span class="mf">1.020</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>           <span class="mf">0.99</span>     <span class="mf">0.32</span>
-  <span class="mi">3</span>   <span class="mf">0.999</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>       <span class="mf">1.009</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>           <span class="mf">1.05</span>     <span class="mf">0.35</span>
-  <span class="mi">4</span>   <span class="mf">0.965</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>       <span class="mf">0.9963</span><span class="p">(</span><span class="mi">86</span><span class="p">)</span>          <span class="mf">2.47</span>     <span class="mf">0.06</span>
-  <span class="mi">5</span>   <span class="mf">0.994</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>       <span class="mf">0.9958</span><span class="p">(</span><span class="mi">74</span><span class="p">)</span>          <span class="mf">1.86</span>     <span class="mf">0.11</span>
-  <span class="mi">6</span>   <span class="mf">1.001</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>       <span class="mf">0.9968</span><span class="p">(</span><span class="mi">66</span><span class="p">)</span>          <span class="mf">1.51</span>     <span class="mf">0.18</span>
-  <span class="mi">7</span>   <span class="mf">0.999</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>       <span class="mf">0.9971</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>          <span class="mf">1.26</span>     <span class="mf">0.27</span>
-  <span class="mi">8</span>   <span class="mf">0.994</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>       <span class="mf">0.9965</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span>          <span class="mf">1.09</span>     <span class="mf">0.37</span>
-  <span class="mi">9</span>   <span class="mf">1.017</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>       <span class="mf">0.9977</span><span class="p">(</span><span class="mi">53</span><span class="p">)</span>          <span class="mf">1.05</span>     <span class="mf">0.39</span>
- <span class="mi">10</span>   <span class="mf">0.981</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>       <span class="mf">0.9961</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>          <span class="mf">1.04</span>     <span class="mf">0.40</span>
+  <span class="mi">1</span>   <span class="mf">0.993</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>       <span class="mf">0.993</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">1.062</span><span class="p">(</span><span class="mi">48</span><span class="p">)</span>       <span class="mf">1.001</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>           <span class="mf">1.83</span>     <span class="mf">0.18</span>
+  <span class="mi">3</span>   <span class="mf">0.964</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>       <span class="mf">0.987</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>           <span class="mf">1.91</span>     <span class="mf">0.15</span>
+  <span class="mi">4</span>   <span class="mf">0.974</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>       <span class="mf">0.9817</span><span class="p">(</span><span class="mi">99</span><span class="p">)</span>          <span class="mf">1.40</span>     <span class="mf">0.24</span>
+  <span class="mi">5</span>   <span class="mf">0.990</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>       <span class="mf">0.9843</span><span class="p">(</span><span class="mi">82</span><span class="p">)</span>          <span class="mf">1.10</span>     <span class="mf">0.35</span>
+  <span class="mi">6</span>   <span class="mf">1.012</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>       <span class="mf">0.9899</span><span class="p">(</span><span class="mi">73</span><span class="p">)</span>          <span class="mf">1.34</span>     <span class="mf">0.25</span>
+  <span class="mi">7</span>   <span class="mf">0.999</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>       <span class="mf">0.9917</span><span class="p">(</span><span class="mi">65</span><span class="p">)</span>          <span class="mf">1.16</span>     <span class="mf">0.32</span>
+  <span class="mi">8</span>   <span class="mf">1.008</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">0.9953</span><span class="p">(</span><span class="mi">58</span><span class="p">)</span>          <span class="mf">1.20</span>     <span class="mf">0.30</span>
+  <span class="mi">9</span>   <span class="mf">1.013</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>       <span class="mf">0.9977</span><span class="p">(</span><span class="mi">54</span><span class="p">)</span>          <span class="mf">1.20</span>     <span class="mf">0.29</span>
+ <span class="mi">10</span>   <span class="mf">0.983</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>       <span class="mf">0.9958</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>          <span class="mf">1.17</span>     <span class="mf">0.31</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="mf">0.9961</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.40</span>
+<span class="n">result</span> <span class="o">=</span> <span class="mf">0.9958</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.31</span>
 </pre></div>
 </div>
 <p>The final result is now reliable.</p>
@@ -390,18 +388,18 @@ the following at the end of the original code,</p>
 <p>gives the following new output:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">0.5015</span><span class="p">(</span><span class="mi">83</span><span class="p">)</span>      <span class="mf">0.5015</span><span class="p">(</span><span class="mi">83</span><span class="p">)</span>          <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">0.5099</span><span class="p">(</span><span class="mi">68</span><span class="p">)</span>      <span class="mf">0.5065</span><span class="p">(</span><span class="mi">53</span><span class="p">)</span>          <span class="mf">0.61</span>     <span class="mf">0.43</span>
-  <span class="mi">3</span>   <span class="mf">0.4992</span><span class="p">(</span><span class="mi">73</span><span class="p">)</span>      <span class="mf">0.5040</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>          <span class="mf">0.63</span>     <span class="mf">0.53</span>
-  <span class="mi">4</span>   <span class="mf">0.5121</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>      <span class="mf">0.5066</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span>          <span class="mf">0.81</span>     <span class="mf">0.49</span>
-  <span class="mi">5</span>   <span class="mf">0.5046</span><span class="p">(</span><span class="mi">73</span><span class="p">)</span>      <span class="mf">0.5062</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>          <span class="mf">0.62</span>     <span class="mf">0.65</span>
-  <span class="mi">6</span>   <span class="mf">0.4918</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>      <span class="mf">0.5033</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span>          <span class="mf">1.34</span>     <span class="mf">0.25</span>
-  <span class="mi">7</span>   <span class="mf">0.5053</span><span class="p">(</span><span class="mi">99</span><span class="p">)</span>      <span class="mf">0.5035</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>          <span class="mf">1.12</span>     <span class="mf">0.35</span>
-  <span class="mi">8</span>   <span class="mf">0.4997</span><span class="p">(</span><span class="mi">69</span><span class="p">)</span>      <span class="mf">0.5030</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>          <span class="mf">1.00</span>     <span class="mf">0.43</span>
-  <span class="mi">9</span>   <span class="mf">0.5016</span><span class="p">(</span><span class="mi">81</span><span class="p">)</span>      <span class="mf">0.5029</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>          <span class="mf">0.88</span>     <span class="mf">0.54</span>
- <span class="mi">10</span>   <span class="mf">0.4951</span><span class="p">(</span><span class="mi">75</span><span class="p">)</span>      <span class="mf">0.5021</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>          <span class="mf">0.88</span>     <span class="mf">0.54</span>
+  <span class="mi">1</span>   <span class="mf">0.4933</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>      <span class="mf">0.4933</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>          <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.5017</span><span class="p">(</span><span class="mi">54</span><span class="p">)</span>      <span class="mf">0.4980</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>          <span class="mf">1.04</span>     <span class="mf">0.31</span>
+  <span class="mi">3</span>   <span class="mf">0.4975</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>      <span class="mf">0.4979</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>          <span class="mf">0.52</span>     <span class="mf">0.59</span>
+  <span class="mi">4</span>   <span class="mf">0.5059</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>      <span class="mf">0.4998</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>          <span class="mf">0.80</span>     <span class="mf">0.49</span>
+  <span class="mi">5</span>   <span class="mf">0.5075</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>      <span class="mf">0.5012</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>          <span class="mf">0.90</span>     <span class="mf">0.46</span>
+  <span class="mi">6</span>   <span class="mf">0.4907</span><span class="p">(</span><span class="mi">66</span><span class="p">)</span>      <span class="mf">0.4997</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>          <span class="mf">1.15</span>     <span class="mf">0.33</span>
+  <span class="mi">7</span>   <span class="mf">0.5009</span><span class="p">(</span><span class="mi">47</span><span class="p">)</span>      <span class="mf">0.5000</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>          <span class="mf">0.97</span>     <span class="mf">0.45</span>
+  <span class="mi">8</span>   <span class="mf">0.5082</span><span class="p">(</span><span class="mi">58</span><span class="p">)</span>      <span class="mf">0.5010</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>          <span class="mf">1.08</span>     <span class="mf">0.38</span>
+  <span class="mi">9</span>   <span class="mf">0.5016</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>      <span class="mf">0.5010</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>          <span class="mf">0.94</span>     <span class="mf">0.48</span>
+ <span class="mi">10</span>   <span class="mf">0.4934</span><span class="p">(</span><span class="mi">76</span><span class="p">)</span>      <span class="mf">0.5006</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>          <span class="mf">0.94</span>     <span class="mf">0.49</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="mf">0.5021</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.54</span>
+<span class="n">result</span> <span class="o">=</span> <span class="mf">0.5006</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.49</span>
 </pre></div>
 </div>
 <p>Again the grid is almost optimal for <code class="docutils literal notranslate"><span class="pre">g(x)</span></code> from the start,
@@ -444,18 +442,18 @@ centered on the Gaussian:</p>
 exact integral equal 1. Integrating as before gives:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">1.005</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>       <span class="mf">1.005</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">1.055</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span>       <span class="mf">1.033</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>           <span class="mf">0.82</span>     <span class="mf">0.37</span>
-  <span class="mi">3</span>   <span class="mf">1.048</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>       <span class="mf">1.035</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>           <span class="mf">0.43</span>     <span class="mf">0.65</span>
-  <span class="mi">4</span>   <span class="mf">1.051</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>       <span class="mf">1.037</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>           <span class="mf">0.31</span>     <span class="mf">0.82</span>
-  <span class="mi">5</span>   <span class="mf">0.994</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>       <span class="mf">1.015</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>           <span class="mf">0.68</span>     <span class="mf">0.61</span>
-  <span class="mi">6</span>   <span class="mf">1.008</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>       <span class="mf">1.014</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>           <span class="mf">0.55</span>     <span class="mf">0.74</span>
-  <span class="mi">7</span>   <span class="mf">1.030</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>       <span class="mf">1.016</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>           <span class="mf">0.49</span>     <span class="mf">0.82</span>
-  <span class="mi">8</span>   <span class="mf">0.971</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>       <span class="mf">1.000</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">0.99</span>     <span class="mf">0.43</span>
-  <span class="mi">9</span>   <span class="mf">1.005</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>       <span class="mf">1.001</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>           <span class="mf">0.87</span>     <span class="mf">0.54</span>
- <span class="mi">10</span>   <span class="mf">1.039</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>       <span class="mf">1.0049</span><span class="p">(</span><span class="mi">97</span><span class="p">)</span>          <span class="mf">0.94</span>     <span class="mf">0.48</span>
+  <span class="mi">1</span>   <span class="mf">0.992</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>       <span class="mf">0.992</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.993</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>       <span class="mf">0.992</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">0.97</span>
+  <span class="mi">3</span>   <span class="mf">1.002</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>       <span class="mf">0.996</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">0.09</span>     <span class="mf">0.91</span>
+  <span class="mi">4</span>   <span class="mf">1.004</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>       <span class="mf">0.9973</span><span class="p">(</span><span class="mi">98</span><span class="p">)</span>          <span class="mf">0.10</span>     <span class="mf">0.96</span>
+  <span class="mi">5</span>   <span class="mf">1.026</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>       <span class="mf">1.0001</span><span class="p">(</span><span class="mi">93</span><span class="p">)</span>          <span class="mf">0.28</span>     <span class="mf">0.89</span>
+  <span class="mi">6</span>   <span class="mf">1.053</span><span class="p">(</span><span class="mi">92</span><span class="p">)</span>       <span class="mf">1.0007</span><span class="p">(</span><span class="mi">93</span><span class="p">)</span>          <span class="mf">0.29</span>     <span class="mf">0.92</span>
+  <span class="mi">7</span>   <span class="mf">1.035</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>       <span class="mf">1.0038</span><span class="p">(</span><span class="mi">89</span><span class="p">)</span>          <span class="mf">0.45</span>     <span class="mf">0.85</span>
+  <span class="mi">8</span>   <span class="mf">0.991</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>       <span class="mf">1.0014</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span>          <span class="mf">0.44</span>     <span class="mf">0.88</span>
+  <span class="mi">9</span>   <span class="mf">0.968</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>       <span class="mf">0.9956</span><span class="p">(</span><span class="mi">73</span><span class="p">)</span>          <span class="mf">0.76</span>     <span class="mf">0.64</span>
+ <span class="mi">10</span>   <span class="mf">1.022</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span>       <span class="mf">0.9966</span><span class="p">(</span><span class="mi">72</span><span class="p">)</span>          <span class="mf">0.73</span>     <span class="mf">0.68</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="mf">1.0049</span><span class="p">(</span><span class="mi">97</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.48</span>
+<span class="n">result</span> <span class="o">=</span> <span class="mf">0.9966</span><span class="p">(</span><span class="mi">72</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.68</span>
 </pre></div>
 </div>
 <p>It is a good idea to make the actual integration volume as large a
@@ -476,7 +474,7 @@ been cut in half had we used the integration volume
 <p>Note, finally, that integration to infinity is also possible:
 map the relevant variable into a different variable
 of finite range. For example,  an integral over <img class="math" src="_images/math/2364a1b4da9be013cbc21d70565f4d4f2bb8d36a.svg" alt="x\equiv b z / (1-z)"/>
-from 0 to infinity is easily reexpressed as
+from 0 to infinity is easily re-expressed as
 an integral over <img class="math" src="_images/math/ee2481120b689ebecdf833b153b1e44372af448e.svg" alt="z"/> from 0 to 1, where the transformation
 emphasizes the region in <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/> of order free parameter <img class="math" src="_images/math/5cf70d30bed668864d41ac882237465737e7f20f.svg" alt="b"/>.</p>
 <p><strong>Damping:</strong> The result in the previous section
@@ -494,18 +492,18 @@ Here we reduce <code class="docutils literal notranslate"><span class="pre">alph
 the following output:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">1.004</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>       <span class="mf">1.004</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">0.988</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>       <span class="mf">0.997</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>           <span class="mf">0.26</span>     <span class="mf">0.61</span>
-  <span class="mi">3</span>   <span class="mf">1.023</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>       <span class="mf">1.005</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>           <span class="mf">0.56</span>     <span class="mf">0.57</span>
-  <span class="mi">4</span>   <span class="mf">0.996</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>       <span class="mf">1.002</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">0.43</span>     <span class="mf">0.73</span>
-  <span class="mi">5</span>   <span class="mf">1.009</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>       <span class="mf">1.0032</span><span class="p">(</span><span class="mi">99</span><span class="p">)</span>          <span class="mf">0.34</span>     <span class="mf">0.85</span>
-  <span class="mi">6</span>   <span class="mf">0.981</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>       <span class="mf">0.9995</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span>          <span class="mf">0.44</span>     <span class="mf">0.82</span>
-  <span class="mi">7</span>   <span class="mf">1.010</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>       <span class="mf">1.0010</span><span class="p">(</span><span class="mi">84</span><span class="p">)</span>          <span class="mf">0.40</span>     <span class="mf">0.88</span>
-  <span class="mi">8</span>   <span class="mf">0.979</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>       <span class="mf">0.9978</span><span class="p">(</span><span class="mi">77</span><span class="p">)</span>          <span class="mf">0.48</span>     <span class="mf">0.85</span>
-  <span class="mi">9</span>   <span class="mf">1.068</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>       <span class="mf">1.0037</span><span class="p">(</span><span class="mi">74</span><span class="p">)</span>          <span class="mf">1.29</span>     <span class="mf">0.24</span>
- <span class="mi">10</span>   <span class="mf">0.973</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>       <span class="mf">1.0010</span><span class="p">(</span><span class="mi">71</span><span class="p">)</span>          <span class="mf">1.32</span>     <span class="mf">0.22</span>
+  <span class="mi">1</span>   <span class="mf">1.008</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>       <span class="mf">1.008</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.993</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>       <span class="mf">0.999</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>           <span class="mf">0.19</span>     <span class="mf">0.66</span>
+  <span class="mi">3</span>   <span class="mf">1.005</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>       <span class="mf">1.002</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>           <span class="mf">0.11</span>     <span class="mf">0.89</span>
+  <span class="mi">4</span>   <span class="mf">1.016</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>       <span class="mf">1.006</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">0.19</span>     <span class="mf">0.91</span>
+  <span class="mi">5</span>   <span class="mf">0.973</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>       <span class="mf">0.9967</span><span class="p">(</span><span class="mi">95</span><span class="p">)</span>          <span class="mf">0.73</span>     <span class="mf">0.57</span>
+  <span class="mi">6</span>   <span class="mf">1.016</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>       <span class="mf">1.0009</span><span class="p">(</span><span class="mi">84</span><span class="p">)</span>          <span class="mf">0.77</span>     <span class="mf">0.57</span>
+  <span class="mi">7</span>   <span class="mf">1.008</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>       <span class="mf">1.0023</span><span class="p">(</span><span class="mi">76</span><span class="p">)</span>          <span class="mf">0.66</span>     <span class="mf">0.68</span>
+  <span class="mi">8</span>   <span class="mf">0.990</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>       <span class="mf">1.0002</span><span class="p">(</span><span class="mi">69</span><span class="p">)</span>          <span class="mf">0.63</span>     <span class="mf">0.73</span>
+  <span class="mi">9</span>   <span class="mf">1.008</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>       <span class="mf">1.0012</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>          <span class="mf">0.58</span>     <span class="mf">0.80</span>
+ <span class="mi">10</span>   <span class="mf">0.958</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>       <span class="mf">0.9959</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>          <span class="mf">1.12</span>     <span class="mf">0.34</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="mf">1.0031</span><span class="p">(</span><span class="mi">72</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.14</span>
+<span class="n">result</span> <span class="o">=</span> <span class="mf">0.9959</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.34</span>
 </pre></div>
 </div>
 <p>Notice how the errors fluctuate less from iteration to iteration
@@ -541,8 +539,50 @@ for very large numbers of iterations, <code class="docutils literal notranslate"
 <p>The lack of systematic biases is <em>not</em> a strong reason for turning
 off adaptation, however, since the biases are
 usually negligible (see above). The most important reason is the
-first: stability. It is particularly relevant if the number of
-integrand evaluations <code class="docutils literal notranslate"><span class="pre">neval</span></code> is small for the integrand.</p>
+first: stability.</p>
+<p><code class="docutils literal notranslate"><span class="pre">adapt=False</span></code> is particularly useful when the number of
+integrand evaluations <code class="docutils literal notranslate"><span class="pre">neval</span></code> is small for the integrand, leading
+to large fluctuations in the errors from iteration to
+iteration. For example,
+the following output is from an estimate (with <code class="docutils literal notranslate"><span class="pre">neval=2.5e4</span></code>)
+of an eight-dimensional
+integral with three sharp peaks along the diagonal (Eq. (45) in
+<a class="reference external" href="https://arxiv.org/abs/2009.05112">arXiv_2009.05112</a>, normalized so that the correct answer equals 1):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+ <span class="mi">1</span>   <span class="mf">0.75</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>        <span class="mf">0.75</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
+ <span class="mi">2</span>   <span class="mf">0.506</span><span class="p">(</span><span class="mi">58</span><span class="p">)</span>       <span class="mf">0.510</span><span class="p">(</span><span class="mi">58</span><span class="p">)</span>           <span class="mf">0.32</span>     <span class="mf">0.57</span>
+ <span class="mi">3</span>   <span class="mf">0.80</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>        <span class="mf">0.530</span><span class="p">(</span><span class="mi">56</span><span class="p">)</span>           <span class="mf">1.02</span>     <span class="mf">0.36</span>
+ <span class="mi">4</span>   <span class="mf">0.76</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>        <span class="mf">0.576</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>           <span class="mf">1.81</span>     <span class="mf">0.14</span>
+ <span class="mi">5</span>   <span class="mf">1.27</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>        <span class="mf">0.596</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>           <span class="mf">2.74</span>     <span class="mf">0.03</span>
+ <span class="mi">6</span>   <span class="mf">1.10</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>        <span class="mf">0.629</span><span class="p">(</span><span class="mi">48</span><span class="p">)</span>           <span class="mf">3.56</span>     <span class="mf">0.00</span>
+ <span class="mi">7</span>   <span class="mf">0.802</span><span class="p">(</span><span class="mi">73</span><span class="p">)</span>       <span class="mf">0.681</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>           <span class="mf">3.63</span>     <span class="mf">0.00</span>
+ <span class="mi">8</span>   <span class="mf">2.8</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>        <span class="mf">0.681</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>           <span class="mf">3.27</span>     <span class="mf">0.00</span>
+ <span class="mi">9</span>   <span class="mf">0.907</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span>       <span class="mf">0.719</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>           <span class="mf">3.52</span>     <span class="mf">0.00</span>
+<span class="mi">10</span>   <span class="mf">1.07</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>        <span class="mf">0.736</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span>           <span class="mf">3.65</span>     <span class="mf">0.00</span>
+
+<span class="n">itn</span>   <span class="n">integral</span>        <span class="n">average</span>         <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+ <span class="mi">1</span>   <span class="mf">1.13</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>        <span class="mf">1.13</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
+ <span class="mi">2</span>   <span class="mf">1.064</span><span class="p">(</span><span class="mi">96</span><span class="p">)</span>       <span class="mf">1.095</span><span class="p">(</span><span class="mi">86</span><span class="p">)</span>           <span class="mf">0.13</span>     <span class="mf">0.72</span>
+ <span class="mi">3</span>   <span class="mf">1.03</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>        <span class="mf">1.072</span><span class="p">(</span><span class="mi">67</span><span class="p">)</span>           <span class="mf">0.19</span>     <span class="mf">0.83</span>
+ <span class="mi">4</span>   <span class="mf">0.924</span><span class="p">(</span><span class="mi">94</span><span class="p">)</span>       <span class="mf">1.035</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span>           <span class="mf">0.58</span>     <span class="mf">0.63</span>
+ <span class="mi">5</span>   <span class="mf">0.858</span><span class="p">(</span><span class="mi">71</span><span class="p">)</span>       <span class="mf">1.000</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span>           <span class="mf">1.08</span>     <span class="mf">0.37</span>
+ <span class="mi">6</span>   <span class="mf">0.97</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>        <span class="mf">0.995</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span>           <span class="mf">0.84</span>     <span class="mf">0.52</span>
+ <span class="mi">7</span>   <span class="mf">0.924</span><span class="p">(</span><span class="mi">69</span><span class="p">)</span>       <span class="mf">0.985</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>           <span class="mf">0.84</span>     <span class="mf">0.54</span>
+ <span class="mi">8</span>   <span class="mf">1.19</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>        <span class="mf">1.010</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span>           <span class="mf">1.01</span>     <span class="mf">0.42</span>
+ <span class="mi">9</span>   <span class="mf">1.74</span><span class="p">(</span><span class="mi">73</span><span class="p">)</span>        <span class="mf">1.092</span><span class="p">(</span><span class="mi">88</span><span class="p">)</span>           <span class="mf">1.01</span>     <span class="mf">0.42</span>
+<span class="mi">10</span>   <span class="mf">0.942</span><span class="p">(</span><span class="mi">89</span><span class="p">)</span>       <span class="mf">1.077</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span>           <span class="mf">1.02</span>     <span class="mf">0.42</span>
+</pre></div>
+</div>
+<p>The first 10 iterations are used to train the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map; their
+results are discarded. The
+next 10 iterations, with <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code>, have uncertainties that
+fluctuate in size by an order of magnitude, but still give a reliable
+estimate for the integral (1.08(8)). Allowing <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
+to continue adapting in the the second set of iterations gives
+results like 0.887(25), which is 4.5 standard deviations too low;
+the real uncertainty is larger than ±0.025.</p>
 <p>Training the integrator and then setting <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code> for the
 final results works best if the number of evaluations per iteration
 (<code class="docutils literal notranslate"><span class="pre">neval</span></code>) is the same in both steps. This is because the second
@@ -615,20 +655,20 @@ both cases, one result for each of the three integrals. <a class="reference inte
 the first integrand in the array. The <code class="docutils literal notranslate"><span class="pre">Q</span></code> value is for all three
 of the integrals, taken together.</p>
 <p>The code produces the following output:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">I</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.00024677</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>   <span class="n">I</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.000123397</span><span class="p">(</span><span class="mi">85</span><span class="p">)</span>   <span class="n">I</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.000062322</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
-<span class="n">Q</span> <span class="o">=</span> <span class="mf">0.49</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">I</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.00024682</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>   <span class="n">I</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.000123417</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>   <span class="n">I</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.000062327</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>
+<span class="n">Q</span> <span class="o">=</span> <span class="mf">0.93</span>
 
-<span class="o">&lt;</span><span class="n">x</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mf">0.500056</span><span class="p">(</span><span class="mi">59</span><span class="p">)</span>
-<span class="n">sigma_x</span><span class="o">**</span><span class="mi">2</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">&gt;</span> <span class="o">-</span> <span class="o">&lt;</span><span class="n">x</span><span class="o">&gt;**</span><span class="mi">2</span> <span class="o">=</span> <span class="mf">0.0024974</span><span class="p">(</span><span class="mi">83</span><span class="p">)</span>
+<span class="o">&lt;</span><span class="n">x</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mf">0.500017</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>
+<span class="n">sigma_x</span><span class="o">**</span><span class="mi">2</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">&gt;</span> <span class="o">-</span> <span class="o">&lt;</span><span class="n">x</span><span class="o">&gt;**</span><span class="mi">2</span> <span class="o">=</span> <span class="mf">0.0024983</span><span class="p">(</span><span class="mi">73</span><span class="p">)</span>
 
 <span class="n">correlation</span> <span class="n">matrix</span><span class="p">:</span>
- <span class="p">[[</span> <span class="mf">1.</span>          <span class="mf">0.98520462</span>  <span class="mf">0.94374824</span><span class="p">]</span>
- <span class="p">[</span> <span class="mf">0.98520462</span>  <span class="mf">1.</span>          <span class="mf">0.98591163</span><span class="p">]</span>
- <span class="p">[</span> <span class="mf">0.94374824</span>  <span class="mf">0.98591163</span>  <span class="mf">1.</span>        <span class="p">]]</span>
+ <span class="p">[[</span><span class="mf">1.</span>         <span class="mf">0.98002885</span> <span class="mf">0.92558296</span><span class="p">]</span>
+ <span class="p">[</span><span class="mf">0.98002885</span> <span class="mf">1.</span>         <span class="mf">0.98157932</span><span class="p">]</span>
+ <span class="p">[</span><span class="mf">0.92558296</span> <span class="mf">0.98157932</span> <span class="mf">1.</span>        <span class="p">]]</span>
 </pre></div>
 </div>
 <p>The estimates for the individual integrals are separately accurate to
-about ±0.07%,
+about ±0.05%,
 but the estimate for <img class="math" src="_images/math/b785fc9691be3f36efb57cce04fb51a9dfec3f31.svg" alt="\langle x \rangle = I_1/I_0"/>
 is accurate to ±0.01%.
 This is almost an order
@@ -637,7 +677,7 @@ The correlation matrix shows that there is 98% correlation between the
 statistical fluctuations in estimates for <img class="math" src="_images/math/d25d10db2f48c689f2f1828bd46bd83bb2cb39fc.svg" alt="I_0"/> and <img class="math" src="_images/math/f606987c7e9ceb513a97df8072fed44ceedd7548.svg" alt="I_1"/>,
 and so the bulk of these fluctuations cancel in the ratio.
 The estimate for the variance <img class="math" src="_images/math/870b49e4c0f492ceb54b077b1dce6d609980a228.svg" alt="\sigma^2_x"/>
-is 51x more accurate than we would
+is 48x more accurate than we would
 have obtained had the integrals been evaluated separately. Both estimates
 are correct to within the quoted errors.</p>
 <p>The individual results are objects of type <code class="xref py py-class docutils literal notranslate"><span class="pre">gvar.GVar</span></code>, which
@@ -679,11 +719,11 @@ for example, can be rewritten as</p>
 </pre></div>
 </div>
 <p>which returns the following output:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="mf">0.00024677</span><span class="p">(</span><span class="mi">17</span><span class="p">),</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mf">0.000123397</span><span class="p">(</span><span class="mi">85</span><span class="p">),</span><span class="s1">&#39;x**2&#39;</span><span class="p">:</span> <span class="mf">0.000062322</span><span class="p">(</span><span class="mi">45</span><span class="p">)}</span>
-<span class="n">Q</span> <span class="o">=</span> <span class="mf">0.49</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="mf">0.00024682</span><span class="p">(</span><span class="mi">12</span><span class="p">),</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mf">0.000123417</span><span class="p">(</span><span class="mi">61</span><span class="p">),</span><span class="s1">&#39;x**2&#39;</span><span class="p">:</span> <span class="mf">0.000062327</span><span class="p">(</span><span class="mi">33</span><span class="p">)}</span>
+<span class="n">Q</span> <span class="o">=</span> <span class="mf">0.93</span>
 
-<span class="o">&lt;</span><span class="n">x</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mf">0.500056</span><span class="p">(</span><span class="mi">59</span><span class="p">)</span>
-<span class="n">sigma_x</span><span class="o">**</span><span class="mi">2</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">&gt;</span> <span class="o">-</span> <span class="o">&lt;</span><span class="n">x</span><span class="o">&gt;**</span><span class="mi">2</span> <span class="o">=</span> <span class="mf">0.0024974</span><span class="p">(</span><span class="mi">83</span><span class="p">)</span>
+<span class="o">&lt;</span><span class="n">x</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mf">0.500017</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>
+<span class="n">sigma_x</span><span class="o">**</span><span class="mi">2</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">&gt;</span> <span class="o">-</span> <span class="o">&lt;</span><span class="n">x</span><span class="o">&gt;**</span><span class="mi">2</span> <span class="o">=</span> <span class="mf">0.0024983</span><span class="p">(</span><span class="mi">73</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The result returned by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is a dictionary using the same keys as the
@@ -733,20 +773,20 @@ from the center of the integration volume. The normalized contributions
 the following output:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">0.85179</span><span class="p">(</span><span class="mi">56</span><span class="p">)</span>     <span class="mf">0.85179</span><span class="p">(</span><span class="mi">56</span><span class="p">)</span>         <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">0.85130</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>     <span class="mf">0.85160</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>         <span class="mf">0.89</span>     <span class="mf">0.50</span>
-  <span class="mi">3</span>   <span class="mf">0.85147</span><span class="p">(</span><span class="mi">53</span><span class="p">)</span>     <span class="mf">0.85155</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>         <span class="mf">0.52</span>     <span class="mf">0.91</span>
-  <span class="mi">4</span>   <span class="mf">0.85164</span><span class="p">(</span><span class="mi">67</span><span class="p">)</span>     <span class="mf">0.85150</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>         <span class="mf">1.10</span>     <span class="mf">0.34</span>
-  <span class="mi">5</span>   <span class="mf">0.85144</span><span class="p">(</span><span class="mi">56</span><span class="p">)</span>     <span class="mf">0.85146</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>         <span class="mf">1.11</span>     <span class="mf">0.32</span>
-  <span class="mi">6</span>   <span class="mf">0.85159</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span>     <span class="mf">0.85150</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>         <span class="mf">0.97</span>     <span class="mf">0.51</span>
-  <span class="mi">7</span>   <span class="mf">0.85086</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>     <span class="mf">0.85137</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>         <span class="mf">0.97</span>     <span class="mf">0.52</span>
-  <span class="mi">8</span>   <span class="mf">0.85139</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>     <span class="mf">0.85137</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>         <span class="mf">0.90</span>     <span class="mf">0.66</span>
-  <span class="mi">9</span>   <span class="mf">0.85089</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>     <span class="mf">0.85122</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>         <span class="mf">0.79</span>     <span class="mf">0.84</span>
- <span class="mi">10</span>   <span class="mf">0.85101</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>     <span class="mf">0.85116</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>         <span class="mf">0.78</span>     <span class="mf">0.87</span>
+  <span class="mi">1</span>   <span class="mf">0.85104</span><span class="p">(</span><span class="mi">57</span><span class="p">)</span>     <span class="mf">0.85104</span><span class="p">(</span><span class="mi">57</span><span class="p">)</span>         <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.85127</span><span class="p">(</span><span class="mi">47</span><span class="p">)</span>     <span class="mf">0.85117</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>         <span class="mf">0.19</span>     <span class="mf">0.98</span>
+  <span class="mi">3</span>   <span class="mf">0.85104</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>     <span class="mf">0.85111</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>         <span class="mf">0.17</span>     <span class="mf">1.00</span>
+  <span class="mi">4</span>   <span class="mf">0.85118</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>     <span class="mf">0.85116</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>         <span class="mf">0.29</span>     <span class="mf">1.00</span>
+  <span class="mi">5</span>   <span class="mf">0.85119</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span>     <span class="mf">0.85119</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>         <span class="mf">0.57</span>     <span class="mf">0.95</span>
+  <span class="mi">6</span>   <span class="mf">0.85121</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>     <span class="mf">0.85119</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>         <span class="mf">0.57</span>     <span class="mf">0.97</span>
+  <span class="mi">7</span>   <span class="mf">0.85073</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>     <span class="mf">0.85103</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>         <span class="mf">0.65</span>     <span class="mf">0.95</span>
+  <span class="mi">8</span>   <span class="mf">0.85097</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>     <span class="mf">0.85101</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>         <span class="mf">0.79</span>     <span class="mf">0.84</span>
+  <span class="mi">9</span>   <span class="mf">0.85116</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>     <span class="mf">0.851040</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span>        <span class="mf">0.88</span>     <span class="mf">0.71</span>
+ <span class="mi">10</span>   <span class="mf">0.85134</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>     <span class="mf">0.851059</span><span class="p">(</span><span class="mi">87</span><span class="p">)</span>        <span class="mf">0.85</span>     <span class="mf">0.77</span>
 
-   <span class="n">I</span> <span class="o">=</span> <span class="mf">0.85116</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
-<span class="n">dI</span><span class="o">/</span><span class="n">I</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0729</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span> <span class="mf">0.2116</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.3246</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span> <span class="mf">0.3193</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.0716</span><span class="p">(</span><span class="mi">15</span><span class="p">)]</span>
-<span class="nb">sum</span><span class="p">(</span><span class="n">dI</span><span class="o">/</span><span class="n">I</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+-</span> <span class="mf">1.7e-08</span>
+   <span class="n">I</span> <span class="o">=</span> <span class="mf">0.851059</span><span class="p">(</span><span class="mi">87</span><span class="p">)</span>
+<span class="n">dI</span><span class="o">/</span><span class="n">I</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0734</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> <span class="mf">0.2093</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span> <span class="mf">0.3232</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span> <span class="mf">0.3248</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span> <span class="mf">0.0693</span><span class="p">(</span><span class="mi">12</span><span class="p">)]</span>
+<span class="nb">sum</span><span class="p">(</span><span class="n">dI</span><span class="o">/</span><span class="n">I</span><span class="p">)</span> <span class="o">=</span> <span class="mf">1.000000000000</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The integrator adapts to the full integral <code class="docutils literal notranslate"><span class="pre">I</span></code> but also gives
@@ -1144,11 +1184,11 @@ points <code class="docutils literal notranslate"><span class="pre">x</span></co
 integrand already in its first iteration:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">1.029</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>       <span class="mf">1.029</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">0.988</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">0.992</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">0.96</span>     <span class="mf">0.33</span>
-  <span class="mi">3</span>   <span class="mf">1.011</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">1.0009</span><span class="p">(</span><span class="mi">82</span><span class="p">)</span>          <span class="mf">1.19</span>     <span class="mf">0.30</span>
-  <span class="mi">4</span>   <span class="mf">1.001</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">1.0008</span><span class="p">(</span><span class="mi">68</span><span class="p">)</span>          <span class="mf">0.79</span>     <span class="mf">0.50</span>
-  <span class="mi">5</span>   <span class="mf">0.995</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">0.9994</span><span class="p">(</span><span class="mi">58</span><span class="p">)</span>          <span class="mf">0.64</span>     <span class="mf">0.64</span>
+  <span class="mi">1</span>   <span class="mf">0.984</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>       <span class="mf">0.984</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">1.008</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">1.004</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>           <span class="mf">0.64</span>     <span class="mf">0.42</span>
+  <span class="mi">3</span>   <span class="mf">1.002</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">1.0029</span><span class="p">(</span><span class="mi">75</span><span class="p">)</span>          <span class="mf">0.33</span>     <span class="mf">0.72</span>
+  <span class="mi">4</span>   <span class="mf">0.999</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">1.0018</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>          <span class="mf">0.24</span>     <span class="mf">0.87</span>
+  <span class="mi">5</span>   <span class="mf">0.9874</span><span class="p">(</span><span class="mi">96</span><span class="p">)</span>      <span class="mf">0.9975</span><span class="p">(</span><span class="mi">52</span><span class="p">)</span>          <span class="mf">0.58</span>     <span class="mf">0.68</span>
 
 </pre></div>
 </div>
@@ -1156,11 +1196,11 @@ integrand already in its first iteration:</p>
 the integrator is still far from converged by the fifth iteration:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">4.9</span><span class="p">(</span><span class="mf">4.4</span><span class="p">)</span>        <span class="mf">4.9</span><span class="p">(</span><span class="mf">4.4</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">0.520</span><span class="p">(</span><span class="mi">76</span><span class="p">)</span>       <span class="mf">0.522</span><span class="p">(</span><span class="mi">76</span><span class="p">)</span>           <span class="mf">1.00</span>     <span class="mf">0.32</span>
-  <span class="mi">3</span>   <span class="mf">0.85</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>        <span class="mf">0.583</span><span class="p">(</span><span class="mi">68</span><span class="p">)</span>           <span class="mf">2.27</span>     <span class="mf">0.10</span>
-  <span class="mi">4</span>   <span class="mf">1.13</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>        <span class="mf">0.689</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>           <span class="mf">5.67</span>     <span class="mf">0.00</span>
-  <span class="mi">5</span>   <span class="mf">0.798</span><span class="p">(</span><span class="mi">56</span><span class="p">)</span>       <span class="mf">0.749</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>           <span class="mf">4.68</span>     <span class="mf">0.00</span>
+  <span class="mi">1</span>   <span class="mf">0.74</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>        <span class="mf">0.74</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.93</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>        <span class="mf">0.90</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>            <span class="mf">0.38</span>     <span class="mf">0.54</span>
+  <span class="mi">3</span>   <span class="mf">0.94</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>        <span class="mf">0.920</span><span class="p">(</span><span class="mi">74</span><span class="p">)</span>           <span class="mf">0.23</span>     <span class="mf">0.79</span>
+  <span class="mi">4</span>   <span class="mf">1.091</span><span class="p">(</span><span class="mi">75</span><span class="p">)</span>       <span class="mf">1.004</span><span class="p">(</span><span class="mi">53</span><span class="p">)</span>           <span class="mf">1.03</span>     <span class="mf">0.38</span>
+  <span class="mi">5</span>   <span class="mf">1.063</span><span class="p">(</span><span class="mi">58</span><span class="p">)</span>       <span class="mf">1.031</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span>           <span class="mf">0.91</span>     <span class="mf">0.46</span>
 
 </pre></div>
 </div>
@@ -1184,7 +1224,8 @@ The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: A
 new variables <code class="docutils literal notranslate"><span class="pre">y[d]</span></code> (where <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;</span> <span class="pre">y[d]</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>) that make the integrand
 easier to integrate. The integrator is used
 to evaluate the integral in <code class="docutils literal notranslate"><span class="pre">y</span></code>-space. To illustrate how this
-works, we replace the last three lines of the code above with
+works, we replace the last three lines of the code at the start of
+this section with
 the following:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">smc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
     <span class="s2">&quot; integrates f(y) over dim-dimensional unit hypercube &quot;</span>
@@ -1230,21 +1271,26 @@ the integrand and using the <a class="reference internal" href="vegas.html#modul
 <p>Having mapped the integration variables <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> to new variables <code class="docutils literal notranslate"><span class="pre">y[d]</span></code>,
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> evaluates the integral in <code class="docutils literal notranslate"><span class="pre">y</span></code>-space using stratified Monte
 Carlo sampling (see <a class="reference internal" href="background.html#adaptive-stratified-sampling"><span class="std std-ref">Adaptive Stratified Sampling</span></a>). This is
-done by dividing each axis into <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> equal stratifications,
+done by dividing each axis <code class="docutils literal notranslate"><span class="pre">d</span></code> into <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> equal stratifications,
 which divide the <code class="docutils literal notranslate"><span class="pre">D</span></code>-dimensional integration volume into
-<code class="docutils literal notranslate"><span class="pre">nstrat**D</span></code> sub-volumes. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> does a separate integral
-in each sub-volume, adjusting the number of integrand samples
-used in each one to minimize errors. By default,
-the number <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> of stratifications per direction is the same
-in every direction and is set automatically
-based on the number <code class="docutils literal notranslate"><span class="pre">neval</span></code> of integrand evaluations per
-iteration. It is possible, however, to specify the number of
+<code class="docutils literal notranslate"><span class="pre">prod(nstrat)</span></code> sub-volumes or (rectangular) hypercubes. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> does a
+separate integral
+in each hypercube, adjusting the number of integrand evaluations
+used in each one to minimize errors. By default, the number of
+stratifications is set automatically based on the number <code class="docutils literal notranslate"><span class="pre">neval</span></code>
+of integrand evaluations per iteration: <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> is set
+equal to <img class="math" src="_images/math/fdedcfaa76dd6907a61c87518d65e3f97e3569cf.svg" alt="M_\mathrm{st}+1"/> for the first <img class="math" src="_images/math/b5d0b9c16509b4f0b46195f2dbe7886c2ce2f098.svg" alt="D_0"/> directions
+and <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}"/> for
+the remaining directions, where <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}"/>
+and <img class="math" src="_images/math/b5d0b9c16509b4f0b46195f2dbe7886c2ce2f098.svg" alt="D_0"/> are chosen
+to maximize the number stratifications consistent with <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
+It is also possible, however, to specify the number of
 stratifications <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> for each direction separately.</p>
-<p>Requiring the same number of stratifications in each direction
+<p>Requiring (approximately) the same number of stratifications in each direction
 greatly limits the number of stratifications in very high
 dimensions, since the product of the <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> must be
 less than <code class="docutils literal notranslate"><span class="pre">neval/2</span></code> (so there are at least two integrand
-samples in each sub-volume). This restricts <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s ability to
+samples in each hypercube). This restricts <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s ability to
 adapt. Often there is a subset of integration directions
 that are more challenging than the others. In high
 dimensions (and possibly lower dimensions)
@@ -1252,28 +1298,33 @@ it is worthwhile using larger values
 for <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> for those directions.</p>
 <p>An example is the 20-dimensional integral</p>
 <div class="math">
-<p><img src="_images/math/001d396e3a44cb660b2e39e503c07d0f7b0b406c.svg" alt="C\int_0^1 \!d^{20}x\,
-\,\sum_{i=1}^2 \mathrm{e}^{-100 (\mathbf{x} - \mathbf{r}_i)^2},"/></p>
+<p><img src="_images/math/8fef71ba07e5ea61c67b56cb21222510782953e8.svg" alt="C\int_0^1 \!d^{20}x\,
+\,\sum_{i=1}^3 \mathrm{e}^{-100 (\mathbf{x} - \mathbf{r}_i)^2},"/></p>
 </div><p>which has high, narrow peaks at</p>
 <div class="math">
-<p><img src="_images/math/a84f30719b9810ff7c3802b5c5a0cb8864d49ea4.svg" alt="\mathbf{r}_1 = (0.39, 0.39, 0.39, 0.39, 0.39, 0.45, \ldots, 0.45),"/></p>
+<p><img src="_images/math/30de301357e262b8ff6d3bf776c593bfa424976c.svg" alt="\mathbf{r}_1 = (0.23, 0.23, 0.23, 0.23, 0.23, 0.45, \ldots, 0.45),"/></p>
 </div><div class="math">
-<p><img src="_images/math/a99b7a3aa2967439521c8c2c97b618e6005d1e49.svg" alt="\mathbf{r}_2 = (0.74, 0.74, 0.74, 0.74, 0.74, 0.45, \ldots, 0.45)."/></p>
+<p><img src="_images/math/8bd0e26564055bae659b56ce9eae9f73089dc653.svg" alt="\mathbf{r}_2 = (0.39, 0.39, 0.39, 0.39, 0.39, 0.45, \ldots, 0.45),"/></p>
+</div><div class="math">
+<p><img src="_images/math/91cf73bd9d7d2a99728aa904fff31852dca0cffa.svg" alt="\mathbf{r}_3 = (0.74, 0.74, 0.74, 0.74, 0.74, 0.45, \ldots, 0.45)."/></p>
 </div><p>These peaks are aligned along the diagonal of the integration volume for the
 first five directions, but are on top of each other in the remaining directions.
 This makes the integrals over the first five directions much more challenging
 than the remaining integrals.</p>
 <p>To integrate this function, we specify <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> rather than <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
-We set <code class="docutils literal notranslate"><span class="pre">nstrat[d]=12</span></code> for the first five directions, and <code class="docutils literal notranslate"><span class="pre">nstrat[d]=1</span></code>
+We set <code class="docutils literal notranslate"><span class="pre">nstrat[d]=10</span></code> for the first five directions, and <code class="docutils literal notranslate"><span class="pre">nstrat[d]=1</span></code>
 for all the rest. This fixes the number of function evaluations to be
-between two and four times the number of sub-volumes created by
-the stratifications (i.e., the product of the <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code>, here 248,832).
+approximately eight times the number of hypercubes created by
+the stratifications (i.e., eight times 100,000), which provides enough
+integrand samples for adaptive stratified sampling while also
+guaranteeing at least two samples per hypercube.
 The following code</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="n">dim</span> <span class="o">=</span> <span class="mi">20</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+    <span class="mi">5</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.23</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.45</span><span class="p">],</span>
     <span class="mi">5</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.39</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.45</span><span class="p">],</span>
     <span class="mi">5</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.74</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.45</span><span class="p">],</span>
     <span class="p">])</span>
@@ -1284,10 +1335,10 @@ The following code</p>
     <span class="k">for</span> <span class="n">ri</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
         <span class="n">dx2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">ri</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">ans</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">ans</span> <span class="o">*</span> <span class="mf">534071568726932.4</span>
+    <span class="k">return</span> <span class="n">ans</span> <span class="o">*</span> <span class="mf">356047712484621.56</span>
 
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
-<span class="n">nstrat</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">nstrat</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">nstrat</span><span class="o">=</span><span class="n">nstrat</span><span class="p">)</span>            <span class="c1"># warmup</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nstrat</span><span class="o">=</span><span class="n">nstrat</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
@@ -1297,27 +1348,27 @@ The following code</p>
 <p>gives excellent results:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">1.055</span><span class="p">(</span><span class="mi">65</span><span class="p">)</span>       <span class="mf">1.055</span><span class="p">(</span><span class="mi">65</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">1.006</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>       <span class="mf">1.016</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>           <span class="mf">0.46</span>     <span class="mf">0.50</span>
-  <span class="mi">3</span>   <span class="mf">0.993</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>       <span class="mf">1.001</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>           <span class="mf">0.43</span>     <span class="mf">0.65</span>
-  <span class="mi">4</span>   <span class="mf">1.003</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>       <span class="mf">1.003</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">0.29</span>     <span class="mf">0.83</span>
-  <span class="mi">5</span>   <span class="mf">0.9897</span><span class="p">(</span><span class="mi">99</span><span class="p">)</span>      <span class="mf">0.9955</span><span class="p">(</span><span class="mi">74</span><span class="p">)</span>          <span class="mf">0.41</span>     <span class="mf">0.80</span>
+  <span class="mi">1</span>   <span class="mf">0.920</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>       <span class="mf">0.920</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.993</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>       <span class="mf">0.974</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>           <span class="mf">1.60</span>     <span class="mf">0.21</span>
+  <span class="mi">3</span>   <span class="mf">1.014</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>       <span class="mf">0.990</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>           <span class="mf">1.30</span>     <span class="mf">0.27</span>
+  <span class="mi">4</span>   <span class="mf">1.099</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>       <span class="mf">0.999</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>           <span class="mf">1.73</span>     <span class="mf">0.16</span>
+  <span class="mi">5</span>   <span class="mf">1.0028</span><span class="p">(</span><span class="mi">78</span><span class="p">)</span>      <span class="mf">1.0023</span><span class="p">(</span><span class="mi">72</span><span class="p">)</span>          <span class="mf">1.31</span>     <span class="mf">0.26</span>
 
-<span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">12</span> <span class="mi">12</span> <span class="mi">12</span> <span class="mi">12</span> <span class="mi">12</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span><span class="p">]</span>
+<span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span><span class="p">]</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> struggles to converge, and is much less accurate,
+<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> struggles to converge, however,
 when in its default mode with the same number of
-integrand evaluations (about <code class="docutils literal notranslate"><span class="pre">1e6</span></code> per iteration):</p>
+integrand evaluations (about 800,000 per iteration):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">1.52</span><span class="p">(</span><span class="mi">59</span><span class="p">)</span>        <span class="mf">1.52</span><span class="p">(</span><span class="mi">59</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">1.41</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>        <span class="mf">1.42</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>            <span class="mf">0.03</span>     <span class="mf">0.86</span>
-  <span class="mi">3</span>   <span class="mf">0.835</span><span class="p">(</span><span class="mi">54</span><span class="p">)</span>       <span class="mf">0.879</span><span class="p">(</span><span class="mi">52</span><span class="p">)</span>           <span class="mf">4.49</span>     <span class="mf">0.01</span>
-  <span class="mi">4</span>   <span class="mf">0.869</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span>       <span class="mf">0.873</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>           <span class="mf">3.00</span>     <span class="mf">0.03</span>
-  <span class="mi">5</span>   <span class="mf">0.982</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>       <span class="mf">0.896</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span>           <span class="mf">2.87</span>     <span class="mf">0.02</span>
+  <span class="mi">1</span>   <span class="mf">2.1</span><span class="p">(</span><span class="mf">1.4</span><span class="p">)</span>        <span class="mf">2.1</span><span class="p">(</span><span class="mf">1.4</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.637</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>       <span class="mf">0.638</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>           <span class="mf">1.14</span>     <span class="mf">0.29</span>
+  <span class="mi">3</span>   <span class="mf">0.755</span><span class="p">(</span><span class="mi">53</span><span class="p">)</span>       <span class="mf">0.684</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>           <span class="mf">2.06</span>     <span class="mf">0.13</span>
+  <span class="mi">4</span>   <span class="mf">0.750</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>       <span class="mf">0.704</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>           <span class="mf">1.78</span>     <span class="mf">0.15</span>
+  <span class="mi">5</span>   <span class="mf">0.89</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>        <span class="mf">0.716</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>           <span class="mf">2.07</span>     <span class="mf">0.08</span>
 
-<span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -1357,7 +1408,8 @@ corresponding integrand values.</p>
 uses transformed integration variables to improve its Monte Carlo
 estimates. It further improves those estimates by subdividing the
 integration volume in the transformed variables into a large number of
-hypercubes, and doing a Monte Carlo integral in each hypercube separately.
+hypercubes, and doing a Monte Carlo integral in each hypercube separately
+(see previous section).
 The final result is the sum of the results from all the hypercubes.
 To mimic a full <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integral estimate using the iterators above, we need
 to know which points belong to which hypercubes. The following code
@@ -1466,7 +1518,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5.4 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 4.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

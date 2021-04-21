@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>How vegas Works &#8212; vegas 3.5.4 documentation</title>
+    <title>How vegas Works &#8212; vegas 4.0 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="c_fortran.html" title="Integrands in C or Fortran"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5.4 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 4.0 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -188,7 +188,7 @@ the grid increments along an axis
 are made smaller in regions where the
 projection of the integral onto that axis is larger. For example,
 the optimal grid for the four-dimensional Gaussian integral
-in the previous section looks like:</p>
+in the section on <a class="reference internal" href="tutorial.html#basic-integrals"><span class="std std-ref">Basic Integrals</span></a> looks like:</p>
 <a class="reference internal image-reference" href="_images/eg1a-plt1.png"><img alt="_images/eg1a-plt1.png" src="_images/eg1a-plt1.png" style="width: 80%;" /></a>
 <a class="reference internal image-reference" href="_images/eg1a-plt2.png"><img alt="_images/eg1a-plt2.png" src="_images/eg1a-plt2.png" style="width: 80%;" /></a>
 <p>These grids transform into uniformly-spaced grids in <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/> space.
@@ -270,8 +270,8 @@ lie along diagonals of the integration volume. To address such problems,
 the new version of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> introduces a second adaptive strategy,
 based upon another standard Monte Carlo technique called “stratified
 sampling.” <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> divides the <img class="math" src="_images/math/46d6d6c574dd6eb0fec02c32d61a984a06878317.svg" alt="D"/>-dimensional
-<img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space volume into <img class="math" src="_images/math/daa9c4e26a01ec8a5cf8e31e2651d7e70d544b1e.svg" alt="M_\mathrm{st}^D"/> hypercubes using
-a uniform <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space grid with <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}"/> stratifications on each
+<img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space volume into <img class="math" src="_images/math/fc258b17231930ecb79503bae4537defbe8cd5cb.svg" alt="(M_\mathrm{st}+1)^{D_0} M_\mathrm{st}^{D-D_0}"/> hypercubes using
+a uniform <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space grid with <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}"/> or <img class="math" src="_images/math/fdedcfaa76dd6907a61c87518d65e3f97e3569cf.svg" alt="M_\mathrm{st}+1"/> stratifications on each
 axis. It estimates
 the integral by doing a separate Monte Carlo integration in each of
 the hypercubes, and adding the results together to provide an estimate
@@ -280,7 +280,7 @@ Typically
 this <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space grid is much coarser than the <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/>-space grid used to
 remap the integration variables. This is because <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> needs
 at least two integrand evaluations in each <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space hypercube, and
-so must keep the number of hypercubes <img class="math" src="_images/math/daa9c4e26a01ec8a5cf8e31e2651d7e70d544b1e.svg" alt="M_\mathrm{st}^D"/> smaller than <code class="docutils literal notranslate"><span class="pre">neval/2</span></code>.
+so must keep the number of hypercubes <img class="math" src="_images/math/fc258b17231930ecb79503bae4537defbe8cd5cb.svg" alt="(M_\mathrm{st}+1)^{D_0} M_\mathrm{st}^{D-D_0}"/> smaller than <code class="docutils literal notranslate"><span class="pre">neval/2</span></code>.
 This can restrict <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}"/> severely when <img class="math" src="_images/math/46d6d6c574dd6eb0fec02c32d61a984a06878317.svg" alt="D"/> is large.</p>
 <p>Older versions of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> also divide <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/>-space into hypercubes and
 do Monte Carlo estimates in the separate hypercubes. These versions, however,
@@ -369,7 +369,7 @@ integrals.</p>
         <li class="right" >
           <a href="c_fortran.html" title="Integrands in C or Fortran"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5.4 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 4.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

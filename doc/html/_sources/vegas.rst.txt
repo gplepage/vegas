@@ -164,6 +164,8 @@ fashion, for use in subsequent iterations of the algorithm.
 
    .. autoattribute:: ninc
 
+         ``ninc[d]`` is the number increments in direction ``d``.
+
    .. attribute:: grid
 
       The nodes of the grid defining the maps are ``self.grid[d, i]``
@@ -195,6 +197,10 @@ fashion, for use in subsequent iterations of the algorithm.
    .. automethod:: show_grid(ngrid=40, shrink=False)
 
    .. automethod:: settings(ngrid=5)
+
+   .. automethod:: extract_grid()
+
+   .. automethod:: clear()
 
 
 PDFIntegrator Objects

@@ -341,3 +341,6 @@ class parallelintegrand(BatchIntegrand):
             )
         # convert list of results into a single numpy array
         return numpy.concatenate(results)
+__version__ = '4.0'
+
+__version__ = '4.0'

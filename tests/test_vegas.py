@@ -36,11 +36,12 @@ class TestAdaptiveMap(unittest.TestCase):
         m = AdaptiveMap(grid=[[0, 1], [2, 4]])
         np_assert_allclose(m.grid, [[0, 1], [2, 4]])
         np_assert_allclose(m.inc, [[1], [2]])
+        np_assert_allclose(m.ninc, [1, 1])
         m = AdaptiveMap(grid=[[0, 1], [-2, 4]], ninc=2)
         np_assert_allclose(m.grid, [[0, 0.5, 1.], [-2., 1., 4.]])
         np_assert_allclose(m.inc, [[0.5, 0.5], [3., 3.]])
         self.assertEqual(m.dim, 2)
-        self.assertEqual(m.ninc, 2)
+        np_assert_allclose(m.ninc, [2, 2])
         m = AdaptiveMap([[0, 0.4, 1], [-2, 0., 4]], ninc=4)
         np_assert_allclose(
             m.grid,
@@ -48,7 +49,13 @@ class TestAdaptiveMap(unittest.TestCase):
             )
         np_assert_allclose(m.inc, [[0.2, 0.2, 0.3, 0.3], [1, 1, 2, 2]])
         self.assertEqual(m.dim, 2)
-        self.assertEqual(m.ninc, 4)
+        np_assert_allclose(m.ninc, [4, 4])
+        m = AdaptiveMap([[0,1], [2, 2.5, 4]])
+        np_assert_allclose(m.ninc, [1, 2])
+        np_assert_allclose(m.grid[0, :2], [0,1])
+        np_assert_allclose(m.grid[1, :3], [2, 2.5, 4])
+        np_assert_allclose(m.inc[0, :1], [1])
+        np_assert_allclose(m.inc[1, :2], [.5, 1.5])
 
     def test_pickle(self):
         " pickle AdaptiveMap "
@@ -125,7 +132,7 @@ class TestAdaptiveMap(unittest.TestCase):
         Fx = F(x)
         m1.adapt_to_samples(x, Fx, nitn=5)
         m1.adapt(ninc=2)
-        np_assert_allclose(m1.grid, [[0., 0.071, 2.0], [0., 0.073, 1.]], rtol=0.4)
+        np_assert_allclose(np.asarray(m1.grid), [[0., 0.071, 2.0], [0., 0.073, 1.]], rtol=0.4)
 
     def test_training_data_adapt(self):
         "add_training_data(...)  adapt(...) "
@@ -427,16 +434,9 @@ class TestIntegrator(unittest.TestCase):
     def tearDown(self):
         pass
 
-    # def test_have_gvar(self):
-    #     " have gvar module? "
-    #     if not have_gvar:
-    #         warnings.warn(
-    #             "no gvar module -- for better results try: pip install gvar"
-    #             )
-
     def test_init(self):
         " Integrator "
-        I = Integrator([[0.,1.],[-1.,1.]], neval=234, nitn=123)
+        I = Integrator([[0.,1.],[-1.,1.]], neval=234, nitn=123, neval_frac=0.75)
         self.assertEqual(I.neval, 234)
         self.assertEqual(I.nitn, 123)
         for k in Integrator.defaults:
@@ -444,70 +444,59 @@ class TestIntegrator(unittest.TestCase):
                 self.assertNotEqual(getattr(I,k), Integrator.defaults[k])
             elif k not in ['map']:
                 self.assertEqual(getattr(I,k), Integrator.defaults[k])
-        np.testing.assert_allclose([I.map.grid[0,0], I.map.grid[0, -1]], [0., 1.])
-        np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, -1]], [-1., 1.])
-        lines = [
-            'Integrator Settings:',
-            '    234 (approx) integrand evaluations in each of 123 iterations',
-            '    number of:  strata/axis = [7 7]',
-            '                increments/axis = 21',
-            '                h-cubes = 49  evaluations/h-cube = 2 (min)',
-            '                h-cubes/batch = 1000',
-            '    minimize_mem = False',
-            '    adapt_to_errors = False',
-            '    damping parameters: alpha = 0.5  beta= 0.75',
-            '    limits: h-cubes < 1e+09  evaluations/h-cube < 1e+05',
-            '    accuracy: relative = 0  absolute accuracy = 0',
-            '',
-            '    axis 0 covers (0.0, 1.0)',
-            '    axis 1 covers (-1.0, 1.0)',
-            '',
+        np.testing.assert_allclose([I.map.grid[0,0], I.map.grid[0, I.map.ninc[0]]], [0., 1.])
+        np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, I.map.ninc[1]]], [-1., 1.])
+        self.assertEqual(list(I.map.ninc), [20, 20])
+        self.assertEqual(list(I.nstrat), [5, 5])
+        self.assertEqual(I.neval, 234)
+    
+        I = Integrator([[0.,1.],[-1.,1.]], neval=1300, max_nhcube=1, neval_frac=0.75, minimize_mem=True)
+        self.assertEqual(list(I.map.ninc), [130, 120])
+        self.assertEqual(list(I.nstrat), [13, 12])
+        self.assertEqual(I.neval, 1300)
+        self.assertEqual(I.min_neval_hcube, 2)
+        np.testing.assert_allclose([I.map.grid[0,0], I.map.grid[0, I.map.ninc[0]]], [0., 1.])
+        np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, I.map.ninc[1]]], [-1., 1.])
+
+        I = Integrator([[0., 1.], [-1., 1.]], nstrat=[10, 11], neval_frac=0.75)
+        self.assertEqual(list(I.map.ninc), [80, 88])
+        self.assertEqual(list(I.nstrat), [10, 11])
+        self.assertEqual(I.neval, 880)
+        self.assertEqual(I.min_neval_hcube, 2)
+        np.testing.assert_allclose([I.map.grid[0,0], I.map.grid[0, I.map.ninc[0]]], [0., 1.])
+        np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, I.map.ninc[1]]], [-1., 1.])
+
+    def test_settings(self):
+        I = Integrator([[0.,1.],[-1.,1.]], neval=254, nitn=123, neval_frac=0.75)
+        outstr = [
+            "Integrator Settings:",
+            "    {neval} (approx) integrand evaluations in each of 123 iterations",
+            "    number of:  strata/axis = [{nstrat0} {nstrat1}]",
+            "                increments/axis = [{ninc0} {ninc1}]",
+            "                h-cubes = {nhcube}  evaluations/h-cube = {min_neval_hcube} (min)",
+            "                h-cubes/batch = 1000",
+            "    minimize_mem = False",
+            "    adapt_to_errors = False",
+            "    damping parameters: alpha = {alpha}  beta= {beta}",
+            "    limits: h-cubes < 1e+09  evaluations/h-cube < 1e+06",
+            "    accuracy: relative = 0  absolute accuracy = 0",
+            "",
+            "    axis 0 covers (0.0, 1.0)",
+            "    axis 1 covers (-1.0, 1.0)\n",
             ]
-        for i, l in enumerate(I.settings().split('\n')):
-            self.assertEqual(l, lines[i])
-        I = Integrator([[0.,1.],[-1.,1.]], max_nhcube=1, minimize_mem=True)
-        lines = [
-            'Integrator Settings:',
-            '    1000 (approx) integrand evaluations in each of 10 iterations',
-            '    number of:  strata/axis = [15 15]',
-            '                increments/axis = 90',
-            '                h-cubes = 225  evaluations/h-cube = 2 (min)',
-            '                h-cubes/batch = 1000',
-            '    minimize_mem = True',
-            '    adapt_to_errors = False',
-            '    damping parameters: alpha = 0.5  beta= 0.75',
-            '    limits: h-cubes < 1  evaluations/h-cube < 1e+05',
-            '    accuracy: relative = 0  absolute accuracy = 0',
-            '',
-            '    axis 0 covers (0.0, 1.0)',
-            '    axis 1 covers (-1.0, 1.0)',
-            '',
-            ]
-        for i, l in enumerate(I.settings().split('\n')):
-            self.assertEqual(l, lines[i])
-        I = Integrator([[0., 1.], [-1., 1.]], nstrat=[10, 11])
-        lines = [
-            'Integrator Settings:',
-            '    440 (approx) integrand evaluations in each of 10 iterations',
-            '    number of:  strata/axis = [10 11]',
-            '                increments/axis = 44',
-            '                h-cubes = 110  evaluations/h-cube = 2 (min)',
-            '                h-cubes/batch = 1000',
-            '    minimize_mem = False',
-            '    adapt_to_errors = False',
-            '    damping parameters: alpha = 0.5  beta= 0.75',
-            '    limits: h-cubes < 1e+09  evaluations/h-cube < 1e+05',
-            '    accuracy: relative = 0  absolute accuracy = 0',
-            '',
-            '    axis 0 covers (0.0, 1.0)',
-            '    axis 1 covers (-1.0, 1.0)',
-            '',
-            ]
-        for i, l in enumerate(I.settings().split('\n')):
-            self.assertEqual(l, lines[i])
+        outstr = ('\n'.join(outstr)).format(
+            neval=I.neval, nstrat0=I.nstrat[0], nstrat1=I.nstrat[1],
+            ninc0=I.map.ninc[0], ninc1=I.map.ninc[1], nhcube=I.nhcube,
+            min_neval_hcube=I.min_neval_hcube, alpha=I.alpha, beta=I.beta
+            )
+        self.assertEqual(outstr, I.settings())
 
     def test_pickle(self):
-        I1 = Integrator([[0.,1.],[-1.,1.]], neval=234, nitn=123)
+        I1 = Integrator([[0.,1.],[-1.,1.]], neval=234)
+        # @batchintegrand
+        # def f(x):
+        #     return np.sum(x**20, axis=1) * 21 / 4.
+        # I1(f, nitn=5)
         with open('test_integ.p', 'wb') as ofile:
             pickle.dump(I1, ofile)
         with open('test_integ.p', 'rb') as ifile:
@@ -516,8 +505,15 @@ class TestIntegrator(unittest.TestCase):
         assert isinstance(I2, Integrator)
         for k in Integrator.defaults:
             if k == 'map':
-                np_assert_allclose(I1.map.grid, I2.map.grid)
-                np_assert_allclose(I1.map.inc, I2.map.inc)
+                np_assert_allclose(I1.map.ninc, I2.map.ninc)
+                for d in range(I1.dim):
+                    # protect against 0.0 entry using 1e-8
+                    grid1 = np.array(I1.map.grid[d, :I1.map.ninc[d] + 1]) + 1e-8
+                    grid2 = np.array(I2.map.grid[d, :I2.map.ninc[d] + 1]) + 1e-8
+                    np_assert_allclose(grid1, grid2, rtol=0.01)
+                    inc1 = I1.map.inc[d, :I1.map.ninc[d]]
+                    inc2 = I2.map.inc[d, :I2.map.ninc[d]]
+                    np_assert_allclose(inc1, inc2, rtol=0.01)
             elif k in ['ran_array_generator']:
                 continue
             else:
@@ -532,7 +528,6 @@ class TestIntegrator(unittest.TestCase):
             nhcube_batch=10,    # number of h-cubes per batch
             max_nhcube=5e2,     # max number of h-cubes
             max_neval_hcube=1e1, # max number of evaluations per h-cube
-            neval_nstrat=12,    # for use when nstrat set
             max_mem=100,        # memory limit
             nitn=100,           # number of iterations
             alpha=0.35,
@@ -554,6 +549,47 @@ class TestIntegrator(unittest.TestCase):
                     new_defaults['map'].grid)
             else:
                 self.assertEqual(getattr(I,k), new_defaults[k])
+        
+        # test special cases (2-d)
+        I = Integrator([[1,1.3,2], [0,1]], maxinc_axis=1000, neval_frac=0.75)
+        I.set(nstrat=[22, 13])
+        self.assertEqual(I.neval, 22 * 13 * 2 / 0.25)
+        self.assertEqual(I.min_neval_hcube, 2)
+        I.set(nstrat=[7,9], neval=2000)
+        self.assertEqual(I.neval, 2000)
+        self.assertEqual(list(I.nstrat), [7, 9])
+        self.assertEqual(list(I.map.ninc), [196, 198])
+        self.assertEqual(I.min_neval_hcube, 7)
+        I.set(nstrat=[7,9])
+        self.assertEqual(I.neval, 7 * 9 * 2 / 0.25)
+        self.assertEqual(I.min_neval_hcube, 2)
+        with self.assertRaises(ValueError):
+            I.set(nstrat=[7,9], neval=20)
+        I.set(neval=3100) 
+        self.assertEqual(list(I.nstrat), [20, 19])
+        self.assertEqual(I.min_neval_hcube, 2)
+        with self.assertRaises(ValueError):
+            I.set(nstrat=[2,3,5])
+        I.set(neval=3500, max_nhcube=500) 
+        self.assertEqual(list(I.nstrat), [21, 20])
+        self.assertEqual(I.min_neval_hcube, 2)
+        with self.assertRaises(ValueError):
+            I.set(nstrat=[10,12], neval=120*4)
+        I.set(nstrat=[10,12], neval=120*8)
+        self.assertEqual(I.neval, 120*8)
+        self.assertEqual(I.min_neval_hcube, 2)
+        # check alignment of the two grids
+        I.set(neval=3.5e8, max_nhcube=1e9)
+        nstrat = np.array(I.nstrat)
+        ninc = np.array(I.map.ninc)
+        self.assertTrue(np.all(np.round(nstrat / ninc) * ninc == nstrat))
+        I.set(neval=300, max_nhcube=1e9)
+        nstrat = np.array(I.nstrat)
+        ninc = np.array(I.map.ninc)
+        self.assertTrue(np.all(np.round(ninc / nstrat) * nstrat == ninc))
+        # sigf
+        I.set(sigf=[1.])
+        self.assertNotEqual(len(I.sigf), 1)
 
     def test_volume(self):
         " integrate constants "
@@ -842,9 +878,10 @@ class TestIntegrator(unittest.TestCase):
         " integral of a constant "
         @batchintegrand
         def g(x):
-            return np.ones(x.shape[0], np.float_)
+            return np.ones(x.shape[0], float)
         # test weighted results
-        integ = Integrator([(0,1)])
+        integ = Integrator([(0,1)],)
+        integ(g, nitn=1, neval=1e2, neval_frac=0.5)
         res = integ(g, nitn=4, neval=1e2)
         self.assertTrue(np.isnan(res.chi2))
         self.assertTrue(np.isnan(res.Q))
@@ -854,6 +891,14 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(np.isnan(res.chi2))
         self.assertTrue(np.isnan(res.Q))
         self.assertAlmostEqual(res.itn_results[0].sdev / res.sdev, 2.0)
+        # zero
+        @batchintegrand
+        def g(x):
+            return np.zeros(x.shape[0], float)
+        # test weighted results
+        integ = Integrator([(0,1)],)
+        res = integ(g, nitn=4, neval=1e2)
+        self.assertEqual(res.mean, 0.0)
 
     def test_mem(self):
         " max_mem "

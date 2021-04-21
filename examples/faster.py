@@ -14,7 +14,7 @@ import vegas
 import math
 import numpy as np
 
-np.random.seed((1,2))   # causes reproducible random numbers
+np.random.seed((1,2, 3))   # causes reproducible random numbers
 
 
 class f_batch(vegas.BatchIntegrand):

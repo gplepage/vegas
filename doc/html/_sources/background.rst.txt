@@ -15,8 +15,10 @@ How :mod:`vegas` Works
 .. |sigmaI| replace:: :math:`\sigma_I`
 .. |x(y)| replace:: :math:`x(y)`
 .. |Ms| replace:: :math:`M_\mathrm{st}`
-.. |Msd| replace:: :math:`M_\mathrm{st}^D`
+.. |Msplus| replace:: :math:`M_\mathrm{st}+1`
+.. |Msd| replace:: :math:`(M_\mathrm{st}+1)^{D_0} M_\mathrm{st}^{D-D_0}`
 .. |d| replace:: :math:`D`
+.. |d0| replace:: :math:`D_0`
 
 |vegas| uses two adaptive strategies: importance sampling, and
 adaptive stratified sampling. Here we discuss the ideas behind each,
@@ -204,7 +206,7 @@ the grid increments along an axis
 are made smaller in regions where the
 projection of the integral onto that axis is larger. For example,
 the optimal grid for the four-dimensional Gaussian integral
-in the previous section looks like:
+in the section on :ref:`basic_integrals` looks like:
 
 .. image:: eg1a-plt1.*
    :width: 80%
@@ -301,7 +303,7 @@ the new version of |vegas| introduces a second adaptive strategy,
 based upon another standard Monte Carlo technique called "stratified
 sampling." |vegas| divides the |d|-dimensional
 |y|-space volume into |Msd| hypercubes using
-a uniform |y|-space grid with |Ms| stratifications on each
+a uniform |y|-space grid with |Ms| or |Msplus| stratifications on each
 axis. It estimates
 the integral by doing a separate Monte Carlo integration in each of
 the hypercubes, and adding the results together to provide an estimate

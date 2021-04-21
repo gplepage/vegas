@@ -35,4 +35,4 @@ paper/
 variations/
 save/
 .gitignore
-
+.vscode/

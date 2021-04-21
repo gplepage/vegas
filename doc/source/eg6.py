@@ -4,6 +4,7 @@ from outputsplitter import log_stdout, unlog_stdout
 
 dim = 20
 r = np.array([
+    5 * [0.23] + (dim - 5) * [0.45],
     5 * [0.39] + (dim - 5) * [0.45],
     5 * [0.74] + (dim - 5) * [0.45],
     ])
@@ -14,13 +15,14 @@ def f(x):
     for ri in r:
         dx2 = np.sum((x - ri[None, :]) ** 2, axis=1)
         ans += np.exp(-100 * dx2)
-    return ans * 534071568726932.4
+    return ans * 356047712484621.56 # 534071568726932.4 
 
 def main():
+    print(vegas.__version__)
     np.random.seed(12)
     log_stdout('eg6a.out')
     itg = vegas.Integrator(dim * [[0, 1]], alpha=0.25)
-    nstrat = 5 * [12] + (dim - 5) * [1]
+    nstrat = 5 * [10] + (dim - 5) * [1]
     itg(f, nitn=15, nstrat=nstrat)
     r = itg(f, nitn=5, nstrat=nstrat)
     print(r.summary())
@@ -29,8 +31,9 @@ def main():
     print()
 
     log_stdout('eg6b.out')
+    np.random.seed(12345)
     itg = vegas.Integrator(dim * [[0, 1]], alpha=0.25)
-    neval = 2e6
+    neval = 8e5
     itg(f, nitn=15, neval=neval)
     r = itg(f, nitn=5, neval=neval)
     print(r.summary())
@@ -87,7 +90,7 @@ def xmain():
     print(r.summary())
     print(list(itg.nstrat), list(itg.neval_hcube_range), r.sum_neval)
 
-from tools import *
+# from tools import *
 
 def xmain():
     dim = 3

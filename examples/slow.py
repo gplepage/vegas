@@ -10,7 +10,7 @@ import vegas
 import math
 import numpy as np
 
-np.random.seed((1,2))   # causes reproducible random numbers
+np.random.seed((1,2, 3))   # causes reproducible random numbers
 
 dim = 6
 norm_ac = 1. / 0.17720931990702889842 ** dim

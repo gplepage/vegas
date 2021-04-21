@@ -37,7 +37,7 @@ def main():
         nstrat = [100, 100] + len(x) * [1]
         nitn_w = 16 
         nitn_r = 8
-    ranseed = gv.ranseed(1)
+        ranseed = gv.ranseed(1)
     print('ranseed = %d' % ranseed)
     itg = vegas.Integrator(
         [(-5, 5), (-5, 5)] + (1 if ONE_W else len(x)) * [(0, 1)], 
@@ -50,7 +50,7 @@ def main():
     print(r.summary())
     print('neval_tot =', nsample, '   nstrat =', np.array(itg.nstrat))
     print( 'last neval =', itg.last_neval, '   r.sum_neval =', r.sum_neval, '    range =', list(itg.neval_hcube_range))
-    print('ninc =', itg.map.ninc, '\n')
+    print('ninc =', list(itg.map.ninc), '\n')
     p = r['p'] / r['norm']
     covp = r['p*p'] / r['norm'] - np.outer(p, p)
     w = r['w'] / r['norm']

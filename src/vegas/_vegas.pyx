@@ -102,42 +102,47 @@ cdef class AdaptiveMap:
     down in order to avoid instabilities caused by random fluctuations.
 
     Args:
-        grid (array): Initial ``x`` grid, where ``grid[d, i]``
-            is the ``i``-th node in direction ``d``.
-        ninc (int or ``None``): Number of increments along each axis
-            of the ``x`` grid. A new grid is generated if ``ninc`` differs
-            from ``grid.shape[1]``. The new grid is designed to give the same
+        grid (list of arrays): Initial ``x`` grid, where ``grid[d][i]``
+            is the ``i``-th node in direction ``d``. Different directions
+            can have different numbers of nodes.
+        ninc (int or array or ``None``): ``ninc[d]`` (or ``ninc``, if it 
+            is a number) is the number of increments along direction ``d`` 
+            in the new  ``x`` grid. The new grid is designed to give the same
             Jacobian ``dx(y)/dy`` as the original grid. The default value,
             ``ninc=None``, leaves the grid unchanged.
     """
     def __init__(self, grid, ninc=None):
-        cdef numpy.npy_intp i, d
+        cdef numpy.npy_intp i, d, dim
+        cdef double griddi
         if isinstance(grid, AdaptiveMap):
-            self._init_grid(grid.grid, initinc=True)
+            self.ninc = numpy.array(grid.ninc)
+            self.inc = numpy.array(grid.inc)
+            self.grid = numpy.array(grid.grid)
         else:
-            grid = numpy.array(grid, numpy.float_)
-            if grid.ndim != 2:
-                raise ValueError('grid must be 2-d array not %d-d' % grid.ndim)
-            grid.sort(axis=1)
-            if grid.shape[1] < 2:
-                raise ValueError("grid.shape[1] smaller than 2: " % grid.shape[1])
-            self._init_grid(grid, initinc=True)
-        self.sum_f = None
-        self.n_f = None
-        if ninc is not None and ninc != self.inc.shape[1]:
-            if self.inc.shape[1] == 1:
+            dim = len(grid)
+            len_g = numpy.array([len(x) for x in grid])
+            if min(len_g) < 2:
+                raise ValueError('grid[d] must have at least 2 elements, not {}'.format(min(len_g)))
+            self.ninc = len_g - 1
+            self.inc = numpy.empty((dim, max(len_g)-1), float)
+            self.grid = numpy.empty((dim, self.inc.shape[1] +1), float)
+            for d in range(dim):
+                for i, griddi in enumerate(sorted(grid[d])):
+                    self.grid[d, i] = griddi
+                for i in range(len_g[d] - 1):
+                    self.inc[d, i] = self.grid[d, i + 1] - self.grid[d, i]
+        self.clear()
+        if ninc is not None and not numpy.all(ninc == self.ninc):
+            if numpy.all(numpy.asarray(self.ninc) == 1):
                 self.make_uniform(ninc=ninc)
             else:
                 self.adapt(ninc=ninc)
 
-    property ninc:
-        " Number of increments along each grid axis."
-        def __get__(self):
-            return self.inc.shape[1]
     property  dim:
         " Number of dimensions."
         def __get__(self):
             return self.grid.shape[0]
+
     def region(self, numpy.npy_intp d=-1):
         """ x-space region.
 
@@ -148,11 +153,20 @@ cdef class AdaptiveMap:
         if d < 0:
             return [self.region(d) for d in range(self.dim)]
         else:
-            return (self.grid[d, 0], self.grid[d, -1])
+            return (self.grid[d, 0], self.grid[d, self.ninc[d]])
+
+    def extract_grid(self):
+        " Return a list of lists specifying the map's grid. "
+        cdef numpy.npy_intp d 
+        grid = []
+        for d in range(self.dim):
+            ng = self.ninc[d] + 1
+            grid.append(list(self.grid[d, :ng]))
+        return grid
 
     def __reduce__(self):
         """ Capture state for pickling. """
-        return (AdaptiveMap, (numpy.asarray(self.grid),))
+        return (AdaptiveMap, (self.extract_grid(),))
 
     def settings(self, ngrid=5):
         """ Create string with information about grid nodes.
@@ -162,20 +176,21 @@ cdef class AdaptiveMap:
         ``ngrid`` specifies the maximum number of nodes to print
         (spread evenly over the grid).
         """
+        cdef numpy.npy_intp d
         ans = []
         if ngrid > 0:
-            grid = numpy.array(self.grid)
-            nskip = int(self.ninc // ngrid)
-            if nskip<1:
-                nskip = 1
-            start = nskip // 2
             for d in range(self.dim):
+                grid_d = numpy.array(self.grid[d, :self.ninc[d] + 1])
+                nskip = int(self.ninc[d] // ngrid)
+                if nskip<1:
+                    nskip = 1
+                start = nskip // 2
                 ans += [
                     "    grid[%2d] = %s"
                     % (
                         d,
                         numpy.array2string(
-                            grid[d, start::nskip],precision=3,
+                            grid_d[start::nskip], precision=3,
                             prefix='    grid[xx] = ')
                           )
                     ]
@@ -192,40 +207,40 @@ cdef class AdaptiveMap:
     def make_uniform(self, ninc=None):
         """ Replace the grid with a uniform grid.
 
-        The new grid has ``ninc`` increments along each direction if
-        ``ninc`` is specified. Otherwise it has the same number of
-        increments as the old grid.
+        The new grid has ``ninc[d]``  (or ``ninc``, if it is a number) 
+        increments along each direction if ``ninc`` is specified.
+        If ``ninc=None`` (default), the new grid has the same number 
+        of increments in each direction as the old grid.
         """
         cdef numpy.npy_intp i, d
         cdef numpy.npy_intp dim = self.grid.shape[0]
         cdef double[:] tmp
         cdef double[:, ::1] new_grid
         if ninc is None:
-            ninc = self.inc.shape[1]
-        ninc = int(ninc)
-        if ninc < 1:
+            ninc = numpy.asarray(self.ninc)
+        elif numpy.shape(ninc) == ():
+            ninc = numpy.full(self.dim, int(ninc), dtype=numpy.intp)
+        elif numpy.shape(ninc) == (self.dim,):
+            ninc = numpy.asarray(ninc)
+        else:
+            raise ValueError('ninc has wrong shape -- {}'.format(numpy.shape(ninc)))
+        if min(ninc) < 1:
             raise ValueError(
-                "no of increments < 1 in AdaptiveMap -- %d"
-                % ninc
+                "no of increments < 1 in AdaptiveMap -- %s"
+                % str(ninc)
                 )
-        new_grid = numpy.empty((dim, ninc + 1), numpy.float_)
+        new_inc = numpy.empty((dim, max(ninc)), numpy.float_)
+        new_grid = numpy.empty((dim, new_inc.shape[1] + 1), numpy.float_)
         for d in range(dim):
-            tmp = numpy.linspace(self.grid[d, 0], self.grid[d, -1], ninc + 1)
-            for i in range(ninc + 1):
+            tmp = numpy.linspace(self.grid[d, 0], self.grid[d, self.ninc[d]], ninc[d] + 1)
+            for i in range(ninc[d] + 1):
                 new_grid[d, i] = tmp[i]
-        self._init_grid(new_grid)
-
-    def _init_grid(self, new_grid, initinc=False):
-        " Set the grid equal to new_grid. "
-        cdef numpy.npy_intp dim = new_grid.shape[0]
-        cdef numpy.npy_intp ninc = new_grid.shape[1] - 1
-        cdef numpy.npy_intp d, i
-        self.grid = new_grid
-        if initinc or self.inc.shape[0] != dim or self.inc.shape[1] != ninc:
-            self.inc = numpy.empty((dim, ninc), numpy.float_)
-        for d in range(dim):
-            for i in range(ninc):
-                self.inc[d, i] = self.grid[d, i + 1] - self.grid[d, i]
+            for i in range(ninc[d]):
+                new_inc[d, i] = new_grid[d, i + 1] - new_grid[d, i]
+        self.ninc = ninc
+        self.grid = new_grid 
+        self.inc = new_inc 
+        self.clear()
 
     def __call__(self, y=None):
         """ Return ``x`` values corresponding to ``y``.
@@ -293,7 +308,7 @@ cdef class AdaptiveMap:
                 and ``j=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
                 omitted (or negative).
         """
-        cdef numpy.npy_intp ninc = self.inc.shape[1]
+        cdef numpy.npy_intp ninc 
         cdef numpy.npy_intp dim = self.inc.shape[0]
         cdef numpy.npy_intp i, iy, d
         cdef double y_ninc, dy_ninc, tmp_jac
@@ -304,6 +319,7 @@ cdef class AdaptiveMap:
         for i in range(ny):
             jac[i] = 1.
             for d in range(dim):
+                ninc = self.ninc[d]
                 y_ninc = y[i, d] * ninc
                 iy = <int>floor(y_ninc)
                 dy_ninc = y_ninc  -  iy
@@ -344,7 +360,7 @@ cdef class AdaptiveMap:
                 and ``j=0...nx-1``. ``nx`` is set to ``x.shape[0]`` if it is
                 omitted (or negative).
         """
-        cdef numpy.npy_intp ninc = self.inc.shape[1]
+        cdef numpy.npy_intp ninc 
         cdef numpy.npy_intp dim = self.inc.shape[0]
         cdef numpy.npy_intp[:] iy
         cdef numpy.npy_intp i, iyi, d
@@ -356,6 +372,7 @@ cdef class AdaptiveMap:
         for i in range(nx):
             jac[i] = 1. 
         for d in range(dim):
+            ninc = self.ninc[d]
             iy = numpy.searchsorted(self.grid[d, :], x[:, d], side='right')
             for i in range(nx):
                 if iy[i] > 0 and iy[i] <= ninc:
@@ -367,7 +384,7 @@ cdef class AdaptiveMap:
                     jac[i] *= self.inc[d, 0] * ninc 
                 elif iy[i] > ninc:
                     y[i, d] = 1.0 
-                    jac[i] *= self.inc[d, -1] * ninc 
+                    jac[i] *= self.inc[d, ninc - 1] * ninc 
         return               
 
 
@@ -397,18 +414,20 @@ cdef class AdaptiveMap:
                 and ``j=0...ny-1``. ``ny`` is set to ``y.shape[0]`` if it is
                 omitted (or negative).
         """
-        cdef numpy.npy_intp ninc = self.inc.shape[1]
+        cdef numpy.npy_intp ninc 
         cdef numpy.npy_intp dim = self.inc.shape[0]
         cdef numpy.npy_intp iy
         cdef numpy.npy_intp i, d
         if self.sum_f is None:
-            self.sum_f = numpy.zeros((dim, ninc), numpy.float_)
-            self.n_f = numpy.zeros((dim, ninc), numpy.float_) + TINY
+            shape = (self.inc.shape[0], self.inc.shape[1])
+            self.sum_f = numpy.zeros(shape, numpy.float_)
+            self.n_f = numpy.zeros(shape, numpy.float_) + TINY
         if ny < 0:
             ny = y.shape[0]
         elif ny > y.shape[0]:
             raise ValueError('ny > y.shape[0]: %d > %d' % (ny, y.shape[0]))
         for d in range(dim):
+            ninc = self.ninc[d]
             for i in range(ny):
                 if y[i, d] > 0 and y[i, d] < 1:
                     iy = <int> floor(y[i, d] * ninc)
@@ -429,7 +448,7 @@ cdef class AdaptiveMap:
         is constant along that direction.
 
         The number of increments along a direction can be
-        changed by setting parameter ``ninc``.
+        changed by setting parameter ``ninc`` (array or number).
 
         The grid does not change if no training data has
         been accumulated, unless ``ninc`` is specified, in
@@ -438,44 +457,57 @@ cdef class AdaptiveMap:
         at different values of ``x``.
 
         Args:
-            alpha (double ): Determines the speed with which the grid
+            alpha (double): Determines the speed with which the grid
                 adapts to training data. Large (postive) values imply
                 rapid evolution; small values (much less than one) imply
                 slow evolution. Typical values are of order one. Choosing
                 ``alpha<0`` causes adaptation to the unmodified training
                 data (usually not a good idea).
-            ninc (int): Number of increments along each direction in the
-                new grid. The number is unchanged from the old grid if
-                ``ninc`` is omitted (or equals ``None``).
+            ninc (int or array or None): The number of increments in the new 
+                grid is ``ninc[d]`` (or ``ninc``, if it is a number)
+                in direction ``d``. The number is unchanged from the 
+                old grid if ``ninc`` is omitted (or equals ``None``, 
+                which is the default).
         """
         cdef double[:, ::1] new_grid
         cdef double[::1] avg_f, tmp_f
         cdef double sum_f, acc_f, f_ninc
-        cdef numpy.npy_intp old_ninc = self.grid.shape[1] - 1
+        cdef numpy.npy_intp old_ninc
         cdef numpy.npy_intp dim = self.grid.shape[0]
-        cdef numpy.npy_intp i, j, new_ninc
+        cdef numpy.npy_intp i, j
+        cdef numpy.npy_intp[:] new_ninc
 
         # initialization
         if ninc is None:
-            new_ninc = old_ninc
+            new_ninc = numpy.array(self.ninc)
+        elif numpy.shape(ninc) == ():
+            new_ninc = numpy.full(dim, int(ninc), numpy.intp)
+        elif len(ninc) == dim:
+            new_ninc = numpy.array(ninc, numpy.intp)
         else:
-            new_ninc = ninc
-        if new_ninc < 1:
-            raise ValueError('ninc < 1: ' + str(new_ninc))
-        if new_ninc == 1:
+            raise ValueError('badly formed ninc = ' + str(ninc))
+        if min(new_ninc) < 1:
+            raise ValueError('ninc < 1: ' + str(list(new_ninc)))
+        if max(new_ninc) == 1:
             new_grid = numpy.empty((dim, 2), numpy.float_)
             for d in range(dim):
                 new_grid[d, 0] = self.grid[d, 0]
-                new_grid[d, 1] = self.grid[d, -1]
-            self._init_grid(new_grid)
+                new_grid[d, 1] = self.grid[d, self.ninc[d]]
+            self.grid = numpy.asarray(new_grid)
+            self.inc = numpy.empty((dim, 1), numpy.float_)
+            self.ninc = numpy.array(dim * [1])
+            for d in range(dim):
+                self.inc[d, 0] = self.grid[d, 1] - self.grid[d, 0]
+            self.clear()
             return
 
         # smoothing
-        new_grid = numpy.empty((dim, new_ninc + 1), numpy.float_)
-        avg_f = numpy.ones(old_ninc, numpy.float_) # default = uniform
-        if alpha > 0 and old_ninc > 1:
-            tmp_f = numpy.empty(old_ninc, numpy.float_)
+        new_grid = numpy.empty((dim, max(new_ninc) + 1), numpy.float_)
+        avg_f = numpy.ones(self.inc.shape[1], numpy.float_) # default = uniform
+        if alpha > 0 and max(self.ninc) > 1:
+            tmp_f = numpy.empty(self.inc.shape[1], numpy.float_)
         for d in range(dim):
+            old_ninc = self.ninc[d]
             if self.sum_f is not None and alpha != 0:
                 for i in range(old_ninc):
                     if self.n_f[d, i] > 0:
@@ -484,8 +516,8 @@ cdef class AdaptiveMap:
                         avg_f[i] = 0.
             if alpha > 0 and old_ninc > 1:
                 tmp_f[0] = abs(7. * avg_f[0] + avg_f[1]) / 8.
-                tmp_f[-1] = abs(7. * avg_f[-1] + avg_f[-2]) / 8.
-                sum_f = tmp_f[0] + tmp_f[-1]
+                tmp_f[old_ninc - 1] = abs(7. * avg_f[old_ninc - 1] + avg_f[old_ninc - 2]) / 8.
+                sum_f = tmp_f[0] + tmp_f[old_ninc - 1]
                 for i in range(1, old_ninc - 1):
                     tmp_f[i] = abs(6. * avg_f[i] + avg_f[i-1] + avg_f[i+1]) / 8.
                     sum_f += tmp_f[i]
@@ -501,15 +533,15 @@ cdef class AdaptiveMap:
 
             # regrid
             new_grid[d, 0] = self.grid[d, 0]
-            new_grid[d, -1] = self.grid[d, -1]
+            new_grid[d, new_ninc[d]] = self.grid[d, old_ninc]
             i = 0        # new_x index
             j = -1         # self_x index
             acc_f = 0   # sum(avg_f) accumulated
             f_ninc = 0.
             for i in range(old_ninc):
                 f_ninc += avg_f[i]
-            f_ninc /= new_ninc     # amount of acc_f per new increment
-            for i in range(1, new_ninc):
+            f_ninc /= new_ninc[d]     # amount of acc_f per new increment
+            for i in range(1, new_ninc[d]):
                 while acc_f < f_ninc:
                     j += 1
                     if j < old_ninc:
@@ -524,8 +556,17 @@ cdef class AdaptiveMap:
                         )
                     continue
                 break
-        self._init_grid(new_grid)
-        self.sum_f = None
+        self.grid = numpy.asarray(new_grid)
+        self.inc = numpy.empty((dim, self.grid.shape[1] - 1), float)
+        for d in range(dim):
+            for i in range(new_ninc[d]):
+                self.inc[d, i] = self.grid[d, i + 1] - self.grid[d, i]
+        self.ninc = numpy.asarray(new_ninc)
+        self.clear()
+
+    def clear(self):
+        " Clear information accumulated by :meth:`AdaptiveMap.add_training_data`. "
+        self.sum_f = None 
         self.n_f = None
 
     def show_grid(self, ngrid=40, axes=None, shrink=False, plotter=None):
@@ -571,26 +612,27 @@ cdef class AdaptiveMap:
                 if dy is not None and (dy < 0 or dy >= dim):
                     raise ValueError('bad directions: %s' % str((dx, dy)))
         fig = plt.figure()
-        nskip = int(self.ninc // ngrid)
-        if nskip < 1:
-            nskip = 1
-        start = nskip // 2
         def plotdata(idx, grid=numpy.asarray(self.grid)):
             dx, dy = axes[idx[0]]
-            nnode = 0
             if dx is not None:
-                xrange = [self.grid[dx, 0], self.grid[dx, -1]]
+                nskip = int(self.ninc[dx] // ngrid)
+                if nskip < 1:
+                    nskip = 1
+                start = nskip // 2
+                xrange = [self.grid[dx, 0], self.grid[dx, self.ninc[dx]]]
                 xgrid = grid[dx, start::nskip]
-                nnode = len(xgrid)
                 xlabel = 'x[%d]' % dx
             else:
                 xrange = [0., 1.]
                 xgrid = None
                 xlabel = ''
             if dy is not None:
-                yrange = [self.grid[dy, 0], self.grid[dy, -1]]
+                nskip = int(self.ninc[dy] // ngrid)
+                if nskip < 1:
+                    nskip = 1
+                start = nskip // 2
+                yrange = [self.grid[dy, 0], self.grid[dy, self.ninc[dy]]]
                 ygrid = grid[dy, start::nskip]
-                nnode = len(ygrid)
                 ylabel = 'x[%d]' % dy
             else:
                 yrange = [0., 1.]
@@ -616,10 +658,11 @@ cdef class AdaptiveMap:
                 )
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
-            for i in range(nnode):
-                if xgrid is not None:
+            if xgrid is not None:
+                for i in range(len(xgrid)):
                     plt.plot([xgrid[i], xgrid[i]], yrange, 'k-')
-                if ygrid is not None:
+            if ygrid is not None:
+                for i in range(len(ygrid)):
                     plt.plot(xrange, [ygrid[i], ygrid[i]], 'k-')
             plt.xlim(*xrange)
             plt.ylim(*yrange)
@@ -653,7 +696,7 @@ cdef class AdaptiveMap:
         else:
             return plt
 
-    def adapt_to_samples(self, x, f, nitn=5, alpha=1.0, ninc=None):
+    def adapt_to_samples(self, x, f, nitn=5, alpha=1.0): # , ninc=None):
         """ Adapt map to data ``{x, f(x)}``.
 
         Replace grid with one that is optimized for integrating 
@@ -671,7 +714,7 @@ cdef class AdaptiveMap:
                 is ``alpha=1.0``. Smaller values slow the iterative 
                 adaptation, to improve stability of convergence.
         """
-        cdef numpy.intp_t i, tmp_ninc, old_ninc
+        cdef numpy.npy_intp i, tmp_ninc, old_ninc
         x = numpy.ascontiguousarray(x)
         if len(x.shape) != 2 or x.shape[1] != self.dim:
             raise ValueError('incompatible shape of x: {}'.format(x.shape))
@@ -681,7 +724,7 @@ cdef class AdaptiveMap:
             fx = numpy.ascontiguousarray(f)
         if fx.shape[0] != x.shape[0]:
             raise ValueError('shape of x and f(x) mismatch: {} vs {}'.format(x.shape, fx.shape))
-        old_ninc = max(self.grid.shape[1] - 1, Integrator.defaults['maxinc_axis'])
+        old_ninc = max(max(self.ninc), Integrator.defaults['maxinc_axis'])
         tmp_ninc = min(old_ninc, x.shape[0] / 10.) 
         if tmp_ninc < 2:
             raise ValueError('not enough samples: {}'.format(x.shape[0]))
@@ -691,7 +734,7 @@ cdef class AdaptiveMap:
             self.invmap(x, y, jac)
             self.add_training_data(y, (jac * fx) ** 2)
             self.adapt(alpha=alpha, ninc=tmp_ninc)
-        if tmp_ninc != old_ninc:
+        if numpy.any(tmp_ninc != old_ninc):
             self.adapt(ninc=old_ninc)
 
 
@@ -763,26 +806,17 @@ cdef class Integrator(object):
             in each iteration of the |vegas| algorithm. Increasing
             ``neval`` increases the precision: statistical errors should
             fall at least as fast as ``sqrt(1./neval)`` and often
-            fall much faster. When ``beta>0``, the total number of
-            evaluations can be substantially larger than ``neval``
-            for challenging integrands; parameter ``max_neval_hcube``
-            can be used to limit such growth. The default value is 1000;
-            real problems often require 10--1000 times more evaluations
-            than this. Ignored if parameter ``nstrat`` is specified.
-        nstrat (int array): (Optional) ``nstrat[d]`` specifies the number 
-            of stratifications to use in direction ``d``. If specified,
-            parameter ``neval`` is ignored; the number of integrand 
-            evaluations per iteration is set between ``neval_nstrat/2`` and 
-            ``neval_strat`` times the product ``nstrat[d]``\s over all 
-            directions. This parameter makes it possible to concentrate 
-            stratifications in directions where they are most needed. 
-            If ``nstrat`` is not specified, the number of evaluations is 
-            determined from parameter ``neval``, and ``nstrat[d]`` 
-            is the same for all ``d``.
-        neval_nstrat (positive int >= 2): When ``nstrat`` is specified,
-            ``neval`` is set to a value between ``neval_nstrat/2`` and 
-            ``neval_strat`` times the product ``nstrat[d]``\s over all 
-            directions; otherwise it is ignored. The default value is 4.
+            fall much faster.  The default value is 1000;
+            real problems often require 10--10,000 times more evaluations
+            than this. 
+        nstrat (int array): ``nstrat[d]`` specifies the number of
+            stratifications to use in direction ``d``. By default this 
+            parameter is set automatically, based on parameter ``neval``,
+            with ``nstrat[d]`` approximately the same for every ``d``. 
+            Specifying ``nstrat`` explicitly makes it possible to 
+            concentrate stratifications in directions  where they are most 
+            needed. If ``nstrat`` is set but ``neval`` is not, 
+            ``neval`` is set equal to ``2*prod(nstrat)/(1-neval_frac)``. 
         alpha (float): Damping parameter controlling the remapping
             of the integration variables as |vegas| adapts to the
             integrand. Smaller values slow adaptation, which may be
@@ -797,6 +831,17 @@ cdef class Integrator(object):
             redistribution. The theoretically optimal value is 1;
             setting ``beta=0`` prevents any redistribution of
             evaluations. The default value is 0.75.
+        neval_frac (float): Approximate fraction of function evaluations
+            used for adaptive stratified sampling. |vegas| 
+            distributes ``(1-neval_frac)*neval``  integrand evaluations 
+            uniformly over all hypercubes, with at  least 2 evaluations 
+            per hypercube. The remaining ``neval_frac*neval`` 
+            evaluations are concentrated in hypercubes where the errors 
+            are largest. Increasing ``neval_frac`` makes more integrand 
+            evaluations available for adaptive stratified 
+            sampling, but reduces the number of hypercubes, which limits
+            the algorithm's ability to adapt. Ignored when ``beta=0``. 
+            Default is ``neval_frac=0.75``. 
         adapt (bool): Setting ``adapt=False`` prevents further
             adaptation by |vegas|. Typically this would be done
             after training the |Integrator| on an integrand, in order
@@ -804,76 +849,6 @@ cdef class Integrator(object):
             unweighted averages to combine results from different
             iterations when ``adapt=False``. The default setting
             is ``adapt=True``.
-        nhcube_batch (positive int): The number of hypercubes (in |y| space)
-            whose integration points are combined into a single
-            batch to be passed to the integrand, together,
-            when using |vegas| in batch mode.
-            The default value is 1000. Larger values may be
-            lead to faster evaluations, but at the cost of
-            more memory for internal work arrays.
-        minimize_mem (bool): When ``True``, |vegas| minimizes
-            internal workspace at the cost of extra evaluations of
-            the integrand. This can increase execution time by
-            50--100% but might be desirable when the number of
-            evaluations is very large (e.g., ``neval=1e9``). Normally
-            |vegas| uses internal work space that grows in
-            proportion to ``neval``. If that work space exceeds
-            the size of the RAM available to the processor,
-            |vegas| runs much more slowly. Setting ``minimize_mem=True``
-            greatly reduces the internal storage used by |vegas|; in
-            particular memory becomes independent of ``neval``. The default
-            setting (``minimize_mem=False``), however, is much superior
-            unless memory becomes a problem. (The large memory is needed
-            for adaptive stratified sampling, so memory is not
-            an issue if ``beta=0``.)
-        adapt_to_errors (bool): ``adapt_to_errors=False`` causes
-            |vegas| to remap the integration variables to emphasize
-            regions where ``|f(x)|`` is largest. This is
-            the default mode.
-
-            ``adapt_to_errors=True`` causes |vegas| to remap
-            variables to emphasize regions where the Monte Carlo
-            error is largest. This might be superior when
-            the number of the number of stratifications (``self.nstrat``)
-            in the |y| grid is large (> 50?). It is typically
-            useful only in one or two dimensions.
-        maxinc_axis (positive int): The maximum number of increments
-            per axis allowed for the |x|-space grid. The default
-            value is 1000; there is probably little need to use
-            other values.
-        max_nhcube (positive int): Maximum number of |y|-space hypercubes
-            used for stratified sampling. Setting ``max_nhcube=1``
-            turns stratified sampling off, which is probably never
-            a good idea. The default setting (1e9) was chosen to
-            correspond to the point where internal work arrays
-            become comparable in size to the typical amount of RAM
-            available to a processor (in a laptop in 2014).
-            Internal memory usage is large only when ``beta>0``
-            and ``minimize_mem=False``; therefore ``max_nhcube`` is
-            ignored if ``beta=0`` or ``minimize_mem=True``.
-        max_neval_hcube (positive int): Maximum number of integrand
-            evaluations per hypercube in the stratification. The default
-            value is 1e5. Larger values might allow for more adaptation
-            (when ``beta>0``), but also can result in large internal
-            work arrays.
-        max_mem (positive int): Maximum number of floats allowed in 
-            internal work arrays (approx.). A ``MemoryError`` is 
-            raised if the work arrays are too large, in which case
-            one might want to reduce ``max_neval_hcube`` or 
-            ``max_nhcube`` (or increase ``max_mem`` if there is 
-            enough RAM). Default value is 1e9.
-        rtol (float): Relative error in the integral estimate
-            at which point the integrator can stop. The default
-            value is 0.0 which turns off this stopping condition.
-            This stopping condition can be quite unreliable
-            in early iterations, before |vegas| has converged.
-            Use with caution, if at all.
-        atol (float): Absolute error in the integral estimate
-            at which point the integrator can stop. The default
-            value is 0.0 which turns off this stopping condition.
-            This stopping condition can be quite unreliable
-            in early iterations, before |vegas| has converged.
-            Use with caution, if at all.
         analyzer: An object with methods
 
                 ``analyzer.begin(itn, integrator)``
@@ -892,6 +867,50 @@ cdef class Integrator(object):
             example, causes vegas to print out a running report
             of its results as they are produced. The default
             is ``analyzer=None``.
+        nhcube_batch (positive int): The number of hypercubes (in |y| space)
+            whose integration points are combined into a single
+            batch to be passed to the integrand, together,
+            when using |vegas| in batch mode.
+            The default value is 1000. Larger values may be
+            lead to faster evaluations, but at the cost of
+            more memory for internal work arrays.
+        maxinc_axis (positive int): The maximum number of increments
+            per axis allowed for the |x|-space grid. The default
+            value is 1000; there is probably little need to use
+            other values.
+        max_nhcube (positive int): Maximum number of |y|-space hypercubes
+            used for stratified sampling. Setting ``max_nhcube=1``
+            turns stratified sampling off, which is probably never
+            a good idea. The default setting (1e9) was chosen to
+            correspond to the point where internal work arrays
+            become comparable in size to the typical amount of RAM
+            available to a processor (in a laptop in 2014).
+            Internal memory usage is large only when ``beta>0``
+            and ``minimize_mem=False``; therefore ``max_nhcube`` is
+            ignored if ``beta=0`` or ``minimize_mem=True``.
+        max_neval_hcube (positive int): Maximum number of integrand
+            evaluations per hypercube in the stratification. The default
+            value is 1e6. Larger values might allow for more adaptation
+            (when ``beta>0``), but also can result in large internal
+            work arrays.
+        max_mem (positive float): Maximum number of floats allowed in 
+            internal work arrays (approx.). A ``MemoryError`` is 
+            raised if the work arrays are too large, in which case
+            one might want to reduce ``max_neval_hcube`` or 
+            ``max_nhcube`` (or increase ``max_mem`` if there is 
+            enough RAM). Default value is 1e9.
+        rtol (float): Relative error in the integral estimate
+            at which point the integrator can stop. The default
+            value is 0.0 which turns off this stopping condition.
+            This stopping condition can be quite unreliable
+            in early iterations, before |vegas| has converged.
+            Use with caution, if at all.
+        atol (float): Absolute error in the integral estimate
+            at which point the integrator can stop. The default
+            value is 0.0 which turns off this stopping condition.
+            This stopping condition can be quite unreliable
+            in early iterations, before |vegas| has converged.
+            Use with caution, if at all.
         ran_array_generator: Function that generates
             :mod:`numpy` arrays of random numbers distributed uniformly
             between 0 and 1. ``ran_array_generator(shape)`` should
@@ -903,10 +922,42 @@ cdef class Integrator(object):
             using MPI. If ``False``, |vegas| does no synchronization
             (but the random numbers should synchronized some other
             way). 
+        adapt_to_errors (bool): 
+            ``adapt_to_errors=False`` causes |vegas| to remap the 
+            integration variables to emphasize regions where ``|f(x)|`` 
+            is largest. This is the default mode.
+
+            ``adapt_to_errors=True`` causes |vegas| to remap
+            variables to emphasize regions where the Monte Carlo
+            error is largest. This might be superior when
+            the number of the number of stratifications (``self.nstrat``)
+            in the |y| grid is large (> 100). It is typically
+            useful only in one or two dimensions.
+        uniform_nstrat (bool): If ``True``, requires that the
+            ``nstrat[d]`` be equal for all ``d``. If ``False`` (default), 
+            the algorithm maximizes the number of stratifications while 
+            requiring ``|nstrat[d1] - nstrat[d2]| <= 1``. This parameter
+            is ignored if ``nstrat`` is specified explicitly.
         mpi (bool): Setting ``mpi=False`` disables ``mpi`` support in
             ``vegas`` even if ``mpi`` is available; setting ``mpi=True``
             (default) allows use of ``mpi`` provided module :mod:`mpi4py`
-            is installed. 
+            is installed. This flag is ignored when ``mpi`` is not 
+            being used (and so has no impact on performance).
+        minimize_mem (bool): When ``True``, |vegas| minimizes
+            internal workspace at the cost of extra evaluations of
+            the integrand. This can increase execution time by
+            50--100% but might be desirable when the number of
+            evaluations is very large (e.g., ``neval=1e9``). Normally
+            |vegas| uses internal work space that grows in
+            proportion to ``neval``. If that work space exceeds
+            the size of the RAM available to the processor,
+            |vegas| runs much more slowly. Setting ``minimize_mem=True``
+            greatly reduces the internal storage used by |vegas|; in
+            particular memory becomes independent of ``neval``. The default
+            setting (``minimize_mem=False``), however, is much superior
+            unless memory becomes a problem. (The large memory is needed
+            for adaptive stratified sampling, so memory is not
+            an issue if ``beta=0``.)
     """
 
     # Settings accessible via the constructor and Integrator.set
@@ -916,17 +967,16 @@ cdef class Integrator(object):
         maxinc_axis=1000,   # number of adaptive-map increments per axis
         nhcube_batch=1000,  # number of h-cubes per batch
         max_nhcube=1e9,     # max number of h-cubes
-        max_neval_hcube=1e5,# max number of evaluations per h-cube
-        avg_neval_hcube=4,  # min avg number of evaluations per h-cube
-        min_neval_hcube=2,  # min number of evaluations per h-cube
+        max_neval_hcube=1e6,# max number of evaluations per h-cube
+        neval_frac=0.75,    # fraction of evaluations used for adaptive stratified sampling
         max_mem=1e9,        # memory cutoff (# of floats)
-        neval_nstrat=4,     # neval = neval_nstrat * prod(nstrat) when nstrat specified
         nitn=10,            # number of iterations
         alpha=0.5,
         beta=0.75,
         adapt=True,
         minimize_mem=False,
         adapt_to_errors=False,
+        uniform_nstrat=False,
         rtol=0,
         atol=0,
         analyzer=None,
@@ -942,21 +992,25 @@ cdef class Integrator(object):
         self.sum_sigf = HUGE
         self.neval_hcube_range = None
         self.last_neval = 0
-        # self.switchset = True
         if isinstance(map, Integrator):
             args = {}
             for k in Integrator.defaults:
-                args[k] = getattr(map, k)
-            args.update(kargs)
-            self.nstrat = numpy.full(map.map.dim, 0, dtype=numpy.intp) # dummy (flags action in self.set())
-            self.set(args)
+                if k == 'map':
+                    self.map = AdaptiveMap(map.map)
+                else:
+                    args[k] = getattr(map, k)
         else:
             args = dict(Integrator.defaults)
-            del args['map']
-            args.update(kargs)
+            if 'map' in args:
+                del args['map']
             self.map = AdaptiveMap(map)
             self.nstrat = numpy.full(self.map.dim, 0, dtype=numpy.intp) # dummy (flags action in self.set())
-            self.set(args)
+        args.update(kargs)
+        if 'nstrat' in kargs and 'neval' not in kargs and 'neval' in args:
+            del args['neval']
+        if 'neval' in kargs and 'nstrat' not in kargs and 'nstrat' in args:
+            del args['nstrat']
+        self.set(args)
 
     def __reduce__(Integrator self not None):
         """ Capture state for pickling. """
@@ -970,192 +1024,6 @@ cdef class Integrator(object):
     def __setstate__(Integrator self not None, odict):
         """ Set state for unpickling. """
         self.set(odict)
-
-    def oldset(Integrator self not None, ka={}, **kargs):
-        """ Reset default parameters in integrator.
-
-        Usage is analogous to the constructor
-        for |Integrator|: for example, ::
-
-            old_defaults = integ.set(neval=1e6, nitn=20)
-
-        resets the default values for ``neval`` and ``nitn``
-        in |Integrator| ``integ``. A dictionary, here
-        ``old_defaults``, is returned. It can be used
-        to restore the old defaults using, for example::
-
-            integ.set(old_defaults)
-        """
-        # reset parameters
-        if kargs:
-            kargs.update(ka)
-        else:
-            kargs = ka
-        old_val = dict()
-        for k in kargs:
-            if k == 'map':
-                old_val[k] = self.map
-                self.map = AdaptiveMap(kargs[k])
-            elif k == 'nhcube_vec':
-                # old name --- here for legacy reasons
-                old_val['nhcube_batch'] = self.nhcube_batch
-                self.nhcube_batch = kargs[k]
-            elif k == 'neval':
-                old_val[k] = self.neval
-                self.neval = kargs[k]
-            elif k == 'nstrat':
-                old_val[k] = self.nstrat 
-                self.nstrat = numpy.array(kargs[k], dtype=numpy.intp)
-            elif k == 'maxinc_axis':
-                old_val[k] = self.maxinc_axis
-                self.maxinc_axis = kargs[k]
-            elif k == 'nhcube_batch':
-                old_val[k] = self.nhcube_batch
-                self.nhcube_batch = kargs[k]
-            elif k == 'max_nhcube':
-                old_val[k] = self.max_nhcube
-                self.max_nhcube = kargs[k]
-            elif k == 'max_neval_hcube':
-                old_val[k] = self.max_neval_hcube
-                self.max_neval_hcube = int(kargs[k])
-            elif k == 'max_mem':
-                old_val[k] = self.max_mem
-                self.max_mem = int(kargs[k])
-            elif k == 'neval_nstrat':
-                old_val[k] = self.neval_nstrat 
-                self.neval_nstrat = int(kargs[k]) 
-                if self.neval_nstrat < 2:
-                    raise ValueError('neval_nstrat must be 2 or larger')
-            elif k == 'nitn':
-                old_val[k] = self.nitn
-                self.nitn = kargs[k]
-            elif k == 'alpha':
-                old_val[k] = self.alpha
-                self.alpha = kargs[k]
-            elif k == 'adapt_to_errors':
-                old_val[k] = self.adapt_to_errors
-                self.adapt_to_errors = kargs[k]
-            elif k == 'minimize_mem':
-                old_val[k] = self.minimize_mem
-                self.minimize_mem = kargs[k]
-            elif k == 'beta':
-                old_val[k] = self.beta
-                self.beta = kargs[k]
-            elif k == 'adapt':
-                old_val[k] = self.adapt
-                self.adapt = kargs[k]
-            elif k == 'analyzer':
-                old_val[k] = self.analyzer
-                self.analyzer = kargs[k]
-            elif k == 'rtol':
-                old_val[k] = self.rtol
-                self.rtol = abs(kargs[k])
-            elif k == 'atol':
-                old_val[k] = self.atol
-                self.atol = abs(kargs[k])
-            elif k == 'ran_array_generator':
-                old_val[k] = self.ran_array_generator
-                self.ran_array_generator = kargs[k]
-            elif k == 'sync_ran':
-                old_val[k] = self.sync_ran
-                self.sync_ran = kargs[k]
-            elif k == 'mpi':
-                # for legacy code
-                old_val[k] = self.mpi
-                self.mpi = kargs[k]
-            elif k == 'avg_neval_hcube':
-                old_val[k] = self.avg_neval_hcube
-                self.avg_neval_hcube = kargs[k]
-            else:
-                raise AttributeError('no attribute named "%s"' % str(k))
-
-        # determine # of strata, # of increments
-        self.dim = self.map.dim
-        if 'nstrat' in old_val:
-            if len(self.nstrat) != self.dim:
-                raise ValueError('nstrat[d] has wrong length: %d not %d' % (len(self.nstrat), self.dim))
-            if numpy.any(numpy.asarray(self.nstrat) < 1):
-                raise ValueError('bad nstrat: ' + str(numpy.asarray(self.nstrat)))
-            old_val['neval'] = old_val.get('neval', self.neval)
-            old_val['adapt_to_errors'] = self.adapt_to_errors
-            self.adapt_to_errors = False
-            self.neval = self.neval_nstrat * numpy.product(self.nstrat)
-            if self.neval > self.neval_nstrat:
-                neval_eff = self.neval / 2
-            else:
-                neval_eff = self.neval
-            ni = min(max(int(self.neval / 10.), 1), self.maxinc_axis)
-            self.map.adapt(ninc=ni)
-            if not numpy.all(numpy.equal(self.nstrat, old_val['nstrat'])):
-                # need to recalculate stratification distribution for beta>0
-                self.sum_sigf = HUGE
-        else:
-            # need extra evaluations if beta>0 so can adapt
-            neval_eff = (self.neval / 2.0) if self.beta > 0 else self.neval
-            ns = int((neval_eff / 2.) ** (1. / self.dim))   # stratifications/axis
-            ni = int(self.neval / 10.)                      # increments/axis
-            if ns < 1:
-                ns = 1
-            elif ns ** self.dim > self.max_nhcube and not self.minimize_mem:
-                ns = int(self.max_nhcube ** (1. / self.dim))
-            if ni < 1:
-                ni = 1
-            elif ni  > self.maxinc_axis:
-                ni = self.maxinc_axis
-            # want integer number of increments in each stratification
-            # or vise versa
-            if ns > ni:
-                if ns < self.maxinc_axis:
-                    ni = ns
-                else:
-                    ns = int(ns // ni) * ni
-            else:
-                ni = int(ni // ns) * ns
-            if self.adapt_to_errors:
-                # ni > ns makes no sense with this mode
-                if ni > ns:
-                    ni = ns
-
-            # rebuild map with correct number of increments
-            self.map.adapt(ninc=ni)
-
-            if not numpy.all(numpy.equal(self.nstrat, ns)):
-                # need to recalculate stratification distribution for beta>0
-                self.sum_sigf = HUGE
-            self.nstrat[:] = ns
-
-        # determine min number of evaluations per h-cube (usually 2)
-        self.nhcube = numpy.product(self.nstrat) 
-        if self.nhcube > 1:
-            self.min_neval_hcube = int(neval_eff // self.nhcube)
-        else:
-            self.min_neval_hcube = self.neval
-        # N.B. min_neval_hcube > max_neval_hcube possible but later code checks
-        if self.min_neval_hcube < 2:
-            self.min_neval_hcube = 2
-
-        # allocate work arrays -- these are stored in the
-        # the Integrator so that the storage is held between
-        # iterations, thereby minimizing the amount of allocating
-        # that goes on
-        neval_batch = self.nhcube_batch * self.min_neval_hcube
-        nsigf = (
-            self.nhcube_batch if self.minimize_mem else
-            self.nhcube
-            )
-        if self.beta > 0 and len(self.sigf) != nsigf:
-            if self.minimize_mem:
-                self.sigf = numpy.empty(nsigf, numpy.float_)
-            else:
-                self.sigf = numpy.ones(nsigf, numpy.float_) * (self.sum_sigf / nsigf)
-        self.neval_hcube = (
-            numpy.zeros(self.nhcube_batch, numpy.intp) + self.min_neval_hcube
-            )
-        self.y = numpy.empty((neval_batch, self.dim), numpy.float_)
-        self.x = numpy.empty((neval_batch, self.dim), numpy.float_)
-        self.jac = numpy.empty(neval_batch, numpy.float_)
-        self.fdv2 = numpy.empty(neval_batch, numpy.float_)
-        return old_val
 
     def set(Integrator self not None, ka={}, **kargs):
         """ Reset default parameters in integrator.
@@ -1172,81 +1040,67 @@ cdef class Integrator(object):
 
             integ.set(old_defaults)
         """
-        if self.switchset:
-            return self.oldset(ka=ka, **kargs)
-        # reset parameters
+        # 1) reset parameters
         if kargs:
             kargs.update(ka)
         else:
             kargs = ka
-        old_val = dict()
+        old_val = dict()        # records anything that is changed
+        nstrat = None
         for k in kargs:
             if k == 'map':
-                old_val[k] = self.map
-                self.map = AdaptiveMap(kargs[k])
-            elif k == 'nstrat' and not numpy.all(kargs[k] == self.nstrat):
-                old_val[k] = self.nstrat 
-                self.nstrat = numpy.array(kargs[k], dtype=numpy.intp)
-            elif k == 'neval' and kargs[k] != self.neval:
-                old_val[k] = self.neval 
-                self.neval = kargs[k]
-            elif k == 'avg_neval_hcube' and kargs[k] != self.avg_neval_hcube:
-                old_val[k] = self.neval 
-                self.avg_neval_hcube = kargs[k]
+                old_val['map'] = self.map
+                self.map = AdaptiveMap(kargs['map'])
+            elif k == 'nstrat':
+                if kargs['nstrat'] is None:
+                    continue
+                old_val['nstrat'] = self.nstrat                
+                nstrat = numpy.array(kargs['nstrat'], dtype=numpy.intp)
+            elif k == 'sigf':
+                old_val['sigf'] = self.sigf 
+                self.sigf = numpy.fabs(kargs['sigf'])
+                self.sum_sigf = numpy.sum(self.sigf)
             elif k in Integrator.defaults:
-                if not numpy.all(kargs[k] == getattr(self, k)):
-                    old_val[k] = getattr(self, k)
-                    setattr(self, k, kargs[k])
-                continue 
+                # ignore entry if set to None (useful for debugging)
+                if kargs[k] is None:
+                    continue
+                old_val[k] = getattr(self, k)
+                setattr(self, k, kargs[k])
             else:
                 raise AttributeError('no attribute named "%s"' % str(k))
         
-        # sanity checks
-        if self.avg_neval_hcube < 2:
-            raise ValueError('avg_neval_hcube must be 2 or larger')
+        # 2) sanity checks
+        if nstrat is not None:
+            if len(nstrat) != self.map.dim:
+                raise ValueError('nstrat[d] has wrong length: %d not %d' % (len(nstrat), self.map.dim))
+            if numpy.any(nstrat < 1):
+                raise ValueError('bad nstrat: ' + str(numpy.asarray(self.nstrat)))
+        if self.neval_frac < 0 or self.neval_frac >= 1:
+            raise ValueError('neval_frac = {} but require 0 <= neval_frac < 1'.format(self.neval_frac))
+        if 'neval' in kargs and self.neval < 2:
+            raise ValueError('neval>2 required, not ' + str(self.neval))
+        neval_frac = 0 if (self.beta == 0 or self.adapt_to_errors) else self.neval_frac
 
         self.dim = self.map.dim
 
-        # set avg neval per h-cube
-        # if self.beta > 0 and not self.adapt_to_errors:
-        #     avg_neval_hcube = (
-        #         self.avg_neval_hcube
-        #         if self.avg_neval_hcube > self.min_neval_hcube else 
-        #         self.min_neval_hcube + 1
-        #         )
-        # else:
-        #     avg_neval_hcube = self.min_neval_hcube 
-        if self.neval < self.avg_neval_hcube:
-            old_val['neval'] = old_val.get('neval', self.neval)
-            self.neval = self.avg_neval_hcube 
-
-        # determine # strata in each direction
-        if 'nstrat' in old_val:
-            # nstrat specified
-            if len(self.nstrat) != self.dim:
-                raise ValueError('nstrat[d] has wrong length: %d not %d' % (len(self.nstrat), self.dim))
-            if numpy.any(numpy.asarray(self.nstrat) < 1):
-                raise ValueError('bad nstrat: ' + str(numpy.asarray(self.nstrat)))
-            old_val['neval'] = old_val.get('neval', self.neval)
-            old_val['adapt_to_errors'] = self.adapt_to_errors
-            self.adapt_to_errors = False
-            self.neval = self.avg_neval_hcube * numpy.product(self.nstrat)
-            if not numpy.all(numpy.equal(self.nstrat, old_val['nstrat'])):
-                # need to recalculate stratification distribution for beta>0
-                self.sum_sigf = HUGE
-        elif self.adapt_to_errors:
-            # adapt to errors needs a uniform grid
-            ns = int((self.neval / 2) ** (1. / self.dim))
-            if not numpy.all(numpy.equal(self.nstrat, ns)):
-                # need to recalculate stratification distribution for beta>0
-                self.sum_sigf = HUGE
-                old_val['nstrat'] = old_val.get('nstrat', self.nstrat)
-                self.nstrat[:] = ns 
-        elif 'neval' in old_val:
-            # determine stratification from neval
-            ns = int((self.neval / self.avg_neval_hcube) ** (1. / self.dim)) # stratifications / axis
+        # 3) determine # strata in each direction
+        if nstrat is not None:
+            # nstrat specified explicitly
+            if len(nstrat) != self.dim or min(nstrat) < 1:
+                raise ValueError('bad nstrat = %s' % str(numpy.asarray(nstrat)))
+            nhcube = numpy.product(nstrat)
+            if 'neval' not in old_val:
+                old_val['neval'] = self.neval
+                self.neval = 2. * nhcube / (1. - neval_frac)
+            elif self.neval < 2. * nhcube / (1. - neval_frac):
+                raise ValueError('neval too small: {} < {}'.format(self.neval, 2. * nhcube / (1. - neval_frac)))
+        elif 'neval' in old_val or 'neval_frac' in old_val:
+            # determine stratification from neval,neval_frac if either was specified
+            ns = int(((1 - neval_frac) * self.neval / 2.) ** (1. / self.dim)) # stratifications / axis
+            if ns < 1:
+                ns = 1
             d = int(
-                (numpy.log(self.neval / self.avg_neval_hcube) - self.dim * numpy.log(ns))
+                (numpy.log((1 - neval_frac) * self.neval / 2.) - self.dim * numpy.log(ns))
                 / numpy.log(1 + 1. / ns)
                 )
             if ((ns + 1)**d * ns**(self.dim-d)) > self.max_nhcube and not self.minimize_mem:
@@ -1254,64 +1108,70 @@ cdef class Integrator(object):
                 if ns < 1:
                     ns = 1
                 d = int(
-                    (numpy.log(self.neval / self.avg_neval_hcube) - self.dim * numpy.log(ns))
+                    (numpy.log((1 - neval_frac) * self.neval / 2.) - self.dim * numpy.log(ns))
                     / numpy.log(1 + 1. / ns)
                     )
+            if self.uniform_nstrat:
+                d = 0
             nstrat = numpy.empty(self.dim, numpy.intp)    
             nstrat[:d] = ns + 1        
             nstrat[d:] = ns 
-            if not numpy.all(numpy.equal(self.nstrat, nstrat)):
-                # need to recalculate stratification distribution for beta>0
-                self.sum_sigf = HUGE
-                old_val['nstrat'] = old_val.get('nstrat', self.nstrat)
-                self.nstrat = nstrat
+        else:
+            # go with existing grid if none of nstrat, neval and neval_frac changed
+            nstrat = self.nstrat
         
-        if 'neval' in old_val:
-            ni = int(self.neval / 10.)                  # increments/axis
-            if self.adapt_to_errors:
-                ni = ns
-            if ni > self.maxinc_axis:
-                ni = self.maxinc_axis
-            nfac = numpy.product(list(set(self.nstrat)))
-            if ni > nfac:
-                ni = int(ni / nfac) * nfac
-            self.map.adapt(ninc=ni)
+        if not numpy.all(numpy.equal(self.nstrat, nstrat)):
+            # need to recalculate stratification distribution for beta>0
+            self.sum_sigf = HUGE
+            self.nstrat = nstrat
+        
+        # 4) reconfigure vegas map, if necessary
+        if self.adapt_to_errors:
+            self.map.adapt(ninc=numpy.asarray(self.nstrat))
+        else:
+            ni = min(int(self.neval / 10.), self.maxinc_axis)   # increments/axis
+            ninc = numpy.empty(self.dim, numpy.intp)
+            for d in range(self.dim):
+                if ni >= self.nstrat[d]:
+                    ninc[d] = int(ni / self.nstrat[d]) * self.nstrat[d]
+                elif self.nstrat[d] <= self.maxinc_axis:
+                    ninc[d] = self.nstrat[d]
+                else:
+                    self.nstrat[d] = int(self.nstrat[d] / ni) * ni
+                    ninc[d] = ni
+            if not numpy.all(numpy.equal(self.map.ninc, ninc)):
+                self.map.adapt(ninc=ninc)
 
-        # determine min number of evaluations per h-cube (usually 2)
-
+        # 5) set min_neval_hcube 
+        # chosen so that actual neval is close to but not larger than self.neval
+        # (unless self.minimize_mem is True in which case it could be larger)
         self.nhcube = numpy.product(self.nstrat) 
-        self.min_neval_hcube = self.avg_neval_hcube
+        avg_neval_hcube = int(self.neval / self.nhcube)
+        if self.nhcube == 1:
+            self.min_neval_hcube = int(self.neval / self.nhcube)
+        else:
+            self.min_neval_hcube = int((1 - neval_frac) * self.neval / self.nhcube)
+        if self.min_neval_hcube < 2:
+            self.min_neval_hcube = 2
 
-        # if self.nhcube > 1:
-        #     self.min_neval_hcube = int(neval_eff // self.nhcube)
-        # else:
-        #     self.min_neval_hcube = self.neval
-        # # N.B. min_neval_hcube > max_neval_hcube possible but later code checks
-        # if self.min_neval_hcube < 2:
-        #     self.min_neval_hcube = 2
-
-        # allocate work arrays -- these are stored in the
+        # 6) allocate work arrays -- these are stored in the
         # the Integrator so that the storage is held between
         # iterations, thereby minimizing the amount of allocating
         # that goes on
 
-        # neval_batch = self.nhcube_batch * self.min_neval_hcube
-        neval_batch = self.nhcube_batch * self.avg_neval_hcube
+        neval_batch = self.nhcube_batch * avg_neval_hcube
         nsigf = (
             self.nhcube_batch if self.minimize_mem else
             self.nhcube
             )
-        if self.beta > 0 and len(self.sigf) != nsigf:
+        if self.beta > 0 and self.nhcube > 1 and not self.adapt_to_errors and len(self.sigf) != nsigf:
             if self.minimize_mem:
                 self.sigf = numpy.empty(nsigf, numpy.float_)
             else:
-                self.sigf = numpy.ones(nsigf, numpy.float_) * (self.sum_sigf / nsigf)
-        # self.neval_hcube = (
-        #     numpy.zeros(self.nhcube_batch, numpy.intp) + self.min_neval_hcube
-        #     )
-        self.neval_hcube = (
-            numpy.zeros(self.nhcube_batch, numpy.intp) + self.avg_neval_hcube
-            )
+                self.sigf = numpy.ones(nsigf, numpy.float_)
+                self.sum_sigf = nsigf  
+        self.neval_hcube = numpy.empty(self.nhcube_batch, dtype=numpy.intp)
+        self.neval_hcube[:] = avg_neval_hcube
         self.y = numpy.empty((neval_batch, self.dim), numpy.float_)
         self.x = numpy.empty((neval_batch, self.dim), numpy.float_)
         self.jac = numpy.empty(neval_batch, numpy.float_)
@@ -1333,7 +1193,7 @@ cdef class Integrator(object):
         neval = nhcube * self.min_neval_hcube if self.beta <= 0 else self.neval
         ans = ""
         ans = "Integrator Settings:\n"
-        if self.beta > 0:
+        if self.beta > 0 and not self.adapt_to_errors:
             ans = ans + (
                 "    %.6g (approx) integrand evaluations in each of %d iterations\n"
                 % (self.neval, self.nitn)
@@ -1347,10 +1207,10 @@ cdef class Integrator(object):
             "    number of:  strata/axis = %s\n" % str(numpy.array(self.nstrat))
             )
         ans = ans + (
-            "                increments/axis = %d\n"
-            % self.map.ninc
+            "                increments/axis = %s\n" 
+            % str(numpy.asarray(self.map.ninc))
             )
-        if self.beta > 0:
+        if self.beta > 0 and not self.adapt_to_errors:
             ans = ans + (
                 "                h-cubes = %.6g  evaluations/h-cube = %d (min)\n"
                 % (nhcube, self.min_neval_hcube)
@@ -1369,10 +1229,21 @@ cdef class Integrator(object):
             "    adapt_to_errors = %s\n"
             % ('True' if self.adapt_to_errors else 'False')
             )
-        ans = ans + (
-            "    damping parameters: alpha = %g  beta= %g\n"
-            % ((self.alpha, self.beta) if self.adapt else (0., 0.))
-            )
+        if not self.adapt:
+            ans = ans + (
+                "    damping parameters: alpha = %g  beta= %g\n"
+                % (0., 0.)
+                )
+        elif self.adapt_to_errors:
+            ans = ans + (
+                "    damping parameters: alpha = %g  beta= %g\n"
+                % (self.alpha, 0.) 
+                )
+        else:
+            ans = ans + (
+                "    damping parameters: alpha = %g  beta= %g\n"
+                % (self.alpha, self.beta)
+                )
         max_neval_hcube = max(self.max_neval_hcube, self.min_neval_hcube)
         ans += (
             "    limits: h-cubes < %.2g  evaluations/h-cube < %.2g\n"
@@ -1482,10 +1353,11 @@ cdef class Integrator(object):
         cdef numpy.npy_intp i_start, ihcube, i, d, tmp_hcube, hcube
         cdef numpy.npy_intp[::1] hcube_array
         cdef double neval_sigf = (
-            self.neval / 2. / self.sum_sigf
-            if self.beta > 0 and self.sum_sigf > 0
+            self.neval_frac * self.neval / self.sum_sigf
+            if self.beta > 0 and self.sum_sigf > 0 and not self.adapt_to_errors
             else 0.0    # use min_neval_hcube
             )
+        cdef numpy.npy_intp avg_neval_hcube = int(self.neval / self.nhcube) ####
         cdef numpy.npy_intp[::1] neval_hcube = self.neval_hcube
         cdef numpy.npy_intp[::1] y0 = numpy.empty(self.dim, numpy.intp)
         cdef numpy.npy_intp max_neval_hcube = max(
@@ -1496,11 +1368,12 @@ cdef class Integrator(object):
         cdef double[:, ::1] y
         cdef double[:, ::1] x
         cdef double[::1] jac
+        cdef bint adaptive_strat = (self.beta > 0 and nhcube > 1 and not self.adapt_to_errors)
         self.last_neval = 0
         self.neval_hcube_range = numpy.zeros(2, numpy.intp) + self.min_neval_hcube
         if yield_hcube:
             hcube_array = numpy.empty(self.y.shape[0], numpy.intp)
-        if self.beta > 0 and self.minimize_mem and not self.adapt:
+        if adaptive_strat and self.minimize_mem and not self.adapt:
             # can't minimize_mem without also adapting, so force beta=0
             neval_sigf = 0.0
         for hcube_base in range(0, nhcube, nhcube_batch):
@@ -1508,7 +1381,7 @@ cdef class Integrator(object):
                 nhcube_batch = nhcube - hcube_base
 
             # determine number of evaluations per h-cube
-            if self.beta > 0:
+            if adaptive_strat:
                 if self.minimize_mem:
                     if self.adapt:
                         self._fill_sigf(
@@ -1519,9 +1392,7 @@ cdef class Integrator(object):
                     sigf = self.sigf[hcube_base:]
                 neval_batch = 0
                 for ihcube in range(nhcube_batch):
-                    neval_hcube[ihcube] = <int> (sigf[ihcube] * neval_sigf)
-                    if neval_hcube[ihcube] < self.min_neval_hcube:
-                        neval_hcube[ihcube] = self.min_neval_hcube
+                    neval_hcube[ihcube] = <int> (sigf[ihcube] * neval_sigf) + self.min_neval_hcube
                     if neval_hcube[ihcube] > max_neval_hcube:
                         neval_hcube[ihcube] = max_neval_hcube
                     if neval_hcube[ihcube] < self.neval_hcube_range[0]:
@@ -1530,8 +1401,8 @@ cdef class Integrator(object):
                         self.neval_hcube_range[1] = neval_hcube[ihcube]
                     neval_batch += neval_hcube[ihcube]
             else:
-                neval_hcube[:] = self.min_neval_hcube
-                neval_batch = nhcube_batch * self.min_neval_hcube
+                neval_hcube[:] = avg_neval_hcube
+                neval_batch = nhcube_batch * avg_neval_hcube
             self.last_neval += neval_batch
 
             if (3*self.dim + 3) * neval_batch > self.max_mem:
@@ -1708,7 +1579,7 @@ cdef class Integrator(object):
         """
         cdef numpy.ndarray[numpy.double_t, ndim=2] x
         cdef numpy.ndarray[numpy.double_t, ndim=1] wgt
-        cdef numpy.ndarray[numpy.intp_t, ndim=1] hcube
+        cdef numpy.ndarray[numpy.npy_intp, ndim=1] hcube
         cdef double[::1] sigf
         cdef double[:, ::1] y
         cdef double[::1] fdv2
@@ -1797,7 +1668,7 @@ cdef class Integrator(object):
                             for t in range(s + 1):
                                 var[s, t] += dvar[t]
                     sigf2 = abs(sum_wf2[0, 0] * neval - sum_wf[0] * sum_wf[0])
-                    if self.beta > 0 and self.adapt:
+                    if self.beta > 0 and self.adapt and not self.adapt_to_errors:
                         if not self.minimize_mem:
                             sigf[i] = sigf2 ** (self.beta / 2.)
                             sum_sigf += sigf[i]
@@ -1820,7 +1691,7 @@ cdef class Integrator(object):
             # accumulate result from this iteration
             result.update(mean, var, self.last_neval)
 
-            if self.beta > 0 and self.adapt:
+            if self.beta > 0 and not self.adapt_to_errors and self.adapt:
                 self.sum_sigf = sum_sigf
             if self.alpha > 0 and self.adapt:
                 self.map.adapt(alpha=self.alpha)
@@ -2302,7 +2173,7 @@ cdef class VegasResult:
     cdef readonly object integrand
     cdef readonly object shape
     cdef readonly object result
-    cdef readonly numpy.intp_t sum_neval
+    cdef readonly double sum_neval
     """ Accumulated result object --- standard interface for integration results.
 
     Integrands are flattened into 2-d arrays in |vegas|. This object
@@ -2321,6 +2192,8 @@ cdef class VegasResult:
             of type :class:`vegas.RAvgArray` for array-valued integrands,
             :class:`vegas.RAvgDict` for dictionary-valued integrands, and
             :class:`vegas.RAvg` for scalar-valued integrands.
+        sum_neval: total number of integrand evaluations in all iterations.
+        avg_neval: average number of integrand evaluations per iteration.
     """
     def __init__(self, integrand=None, weighted=None):
         self.integrand = integrand
@@ -2333,6 +2206,14 @@ cdef class VegasResult:
         else:
             self.result = RAvgArray(self.shape, weighted=weighted)
 
+    property  avg_neval:
+        " Average number of integrand evaluations per iteration."
+        def __get__(self):
+            if len(self.result.itn_results) > 0:
+                return int(self.sum_neval / len(self.result.itn_results))
+            else:
+                return 0.
+
     def update(self, mean, var, last_neval=None):
         if self.shape is None:
             ans = gvar.BufferDict(self.integrand.bdict, buf=gvar.gvar(mean, var))
@@ -2344,6 +2225,7 @@ cdef class VegasResult:
         if last_neval is not None:
             self.sum_neval += last_neval
             self.result.sum_neval = self.sum_neval
+            self.result.avg_neval = self.avg_neval
 
     def update_analyzer(self, analyzer):
         """ Update analyzer at end of an iteration. """

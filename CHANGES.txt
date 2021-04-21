@@ -1,3 +1,20 @@
+Version 4.0?
+============
+This update changes one aspect of the default algorithm 
+for adaptive stratified sampling. Specifically it no longer 
+uses the same number of stratifications in each direction:
+Mst+1 stratifications are used in the first D0 directions 
+and Mst in the remaining directions. This allows for more 
+hypercubes, which reduces errors and improves stability. 
+For many problems the difference is negligible, but 
+this change can lead to large improvements for high 
+dimensions or with a small number neval of integrand 
+evaluations. In particular there will always be some 
+stratification for arbitrarily high dimensions.
+
+A related change is that AdaptiveMap's can now have 
+different numbers of increments in different directions.
+
 Version 3.5.4 2021-03-28
 ========================
 Minor update to fix a bug (in _fill_sigf) when minimize_mem=True. 

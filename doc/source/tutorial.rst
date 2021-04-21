@@ -10,6 +10,8 @@ Tutorial
 .. |chi2| replace:: :math:`\chi^2`
 .. |x| replace:: x
 .. |y| replace:: y
+.. |~| unicode:: U+00A0
+   :trim:
 
 Introduction
 -------------
@@ -76,6 +78,8 @@ using Python 2, or add ::
 at the start of your file.
 
 
+.. _basic_integrals:
+
 Basic Integrals
 ----------------
 Here we illustrate the use of |vegas| by estimating the integral
@@ -125,9 +129,9 @@ There are several things to note here:
     **Adaptation:** Integration estimates are shown for
     each of the 10 iterations,
     giving both the estimate from just that iteration, and the weighted
-    average of results from all iterations up to that point. The
+    average of results from all iterations up to that point.  The
     estimates from the first two iterations are not accurate at
-    all, with errors equal to 30--190% of the final result.
+    all, with errors equal to 25--140% of the final result.
     |vegas| initially has no information about the integrand
     and so does a relatively poor job of estimating the integral.
     It uses information from the samples in one iteration, however,
@@ -135,14 +139,14 @@ There are several things to note here:
     concentrating samples where the function is largest and reducing
     errors.
     As a result, the per-iteration error
-    is reduced to 4.3% by the fifth iteration, and below 2% by
-    the end --- an improvement by almost two orders of
-    magnitude from the start. Eventually the per-iteration error
+    is reduced to 3.4% by the fifth iteration, and almost to 1% by
+    the end --- an improvement by a factor of more than 100 from the start. 
+    Eventually the per-iteration error
     stops decreasing because |vegas| has found the optimal remapping,
     at which point
-    it has fully adapted to the integrand.
+    it is fully adapted to the integrand.
 
-    **Weighted Average:** The final result, 1.0015 ± 0.0091,
+    **Weighted Average:** The final result, 1.0057 ± 0.0064,
     is obtained from a weighted
     average of the separate results from each iteration:
     estimates are weighted by the inverse variance, thereby giving
@@ -198,14 +202,15 @@ There are several things to note here:
 
       ``result.Q`` --- *Q* or *p-value* of the weighted average's |chi2|;
 
-      ``result.itn_results`` --- list of the integral estimates
-      from each iteration;
+      ``result.itn_results`` --- list of the integral estimates from each iteration;
 
       ``result.sum_neval`` --- total number of integrand evaluations used.
 
-    In this example the final *Q* is 0.42, indicating that the
+      ``result.avg_neval`` --- average number of integrand evaluations per iteration
+
+    In this example the final *Q* is 0.25, indicating that the
     :math:`\chi^2` for this average is not particularly unlikely and
-    thus the error estimate is most likely reliable.
+    thus the error estimate is likely reliable.
 
     **Precision:** The precision of |vegas| estimates is
     determined by ``nitn``, the number of iterations
@@ -217,7 +222,7 @@ There are several things to note here:
     The number of integrand
     evaluations per iteration
     varies from iteration to iteration,
-    here between 486 and 959. Typically |vegas| needs more
+    here between 860 and 960. Typically |vegas| needs more
     integration points in early iterations, before it has fully
     adapted to the integrand.
 
@@ -253,13 +258,13 @@ There are several things to note here:
     error, which is what is quoted by |vegas|. The other is
     a systematic error due to residual non-Gaussian
     effects. The systematic error vanishes like
-    ``1/neval`` and so becomes negligible compared with
+    ``1/neval`` or faster, and so becomes negligible compared with
     the statistical error as ``neval`` increases.
     The systematic error can bias the Monte Carlo estimate, however,
     if ``neval`` is insufficiently large. This usually
     results in a large |chi2| (and small *Q*), but a
     more reliable check is to compare
-    results that use signficantly different values of ``neval``.
+    results that use significantly different values of ``neval``.
     The systematic errors due to non-Gaussian behavior are
     likely negligible if the different estimates agree to
     within the statistical errors.
@@ -269,17 +274,15 @@ There are several things to note here:
     rather than ``nitn`` to obtain more precision.
     Making ``neval`` larger and larger is guaranteed
     to improve the Monte Carlo estimate, as the statistical
-    error decreases (at least as fast as ``sqrt(1/neval)``
-    and often faster) and the
-    systematic error decreases even more quickly (like
-    ``1/neval``).
+    error decreases and the
+    systematic error decreases even more quickly.
     Making ``nitn`` larger and larger, on the other hand,
     is guaranteed eventually to give the wrong
     answer. This is because at some point the statistical error
     (which falls as ``sqrt(1/nitn)``) will no longer
     mask the systematic error (which is unaffected by ``nitn``).
     The systematic error for the integral
-    above (with ``neval=1000``) is about -0.0008(1), which
+    above (with ``neval=1000``) is about -0.0008, which
     is negligible compared to the statistical error unless
     ``nitn`` is of order 1500 or larger --- so systematic errors
     aren't a problem with ``nitn=10``.
@@ -287,8 +290,8 @@ There are several things to note here:
     **Early Iterations:** Integral estimates from early iterations,
     before |vegas| has adapted, can be quite
     crude. With very peaky integrands, these are often far from
-    the correct answer with highly unreliable error estimates. For
-    example, the integral above becomes more
+    the correct answer with highly unreliable error  estimates. For
+    example, the integral above becomes more 
     difficult if we double the length of each side of the
     integration volume by redefining ``integ`` as::
 
@@ -298,9 +301,9 @@ There are several things to note here:
 
     .. literalinclude:: eg1c.out
 
-    |vegas| misses the peak completely in the first two iterations,
-    giving estimates that are completely
-    wrong (by 76 and 123 standard deviations!).
+    |vegas| misses the peak completely in the first iteration,
+    giving an estimate that is completely
+    wrong (by 1000 standard deviations!).
     Some of its samples hit the peak's shoulders, so |vegas| is
     eventually able to find the peak (by iterations 5--6), but
     the integrand estimates are wildly non-Gaussian before that
@@ -315,7 +318,7 @@ There are several things to note here:
     with two calls::
 
       # step 1 -- adapt to f; discard results
-      integ(f, nitn=7, neval=1000)
+      integ(f, nitn=10, neval=1000)
 
       # step 2 -- integ has adapted to f; keep results
       result = integ(f, nitn=10, neval=1000)
@@ -409,7 +412,7 @@ There are several things to note here:
     Note, finally, that integration to infinity is also possible:
     map the relevant variable into a different variable
     of finite range. For example,  an integral over :math:`x\equiv b z / (1-z)`
-    from 0 to infinity is easily reexpressed as
+    from 0 to infinity is easily re-expressed as
     an integral over :math:`z` from 0 to 1, where the transformation
     emphasizes the region in :math:`x` of order free parameter :math:`b`.
 
@@ -427,7 +430,7 @@ There are several things to note here:
     Here we reduce ``alpha`` to 0.1, from its default value of 0.5, and get
     the following output:
 
-    .. literalinclude:: eg1g.out
+    .. literalinclude:: eg1h.out
 
     Notice how the errors fluctuate less from iteration to iteration
     with the smaller ``alpha`` in this case.
@@ -466,8 +469,51 @@ There are several things to note here:
     The lack of systematic biases is *not* a strong reason for turning
     off adaptation, however, since the biases are
     usually negligible (see above). The most important reason is the
-    first: stability. It is particularly relevant if the number of
-    integrand evaluations ``neval`` is small for the integrand.
+    first: stability. 
+    
+    ``adapt=False`` is particularly useful when the number of
+    integrand evaluations ``neval`` is small for the integrand, leading
+    to large fluctuations in the errors from iteration to 
+    iteration. For example, 
+    the following output is from an estimate (with ``neval=2.5e4``)
+    of an eight-dimensional
+    integral with three sharp peaks along the diagonal (Eq. |~| (45) in 
+    arXiv_2009.05112_, normalized so that the correct answer equals 1)::
+
+        itn   integral        wgt average     chi2/dof        Q
+        -------------------------------------------------------
+         1   0.75(43)        0.75(43)            0.00     1.00
+         2   0.506(58)       0.510(58)           0.32     0.57
+         3   0.80(21)        0.530(56)           1.02     0.36
+         4   0.76(11)        0.576(50)           1.81     0.14
+         5   1.27(29)        0.596(49)           2.74     0.03
+         6   1.10(19)        0.629(48)           3.56     0.00
+         7   0.802(73)       0.681(40)           3.63     0.00
+         8   2.8(2.0)        0.681(40)           3.27     0.00
+         9   0.907(90)       0.719(36)           3.52     0.00
+        10   1.07(16)        0.736(35)           3.65     0.00
+
+        itn   integral        average         chi2/dof        Q
+        -------------------------------------------------------
+         1   1.13(14)        1.13(14)            0.00     1.00
+         2   1.064(96)       1.095(86)           0.13     0.72
+         3   1.03(10)        1.072(67)           0.19     0.83
+         4   0.924(94)       1.035(55)           0.58     0.63
+         5   0.858(71)       1.000(46)           1.08     0.37
+         6   0.97(11)        0.995(43)           0.84     0.52
+         7   0.924(69)       0.985(38)           0.84     0.54
+         8   1.19(16)        1.010(39)           1.01     0.42
+         9   1.74(73)        1.092(88)           1.01     0.42
+        10   0.942(89)       1.077(80)           1.02     0.42
+            
+    The first 10 iterations are used to train the |vegas| map; their
+    results are discarded. The 
+    next 10 iterations, with ``adapt=False``, have uncertainties that
+    fluctuate in size by an order of magnitude, but still give a reliable 
+    estimate for the integral (1.08(8)). Allowing |vegas|
+    to continue adapting in the the second set of iterations gives
+    results like 0.887(25), which is 4.5 standard deviations too low;
+    the real uncertainty is larger than |~| ±0.025.
 
     Training the integrator and then setting ``adapt=False`` for the
     final results works best if the number of evaluations per iteration
@@ -550,7 +596,7 @@ The code produces the following output:
 .. literalinclude:: eg3a.out
 
 The estimates for the individual integrals are separately accurate to
-about ±0.07%,
+about ±0.05%,
 but the estimate for :math:`\langle x \rangle = I_1/I_0`
 is accurate to ±0.01%.
 This is almost an order
@@ -559,7 +605,7 @@ The correlation matrix shows that there is 98% correlation between the
 statistical fluctuations in estimates for :math:`I_0` and :math:`I_1`,
 and so the bulk of these fluctuations cancel in the ratio.
 The estimate for the variance :math:`\sigma^2_x`
-is 51x more accurate than we would
+is 48x more accurate than we would
 have obtained had the integrals been evaluated separately. Both estimates
 are correct to within the quoted errors.
 
@@ -1096,7 +1142,8 @@ The |vegas| map maps the integration variables ``x[d]`` into
 new variables ``y[d]`` (where ``0 < y[d] < 1``) that make the integrand 
 easier to integrate. The integrator is used 
 to evaluate the integral in ``y``-space. To illustrate how this 
-works, we replace the last three lines of the code above with 
+works, we replace the last three lines of the code at the start of
+this section with 
 the following::
 
     def smc(f, neval, dim):
@@ -1142,22 +1189,27 @@ the integrand and using the |vegas| integrator's map: ``integ.map``.
 Having mapped the integration variables ``x[d]`` to new variables ``y[d]``,
 |vegas| evaluates the integral in ``y``-space using stratified Monte 
 Carlo sampling (see :ref:`adaptive-stratified-sampling`). This is 
-done by dividing each axis into ``nstrat`` equal stratifications, 
+done by dividing each axis ``d`` into ``nstrat[d]`` equal stratifications, 
 which divide the ``D``-dimensional integration volume into 
-``nstrat**D`` sub-volumes. |vegas| does a separate integral 
-in each sub-volume, adjusting the number of integrand samples 
-used in each one to minimize errors. By default,
-the number ``nstrat`` of stratifications per direction is the same 
-in every direction and is set automatically 
-based on the number ``neval`` of integrand evaluations per 
-iteration. It is possible, however, to specify the number of 
+``prod(nstrat)`` sub-volumes or (rectangular) hypercubes. |vegas| does a 
+separate integral 
+in each hypercube, adjusting the number of integrand evaluations 
+used in each one to minimize errors. By default, the number of
+stratifications is set automatically based on the number ``neval`` 
+of integrand evaluations per iteration: ``nstrat[d]`` is set 
+equal to :math:`M_\mathrm{st}+1` for the first :math:`D_0` directions 
+and :math:`M_\mathrm{st}` for 
+the remaining directions, where :math:`M_\mathrm{st}` 
+and :math:`D_0` are chosen 
+to maximize the number stratifications consistent with ``neval``.
+It is also possible, however, to specify the number of 
 stratifications ``nstrat[d]`` for each direction separately. 
 
-Requiring the same number of stratifications in each direction 
+Requiring (approximately) the same number of stratifications in each direction 
 greatly limits the number of stratifications in very high 
 dimensions, since the product of the ``nstrat[d]`` must be 
 less than ``neval/2`` (so there are at least two integrand 
-samples in each sub-volume). This restricts |vegas|'s ability to 
+samples in each hypercube). This restricts |vegas|'s ability to 
 adapt. Often there is a subset of integration directions 
 that are more challenging than the others. In high 
 dimensions (and possibly lower dimensions) 
@@ -1168,15 +1220,18 @@ An example is the 20-dimensional integral
 
 .. math:: 
     C\int_0^1 \!d^{20}x\,
-    \,\sum_{i=1}^2 \mathrm{e}^{-100 (\mathbf{x} - \mathbf{r}_i)^2},
+    \,\sum_{i=1}^3 \mathrm{e}^{-100 (\mathbf{x} - \mathbf{r}_i)^2},
 
 which has high, narrow peaks at 
 
 .. math::
-    \mathbf{r}_1 = (0.39, 0.39, 0.39, 0.39, 0.39, 0.45, \ldots, 0.45),
+    \mathbf{r}_1 = (0.23, 0.23, 0.23, 0.23, 0.23, 0.45, \ldots, 0.45),
     
 .. math::
-    \mathbf{r}_2 = (0.74, 0.74, 0.74, 0.74, 0.74, 0.45, \ldots, 0.45).
+    \mathbf{r}_2 = (0.39, 0.39, 0.39, 0.39, 0.39, 0.45, \ldots, 0.45),
+    
+.. math::
+    \mathbf{r}_3 = (0.74, 0.74, 0.74, 0.74, 0.74, 0.45, \ldots, 0.45).
 
 These peaks are aligned along the diagonal of the integration volume for the 
 first five directions, but are on top of each other in the remaining directions.
@@ -1184,10 +1239,12 @@ This makes the integrals over the first five directions much more challenging
 than the remaining integrals.
 
 To integrate this function, we specify ``nstrat[d]`` rather than ``neval``. 
-We set ``nstrat[d]=12`` for the first five directions, and ``nstrat[d]=1`` 
+We set ``nstrat[d]=10`` for the first five directions, and ``nstrat[d]=1`` 
 for all the rest. This fixes the number of function evaluations to be 
-between two and four times the number of sub-volumes created by 
-the stratifications (i.e., the product of the ``nstrat[d]``, here 248,832).  
+approximately eight times the number of hypercubes created by 
+the stratifications (i.e., eight times 100,000), which provides enough
+integrand samples for adaptive stratified sampling while also 
+guaranteeing at least two samples per hypercube.
 The following code ::
 
     import vegas 
@@ -1195,6 +1252,7 @@ The following code ::
 
     dim = 20
     r = np.array([
+        5 * [0.23] + (dim - 5) * [0.45],
         5 * [0.39] + (dim - 5) * [0.45],
         5 * [0.74] + (dim - 5) * [0.45],
         ])
@@ -1205,10 +1263,10 @@ The following code ::
         for ri in r:
             dx2 = np.sum((x - ri[None, :]) ** 2, axis=1)
             ans += np.exp(-100 * dx2)
-        return ans * 534071568726932.4
+        return ans * 356047712484621.56
 
     integ = vegas.Integrator(dim * [[0, 1]], alpha=0.25)
-    nstrat = 5 * [12] + (dim - 5) * [1]
+    nstrat = 5 * [10] + (dim - 5) * [1]
     integ(f, nitn=15, nstrat=nstrat)            # warmup
     r = integ(f, nitn=5, nstrat=nstrat)
     print(r.summary())
@@ -1218,9 +1276,9 @@ gives excellent results:
 
 .. literalinclude:: eg6a.out
 
-|vegas| struggles to converge, and is much less accurate,
+|vegas| struggles to converge, however,
 when in its default mode with the same number of 
-integrand evaluations (about ``1e6`` per iteration):
+integrand evaluations (about 800,000 per iteration):
 
 .. literalinclude:: eg6b.out 
 
@@ -1266,7 +1324,8 @@ The random points generated by |vegas| are stratified into hypercubes: |vegas|
 uses transformed integration variables to improve its Monte Carlo
 estimates. It further improves those estimates by subdividing the
 integration volume in the transformed variables into a large number of
-hypercubes, and doing a Monte Carlo integral in each hypercube separately.
+hypercubes, and doing a Monte Carlo integral in each hypercube separately
+(see previous section).
 The final result is the sum of the results from all the hypercubes.
 To mimic a full |vegas| integral estimate using the iterators above, we need
 to know which points belong to which hypercubes. The following code

@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>vegas Module &#8212; vegas 3.5.4 documentation</title>
+    <title>vegas Module &#8212; vegas 4.0 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5.4 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 4.0 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -140,22 +140,17 @@ to 20.</p></li>
 in each iteration of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> algorithm. Increasing
 <code class="docutils literal notranslate"><span class="pre">neval</span></code> increases the precision: statistical errors should
 fall at least as fast as <code class="docutils literal notranslate"><span class="pre">sqrt(1./neval)</span></code> and often
-fall much faster. When <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>, the total number of
-evaluations can be substantially larger than <code class="docutils literal notranslate"><span class="pre">neval</span></code>
-for challenging integrands; parameter <code class="docutils literal notranslate"><span class="pre">max_neval_hcube</span></code>
-can be used to limit such growth. The default value is 1000;
-real problems often require 10–1000 times more evaluations
-than this. Ignored if parameter <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> is specified.</p></li>
-<li><p><strong>nstrat</strong> (<em>int array</em>) – (Optional) <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> specifies the number
-of stratifications to use in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. If specified,
-parameter <code class="docutils literal notranslate"><span class="pre">neval</span></code> is ignored; the number of integrand
-evaluations per iteration is set between <code class="docutils literal notranslate"><span class="pre">neval_nstrat/2</span></code> and
-<code class="docutils literal notranslate"><span class="pre">neval_strat</span></code> times the product <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code>s over all
-directions. This parameter makes it possible to concentrate
-stratifications in directions where they are most needed.
-If <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> is not specified, the number of evaluations is
-determined from parameter <code class="docutils literal notranslate"><span class="pre">neval</span></code>, and <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code>
-is the same for all <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p></li>
+fall much faster.  The default value is 1000;
+real problems often require 10–10,000 times more evaluations
+than this.</p></li>
+<li><p><strong>nstrat</strong> (<em>int array</em>) – <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> specifies the number of
+stratifications to use in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. By default this
+parameter is set automatically, based on parameter <code class="docutils literal notranslate"><span class="pre">neval</span></code>,
+with <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> approximately the same for every <code class="docutils literal notranslate"><span class="pre">d</span></code>.
+Specifying <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> explicitly makes it possible to
+concentrate stratifications in directions  where they are most
+needed. If <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> is set but <code class="docutils literal notranslate"><span class="pre">neval</span></code> is not,
+<code class="docutils literal notranslate"><span class="pre">neval</span></code> is set equal to <code class="docutils literal notranslate"><span class="pre">2*prod(nstrat)/(1-neval_frac)</span></code>.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – Damping parameter controlling the remapping
 of the integration variables as <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adapts to the
 integrand. Smaller values slow adaptation, which may be
@@ -170,6 +165,17 @@ variables). Smaller values limit the amount of
 redistribution. The theoretically optimal value is 1;
 setting <code class="docutils literal notranslate"><span class="pre">beta=0</span></code> prevents any redistribution of
 evaluations. The default value is 0.75.</p></li>
+<li><p><strong>neval_frac</strong> (<em>float</em>) – Approximate fraction of function evaluations
+used for adaptive stratified sampling. <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
+distributes <code class="docutils literal notranslate"><span class="pre">(1-neval_frac)*neval</span></code>  integrand evaluations
+uniformly over all hypercubes, with at  least 2 evaluations
+per hypercube. The remaining <code class="docutils literal notranslate"><span class="pre">neval_frac*neval</span></code>
+evaluations are concentrated in hypercubes where the errors
+are largest. Increasing <code class="docutils literal notranslate"><span class="pre">neval_frac</span></code> makes more integrand
+evaluations available for adaptive stratified
+sampling, but reduces the number of hypercubes, which limits
+the algorithm’s ability to adapt. Ignored when <code class="docutils literal notranslate"><span class="pre">beta=0</span></code>.
+Default is <code class="docutils literal notranslate"><span class="pre">neval_frac=0.75</span></code>.</p></li>
 <li><p><strong>adapt</strong> (<em>bool</em>) – Setting <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code> prevents further
 adaptation by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>. Typically this would be done
 after training the <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a> on an integrand, in order
@@ -177,76 +183,6 @@ to stabilize further estimates of the integral. <a class="reference internal" hr
 unweighted averages to combine results from different
 iterations when <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code>. The default setting
 is <code class="docutils literal notranslate"><span class="pre">adapt=True</span></code>.</p></li>
-<li><p><strong>nhcube_batch</strong> (<em>positive int</em>) – The number of hypercubes (in y space)
-whose integration points are combined into a single
-batch to be passed to the integrand, together,
-when using <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> in batch mode.
-The default value is 1000. Larger values may be
-lead to faster evaluations, but at the cost of
-more memory for internal work arrays.</p></li>
-<li><p><strong>minimize_mem</strong> (<em>bool</em>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> minimizes
-internal workspace at the cost of extra evaluations of
-the integrand. This can increase execution time by
-50–100% but might be desirable when the number of
-evaluations is very large (e.g., <code class="docutils literal notranslate"><span class="pre">neval=1e9</span></code>). Normally
-<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> uses internal work space that grows in
-proportion to <code class="docutils literal notranslate"><span class="pre">neval</span></code>. If that work space exceeds
-the size of the RAM available to the processor,
-<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> runs much more slowly. Setting <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>
-greatly reduces the internal storage used by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>; in
-particular memory becomes independent of <code class="docutils literal notranslate"><span class="pre">neval</span></code>. The default
-setting (<code class="docutils literal notranslate"><span class="pre">minimize_mem=False</span></code>), however, is much superior
-unless memory becomes a problem. (The large memory is needed
-for adaptive stratified sampling, so memory is not
-an issue if <code class="docutils literal notranslate"><span class="pre">beta=0</span></code>.)</p></li>
-<li><p><strong>adapt_to_errors</strong> (<em>bool</em>) – <p><code class="docutils literal notranslate"><span class="pre">adapt_to_errors=False</span></code> causes
-<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to remap the integration variables to emphasize
-regions where <code class="docutils literal notranslate"><span class="pre">|f(x)|</span></code> is largest. This is
-the default mode.</p>
-<p><code class="docutils literal notranslate"><span class="pre">adapt_to_errors=True</span></code> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to remap
-variables to emphasize regions where the Monte Carlo
-error is largest. This might be superior when
-the number of the number of stratifications (<code class="docutils literal notranslate"><span class="pre">self.nstrat</span></code>)
-in the y grid is large (&gt; 50?). It is typically
-useful only in one or two dimensions.</p>
-</p></li>
-<li><p><strong>maxinc_axis</strong> (<em>positive int</em>) – The maximum number of increments
-per axis allowed for the x-space grid. The default
-value is 1000; there is probably little need to use
-other values.</p></li>
-<li><p><strong>max_nhcube</strong> (<em>positive int</em>) – Maximum number of y-space hypercubes
-used for stratified sampling. Setting <code class="docutils literal notranslate"><span class="pre">max_nhcube=1</span></code>
-turns stratified sampling off, which is probably never
-a good idea. The default setting (1e9) was chosen to
-correspond to the point where internal work arrays
-become comparable in size to the typical amount of RAM
-available to a processor (in a laptop in 2014).
-Internal memory usage is large only when <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>
-and <code class="docutils literal notranslate"><span class="pre">minimize_mem=False</span></code>; therefore <code class="docutils literal notranslate"><span class="pre">max_nhcube</span></code> is
-ignored if <code class="docutils literal notranslate"><span class="pre">beta=0</span></code> or <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>.</p></li>
-<li><p><strong>max_neval_hcube</strong> (<em>positive int</em>) – Maximum number of integrand
-evaluations per hypercube in the stratification. The default
-value is 1e5. Larger values might allow for more adaptation
-(when <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>), but also can result in large internal
-work arrays.</p></li>
-<li><p><strong>max_mem</strong> (<em>positive int</em>) – Maximum number of floats allowed in
-internal work arrays (approx.). A <code class="docutils literal notranslate"><span class="pre">MemoryError</span></code> is
-raised if the work arrays are too large, in which case
-one might want to reduce <code class="docutils literal notranslate"><span class="pre">max_neval_hcube</span></code> or
-<code class="docutils literal notranslate"><span class="pre">max_nhcube</span></code> (or increase <code class="docutils literal notranslate"><span class="pre">max_mem</span></code> if there is
-enough RAM). Default value is 1e9.</p></li>
-<li><p><strong>rtol</strong> (<em>float</em>) – Relative error in the integral estimate
-at which point the integrator can stop. The default
-value is 0.0 which turns off this stopping condition.
-This stopping condition can be quite unreliable
-in early iterations, before <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> has converged.
-Use with caution, if at all.</p></li>
-<li><p><strong>atol</strong> (<em>float</em>) – Absolute error in the integral estimate
-at which point the integrator can stop. The default
-value is 0.0 which turns off this stopping condition.
-This stopping condition can be quite unreliable
-in early iterations, before <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> has converged.
-Use with caution, if at all.</p></li>
 <li><p><strong>analyzer</strong> – <p>An object with methods</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">analyzer.begin(itn,</span> <span class="pre">integrator)</span></code></p>
@@ -265,6 +201,50 @@ example, causes vegas to print out a running report
 of its results as they are produced. The default
 is <code class="docutils literal notranslate"><span class="pre">analyzer=None</span></code>.</p>
 </p></li>
+<li><p><strong>nhcube_batch</strong> (<em>positive int</em>) – The number of hypercubes (in y space)
+whose integration points are combined into a single
+batch to be passed to the integrand, together,
+when using <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> in batch mode.
+The default value is 1000. Larger values may be
+lead to faster evaluations, but at the cost of
+more memory for internal work arrays.</p></li>
+<li><p><strong>maxinc_axis</strong> (<em>positive int</em>) – The maximum number of increments
+per axis allowed for the x-space grid. The default
+value is 1000; there is probably little need to use
+other values.</p></li>
+<li><p><strong>max_nhcube</strong> (<em>positive int</em>) – Maximum number of y-space hypercubes
+used for stratified sampling. Setting <code class="docutils literal notranslate"><span class="pre">max_nhcube=1</span></code>
+turns stratified sampling off, which is probably never
+a good idea. The default setting (1e9) was chosen to
+correspond to the point where internal work arrays
+become comparable in size to the typical amount of RAM
+available to a processor (in a laptop in 2014).
+Internal memory usage is large only when <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>
+and <code class="docutils literal notranslate"><span class="pre">minimize_mem=False</span></code>; therefore <code class="docutils literal notranslate"><span class="pre">max_nhcube</span></code> is
+ignored if <code class="docutils literal notranslate"><span class="pre">beta=0</span></code> or <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>.</p></li>
+<li><p><strong>max_neval_hcube</strong> (<em>positive int</em>) – Maximum number of integrand
+evaluations per hypercube in the stratification. The default
+value is 3e5. Larger values might allow for more adaptation
+(when <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>), but also can result in large internal
+work arrays.</p></li>
+<li><p><strong>max_mem</strong> (<em>positive float</em>) – Maximum number of floats allowed in
+internal work arrays (approx.). A <code class="docutils literal notranslate"><span class="pre">MemoryError</span></code> is
+raised if the work arrays are too large, in which case
+one might want to reduce <code class="docutils literal notranslate"><span class="pre">max_neval_hcube</span></code> or
+<code class="docutils literal notranslate"><span class="pre">max_nhcube</span></code> (or increase <code class="docutils literal notranslate"><span class="pre">max_mem</span></code> if there is
+enough RAM). Default value is 1e9.</p></li>
+<li><p><strong>rtol</strong> (<em>float</em>) – Relative error in the integral estimate
+at which point the integrator can stop. The default
+value is 0.0 which turns off this stopping condition.
+This stopping condition can be quite unreliable
+in early iterations, before <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> has converged.
+Use with caution, if at all.</p></li>
+<li><p><strong>atol</strong> (<em>float</em>) – Absolute error in the integral estimate
+at which point the integrator can stop. The default
+value is 0.0 which turns off this stopping condition.
+This stopping condition can be quite unreliable
+in early iterations, before <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> has converged.
+Use with caution, if at all.</p></li>
 <li><p><strong>ran_array_generator</strong> – Function that generates
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> arrays of random numbers distributed uniformly
 between 0 and 1. <code class="docutils literal notranslate"><span class="pre">ran_array_generator(shape)</span></code> should
@@ -276,10 +256,41 @@ number generator is synchronized across all processors when
 using MPI. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> does no synchronization
 (but the random numbers should synchronized some other
 way).</p></li>
-<li><p><strong>mpi</strong> – Setting <code class="docutils literal notranslate"><span class="pre">mpi=False</span></code> disables <code class="docutils literal notranslate"><span class="pre">mpi</span></code> support in
+<li><p><strong>adapt_to_errors</strong> (<em>bool</em>) – <p><code class="docutils literal notranslate"><span class="pre">adapt_to_errors=False</span></code> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to remap the
+integration variables to emphasize regions where <code class="docutils literal notranslate"><span class="pre">|f(x)|</span></code>
+is largest. This is the default mode.</p>
+<p><code class="docutils literal notranslate"><span class="pre">adapt_to_errors=True</span></code> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to remap
+variables to emphasize regions where the Monte Carlo
+error is largest. This might be superior when
+the number of the number of stratifications (<code class="docutils literal notranslate"><span class="pre">self.nstrat</span></code>)
+in the y grid is large (&gt; 100). It is typically
+useful only in one or two dimensions.</p>
+</p></li>
+<li><p><strong>uniform_nstrat</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, requires that the
+<code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> be equal for all <code class="docutils literal notranslate"><span class="pre">d</span></code>. If <code class="docutils literal notranslate"><span class="pre">False</span></code> (default),
+the algorithm maximizes the number of stratifications while
+requiring <code class="docutils literal notranslate"><span class="pre">|nstrat[d1]</span> <span class="pre">-</span> <span class="pre">nstrat[d2]|</span> <span class="pre">&lt;=</span> <span class="pre">1</span></code>. This parameter
+is ignored if <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> is specified explicitly.</p></li>
+<li><p><strong>mpi</strong> (<em>bool</em>) – Setting <code class="docutils literal notranslate"><span class="pre">mpi=False</span></code> disables <code class="docutils literal notranslate"><span class="pre">mpi</span></code> support in
 <code class="docutils literal notranslate"><span class="pre">vegas</span></code> even if <code class="docutils literal notranslate"><span class="pre">mpi</span></code> is available; setting <code class="docutils literal notranslate"><span class="pre">mpi=True</span></code>
 (default) allows use of <code class="docutils literal notranslate"><span class="pre">mpi</span></code> provided module <code class="xref py py-mod docutils literal notranslate"><span class="pre">mpi4py</span></code>
-is installed.</p></li>
+is installed. This flag is ignored when <code class="docutils literal notranslate"><span class="pre">mpi</span></code> is not
+being used (and so has no impact on performance).</p></li>
+<li><p><strong>minimize_mem</strong> – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> minimizes
+internal workspace at the cost of extra evaluations of
+the integrand. This can increase execution time by
+50–100% but might be desirable when the number of
+evaluations is very large (e.g., <code class="docutils literal notranslate"><span class="pre">neval=1e9</span></code>). Normally
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> uses internal work space that grows in
+proportion to <code class="docutils literal notranslate"><span class="pre">neval</span></code>. If that work space exceeds
+the size of the RAM available to the processor,
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> runs much more slowly. Setting <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>
+greatly reduces the internal storage used by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>; in
+particular memory becomes independent of <code class="docutils literal notranslate"><span class="pre">neval</span></code>. The default
+setting (<code class="docutils literal notranslate"><span class="pre">minimize_mem=False</span></code>), however, is much superior
+unless memory becomes a problem. (The large memory is needed
+for adaptive stratified sampling, so memory is not
+an issue if <code class="docutils literal notranslate"><span class="pre">beta=0</span></code>.)</p></li>
 </ul>
 </dd>
 </dl>
@@ -602,11 +613,12 @@ down in order to avoid instabilities caused by random fluctuations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>grid</strong> (<em>array</em>) – Initial <code class="docutils literal notranslate"><span class="pre">x</span></code> grid, where <code class="docutils literal notranslate"><span class="pre">grid[d,</span> <span class="pre">i]</span></code>
-is the <code class="docutils literal notranslate"><span class="pre">i</span></code>-th node in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p></li>
-<li><p><strong>ninc</strong> (int or <code class="docutils literal notranslate"><span class="pre">None</span></code>) – Number of increments along each axis
-of the <code class="docutils literal notranslate"><span class="pre">x</span></code> grid. A new grid is generated if <code class="docutils literal notranslate"><span class="pre">ninc</span></code> differs
-from <code class="docutils literal notranslate"><span class="pre">grid.shape[1]</span></code>. The new grid is designed to give the same
+<li><p><strong>grid</strong> (<em>list of arrays</em>) – Initial <code class="docutils literal notranslate"><span class="pre">x</span></code> grid, where <code class="docutils literal notranslate"><span class="pre">grid[d][i]</span></code>
+is the <code class="docutils literal notranslate"><span class="pre">i</span></code>-th node in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. Different directions
+can have different numbers of nodes.</p></li>
+<li><p><strong>ninc</strong> (int or array or <code class="docutils literal notranslate"><span class="pre">None</span></code>) – <code class="docutils literal notranslate"><span class="pre">ninc[d]</span></code> (or <code class="docutils literal notranslate"><span class="pre">ninc</span></code>, if it
+is a number) is the number of increments along direction <code class="docutils literal notranslate"><span class="pre">d</span></code>
+in the new  <code class="docutils literal notranslate"><span class="pre">x</span></code> grid. The new grid is designed to give the same
 Jacobian <code class="docutils literal notranslate"><span class="pre">dx(y)/dy</span></code> as the original grid. The default value,
 <code class="docutils literal notranslate"><span class="pre">ninc=None</span></code>, leaves the grid unchanged.</p></li>
 </ul>
@@ -622,7 +634,7 @@ Jacobian <code class="docutils literal notranslate"><span class="pre">dx(y)/dy</
 <dl class="attribute">
 <dt id="vegas.AdaptiveMap.ninc">
 <code class="sig-name descname">ninc</code><a class="headerlink" href="#vegas.AdaptiveMap.ninc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of increments along each grid axis.</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">ninc[d]</span></code> is the number increments in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -654,7 +666,7 @@ where the projected data is small. The grid along
 any direction is unchanged if the training data
 is constant along that direction.</p>
 <p>The number of increments along a direction can be
-changed by setting parameter <code class="docutils literal notranslate"><span class="pre">ninc</span></code>.</p>
+changed by setting parameter <code class="docutils literal notranslate"><span class="pre">ninc</span></code> (array or number).</p>
 <p>The grid does not change if no training data has
 been accumulated, unless <code class="docutils literal notranslate"><span class="pre">ninc</span></code> is specified, in
 which case the number of increments is adjusted
@@ -669,9 +681,11 @@ rapid evolution; small values (much less than one) imply
 slow evolution. Typical values are of order one. Choosing
 <code class="docutils literal notranslate"><span class="pre">alpha&lt;0</span></code> causes adaptation to the unmodified training
 data (usually not a good idea).</p></li>
-<li><p><strong>ninc</strong> (<em>int</em>) – Number of increments along each direction in the
-new grid. The number is unchanged from the old grid if
-<code class="docutils literal notranslate"><span class="pre">ninc</span></code> is omitted (or equals <code class="docutils literal notranslate"><span class="pre">None</span></code>).</p></li>
+<li><p><strong>ninc</strong> (<em>int</em><em> or </em><em>array</em><em> or </em><em>None</em>) – The number of increments in the new
+grid is <code class="docutils literal notranslate"><span class="pre">ninc[d]</span></code> (or <code class="docutils literal notranslate"><span class="pre">ninc</span></code>, if it is a number)
+in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. The number is unchanged from the
+old grid if <code class="docutils literal notranslate"><span class="pre">ninc</span></code> is omitted (or equals <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+which is the default).</p></li>
 </ul>
 </dd>
 </dl>
@@ -748,9 +762,10 @@ can be an array <code class="docutils literal notranslate"><span class="pre">y[d
 <dt id="vegas.AdaptiveMap.make_uniform">
 <code class="sig-name descname">make_uniform</code><span class="sig-paren">(</span><em class="sig-param">ninc=None</em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.make_uniform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Replace the grid with a uniform grid.</p>
-<p>The new grid has <code class="docutils literal notranslate"><span class="pre">ninc</span></code> increments along each direction if
-<code class="docutils literal notranslate"><span class="pre">ninc</span></code> is specified. Otherwise it has the same number of
-increments as the old grid.</p>
+<p>The new grid has <code class="docutils literal notranslate"><span class="pre">ninc[d]</span></code>  (or <code class="docutils literal notranslate"><span class="pre">ninc</span></code>, if it is a number)
+increments along each direction if <code class="docutils literal notranslate"><span class="pre">ninc</span></code> is specified.
+If <code class="docutils literal notranslate"><span class="pre">ninc=None</span></code> (default), the new grid has the same number
+of increments in each direction as the old grid.</p>
 </dd></dl>
 
 <dl class="method">
@@ -847,6 +862,18 @@ plots are displayed using <code class="docutils literal notranslate"><span class
 in the map grid for each direction. Parameter
 <code class="docutils literal notranslate"><span class="pre">ngrid</span></code> specifies the maximum number of nodes to print
 (spread evenly over the grid).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.AdaptiveMap.extract_grid">
+<code class="sig-name descname">extract_grid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.extract_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of lists specifying the grid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vegas.AdaptiveMap.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>clear information accumulated by <a class="reference internal" href="#vegas.AdaptiveMap.add_training_data" title="vegas.AdaptiveMap.add_training_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AdaptiveMap.add_training_data()</span></code></a></p>
 </dd></dl>
 
 </dd>
@@ -1347,7 +1374,7 @@ gives the fastest results.</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 3.5.4 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 4.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -27,9 +27,9 @@ run:
 	$(PYTHON) slow.py > slow.tmp     # about 6s
 	- diff -w slow.out slow.tmp
 	$(PYTHON) faster.py > faster.tmp
-	- diff -w faster.out faster.tmp
+	- diff -w slow.out faster.tmp
 	$(PYTHON) fastest.py > fastest.tmp
-	- diff -w fastest.out fastest.tmp
+	- diff -w slow.out fastest.tmp
 	$(PYTHON) bayes.py > bayes.tmp
 	- diff -w bayes.out bayes.tmp
 	$(PYTHON) distribution.py > distribution.tmp
@@ -47,11 +47,11 @@ run:
 	- diff -w slow.out mpi-slow/1/rank.0/stdout
 	- diff -w slow.out mpi-slow/1/rank.1/stdout
 	- mpirun -np 2 -output-filename mpi-faster $(PYTHON) faster.py > mpi-faster.tmp
-	- diff -w faster.out mpi-faster/1/rank.0/stdout
-	- diff -w faster.out mpi-faster/1/rank.1/stdout
+	- diff -w slow.out mpi-faster/1/rank.0/stdout
+	- diff -w slow.out mpi-faster/1/rank.1/stdout
 	- mpirun -np 2 -output-filename mpi-fastest $(PYTHON) fastest.py > mpi-fastest.tmp
-	- diff -w fastest.out mpi-fastest/1/rank.0/stdout
-	- diff -w fastest.out mpi-fastest/1/rank.1/stdout
+	- diff -w slow.out mpi-fastest/1/rank.0/stdout
+	- diff -w slow.out mpi-fastest/1/rank.1/stdout
 
 time:
 	time $(MAKE) PYTHON=$(PYTHON) PLOT=False run
@@ -80,7 +80,7 @@ update-all:
 	$(PYTHON) slow.py > slow.out
 	$(PYTHON) faster.py > faster.out
 	$(PYTHON) fastest.py > fastest.out
-	$(PYTHON) bayes.py > bayes.tmp
+	$(PYTHON) bayes.py > bayes.out
 	$(PYTHON) distribution.py > distribution.out
 	$(PYTHON) path-integral.py > path-integral.out
 	$(PYTHON) parallel-pools.py > parallel-pools.out
