@@ -224,7 +224,7 @@ and <code class="docutils literal notranslate"><span class="pre">minimize_mem=Fa
 ignored if <code class="docutils literal notranslate"><span class="pre">beta=0</span></code> or <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>.</p></li>
 <li><p><strong>max_neval_hcube</strong> (<em>positive int</em>) – Maximum number of integrand
 evaluations per hypercube in the stratification. The default
-value is 3e5. Larger values might allow for more adaptation
+value is 1e6. Larger values might allow for more adaptation
 (when <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>), but also can result in large internal
 work arrays.</p></li>
 <li><p><strong>max_mem</strong> (<em>positive float</em>) – Maximum number of floats allowed in
@@ -867,13 +867,13 @@ in the map grid for each direction. Parameter
 <dl class="method">
 <dt id="vegas.AdaptiveMap.extract_grid">
 <code class="sig-name descname">extract_grid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.extract_grid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of lists specifying the grid.</p>
+<dd><p>Return a list of lists specifying the map’s grid.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="vegas.AdaptiveMap.clear">
 <code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.clear" title="Permalink to this definition">¶</a></dt>
-<dd><p>clear information accumulated by <a class="reference internal" href="#vegas.AdaptiveMap.add_training_data" title="vegas.AdaptiveMap.add_training_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AdaptiveMap.add_training_data()</span></code></a></p>
+<dd><p>Clear information accumulated by <a class="reference internal" href="#vegas.AdaptiveMap.add_training_data" title="vegas.AdaptiveMap.add_training_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AdaptiveMap.add_training_data()</span></code></a>.</p>
 </dd></dl>
 
 </dd>

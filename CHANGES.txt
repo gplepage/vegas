@@ -1,5 +1,5 @@
-Version 4.0?
-============
+Version 4.0 2021-04-21
+=======================
 This update changes one aspect of the default algorithm 
 for adaptive stratified sampling. Specifically it no longer 
 uses the same number of stratifications in each direction:
@@ -10,9 +10,11 @@ For many problems the difference is negligible, but
 this change can lead to large improvements for high 
 dimensions or with a small number neval of integrand 
 evaluations. In particular there will always be some 
-stratification for arbitrarily high dimensions.
+stratification for arbitrarily high dimensions. The 
+default stratification is determined by neval and 
+new parameter neval_frac.
 
-A related change is that AdaptiveMap's can now have 
+A related change is that AdaptiveMaps can now have 
 different numbers of increments in different directions.
 
 Version 3.5.4 2021-03-28
