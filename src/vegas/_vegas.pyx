@@ -120,7 +120,7 @@ cdef class AdaptiveMap:
             self.grid = numpy.array(grid.grid)
         else:
             dim = len(grid)
-            len_g = numpy.array([len(x) for x in grid])
+            len_g = numpy.array([len(x) for x in grid], dtype=numpy.intp)
             if min(len_g) < 2:
                 raise ValueError('grid[d] must have at least 2 elements, not {}'.format(min(len_g)))
             self.ninc = len_g - 1
@@ -495,7 +495,7 @@ cdef class AdaptiveMap:
                 new_grid[d, 1] = self.grid[d, self.ninc[d]]
             self.grid = numpy.asarray(new_grid)
             self.inc = numpy.empty((dim, 1), numpy.float_)
-            self.ninc = numpy.array(dim * [1])
+            self.ninc = numpy.array(dim * [1], dtype=numpy.intp)
             for d in range(dim):
                 self.inc[d, 0] = self.grid[d, 1] - self.grid[d, 0]
             self.clear()

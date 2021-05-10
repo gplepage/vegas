@@ -1,3 +1,7 @@
+Version 4.0.1 2021-05-10
+========================
+Bug fix so version 4.0 works properly on Windows machines.
+
 Version 4.0 2021-04-21
 =======================
 This update changes one aspect of the default algorithm 
