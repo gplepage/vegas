@@ -1,3 +1,12 @@
+Version 4.0.2 2021-06-09
+========================
+- Fixes (rare) bug when integrand vanishes everywhere.
+
+- Lazy import for mpi4py.
+
+- Adds RBatchIntegrand and rbatchintegrand.
+
+
 Version 4.0.1 2021-05-10
 ========================
 Bug fix so version 4.0 works properly on Windows machines.

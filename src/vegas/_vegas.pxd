@@ -20,6 +20,10 @@ cdef class BatchIntegrand:
     cdef readonly object fcntype
     cdef public object fcn
 
+cdef class RBatchIntegrand:
+    cdef readonly object fcntype
+    cdef public object fcn
+
 # legacy name
 cdef class VecIntegrand(BatchIntegrand):
     pass

@@ -59,6 +59,8 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 from ._vegas import RAvg, RAvgArray, RAvgDict
 from ._vegas import AdaptiveMap, Integrator, BatchIntegrand
 from ._vegas import reporter, batchintegrand
+from ._vegas import rbatchintegrand, RBatchIntegrand
+from ._vegas import lbatchintegrand, LBatchIntegrand
 from ._vegas import MPIintegrand
 # legacy names:
 from ._vegas import vecintegrand, VecIntegrand
@@ -341,6 +343,3 @@ class parallelintegrand(BatchIntegrand):
             )
         # convert list of results into a single numpy array
         return numpy.concatenate(results)
-__version__ = '4.0'
-
-__version__ = '4.0'
