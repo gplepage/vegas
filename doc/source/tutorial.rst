@@ -56,7 +56,8 @@ version), C and C++. The algorithm used here is significantly improved over
 the original implementation, and that used in most other implementations.
 It uses two adaptive strategies: importance sampling, as in the original
 implementation, and adaptive stratified sampling, which is new. The 
-new algorithm is described in G. P. Lepage, arXiv_2009.05112_.
+new algorithm is described in G. P. Lepage, arXiv_2009.05112_ (published in 
+the Journal of Computational Physics 439 (2021) 110386).
 
 .. _arXiv_2009.05112: https://arxiv.org/abs/2009.05112
 
