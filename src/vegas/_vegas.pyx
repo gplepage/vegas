@@ -1072,7 +1072,7 @@ cdef class Integrator(object):
                 raise ValueError('bad nstrat: ' + str(numpy.asarray(self.nstrat)))
         if self.neval_frac < 0 or self.neval_frac >= 1:
             raise ValueError('neval_frac = {} but require 0 <= neval_frac < 1'.format(self.neval_frac))
-        if 'neval' in kargs and self.neval < 2:
+        if 'neval' in old_val and self.neval < 2:
             raise ValueError('neval>2 required, not ' + str(self.neval))
         neval_frac = 0 if (self.beta == 0 or self.adapt_to_errors) else self.neval_frac
 
@@ -1089,7 +1089,7 @@ cdef class Integrator(object):
                 self.neval = 2. * nhcube / (1. - neval_frac)
             elif self.neval < 2. * nhcube / (1. - neval_frac):
                 raise ValueError('neval too small: {} < {}'.format(self.neval, 2. * nhcube / (1. - neval_frac)))
-        elif 'neval' in old_val or 'neval_frac' in old_val:
+        elif 'neval' in old_val or 'neval_frac' in old_val or 'max_nhcube' in old_val:
             # determine stratification from neval,neval_frac if either was specified
             ns = int(((1 - neval_frac) * self.neval / 2.) ** (1. / self.dim)) # stratifications / axis
             if ns < 1:
@@ -1099,11 +1099,9 @@ cdef class Integrator(object):
                 / numpy.log(1 + 1. / ns)
                 )
             if ((ns + 1)**d * ns**(self.dim-d)) > self.max_nhcube and not self.minimize_mem:
-                ns = int(self.max_nhcube ** (1. / self.dim)) - 1
-                if ns < 1:
-                    ns = 1
+                ns = int(self.max_nhcube ** (1. / self.dim))
                 d = int(
-                    (numpy.log((1 - neval_frac) * self.neval / 2.) - self.dim * numpy.log(ns))
+                    (numpy.log(self.max_nhcube) - self.dim * numpy.log(ns))
                     / numpy.log(1 + 1. / ns)
                     )
             if self.uniform_nstrat:
@@ -1143,7 +1141,7 @@ cdef class Integrator(object):
         self.nhcube = numpy.product(self.nstrat) 
         avg_neval_hcube = int(self.neval / self.nhcube)
         if self.nhcube == 1:
-            self.min_neval_hcube = int(self.neval / self.nhcube)
+            self.min_neval_hcube = int(self.neval)
         else:
             self.min_neval_hcube = int((1 - neval_frac) * self.neval / self.nhcube)
         if self.min_neval_hcube < 2:
@@ -1622,6 +1620,8 @@ cdef class Integrator(object):
 
                 # evaluate integrand at all points in x
                 fx = fcn.eval(x)
+                if numpy.any(numpy.isnan(fx)):
+                    raise ValueError('integrand evaluates to nan')
                 if firsteval:
                     # allocate work arrays on first pass through;
                     # (needed a sample fcn evaluation in order to do this)

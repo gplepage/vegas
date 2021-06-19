@@ -458,6 +458,14 @@ class TestIntegrator(unittest.TestCase):
         np.testing.assert_allclose([I.map.grid[0,0], I.map.grid[0, I.map.ninc[0]]], [0., 1.])
         np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, I.map.ninc[1]]], [-1., 1.])
 
+        I = Integrator([[0.,1.],[-1.,1.]], max_nhcube=1)
+        self.assertEqual(list(I.map.ninc), [100, 100])
+        self.assertEqual(list(I.nstrat), [1, 1])
+        self.assertEqual(I.neval, 1000)
+        self.assertEqual(I.min_neval_hcube, 1000)
+        np.testing.assert_allclose([I.map.grid[0,0], I.map.grid[0, I.map.ninc[0]]], [0., 1.])
+        np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, I.map.ninc[1]]], [-1., 1.])
+
         I = Integrator([[0., 1.], [-1., 1.]], nstrat=[10, 11], neval_frac=0.75)
         self.assertEqual(list(I.map.ninc), [80, 88])
         self.assertEqual(list(I.nstrat), [10, 11])
