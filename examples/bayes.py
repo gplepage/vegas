@@ -5,8 +5,6 @@ import gvar as gv
 import lsqfit
 import vegas
 
-from outputsplitter import log_stdout
-
 numpy = np
 
 # options (default is 2nd in each case)
