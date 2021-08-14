@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Tutorial &#8212; vegas 4.0.3 documentation</title>
+    <title>Tutorial &#8212; vegas 5.0 documentation</title>
     <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 4.0.3 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.0 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -54,7 +54,7 @@
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>Class <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a> gives Monte Carlo estimates of arbitrary
 multidimensional integrals using the <em>vegas</em> algorithm
-(G. P. Lepage, J. Comput. Phys. 27 (1978) 192).
+(G. P. Lepage, J. Comput. Phys. 27 (1978) 192 and J. Comput. Phys. 439 (2021) 110386).
 The algorithm has two components.
 First an automatic transformation is applied to to the integration variables
 in an attempt to flatten the integrand. Then a Monte Carlo estimate of the
@@ -89,8 +89,8 @@ version), C and C++. The algorithm used here is significantly improved over
 the original implementation, and that used in most other implementations.
 It uses two adaptive strategies: importance sampling, as in the original
 implementation, and adaptive stratified sampling, which is new. The
-new algorithm is described in G. P. Lepage, <a class="reference external" href="https://arxiv.org/abs/2009.05112">arXiv_2009.05112</a> (published in
-Journal of Computational Physics 439 (2021) 110386).</p>
+new algorithm is described in G. P. Lepage, <a class="reference external" href="https://arxiv.org/abs/2009.05112">arXiv_2009.05112</a>
+(J. Comput. Phys. 439 (2021) 110386).</p>
 <p>This module is written in Cython, so it is almost as fast as compiled Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.</p>
@@ -798,6 +798,107 @@ the different <code class="docutils literal notranslate"><span class="pre">dI/I<
 be exactly zero absent roundoff errors.) Typically one has
 more than five bins.</p>
 </div>
+<div class="section" id="bayesian-integrals">
+<h2>Bayesian Integrals<a class="headerlink" href="#bayesian-integrals" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> module has a special-purpose integrator for
+evaluating averages over probability distributions. Given a
+multi-dimensional Gaussian probability distribution
+<code class="docutils literal notranslate"><span class="pre">g</span></code> (specified by an array of <code class="docutils literal notranslate"><span class="pre">gvar.GVar</span></code>s or a dictionary whose
+values are <code class="docutils literal notranslate"><span class="pre">gvar.GVar</span></code>s or arrays of <code class="docutils literal notranslate"><span class="pre">gvar.GVar</span></code>s),
+<code class="docutils literal notranslate"><span class="pre">vegas.PDFIntegrator(g)</span></code> creates an integrator that
+is optimized to evaluate integrals of <code class="docutils literal notranslate"><span class="pre">f(p)</span> <span class="pre">*</span> <span class="pre">pdf(p)</span></code>
+where <code class="docutils literal notranslate"><span class="pre">f(p)</span></code> is an arbitrary function and <code class="docutils literal notranslate"><span class="pre">pdf(p)</span></code>
+is the probability density function (PDF) corresponding to <code class="docutils literal notranslate"><span class="pre">g</span></code>.
+Here <code class="docutils literal notranslate"><span class="pre">p</span></code> is a point in the parameter space of the
+distribution — an array or dictionary having the
+same layout as <code class="docutils literal notranslate"><span class="pre">g</span></code>.</p>
+<p><a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> integrates over the entire
+parameter space of the
+distribution but re-expresses integrals in terms of variables
+that diagonalize <code class="docutils literal notranslate"><span class="pre">g</span></code>’s covariance matrix and are centered at
+its mean value. This greatly facilitates integration over these
+variables using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>, making integrals over
+many parameters feasible, even when the parameters are highly
+correlated. <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> also pre-adapts the integrator
+to <code class="docutils literal notranslate"><span class="pre">g</span></code>’s PDF so it is usually unnecessary to discard early iterations.</p>
+<p>The PDF corresponding to <code class="docutils literal notranslate"><span class="pre">g</span></code> can be replaced by an arbitrary
+PDF function <code class="docutils literal notranslate"><span class="pre">pdf(p)</span></code>. The integration variables are still
+specified by and optimized for <code class="docutils literal notranslate"><span class="pre">g</span></code>, but the PDF used in the
+integrals is <code class="docutils literal notranslate"><span class="pre">pdf(p)</span></code>.
+<a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> normally evaluates the
+integrals of both <code class="docutils literal notranslate"><span class="pre">pdf(p)</span> <span class="pre">*</span> <span class="pre">f(p)</span></code> and <code class="docutils literal notranslate"><span class="pre">pdf(p)</span></code>. The expectation
+value is the ratio of the two integrals, so the PDF need not be
+normalized. Note also that Monte Carlo uncertainties in
+the two integrals can be highly correlated, in which case
+the uncertainties are significantly reduced in the ratio.</p>
+<p>A simple illustration of <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> is given by the following
+code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">gvar</span> <span class="k">as</span> <span class="nn">gv</span>
+
+<span class="c1"># multi-dimensional Gaussian distribution</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="p">()</span>
+<span class="n">g</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.99</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+<span class="n">g</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="s1">&#39;1(1)&#39;</span><span class="p">)</span>
+
+<span class="c1"># integrator for expectation values in distribution g</span>
+<span class="n">g_expval</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">PDFIntegrator</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+<span class="c1"># want expectation value of [fp, fp**2]</span>
+<span class="k">def</span> <span class="nf">f_f2</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>
+    <span class="n">fp</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">fp</span><span class="p">,</span> <span class="n">fp</span> <span class="o">**</span> <span class="mi">2</span><span class="p">]</span>
+
+<span class="c1"># &lt;f_f2&gt; in distribution g</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">g_expval</span><span class="p">(</span><span class="n">f_f2</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;results =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># mean and standard deviation of fp&#39;s distribution</span>
+<span class="n">fmean</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">fsdev</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;fp.mean =&#39;</span><span class="p">,</span> <span class="n">fmean</span><span class="p">,</span> <span class="s1">&#39;   fp.sdev =&#39;</span><span class="p">,</span> <span class="n">fsdev</span><span class="p">)</span>
+<span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Gaussian approx&#39;n for fp =&quot;</span><span class="p">,</span> <span class="n">f_f2</span><span class="p">(</span><span class="n">g</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># g&#39;s pdf norm</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;PDF norm =&#39;</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">pdfnorm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here the distribution <code class="docutils literal notranslate"><span class="pre">g</span></code> describes two highly correlated variables,
+<code class="docutils literal notranslate"><span class="pre">a[0]</span></code> and <code class="docutils literal notranslate"><span class="pre">a[1]</span></code>, and a third uncorrelated variable <code class="docutils literal notranslate"><span class="pre">b</span></code>.
+We use the integrator to calculated  the expectation value of
+<code class="docutils literal notranslate"><span class="pre">fp</span> <span class="pre">=</span> <span class="pre">a[0]</span> <span class="pre">*</span> <span class="pre">a[1]</span> <span class="pre">+</span> <span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">fp**2</span></code>, so we can compute the
+mean and standard
+deviation of the <code class="docutils literal notranslate"><span class="pre">fp</span></code> distribution. The output from this code
+shows that the Gaussian approximation 1.0(1.4) for the mean and
+standard deviation is not particularly
+close to the correct value 2.0(2.0):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">1.0024</span><span class="p">(</span><span class="mi">94</span><span class="p">)</span>      <span class="mf">1.0024</span><span class="p">(</span><span class="mi">94</span><span class="p">)</span>          <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.9995</span><span class="p">(</span><span class="mi">58</span><span class="p">)</span>      <span class="mf">1.0002</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>          <span class="mf">0.04</span>     <span class="mf">0.99</span>
+  <span class="mi">3</span>   <span class="mf">0.9932</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>      <span class="mf">0.9974</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span>          <span class="mf">0.97</span>     <span class="mf">0.45</span>
+  <span class="mi">4</span>   <span class="mf">1.0017</span><span class="p">(</span><span class="mi">68</span><span class="p">)</span>      <span class="mf">0.9982</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>          <span class="mf">0.75</span>     <span class="mf">0.66</span>
+  <span class="mi">5</span>   <span class="mf">1.0063</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>      <span class="mf">1.0009</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span>          <span class="mf">0.80</span>     <span class="mf">0.65</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.995</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span> <span class="mf">8.05</span><span class="p">(</span><span class="mi">15</span><span class="p">)]</span> 
+
+<span class="n">fp</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="mf">1.995</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>    <span class="n">fp</span><span class="o">.</span><span class="n">sdev</span> <span class="o">=</span> <span class="mf">2.016</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>
+<span class="n">Gaussian</span> <span class="n">approx</span><span class="s1">&#39;n for fp = 1.0(1.4) </span>
+
+<span class="n">PDF</span> <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0009</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In general function <code class="docutils literal notranslate"><span class="pre">f(p)</span></code> can return a number, or an array of
+numbers, or a dictionary whose values are numbers or arrays of numbers.
+This allows multiple expectation values to be evaluated simultaneously.</p>
+<p>The discussion in <a class="reference internal" href="outliers.html#case-curve-fitting"><span class="std std-ref">Case Study: Bayesian Curve Fitting</span></a> illustrates how
+<a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> can be used with a non-Gaussian PDF in two
+examples, one with 4 parameters
+and the other with 22 parameters.</p>
+</div>
 <div class="section" id="faster-integrands">
 <h2>Faster Integrands<a class="headerlink" href="#faster-integrands" title="Permalink to this headline">¶</a></h2>
 <p>The computational cost of a realistic multidimensional integral
@@ -993,6 +1094,10 @@ by a dictionary-valued batch integrand: e.g.,</p>
     <span class="k">return</span> <span class="n">ans</span>
 </pre></div>
 </div>
+<p>It is sometimes more convenient to have the batch index be the last index
+(the rightmost) rather than the first. Then <code class="docutils literal notranslate"><span class="pre">&#64;vegas.batchintegrand</span></code> is
+replaced by <code class="docutils literal notranslate"><span class="pre">&#64;vegas.rbatchintegrand</span></code>. (Note that <code class="docutils literal notranslate"><span class="pre">&#64;vegas.batchintegrand</span></code>
+is the same as <code class="docutils literal notranslate"><span class="pre">&#64;vegas.lbatchintegrand</span></code>.)</p>
 </div>
 <div class="section" id="multiple-processors">
 <h2>Multiple Processors<a class="headerlink" href="#multiple-processors" title="Permalink to this headline">¶</a></h2>
@@ -1466,6 +1571,7 @@ deviations, and properly correlated with other
 <li><a class="reference internal" href="#basic-integrals">Basic Integrals</a></li>
 <li><a class="reference internal" href="#multiple-integrands-simultaneously">Multiple Integrands Simultaneously</a></li>
 <li><a class="reference internal" href="#calculating-distributions">Calculating Distributions</a></li>
+<li><a class="reference internal" href="#bayesian-integrals">Bayesian Integrals</a></li>
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>
 <li><a class="reference internal" href="#multiple-processors">Multiple Processors</a></li>
 <li><a class="reference internal" href="#sums-with-vegas">Sums with <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a></li>
@@ -1519,7 +1625,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 4.0.3 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -4,6 +4,7 @@ Tutorial
 .. moduleauthor:: G. Peter Lepage <g.p.lepage@cornell.edu>
 
 .. |Integrator| replace:: :class:`vegas.Integrator`
+.. |PDFIntegrator| replace:: :class:`vegas.PDFIntegrator`
 .. |AdaptiveMap| replace:: :class:`vegas.AdaptiveMap`
 .. |vegas| replace:: :mod:`vegas`
 .. |WAvg| replace:: :class:`vegas.RunningWAvg`
@@ -18,7 +19,7 @@ Introduction
 
 Class :class:`vegas.Integrator` gives Monte Carlo estimates of arbitrary
 multidimensional integrals using the *vegas* algorithm
-(G. P. Lepage, J. Comput. Phys. 27 (1978) 192).
+(G. P. Lepage, J. Comput. Phys. 27 (1978) 192 and J. Comput. Phys. 439 (2021) 110386).
 The algorithm has two components.
 First an automatic transformation is applied to to the integration variables
 in an attempt to flatten the integrand. Then a Monte Carlo estimate of the
@@ -56,8 +57,8 @@ version), C and C++. The algorithm used here is significantly improved over
 the original implementation, and that used in most other implementations.
 It uses two adaptive strategies: importance sampling, as in the original
 implementation, and adaptive stratified sampling, which is new. The 
-new algorithm is described in G. P. Lepage, arXiv_2009.05112_ (published in 
-Journal of Computational Physics 439 (2021) 110386).
+new algorithm is described in G. P. Lepage, arXiv_2009.05112_ 
+(J. Comput. Phys. 439 (2021) 110386).
 
 .. _arXiv_2009.05112: https://arxiv.org/abs/2009.05112
 
@@ -709,6 +710,98 @@ the different ``dI/I`` values. (The uncertainty on ``sum(dI/I)`` would
 be exactly zero absent roundoff errors.) Typically one has
 more than five bins.
 
+Bayesian Integrals
+---------------------
+The |vegas| module has a special-purpose integrator for 
+evaluating averages over probability distributions. Given a 
+multi-dimensional Gaussian probability distribution 
+``g`` (specified by an array of ``gvar.GVar``\s or a dictionary whose 
+values are ``gvar.GVar``\s or arrays of ``gvar.GVar``\s),
+``vegas.PDFIntegrator(g)`` creates an integrator that 
+is optimized to evaluate integrals of ``f(p) * pdf(p)``
+where ``f(p)`` is an arbitrary function and ``pdf(p)``
+is the probability density function (PDF) corresponding to ``g``.
+Here ``p`` is a point in the parameter space of the 
+distribution — an array or dictionary having the 
+same layout as ``g``.
+
+|PDFIntegrator| integrates over the entire 
+parameter space of the
+distribution but re-expresses integrals in terms of variables
+that diagonalize ``g``'s covariance matrix and are centered at
+its mean value. This greatly facilitates integration over these
+variables using |vegas|, making integrals over
+many parameters feasible, even when the parameters are highly
+correlated. |PDFIntegrator| also pre-adapts the integrator 
+to ``g``'s PDF so it is usually unnecessary to discard early iterations.
+
+The PDF corresponding to ``g`` can be replaced by an arbitrary
+PDF function ``pdf(p)``. The integration variables are still
+specified by and optimized for ``g``, but the PDF used in the 
+integrals is ``pdf(p)``.
+|PDFIntegrator| normally evaluates the 
+integrals of both ``pdf(p) * f(p)`` and ``pdf(p)``. The expectation 
+value is the ratio of the two integrals, so the PDF need not be 
+normalized. Note also that Monte Carlo uncertainties in 
+the two integrals can be highly correlated, in which case 
+the uncertainties are significantly reduced in the ratio.  
+
+A simple illustration of |PDFIntegrator| is given by the following
+code::
+
+    import vegas
+    import gvar as gv
+
+    # multi-dimensional Gaussian distribution
+    g = gv.BufferDict()
+    g['a'] = gv.gvar([0., 1.], [[1., 0.99], [0.99, 1.]])
+    g['b'] = gv.gvar('1(1)')
+
+    # integrator for expectation values in distribution g
+    g_expval = vegas.PDFIntegrator(g)
+
+    # want expectation value of [fp, fp**2]
+    def f_f2(p):
+        a = p['a']
+        b = p['b']
+        fp = a[0] * a[1] + b
+        return [fp, fp ** 2]
+
+    # <f_f2> in distribution g
+    results = g_expval(f_f2, neval=2000, nitn=5)
+    print(results.summary())
+    print('results =', results, '\n')
+
+    # mean and standard deviation of fp's distribution
+    fmean = results[0]
+    fsdev = gv.sqrt(results[1] - results[0] ** 2)
+    print ('fp.mean =', fmean, '   fp.sdev =', fsdev)
+    print ("Gaussian approx'n for fp =", f_f2(g)[0], '\n')
+
+    # g's pdf norm
+    print('PDF norm =', results.pdfnorm)
+
+Here the distribution ``g`` describes two highly correlated variables,
+``a[0]`` and ``a[1]``, and a third uncorrelated variable ``b``.
+We use the integrator to calculated  the expectation value of 
+``fp = a[0] * a[1] + b`` and ``fp**2``, so we can compute the 
+mean and standard 
+deviation of the ``fp`` |~| distribution. The output from this code 
+shows that the Gaussian approximation 1.0(1.4) for the mean and 
+standard deviation is not particularly 
+close to the correct value |~| 2.0(2.0):
+
+.. literalinclude:: eg7.out
+
+In general function ``f(p)`` can return a number, or an array of
+numbers, or a dictionary whose values are numbers or arrays of numbers.
+This allows multiple expectation values to be evaluated simultaneously.
+
+The discussion in :ref:`case_curve_fitting` illustrates how 
+|PDFIntegrator| can be used with a non-Gaussian PDF in two
+examples, one with 4 |~| parameters 
+and the other with 22 |~| parameters. 
+
 
 Faster Integrands
 -------------------------
@@ -910,6 +1003,11 @@ by a dictionary-valued batch integrand: e.g., ::
         ans['x'] = x[:, 0] * ans['1']
         ans['x**2'] = x[:, 0] ** 2 * ans['1']
         return ans
+
+It is sometimes more convenient to have the batch index be the last index 
+(the rightmost) rather than the first. Then ``@vegas.batchintegrand`` is
+replaced by ``@vegas.rbatchintegrand``. (Note that ``@vegas.batchintegrand``
+is the same as ``@vegas.lbatchintegrand``.)
 
 
 Multiple Processors

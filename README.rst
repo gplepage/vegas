@@ -16,8 +16,8 @@ a second adaptive strategy has been added. It also supports
 multi-processor evaluation of integrands using MPI.
 
 The new algorithm is described in G. P. Lepage, 
-<https://arxiv.org/abs/2009.05112> (published in the
-Journal of Computational Physics 439 (2021) 110386).
+<https://arxiv.org/abs/2009.05112>
+(J. Comput. Phys. 439 (2021) 110386).
 
 See the ``INSTALLATION`` file for installation directions.
 Test ``vegas`` using ``make tests``. Some simple examples are

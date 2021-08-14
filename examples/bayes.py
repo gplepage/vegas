@@ -1,18 +1,25 @@
-import vegas 
-import gvar as gv 
-import numpy as np 
+import matplotlib.pyplot as plt
+import numpy as np
 
-ONE_W = True
+import gvar as gv
+import lsqfit
+import vegas
+
+from outputsplitter import log_stdout
+
+numpy = np
+
+# options (default is 2nd in each case)
+SHOW_PLOT = True 
 SHOW_PLOT = False
+USE_FIT = True
+USE_FIT = False
+W_SHAPE = 19
+W_SHAPE = ()
 
-if SHOW_PLOT:
-    import matplotlib.pyplot as plt 
-    import lsqfit
-else:
-    plt = None
+gv.ranseed(1)
 
 def main():
-    # data
     x = np.array([
         0.2, 0.4, 0.6, 0.8, 1.,
         1.2, 1.4, 1.6, 1.8, 2.,
@@ -25,148 +32,142 @@ def main():
         '1.51(20)', '1.73(20)', '2.16(20)', '1.85(20)', '2.00(20)',
         '2.11(20)', '2.75(20)', '0.86(20)', '2.73(20)'
         ])
-    data = Data(x, y)
-    f = F(data)
-    prep_plot(plt, data)
-    if ONE_W:
-        nstrat = [20, 20, 2]
-        nitn_w = 6
-        nitn_r = 9
-        ranseed = gv.ranseed(12345)
+    prior = make_prior(W_SHAPE)
+
+    # modified probability density function
+    mod_pdf = ModifiedPDF(data=(x, y), fcn=fitfcn, prior=prior)
+
+    # evaluate expectation value of g(p)
+    @vegas.rbatchintegrand
+    def g(p):
+        w = p['w']
+        c = p['c']
+        c_outer = c[:, None] * c[None,:]
+        b = p['b']
+        return dict(w=[w, w**2] , c_mean=c, c_outer=c_outer, b=[b, b**2])
+
+    # integrator for expectation values with modified PDF
+    if USE_FIT:
+        fit = lsqfit.nonlinear_fit(data=(x,y), prior=prior, fcn=fitfcn)
+        expval = vegas.PDFIntegrator(fit.p, pdf=mod_pdf)
     else:
-        nstrat = [100, 100] + len(x) * [1]
-        nitn_w = 16 
-        nitn_r = 8
-        ranseed = gv.ranseed(1)
-    print('ranseed = %d' % ranseed)
-    itg = vegas.Integrator(
-        [(-5, 5), (-5, 5)] + (1 if ONE_W else len(x)) * [(0, 1)], 
+        expval = vegas.PDFIntegrator(prior, pdf=mod_pdf)
+
+    # adapt integrator to pdf
+    nitn = 10
+    neval = 1_000
+    warmup = expval(g, neval=neval, nitn=nitn)
+
+    # calculate expectation values
+    results = expval(g, neval=neval, nitn=nitn, adapt=False)
+    print(results.summary())
+
+    # parameters c[i]
+    c_mean = results['c_mean']
+    cov = results['c_outer'] - np.outer(c_mean, c_mean)
+    cov = (cov + cov.T) / 2
+    # combine Monte Carlo vegas error with covariance
+    c = c_mean + gv.gvar(np.zeros(c_mean.shape), gv.mean(cov))
+    print('c =', c)
+    print(
+        'corr(c) =',
+        np.array2string(gv.evalcorr(c), prefix=10 * ' '),
+        '\n',
         )
-    w = itg(f, nstrat=nstrat, nitn=nitn_w)
-    nsample = w.sum_neval
-    print(w.summary())
-    r = itg(f, nstrat=nstrat, nitn=nitn_r)
-    nsample += r.sum_neval
-    print(r.summary())
-    print('neval_tot =', nsample, '   nstrat =', np.array(itg.nstrat))
-    print( 'last neval =', itg.last_neval, '   r.sum_neval =', r.sum_neval, '    range =', list(itg.neval_hcube_range))
-    print('ninc =', list(itg.map.ninc), '\n')
-    p = r['p'] / r['norm']
-    covp = r['p*p'] / r['norm'] - np.outer(p, p)
-    w = r['w'] / r['norm']
-    sigw = np.sqrt(r['w*w'] / r['norm'] - w ** 2)
-    print('p =', p, '   w =', w)
-    plot_fit(plt, gv.gvar(gv.mean(p), gv.mean(covp)), data, 'b:', color='b', alpha=0.5)
-    print('sigp =', np.diagonal(covp) ** 0.5)
-    print('corr(p0,p1) =', (covp / np.outer(np.diagonal(covp) ** 0.5, np.diagonal(covp)** 0.5))[0,1])
-    print('cov(p,p):\n', covp)
-    print('sigw =', sigw)
-    print()
-    save_plot(plt)
 
-class F(vegas.BatchIntegrand):
-    def __init__(self, data, w=None):
-        self.data = data 
-        self.w = None
-    def __call__(self, x):
-        p = x[:, :2]
-        if self.w is None:
-            if ONE_W:
-                w = x[:, 2]
-            else:
-                w = x[:, 2:]
+    # parameter w
+    wmean, w2mean = results['w']
+    wsdev = gv.mean(w2mean - wmean ** 2) ** 0.5
+    w = wmean + gv.gvar(np.zeros(np.shape(wmean)), wsdev)
+    print('w =', w, '\n')
+
+    # parameter b
+    bmean, b2mean = results['b']
+    bsdev = gv.mean(b2mean - bmean ** 2) ** 0.5
+    b = bmean + gv.gvar(np.zeros(np.shape(bmean)), bsdev)
+    print('b =', b, '\n')
+
+    # Bayes Factor
+    print('logBF =', np.log(results.pdfnorm))
+
+    ### Plot results
+    make_plot(data=(x, y), prior=prior, c=c)
+
+@vegas.rbatchintegrand
+class ModifiedPDF:
+    """ Modified PDF to account for measurement failure. """
+
+    def __init__(self, data, fcn, prior):
+        x, y = data
+        # add rbatch index to arrays
+        self.x = x[:, None]
+        self.y = y[:, None]
+        self.fcn = fcn
+        self.prior = gv.BufferDict()
+        self.prior['c'] = prior['c'][:, None]
+        if np.shape(prior['gw(w)']) != ():
+            self.prior['gw(w)'] = prior['gw(w)'][:, None]
         else:
-            w = self.w
-        ans = {}
-        ans['norm'] = self.data.pdf(p, w)
-        ans['p'] = p * ans['norm'][:, None]
-        if ONE_W:
-            ans['w'] = w * ans['norm']
+            self.prior['gw(w)'] = prior['gw(w)']
+        self.prior['gb(b)'] = prior['gb(b)']
+
+    def __call__(self, p):
+        y_fx = self.y - self.fcn(self.x, p)
+        data_pdf1 = self.gaussian_pdf(y_fx)
+        data_pdf2 = self.gaussian_pdf(y_fx, broaden=p['b'])
+        prior_pdf = np.prod(self.gaussian_pdf(p['c'] - self.prior['c']), axis=0)
+        # Gaussians for gw(w) and gb(b)
+        if np.shape(self.prior['gw(w)']) == ():
+            prior_pdf *= self.gaussian_pdf(p['gw(w)'] - self.prior['gw(w)'])
         else:
-            ans['w'] = w * ans['norm'][:, None]
-        ans['p*p'] = p[:,None,:] * p[:,:,None] * ans['norm'][:, None, None]
-        if ONE_W:
-            ans['w*w'] = w * w * ans['norm']
-        else:
-            ans['w*w'] = w ** 2 * ans['norm'][:, None]
-        return ans
+            prior_pdf *= np.prod(self.gaussian_pdf(p['gw(w)'] - self.prior['gw(w)']), axis=0)
+        prior_pdf *= self.gaussian_pdf(p['gb(b)'] - self.prior['gb(b)'])
+        # p['w'] derived (automatically) from p['gw(w)']
+        w = p['w']
+        return np.prod((1. - w) * data_pdf1 + w * data_pdf2, axis=0) * prior_pdf
 
+    @staticmethod
+    def gaussian_pdf(x, broaden=1.):
+        xmean = gv.mean(x)
+        xvar = gv.var(x) * broaden ** 2
+        return gv.exp(-xmean ** 2 / 2. /xvar) / gv.sqrt(2 * np.pi * xvar)
 
-def save_plot(plt):
-    if  ONE_W and SHOW_PLOT:
-        # plt.savefig('bayes.pdf', bbox_inches='tight')
-        plt.show()
+def fitfcn(x, p):
+    c = p['c']
+    return c[0] + c[1] * x
 
-def plot_fit(plt, p, data,  *args, **kargs):
-    if not ONE_W or not SHOW_PLOT:
-        return plt
-    xline = np.linspace(data.x[0], data.x[-1], 100)
-    yline = data.fitfcn(p, x=xline)
-    yp = gv.mean(yline) + gv.sdev(yline)
-    ym = gv.mean(yline) - gv.sdev(yline)
-    if args[0][0] == 'k':
-        plt.plot(xline, gv.mean(yline), *args)
-    else:
-        plt.fill_between(xline,yp,ym, **kargs)
-
-def prep_plot(plt, data):
-    if not SHOW_PLOT or not ONE_W:
-        return plt
-    fit = lsqfit.nonlinear_fit(
-        data=gv.gvar(data.y, data.sig), prior=make_prior(), fcn=data.fitfcn
-        )
-    print(fit)
-    if False:
-        plt.rc('text',usetex=True)
-        plt.rc('font',family='serif', serif=['Times'])
-        ebargs = dict(
-            fmt='o', mfc='w', alpha=1.0, ms=1.5 * 2.5,
-            capsize=1.5 * 1.25, elinewidth=.5 * 1.5, mew=.5 * 1.5
-            )
-        fw = 3.3   # make bigger
-        fh = fw /1.61803399 
-        # plt.figure(figsize=(fw,fh))
-        plt.rcParams["figure.figsize"] = (fw, fh)
-    else:
-        plt.rc('font',family='serif')
-        ebargs = dict(fmt='o', mfc='w', alpha=1.0)
-
-    plt.errorbar(x=data.x, y=data.y, yerr=data.sig, c='b', **ebargs)
-    
-    plt.xlabel(r'$x$')
-    plt.ylabel(r'$y$')
-    plot_fit(plt, fit.p, data, 'k:') # , color='0.8')
-    return plt
-
-class Data:
-    def __init__(self, x, y):
-        self.x = x 
-        self.y = gv.mean(y)
-        self.sig = gv.sdev(y)
-    def fitfcn(self, p, x=None):
-        if x is None:
-            x = self.x
-        if len(p.shape) > 1:
-            return p[:, 0][:, None] + p[:, 1][:, None] * x[None, :]
-        else:
-            return p[0] + p[1] * x
-    def pdf(self, p, w):
-        fp = self.fitfcn(p)
-        if len(p.shape) > 1:
-            y = self.y[None, :]
-            if ONE_W:
-                w = w[:, None]
-            var = (self.sig ** 2)[None, :]
-        else:
-            y = self.y
-            var = self.sig ** 2 
-        p1 = (1 - w) * np.exp(-(y - fp) ** 2 / 2 / var) / np.sqrt(2 * np.pi * var)
-        p2 = w * np.exp(-(y - fp) ** 2 / 200 / var) / np.sqrt(200 * np.pi * var)
-        return np.prod(p1 + p2, axis=-1)
-
-def make_prior():
-    prior = gv.gvar(['0(5)', '0(5)'])
+def make_prior(w_shape=()):
+    prior = gv.BufferDict()
+    prior['c'] = gv.gvar(['0(5)', '0(5)'])
+    prior['gw(w)'] = gv.BufferDict.uniform('gw', 0., 1., shape=w_shape)
+    prior['gb(b)'] = gv.BufferDict.uniform('gb', 5., 20.)
     return prior
 
-if __name__ == "__main__":
+def make_plot(data, prior, c):
+    if not SHOW_PLOT:
+        return
+    # plot data
+    x, y = data
+    plt.errorbar(x, gv.mean(y), gv.sdev(y), fmt='o', c='b')
+
+    # plot lsqfit fit
+    fit = lsqfit.nonlinear_fit(data=(x,y), fcn=fitfcn, prior=prior)
+    xline = np.linspace(x[0], x[-1], 100)
+    yline = fitfcn(xline, fit.pmean)
+    plt.plot(xline, gv.mean(yline), 'k:')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    # plt.savefig('outliers1.png', bbox_inches='tight')
+    # plt.show()
+
+    # add modified fit to plot
+    yline = fitfcn(xline, dict(c=c))
+    plt.plot(xline, gv.mean(yline), 'r--')
+    yp = gv.mean(yline) + gv.sdev(yline)
+    ym = gv.mean(yline) - gv.sdev(yline)
+    plt.fill_between(xline, yp, ym, color='r', alpha=0.2)
+    # plt.savefig('outliers2.png', bbox_inches='tight')
+    plt.show()
+
+if __name__ == '__main__':
     main()

@@ -1,0 +1,461 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Case Study: Bayesian Curve Fitting &#8212; vegas 5.0 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="vegas Module" href="vegas.html" />
+    <link rel="prev" title="How vegas Works" href="background.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="vegas.html" title="vegas Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="background.html" title="How vegas Works"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="case-study-bayesian-curve-fitting">
+<span id="case-curve-fitting"></span><h1>Case Study: Bayesian Curve Fitting<a class="headerlink" href="#case-study-bayesian-curve-fitting" title="Permalink to this headline">¶</a></h1>
+<p>In this case study, we use <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to fit a straight line
+to data with with outliers. We use the specialized
+integrator <code class="xref py py-class docutils literal notranslate"><span class="pre">PDFIntegrator</span></code> with a non-Gaussian
+probability density function (PDF) in a Bayesian
+analysis. We look at two examples,
+one with 4 parameters
+and the other with 22 parameters.</p>
+<p>This case study is adapted from an example by Jake Vanderplas
+on his <a class="reference external" href="http://jakevdp.github.io/blog/2014/06/06/frequentism-and-bayesianism-2-when-results-differ">Python blog</a>.</p>
+<div class="section" id="the-problem">
+<h2>The Problem<a class="headerlink" href="#the-problem" title="Permalink to this headline">¶</a></h2>
+<p>We want to extrapolate the <code class="docutils literal notranslate"><span class="pre">y</span></code> values in the following figure to <code class="docutils literal notranslate"><span class="pre">x=0</span></code>:</p>
+<a class="reference internal image-reference" href="_images/outliers1.png"><img alt="_images/outliers1.png" src="_images/outliers1.png" style="width: 60%;" /></a>
+<p>A linear least-squares fit to the data (dotted line) is unconvincing; in particular,
+the extrapolated value at <code class="docutils literal notranslate"><span class="pre">x=0</span></code> is larger than one while most of the data
+near <code class="docutils literal notranslate"><span class="pre">x=0</span></code> suggest an intercept less than 0.5. The problem, of course, is
+caused by the outliers. There are at least three outliers.</p>
+</div>
+<div class="section" id="a-solution">
+<h2>A Solution<a class="headerlink" href="#a-solution" title="Permalink to this headline">¶</a></h2>
+<p>There are many <em>ad hoc</em> prescriptions for handling outliers. In the best
+of situations one has an explanation for the outliers and can
+model them accordingly. For example,
+we might know that some fraction <img class="math" src="_images/math/84072168b5bd3b9bc072876ef2bcfcdae05d3f1a.svg" alt="w"/> of the time our device
+malfunctions, resulting in much larger measurement errors than usual.
+This can be modeled in a Bayesian analysis by describing the
+data using a linear
+combination of two
+Gaussian probability density functions (PDFs).
+One is the usual PDF proportional to the
+product of <img class="math" src="_images/math/422f6e2d47c3b7254150f37154637d482563750d.svg" alt="exp(-(y-f(x))^2  / 2\sigma_y^2))"/>
+over all data points, where the fit function <img class="math" src="_images/math/fb62ba1e89ca6200f224a445c3f4a567fc451fe1.svg" alt="f(x)"/>
+is <img class="math" src="_images/math/cb6500d7b30569927bea2aa68fc88d9e51ec68a7.svg" alt="c_0 + c_1 x"/>. The second is the same but
+with the <img class="math" src="_images/math/9497613bf54f0eb13b02eb1eccbf9426ae2dbec6.svg" alt="\sigma_y \to b \sigma_y"/> for some <img class="math" src="_images/math/403f64983bfd8de5ea4f011b3e405c2fb857c867.svg" alt="b&gt;1"/>.
+The relative weights assigned to
+these two terms are <img class="math" src="_images/math/3b4ea90c6ed6abf0b29b4bd86f347100d614479b.svg" alt="1-w"/> and <img class="math" src="_images/math/84072168b5bd3b9bc072876ef2bcfcdae05d3f1a.svg" alt="w"/>, respectively.</p>
+<p>The following code does a Bayesian fit with this modified PDF:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">gvar</span> <span class="k">as</span> <span class="nn">gv</span>
+<span class="kn">import</span> <span class="nn">vegas</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># 1) create data</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span>
+        <span class="mf">1.2</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span>
+        <span class="mf">2.2</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">,</span> <span class="mf">2.6</span><span class="p">,</span> <span class="mf">2.8</span><span class="p">,</span> <span class="mf">3.</span><span class="p">,</span>
+        <span class="mf">3.2</span><span class="p">,</span> <span class="mf">3.4</span><span class="p">,</span> <span class="mf">3.6</span><span class="p">,</span> <span class="mf">3.8</span>
+        <span class="p">])</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">([</span>
+        <span class="s1">&#39;0.38(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;2.89(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;0.85(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;0.59(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;2.88(20)&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;1.44(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;0.73(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;1.23(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;1.68(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;1.36(20)&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;1.51(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;1.73(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;2.16(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;1.85(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;2.00(20)&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;2.11(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;2.75(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;0.86(20)&#39;</span><span class="p">,</span> <span class="s1">&#39;2.73(20)&#39;</span>
+        <span class="p">])</span>
+
+    <span class="c1"># 2) create prior and modified PDF</span>
+    <span class="n">prior</span> <span class="o">=</span> <span class="n">make_prior</span><span class="p">()</span>
+    <span class="n">mod_pdf</span> <span class="o">=</span> <span class="n">ModifiedPDF</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">fcn</span><span class="o">=</span><span class="n">fitfcn</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">)</span>
+
+    <span class="c1"># 3) create integrator and adapt it to the modified PDF</span>
+    <span class="n">expval</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">PDFIntegrator</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">pdf</span><span class="o">=</span><span class="n">mod_pdf</span><span class="p">)</span>
+    <span class="n">nitn</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">neval</span> <span class="o">=</span> <span class="mi">1_000</span>
+    <span class="n">warmup</span> <span class="o">=</span> <span class="n">expval</span><span class="p">(</span><span class="n">neval</span><span class="o">=</span><span class="n">neval</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="n">nitn</span><span class="p">)</span>
+
+    <span class="c1"># 4) evaluate expectation value of g(p)</span>
+    <span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
+    <span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span>
+        <span class="n">c_outer</span> <span class="o">=</span> <span class="n">c</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">c</span><span class="p">[</span><span class="kc">None</span><span class="p">,:]</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="p">]</span> <span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span><span class="p">],</span> <span class="n">c_mean</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">c_outer</span><span class="o">=</span><span class="n">c_outer</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">expval</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="n">neval</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="n">nitn</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+
+    <span class="c1"># parameters c[i]</span>
+    <span class="n">c_mean</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;c_mean&#39;</span><span class="p">]</span>
+    <span class="n">c_cov</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;c_outer&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">c_mean</span><span class="p">,</span> <span class="n">c_mean</span><span class="p">)</span>
+    <span class="n">c_cov</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_cov</span> <span class="o">+</span> <span class="n">c_cov</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="c1"># combine Monte Carlo vegas uncertainty in c_mean with covariance</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">c_mean</span> <span class="o">+</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">c_mean</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">gv</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">c_cov</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;c =&#39;</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="s1">&#39;corr(c) =&#39;</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array2string</span><span class="p">(</span><span class="n">gv</span><span class="o">.</span><span class="n">evalcorr</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">prefix</span><span class="o">=</span><span class="mi">10</span> <span class="o">*</span> <span class="s1">&#39; &#39;</span><span class="p">),</span>
+        <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># parameter w</span>
+    <span class="n">wmean</span><span class="p">,</span> <span class="n">w2mean</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span>
+    <span class="n">wsdev</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">w2mean</span> <span class="o">-</span> <span class="n">wmean</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">wmean</span> <span class="o">+</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">wmean</span><span class="p">)),</span> <span class="n">wsdev</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;w =&#39;</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="c1"># parameter b</span>
+    <span class="n">bmean</span><span class="p">,</span> <span class="n">b2mean</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>
+    <span class="n">bsdev</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">b2mean</span> <span class="o">-</span> <span class="n">bmean</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">bmean</span> <span class="o">+</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">bmean</span><span class="p">)),</span> <span class="n">bsdev</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;b =&#39;</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Bayes Factor</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;logBF =&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">pdfnorm</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">fitfcn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span>
+
+<span class="k">def</span> <span class="nf">make_prior</span><span class="p">(</span><span class="n">w_shape</span><span class="o">=</span><span class="p">()):</span>
+    <span class="n">prior</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="p">()</span>
+    <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">([</span><span class="s1">&#39;0(5)&#39;</span><span class="p">,</span> <span class="s1">&#39;0(5)&#39;</span><span class="p">])</span>
+    <span class="c1"># uniform distributions for w and b</span>
+    <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="s1">&#39;gw&#39;</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">w_shape</span><span class="p">)</span>
+    <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gb(b)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="s1">&#39;gb&#39;</span><span class="p">,</span> <span class="mf">5.</span><span class="p">,</span> <span class="mf">20.</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">prior</span>
+
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
+<span class="k">class</span> <span class="nc">ModifiedPDF</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Modified PDF to account for measurement failure. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">fcn</span><span class="p">,</span> <span class="n">prior</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="c1"># add rbatch index to arrays</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fcn</span> <span class="o">=</span> <span class="n">fcn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prior</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">][:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">][:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gb(b)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gb(b)&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="n">y_fx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">fcn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">data_pdf1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gaussian_pdf</span><span class="p">(</span><span class="n">y_fx</span><span class="p">)</span>
+        <span class="n">data_pdf2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gaussian_pdf</span><span class="p">(</span><span class="n">y_fx</span><span class="p">,</span> <span class="n">broaden</span><span class="o">=</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">])</span>
+        <span class="n">prior_pdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gaussian_pdf</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+            <span class="p">)</span>
+        <span class="c1"># Gaussians for gw(w) and gb(b)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="p">():</span>
+            <span class="n">prior_pdf</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gaussian_pdf</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prior_pdf</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gaussian_pdf</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">]),</span>
+                <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+                <span class="p">)</span>
+        <span class="n">prior_pdf</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gaussian_pdf</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;gb(b)&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gb(b)&#39;</span><span class="p">])</span>
+        <span class="c1"># p[&#39;w&#39;] derived (automatically) from p[&#39;gw(w)&#39;]</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span>
+        <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">((</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">w</span><span class="p">)</span> <span class="o">*</span> <span class="n">data_pdf1</span> <span class="o">+</span> <span class="n">w</span> <span class="o">*</span> <span class="n">data_pdf2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">prior_pdf</span>
+        <span class="k">return</span> <span class="n">ans</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">gaussian_pdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">broaden</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+        <span class="n">xmean</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">xvar</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">broaden</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">gv</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">xmean</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="mf">2.</span> <span class="o">/</span><span class="n">xvar</span><span class="p">)</span> <span class="o">/</span> <span class="n">gv</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">xvar</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Here class <code class="docutils literal notranslate"><span class="pre">ModifiedPDF</span></code> implements the modified PDF. The parameters for
+this distribution are the fit function coefficients <code class="docutils literal notranslate"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">p['c']</span></code>, the
+weight <code class="docutils literal notranslate"><span class="pre">w</span> <span class="pre">=</span> <span class="pre">p['w']</span></code>, and a breadth parameter <code class="docutils literal notranslate"><span class="pre">p['b']</span></code>. As usual the PDF for
+the parameters (in <code class="docutils literal notranslate"><span class="pre">__call__</span></code>) is the product of a PDF for the data times a
+PDF for the priors. The data PDF consists of the two Gaussian distributions:
+one, <code class="docutils literal notranslate"><span class="pre">data_pdf1</span></code>, with the
+nominal data errors and weigth <code class="docutils literal notranslate"><span class="pre">(1-w)</span></code>, and the other, <code class="docutils literal notranslate"><span class="pre">data_pdf2</span></code>,
+with errors that are <code class="docutils literal notranslate"><span class="pre">p['b']</span></code>
+times larger and weigth <code class="docutils literal notranslate"><span class="pre">w</span></code>.</p>
+<p>We want broad Gaussian priors for the fit function coefficients, but
+uniform priors for the weight parameter (<img class="math" src="_images/math/09dda2e4fbdcea440c01cfc09f793c1390416f1f.svg" alt="0&lt;w&lt;1"/>) and breadth
+parameter (<img class="math" src="_images/math/161ae0c0e037e364e4977f1ba6b3d21982c1e997.svg" alt="5&lt;b&lt;20"/>). An easy way to implement the uniform
+priors for use by <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> is to replace the weight
+and breadth parameters by new parameters <code class="docutils literal notranslate"><span class="pre">p['gw(w)']</span></code> and <code class="docutils literal notranslate"><span class="pre">p['gb(b)']</span></code>,
+respectively, that map the uniform distributions onto Gaussian
+distributions (0 ± 1). Values for the weight <code class="docutils literal notranslate"><span class="pre">p['w']</span></code> and breadth
+<code class="docutils literal notranslate"><span class="pre">p['b']</span></code> are then obtained from the new variables using the inverse map.
+This strategy is easily implemented using a <code class="xref py py-class docutils literal notranslate"><span class="pre">gvar.BufferDict</span></code>
+dictionary to describe the parameter prior.</p>
+<p>The parameter priors are specified in <code class="docutils literal notranslate"><span class="pre">make_prior()</span></code> which returns the
+<code class="docutils literal notranslate"><span class="pre">BufferDict</span></code> dictionary, with a Gaussian random variable
+(a <code class="xref py py-class docutils literal notranslate"><span class="pre">gvar.GVar</span></code>) for each parameter.
+The fit function coefficients
+(<code class="docutils literal notranslate"><span class="pre">prior['c']</span></code>) have broad priors: 0 ± 5. The prior for
+parameter <code class="docutils literal notranslate"><span class="pre">p['gw(w)']</span></code> is specified by</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">prior</span><span class="p">[</span><span class="s1">&#39;gw(w)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="s1">&#39;gw&#39;</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which assigns it a Gaussian prior (0 ± 1) while also instructing
+any <code class="docutils literal notranslate"><span class="pre">BufferDict</span></code> dictionary <code class="docutils literal notranslate"><span class="pre">p</span></code> that includes a value for
+<code class="docutils literal notranslate"><span class="pre">p['gw(w)']</span></code>  to automatically generate the corresponding value for the
+weight <code class="docutils literal notranslate"><span class="pre">p['w']</span></code>. This makes the weight parameter
+available automatically even though <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a>
+integrates over <code class="docutils literal notranslate"><span class="pre">p['gw(w)']</span></code>. The same strategy is used
+for the breadth parameter.</p>
+<p>The Bayesian integrals are estimated using <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a>
+<code class="docutils literal notranslate"><span class="pre">expval</span></code>, which is created from the prior.
+It is used to evaluate expectation values of arbitrary functions of the
+fit variables. Here it optimizes the integration variables for integrals
+of the prior’s PDF, but replaces that PDF with the modified PDF when
+evaluating expectation values.</p>
+<p>We first call <code class="docutils literal notranslate"><span class="pre">expval</span></code> with no function, to allow the integrator to adapt
+to the modified PDF. We then use the integrator to evaluate the expectation value of
+function <code class="docutils literal notranslate"><span class="pre">g(p)</span></code>, but now with <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code> to get more reliable
+error estimates. The output dictionary <code class="docutils literal notranslate"><span class="pre">results</span></code>
+contains expectation values of the corresponding entries in the dictionary
+returned <code class="docutils literal notranslate"><span class="pre">g(p)</span></code>. These data allow us to calculate means, standard deviations
+and correlation matrices for the fit parameters.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">g(p)</span></code> and <code class="docutils literal notranslate"><span class="pre">mod_pdf(p)</span></code> are both batch integrands, with the
+batch index on the right (i.e., the last index). This significantly
+reduces the time required for the integrations.</p>
+<p>The results from this code are as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">average</span>         <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">4.50</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.50</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">4.45</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.48</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">1.46</span>     <span class="mf">0.14</span>
+  <span class="mi">3</span>   <span class="mf">4.58</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.51</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">1.00</span>     <span class="mf">0.46</span>
+  <span class="mi">4</span>   <span class="mf">4.37</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.476</span><span class="p">(</span><span class="mi">91</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">1.11</span>     <span class="mf">0.30</span>
+  <span class="mi">5</span>   <span class="mf">4.06</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.393</span><span class="p">(</span><span class="mi">79</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">1.34</span>     <span class="mf">0.07</span>
+  <span class="mi">6</span>   <span class="mf">4.79</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.458</span><span class="p">(</span><span class="mi">73</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">1.33</span>     <span class="mf">0.05</span>
+  <span class="mi">7</span>   <span class="mf">4.25</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.429</span><span class="p">(</span><span class="mi">67</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">1.35</span>     <span class="mf">0.03</span>
+  <span class="mi">8</span>   <span class="mf">4.88</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.485</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">1.34</span>     <span class="mf">0.02</span>
+  <span class="mi">9</span>   <span class="mf">4.60</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.498</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">1.29</span>     <span class="mf">0.04</span>
+ <span class="mi">10</span>   <span class="mf">4.59</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.507</span><span class="p">(</span><span class="mi">58</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">1.19</span>     <span class="mf">0.10</span>
+
+<span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.29</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span> <span class="mf">0.620</span><span class="p">(</span><span class="mi">56</span><span class="p">)]</span>
+<span class="n">corr</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">=</span> <span class="p">[[</span> <span class="mf">1.</span>         <span class="o">-</span><span class="mf">0.89280381</span><span class="p">]</span>
+           <span class="p">[</span><span class="o">-</span><span class="mf">0.89280381</span>  <span class="mf">1.</span>        <span class="p">]]</span> 
+
+<span class="n">w</span> <span class="o">=</span> <span class="mf">0.27</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> 
+
+<span class="n">b</span> <span class="o">=</span> <span class="mf">10.7</span><span class="p">(</span><span class="mf">3.6</span><span class="p">)</span> 
+
+<span class="n">logBF</span> <span class="o">=</span> <span class="o">-</span><span class="mf">23.823</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The table shows results for the normalization of the
+modified PDF from each of the <code class="docutils literal notranslate"><span class="pre">nitn=10</span></code> iterations of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
+algorithm used to estimate the integrals. The logarithm of the normalization
+(<code class="docutils literal notranslate"><span class="pre">logBF</span></code>) is -23.8. This is the logarithm of the Bayes Factor for the fit. It
+is much larger than the value -117.5 obtained from a least-squares fit (i.e.,
+from the script above but with <code class="docutils literal notranslate"><span class="pre">w=0</span></code> in the PDF). This means that the
+data much prefer the
+modified prior (by a factor of <img class="math" src="_images/math/bfe4150d3df18eeab5a2055d358adde6de699103.svg" alt="exp(-23.8 + 117.4)"/> or about 10<sup>41</sup>).</p>
+<p>The new fit parameters are much more reasonable than the results from the
+least-squares fit. In particular the
+intercept is 0.29(13) which
+is much more plausible than the least-squares result (compare the dashed line in red
+with the dotted line):</p>
+<a class="reference internal image-reference" href="_images/outliers2.png"><img alt="_images/outliers2.png" src="_images/outliers2.png" style="width: 60%;" /></a>
+<p>Note, from the correlation matrix, that the intercept and slope are
+anti-correlated, as one might guess for this fit.
+The analysis also gives us an estimate for the failure rate <code class="docutils literal notranslate"><span class="pre">w=0.27(12)</span></code>
+of our devices — they fail about a quarter of the time — and
+shows that the <code class="docutils literal notranslate"><span class="pre">y</span></code> errors are <code class="docutils literal notranslate"><span class="pre">b=10.7(3.6)</span></code> times larger when
+there is a failure.</p>
+<p>Finally, note that the Monte Carlo integrations can be made more than
+twice as accurate (or faster) by using the results of a least-squares fit
+in place of the
+prior to define the <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a>. This is done, for
+example, using the <code class="xref py py-mod docutils literal notranslate"><span class="pre">lsqfit</span></code> module to replace</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">expval</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">PDFIntegrator</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">pdf</span><span class="o">=</span><span class="n">mod_pdf</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>by</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">lsqfit</span><span class="o">.</span><span class="n">nonlinear_fit</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span> <span class="n">fcn</span><span class="o">=</span><span class="n">fitfcn</span><span class="p">)</span>
+<span class="n">expval</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">PDFIntegrator</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="n">pdf</span><span class="o">=</span><span class="n">mod_pdf</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">fit.p</span></code> are the best-fit values of the parameters from the fit.
+The values of the expectation values are unchanged in the second
+case but the optimized integration variables used by
+<a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> are better suited to the
+PDF.</p>
+</div>
+<div class="section" id="a-variation">
+<h2>A Variation<a class="headerlink" href="#a-variation" title="Permalink to this headline">¶</a></h2>
+<p>A somewhat different model for the data PDF assigns a separate value
+<code class="docutils literal notranslate"><span class="pre">w</span></code> to each data point. The script above does this if</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">prior</span> <span class="o">=</span> <span class="n">make_prior</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>is replaced by</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">prior</span> <span class="o">=</span> <span class="n">make_prior</span><span class="p">(</span><span class="n">w_shape</span><span class="o">=</span><span class="mi">19</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The Bayesian integral then has 22 parameters, rather than the 4 parameters
+before. The code still takes only a couple of seconds to run on a 2020 laptop.</p>
+<p>The final results are quite similar to the other model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">average</span>         <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">1.55</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">1.55</span><span class="p">(</span><span class="mi">39</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">1.78</span><span class="p">(</span><span class="mi">81</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">1.66</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">1.02</span>     <span class="mf">0.44</span>
+  <span class="mi">3</span>   <span class="mf">1.99</span><span class="p">(</span><span class="mi">83</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">1.77</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">1.13</span>     <span class="mf">0.18</span>
+  <span class="mi">4</span>   <span class="mf">1.8</span><span class="p">(</span><span class="mf">1.1</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">1.79</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">1.10</span>     <span class="mf">0.19</span>
+  <span class="mi">5</span>   <span class="mf">1.30</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">1.69</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">1.01</span>     <span class="mf">0.46</span>
+  <span class="mi">6</span>   <span class="mf">1.23</span><span class="p">(</span><span class="mi">48</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">1.62</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">1.02</span>     <span class="mf">0.42</span>
+  <span class="mi">7</span>   <span class="mf">4.3</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.00</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.94</span>     <span class="mf">0.76</span>
+  <span class="mi">8</span>   <span class="mf">4.0</span><span class="p">(</span><span class="mf">1.4</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.26</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">1.00</span>     <span class="mf">0.51</span>
+  <span class="mi">9</span>   <span class="mf">1.81</span><span class="p">(</span><span class="mi">74</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.21</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">1.04</span>     <span class="mf">0.28</span>
+ <span class="mi">10</span>   <span class="mf">1.31</span><span class="p">(</span><span class="mi">47</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.12</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">1.05</span>     <span class="mf">0.24</span>
+
+<span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.27</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span> <span class="mf">0.620</span><span class="p">(</span><span class="mi">56</span><span class="p">)]</span>
+<span class="n">corr</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">=</span> <span class="p">[[</span> <span class="mf">1.</span>         <span class="o">-</span><span class="mf">0.86270344</span><span class="p">]</span>
+           <span class="p">[</span><span class="o">-</span><span class="mf">0.86270344</span>  <span class="mf">1.</span>        <span class="p">]]</span> 
+
+<span class="n">w</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.35</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span> <span class="mf">0.67</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.35</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span> <span class="mf">0.39</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.70</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span> <span class="mf">0.49</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span> <span class="mf">0.52</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.33</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>
+ <span class="mf">0.46</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span> <span class="mf">0.39</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.45</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.42</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span> <span class="mf">0.40</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span> <span class="mf">0.37</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span> <span class="mf">0.36</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.36</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>
+ <span class="mf">0.50</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span> <span class="mf">0.66</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span> <span class="mf">0.36</span><span class="p">(</span><span class="mi">23</span><span class="p">)]</span> 
+
+<span class="n">b</span> <span class="o">=</span> <span class="mf">9.7</span><span class="p">(</span><span class="mf">3.6</span><span class="p">)</span> 
+
+<span class="n">logBF</span> <span class="o">=</span> <span class="o">-</span><span class="mf">24.58</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The logarithm of the Bayes Factor <code class="docutils literal notranslate"><span class="pre">logBF</span></code> is slightly lower for
+this model than before. It is also less accurately determined (10x), because
+22-parameter integrals are considerably more difficult than 4-parameter
+integrals. More precision can be obtained by increasing <code class="docutils literal notranslate"><span class="pre">neval</span></code>, but
+the current precision is more than adequate.</p>
+<p>Only three of the <code class="docutils literal notranslate"><span class="pre">w[i]</span></code> values listed in the output are more than two
+standard deviations away from zero. Not surprisingly, these correspond to
+the unambiguous outliers. The fit function parameters are almost the same
+as before.</p>
+<p>The outliers in this case are pretty obvious; one is tempted to simply drop
+them. It is clearly better, however, to understand why they have occurred and
+to quantify the effect if possible, as above. Dropping outliers would be much
+more difficult if they were, say, three times closer to the rest of the data.
+The least-squares fit would still be poor (<code class="docutils literal notranslate"><span class="pre">chi**2</span></code> per degree of freedom of
+3) and its intercept a bit too high (0.6(1)). Using the modified PDF, on the
+other hand, would give results very similar to what we obtained above: for
+example, the intercept would be 0.35(17).</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Case Study: Bayesian Curve Fitting</a><ul>
+<li><a class="reference internal" href="#the-problem">The Problem</a></li>
+<li><a class="reference internal" href="#a-solution">A Solution</a></li>
+<li><a class="reference internal" href="#a-variation">A Variation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="background.html"
+                        title="previous chapter">How <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Works</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="vegas.html"
+                        title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/outliers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="vegas.html" title="vegas Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="background.html" title="How vegas Works"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013-18, G.P. Lepage.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

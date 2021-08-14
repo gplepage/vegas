@@ -17,6 +17,7 @@ Contents:
    tutorial.rst
    c_fortran.rst
    background.rst
+   outliers.rst
    vegas.rst
 
 Indices and tables

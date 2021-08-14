@@ -11,6 +11,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import collections
 import math
 import os
 import pickle
@@ -465,6 +466,10 @@ class TestIntegrator(unittest.TestCase):
         self.assertEqual(I.min_neval_hcube, 1000)
         np.testing.assert_allclose([I.map.grid[0,0], I.map.grid[0, I.map.ninc[0]]], [0., 1.])
         np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, I.map.ninc[1]]], [-1., 1.])
+        # make sure it works
+        def f(x):
+            return sum(x)
+        I(f)
 
         I = Integrator([[0., 1.], [-1., 1.]], nstrat=[10, 11], neval_frac=0.75)
         self.assertEqual(list(I.map.ninc), [80, 88])
@@ -510,7 +515,7 @@ class TestIntegrator(unittest.TestCase):
         with open('test_integ.p', 'rb') as ifile:
             I2 = pickle.load(ifile)
         os.remove('test_integ.p')
-        assert isinstance(I2, Integrator)
+        self.assertTrue(isinstance(I2, Integrator))
         for k in Integrator.defaults:
             if k == 'map':
                 np_assert_allclose(I1.map.ninc, I2.map.ninc)
@@ -653,6 +658,73 @@ class TestIntegrator(unittest.TestCase):
         self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
         self.assertGreater(r.Q, 1e-3)
         self.assertLess(r.sdev, 1e-3)
+
+    def test_VegasIntegrand(self):
+        " VegasIntegrand(fcn) "
+        from vegas._vegas import VegasIntegrand
+        def f0(x):
+            return x[0] + x[1] + x[2]
+        @lbatchintegrand 
+        def f1(x):
+            return x[:, 0] + x[:, 1] + x[:, 2]
+        self.assertTrue(batchintegrand is lbatchintegrand)
+        f2 = rbatchintegrand(f0)
+        @lbatchintegrand
+        def f3(x):
+            return [[x[:, 0] + x[:, 1] + x[:, 2]]]
+        @rbatchintegrand
+        def f4(x):
+            return [[x[0] + x[1] + x[2]]]
+        def f5(x):
+            return collections.OrderedDict([('a', [[x[0] + x[1] + x[2]]])])
+        @lbatchintegrand
+        def f6(x):
+            return collections.OrderedDict([('a', [[x[:, 0] + x[:, 1] + x[:, 2]]])])
+        f7 = rbatchintegrand(f5)
+        x = numpy.random.uniform(size=(5,3))
+        ans = numpy.sum(x, axis=1).reshape((5,1))
+        for f in [f0, f1, f2, f3, f4, f5, f6, f7]:
+            fcn = VegasIntegrand(f)
+            self.assertTrue(numpy.allclose(ans, fcn.eval(x)))
+            self.assertTrue(numpy.allclose(ans, fcn.eval(x)))
+            fans = fcn.format_result(x[0,:1], x[:1,:1]**2)
+            if f in [f0, f1, f2]:
+                self.assertEqual(numpy.shape(fans), ())
+            if f in [f3, f4]:
+                self.assertEqual(numpy.shape(fans), (1,1))
+            if f in [f5, f6, f7]:
+                self.assertEqual(list(fans.keys()), ['a'])
+                self.assertEqual(numpy.shape(fans['a']), (1,1))
+
+        def f8(x):
+            return [[x[0]], [x[0] + x[1] + x[2]]]
+        @lbatchintegrand 
+        def f9(x):
+            ans = numpy.empty((x.shape[0], 2, 1), float)
+            ans[:, 0, 0] = x[:, 0]
+            ans[:, 1, 0] = x[:, 0] + x[:, 1] + x[:, 2]
+            return ans
+        f10 = rbatchintegrand (f8)
+        def f11(x):
+            return collections.OrderedDict([('a', x[0]), ('b', [[x[0] + x[1] + x[2]]])])
+        @lbatchintegrand 
+        def f12(x):
+            return collections.OrderedDict([('a', x[:, 0]), ('b', (x[:, 0] + x[:, 1] + x[:, 2]).reshape((-1,1,1)))])
+        f13 = rbatchintegrand(f11)
+        ans = numpy.empty((5,2), float)
+        ans[:, 0] = x[:, 0]
+        ans[:, 1] = numpy.sum(x, axis=1)
+        for f in [f8, f9, f10, f11, f12, f13]:
+            fcn = VegasIntegrand(f)
+            self.assertTrue(numpy.allclose(ans, fcn.eval(x)))
+            self.assertTrue(numpy.allclose(ans, fcn.eval(x)))
+            fans = fcn.format_result(x[0,:2], x[:2,:2].dot(x[:2, :2].T))
+            if f in [f8, f9, f10]:
+                self.assertEqual(numpy.shape(fans), (2,1))
+            if f in [f11, f12, f13]:
+                self.assertEqual(list(fans.keys()), ['a', 'b'])
+                self.assertEqual(numpy.shape(fans['a']), ())
+                self.assertEqual(numpy.shape(fans['b']), (1,1))
 
 
     def test_min_sigf(self):
@@ -915,109 +987,266 @@ class TestIntegrator(unittest.TestCase):
         with self.assertRaises(MemoryError):
             I(f, neval=1e4)
 
-class test_PDFIntegrator(unittest.TestCase): #,ArrayTests):
-    # @unittest.skipIf(FAST,"skipping test_expval for speed")
-    def test_expval(self):
-        " integrator(f ...) "
-        xarray = gv.gvar([5., 3.], [[400., 0.9], [0.9, 1.]])
-        xdict = gv.BufferDict([(0, 1), (1, 1)])
-        xdict = gv.BufferDict(xdict, buf=xarray)
-        xscalar = xarray[0]
-        def fscalar(x):
-            if hasattr(x, 'keys'):
-                x = x.buf
-            return x.flat[0]
-        def farray(x):
-            if hasattr(x, 'keys'):
-                x = x.buf
-            return gv.PDFStatistics.moments(x.flat[0])
-        def fdict(x):
-            if hasattr(x, 'keys'):
-                x = x.buf
-            return gv.BufferDict([
-                 (0, x.flat[0]), (1, x.flat[0] ** 2),
-                (2, x.flat[0] ** 3), (3, x.flat[0] ** 4)
-                ])
-        for x in [xscalar, xarray, xdict]:
-            integ = PDFIntegrator(x)
-            integ(neval=1000, nitn=5)
-            for f in [fscalar, farray, fdict]:
-                r = integ(f, neval=1000, nitn=5, adapt=False)
-                if f is fscalar:
-                    self.assertTrue(abs(r.mean - 5) < 5. * r.sdev)
-                else:
-                    if hasattr(r, 'keys'):
-                        r = r.buf
-                    s = gv.PDFStatistics(r)
-                    self.assertTrue(abs(s.mean.mean - 5.) < 10. * s.mean.sdev)
-                    self.assertTrue(abs(s.sdev.mean - 20.) < 10. * s.sdev.sdev)
-                    self.assertTrue(abs(s.skew.mean) < 10. * s.skew.sdev)
-                    self.assertTrue(abs(s.ex_kurt.mean) < 10. * s.ex_kurt.sdev)
+class test_PDFIntegrator(unittest.TestCase):
+    def test_nobatch(self):
+        # g is vector
+        g = gv.gvar([1., 2.], [[1, .1], [.1, 4]])
+        gev = PDFIntegrator(g, alpha=0, beta=0)
+        def f(p):
+            return p[0] + p[1]
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r.mean - sum(g).mean) < 5 * r.sdev)
+        ff = str(r)
+        def f(p):
+            ff = p[0] + p[1]
+            ff2 = ff * ff
+            return [[ff, ff, ff2], [ff2, ff, ff2 * ff]]
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r[0,0].mean - sum(g).mean) < 5 * r[0,0].sdev)
+        var = r[1, 0] - r[0, 0] ** 2
+        self.assertTrue(abs(var.mean - sum(g).var) < 5. * var.sdev)
+        ff2 = str(r[0, 2])
+        ff3 = str(r[1, 2])
+        self.assertTrue(ff == str(r[0,0]) == str(r[0, 1]) == str(r[1, 1]))
+        self.assertTrue(ff2 == str(r[1,0]))
+        self.assertTrue(ff != ff2 != ff3 != ff)
+        self.assertTrue(r.shape == (2,3))
+        diff3 = r[1,2] - 3 * r[1,0] * r[0,0] + 2 * r[0,0]**3
+        self.assertTrue(abs(diff3.mean) < 5. * diff3.sdev)
+        def f(p):
+            ff = p[0] + p[1]
+            ff2 = ff * ff
+            ans = collections.OrderedDict()
+            ans[0] = ff
+            ans[1] = [[ff, ff, ff2], [ff2, ff, ff2 * ff]]
+            return ans
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(ff == str(r[0]) == str(r[1][0,0]) == str(r[1][0,1]) == str(r[1][1,1]) )
+        self.assertTrue(ff2 == str(r[1][0,2]) == str(r[1][1,0]))
+        self.assertTrue(ff3 == str(r[1][1,2]))
+        self.assertTrue(r[1].shape == (2,3))
 
-        # covariance test
-        # N.B. Integrand has two entries that are identical, 
-        #   which leads to a singular covariance -- so SVD
-        #   is essential here. The off-diagonal elements 
-        #   of np.outer(x, x) are what cause the singularity.
-        def fcov(x):
-            return dict(x=x, xx=np.outer(x, x))
-        integ = PDFIntegrator(xarray)
-        r = integ(fcov, neval=1000, nitn=5)
-        rmean = r['x']
-        rcov = r['xx'] - np.outer(r['x'], r['x'])
-        xmean = gv.mean(xarray)
-        xcov = gv.evalcov(xarray)
-        for i in [0, 1]:
-            self.assertTrue(abs(rmean[i].mean - xmean[i]) < 5. * rmean[i].sdev)
-            for j in [0, 1]:
-                self.assertTrue(abs(rcov[i,j].mean - xcov[i,j]) < 5. * rcov[i,j].sdev)
+    def test_rbatch(self):
+        # g is vector
+        g = gv.gvar([1., 2.], [[1, .1], [.1, 4]])
+        gev = PDFIntegrator(g, alpha=0, beta=0)
+        @rbatchintegrand
+        def f(p):
+            return p[0] + p[1]
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r.mean - sum(g).mean) < 5 * r.sdev)
+        ff = str(r)
+        @rbatchintegrand
+        def f(p):
+            ff = p[0] + p[1]
+            ff2 = ff * ff
+            return [[ff, ff, ff2], [ff2, ff, ff2 * ff]]
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r[0,0].mean - sum(g).mean) < 5 * r[0,0].sdev)
+        var = r[1, 0] - r[0, 0] ** 2
+        self.assertTrue(abs(var.mean - sum(g).var) < 5. * var.sdev)
+        ff2 = str(r[0, 2])
+        ff3 = str(r[1, 2])
+        self.assertTrue(ff == str(r[0,0]) == str(r[0, 1]) == str(r[1, 1]))
+        self.assertTrue(ff2 == str(r[1,0]))
+        self.assertTrue(ff != ff2 != ff3 != ff)
+        self.assertTrue(r.shape == (2,3))
+        diff3 = r[1,2] - 3 * r[1,0] * r[0,0] + 2 * r[0,0]**3
+        self.assertTrue(abs(diff3.mean) < 5. * diff3.sdev)
+        @rbatchintegrand
+        def f(p):
+            ff = p[0] + p[1]
+            ff2 = ff * ff
+            ans = collections.OrderedDict()
+            ans[0] = ff
+            ans[1] = [[ff, ff, ff2], [ff2, ff, ff2 * ff]]
+            return ans
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(ff == str(r[0]) == str(r[1][0,0]) == str(r[1][0,1]) == str(r[1][1,1]) )
+        self.assertTrue(ff2 == str(r[1][0,2]) == str(r[1][1,0]))
+        self.assertTrue(ff3 == str(r[1][1,2]))
+        self.assertTrue(r[1].shape == (2,3))
 
-    # @unittest.skipIf(FAST,"skipping test_nopdf for speed")
-    def test_nopdf(self):
-        " integrator(f ... nopdf=True) and pdf(p) "
-        xarray = gv.gvar([5., 3.], [[4., 1.9], [1.9, 1.]])
-        xdict = gv.BufferDict([(0, 1), (1, 1)])
-        xdict = gv.BufferDict(xdict, buf=xarray)
-        pdf = PDFIntegrator(xarray).pdf
-        def farray(x):
-            if hasattr(x, 'keys'):
-                x = x.buf
-            prob = pdf(x)
-            return [x[0] * prob, x[0] ** 2 * prob, prob]
-        def fdict(x):
-            if hasattr(x, 'keys'):
-                x = x.buf
-            prob = pdf(x)
-            return gv.BufferDict([(0, x[0] * prob), (1, x[0] ** 2 * prob), (3, prob)])
-        for x in [xarray, xdict]:
-            x[0] -= 0.1 * x[0].sdev
-            x[1] += 0.1 * x[1].sdev
-            for f in [farray, fdict]:
-                integ = PDFIntegrator(x)
-                integ(f, neval=1000, nitn=5)
-                r = integ(f, neval=1000, nitn=5, nopdf=True, adapt=False)
-                rmean = r[0]
-                rsdev = np.sqrt(r[1] - rmean ** 2)
-                self.assertTrue(abs(rmean.mean - 5.) < 5. * rmean.sdev)
-                self.assertTrue(abs(rsdev.mean - 2.) < 5. * rsdev.sdev)
+    def test_lbatch(self):
+        # g is vector
+        g = gv.gvar([1., 2.], [[1, .1], [.1, 4]])
+        gev = PDFIntegrator(g, alpha=0, beta=0)
+        @lbatchintegrand
+        def f(p):
+            return p[:, 0] + p[:, 1]
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r.mean - sum(g).mean) < 5 * r.sdev)
+        ff = str(r)
+        @lbatchintegrand
+        def f(p):
+            ff = p[:, 0] + p[:, 1]
+            ff2 = ff * ff
+            ans = np.zeros(p.shape[:1] + (2,3), float)
+            ans[:, 0, 0] = ff 
+            ans[:, 0, 1] = ff 
+            ans[:, 0, 2] = ff2 
+            ans[:, 1, 0] = ff2 
+            ans[:, 1, 1] = ff 
+            ans[:, 1, 2] = ff * ff2
+            return ans
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r[0,0].mean - sum(g).mean) < 5 * r[0,0].sdev)
+        var = r[1, 0] - r[0, 0] ** 2
+        self.assertTrue(abs(var.mean - sum(g).var) < 5. * var.sdev)
+        ff2 = str(r[0, 2])
+        ff3 = str(r[1, 2])
+        self.assertTrue(ff == str(r[0,0]) == str(r[0, 1]) == str(r[1, 1]))
+        self.assertTrue(ff2 == str(r[1,0]))
+        self.assertTrue(ff != ff2 != ff3 != ff)
+        self.assertTrue(r.shape == (2,3))
+        diff3 = r[1,2] - 3 * r[1,0] * r[0,0] + 2 * r[0,0]**3
+        self.assertTrue(abs(diff3.mean) < 5. * diff3.sdev)
+        @lbatchintegrand
+        def f(p):
+            ff = p[:, 0] + p[:, 1]
+            ff2 = ff * ff
+            ans = collections.OrderedDict()
+            ans[0] = ff
+            ans[1] = np.zeros(p.shape[:1] + (2,3), float)
+            ans[1][:, 0, 0] = ff 
+            ans[1][:, 0, 1] = ff 
+            ans[1][:, 0, 2] = ff2 
+            ans[1][:, 1, 0] = ff2 
+            ans[1][:, 1, 1] = ff 
+            ans[1][:, 1, 2] = ff * ff2
+            return ans
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(ff == str(r[0]) == str(r[1][0,0]) == str(r[1][0,1]) == str(r[1][1,1]) )
+        self.assertTrue(ff2 == str(r[1][0,2]) == str(r[1][1,0]))
+        self.assertTrue(ff3 == str(r[1][1,2]))
+        self.assertTrue(r[1].shape == (2,3))
 
-    # @unittest.skipIf(FAST,"skipping test_limit_scale for speed")
+    def test_scalar_pdf(self):
+        g = gv.gvar(1, 2)
+        gev = PDFIntegrator(g, alpha=0, beta=0)
+        @rbatchintegrand
+        def f(p):
+            ff = p
+            return ff 
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r.mean - g.mean) < 5 * r.sdev)
+        @lbatchintegrand
+        def f(p):
+            ff = p
+            return ff 
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r.mean - g.mean) < 5 * r.sdev)
+
+    def test_array_pdf(self):
+        g = gv.gvar([1., 2.], [[1, .1], [.1, 4]])
+        gev = PDFIntegrator(g, alpha=0, beta=0)
+        @rbatchintegrand
+        def f(p):
+            ff = np.sum(p, axis=0)
+            return ff 
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r.mean - sum(g).mean) < 5 * r.sdev)
+        @lbatchintegrand
+        def f(p):
+            ff = np.sum(p, axis=1)
+            return ff 
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r.mean - sum(g).mean) < 5 * r.sdev)
+
+    def test_dict_pdf(self):
+        g = dict(a=gv.gvar(1, 1), b=gv.gvar([1., 2.], [[1, .1], [.1, 4]]))
+        gev = PDFIntegrator(g, alpha=0, beta=0)
+        def f(p):
+            ff = np.sum(p['b'], axis=0)
+            return ff 
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r.mean - sum(g['b']).mean) < 5 * r.sdev)
+        @rbatchintegrand
+        def f(p):
+            ff = np.sum(p['b'], axis=0)
+            return ff 
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r.mean - sum(g['b']).mean) < 5 * r.sdev)
+        @lbatchintegrand
+        def f(p):
+            ff = np.sum(p['b'], axis=1)
+            return ff 
+        gv.ranseed(1)
+        r = gev(f, nitn=1)
+        self.assertTrue(abs(r.mean - sum(g['b']).mean) < 5 * r.sdev)
+
+    def test_change_pdf(self):
+        gv.ranseed(123)
+        g = gv.gvar(1, 2)
+        gev = PDFIntegrator(g, alpha=0, beta=0)
+        # shift peak
+        @rbatchintegrand
+        def f(p):
+            return [p, p**2] 
+        def pdf(p):
+            return gv.exp(-(p - g.mean - 0.5 * g.sdev) ** 2 / 8) / np.sqrt(2 * np.pi * g.var)
+        r = gev(f, pdf=pdf, nitn=2, adapt=True)
+        self.assertTrue(abs(r[0].mean - g.mean - 0.5 * g.sdev) < 5 * r[0].sdev)
+
+        gv.ranseed(123)
+        g = gv.gvar(1, 2)
+        gev = PDFIntegrator(g, alpha=0, beta=0)
+        # shift peak
+        @lbatchintegrand
+        def f(p):
+            return np.moveaxis([p, p**2], -1, 0)
+        def pdf(p):
+            return gv.exp(-(p - g.mean - 0.5 * g.sdev) ** 2 / 8) / np.sqrt(2 * np.pi * g.var)
+        r = gev(f, pdf=pdf, nitn=2, adapt=True)
+        self.assertTrue(abs(r[0].mean - g.mean - 0.5 * g.sdev) < 5 * r[0].sdev)
+
+    def test_adapt_to_pdf(self):
+        gv.ranseed(1)
+        g = gv.gvar([1., 2.], [[1, .1], [.1, 4]])
+        gev = PDFIntegrator(g, alpha=0, beta=0, adapt_to_pdf=False)
+        @rbatchintegrand
+        def f(p):
+            return p[0] + p[1]
+        gv.ranseed(1)
+        r = gev(f, nitn=2)
+        self.assertTrue(abs(r.mean - sum(g).mean) < 5 * r.sdev)
+
     def test_limit_scale(self):
         " integrator(...,limit=..,scale=..) "
         g = gv.gvar(1,0.1)
         for scale in [1., 2.]:
             integ = PDFIntegrator(g, limit=1., scale=scale)
-            norm = integ(neval=1000, nitn=5)
+            norm = integ(neval=1000, nitn=5).pdfnorm
             self.assertTrue(
                 abs(norm.mean - 0.682689492137) < 5 * norm.sdev
                 )
             integ = PDFIntegrator(g, limit=2., scale=scale)
-            norm = integ(neval=1000, nitn=5)
+            norm = integ(neval=1000, nitn=5).pdfnorm
             self.assertTrue(
                 abs(norm.mean - 0.954499736104) < 5 * norm.sdev
                 )
 
-    # @unittest.skipIf(FAST,"skipping test_histogram for speed")
+    def test_no_f(self):
+        for g in [gv.gvar(1,1), gv.gvar([2*['1(1)']]), gv.gvar(dict(a='1(1)', b=[2*['2(2)']]))]:
+            gev = PDFIntegrator(g)
+            norm = gev(nitn=1).pdfnorm 
+            self.assertTrue(abs(norm.mean-1) < 5 * norm.sdev)
+
     def test_histogram(self):
         x = gv.gvar([5., 3.], [[4., 0.2], [0.2, 1.]])
         xsum = x[0] + x[1]

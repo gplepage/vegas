@@ -19,6 +19,7 @@ cimport numpy
 from libc.math cimport floor, log, abs, tanh, erf, exp, sqrt, lgamma
 
 import collections
+import functools
 import math
 import sys
 import time
@@ -1587,11 +1588,16 @@ cdef class Integrator(object):
         cdef double[:, ::1] var = numpy.empty((1, 1), numpy.float_)
         cdef double[::1] dvar = numpy.empty(1, numpy.float_)
         cdef numpy.npy_intp itn, i, j, s, t, neval 
+        cdef bint adaptive_strat
         cdef double sum_sigf, sigf2
         cdef bint firsteval = True
 
         if kargs:
             self.set(kargs)
+        adaptive_strat = (
+            self.beta > 0 and self.nhcube > 1 
+            and self.adapt and not self.adapt_to_errors
+            )
 
         # synchronize random numbers across all processes (mpi)
         if self.sync_ran and self.mpi:
@@ -1666,7 +1672,7 @@ cdef class Integrator(object):
                             for t in range(s + 1):
                                 var[s, t] += dvar[t]
                     sigf2 = abs(sum_wf2[0, 0] * neval - sum_wf[0] * sum_wf[0])
-                    if self.beta > 0 and self.adapt and not self.adapt_to_errors:
+                    if adaptive_strat:
                         if not self.minimize_mem:
                             sigf[i] = sigf2 ** (self.beta / 2.)
                             sum_sigf += sigf[i]
@@ -1941,7 +1947,7 @@ class RAvgDict(gvar.BufferDict):
             weighted = self.weighted
         ans = self.rarray.summary(weighted=weighted, extended=False)
         if extended and self.itn_results[0].size > 1:
-            ans += '\n' + gvar.tabulate(self)
+            ans += '\n' + gvar.tabulate(self) + '\n'
         return ans
 
     def _chi2(self):
@@ -2153,7 +2159,7 @@ class RAvgArray(numpy.ndarray):
         for data in linedata:
             ans += fmt % data
         if extended and self.itn_results[0].size > 1:
-            ans += '\n' + gvar.tabulate(self)
+            ans += '\n' + gvar.tabulate(self) + '\n'
         return ans
 
 
@@ -2213,13 +2219,7 @@ cdef class VegasResult:
                 return 0.
 
     def update(self, mean, var, last_neval=None):
-        if self.shape is None:
-            ans = gvar.BufferDict(self.integrand.bdict, buf=gvar.gvar(mean, var))
-            self.result.add(ans)
-        elif self.shape == ():
-            self.result.add(gvar.gvar(mean[0], var[0,0] ** 0.5))
-        else:
-            self.result.add(gvar.gvar(mean, var).reshape(self.shape))
+        self.result.add(self.integrand.format_result(mean, var))
         if last_neval is not None:
             self.sum_neval += last_neval
             self.result.sum_neval = self.sum_neval
@@ -2235,6 +2235,7 @@ cdef class VegasResult:
 
 cdef class VegasIntegrand:
     cdef public object shape
+    cdef public object fcntype
     cdef public numpy.npy_intp size
     cdef public object eval
     cdef public object bdict
@@ -2262,7 +2263,7 @@ cdef class VegasIntegrand:
 
     Args:
         fcn: Integrand function.
-        map: :class:`vegas.AdaptiveMap` being used by |vegas|.
+        mpi: ``True`` (default) if mpi might be used; ``False`` otherwise.
 
     Attributes:
         eval: ``eval(x)`` returns ``fcn(x)`` repacked as a 2-d array.
@@ -2286,79 +2287,94 @@ cdef class VegasIntegrand:
                 self.nproc = 1 
         else:
             self.nproc = 1
+        self.eval = functools.partial(VegasIntegrand.firstpass_eval, self=self, fcn=fcn)
+        self.fcntype = None
 
-        def eval(x, self=self, fcn=fcn):
-            " Temporary eval, used for first call but then replaced by correct eval. "
-            # check for scalar functions and convert to batch if is scalar
-            # evaluate at arbitrary point to determine integrand shape
-            x0 = x[0]
-            fcntype = getattr(fcn, 'fcntype', 'scalar')
-            if fcntype == 'scalar':
-                fx = fcn(x0)
-                if hasattr(fx, 'keys'):
-                    if not isinstance(fx, gvar.BufferDict):
-                        fx = gvar.BufferDict(fx)
-                    self.size = fx.size
-                    self.shape = None
-                    self.bdict = fx
-                    _eval = _BatchIntegrand_from_NonBatchDict(fcn, self.size)
-                else:
-                    fx = numpy.asarray(fx)
-                    self.shape = fx.shape
-                    self.size = fx.size
-                    _eval = _BatchIntegrand_from_NonBatch(fcn, self.size, self.shape)
-            elif fcntype == 'rbatch':
-                x0.shape = x0.shape + (1,)
-                fx = fcn(x0)
-                if False or hasattr(fx, 'keys'):
-                    # build dictionary for non-batch version of function
-                    fxs = gvar.BufferDict()
-                    for k in fx:
-                        fxs[k] = numpy.asarray(fx[k]).T[0]
-                    self.shape = None
-                    self.bdict = fxs
-                    self.size = self.bdict.size
-                    _eval = _BatchIntegrand_from_RBatchDict(fcn, self.bdict)
-                else:
-                    fx = numpy.asarray(fx)
-                    self.shape = fx.shape[:-1]
-                    self.size = fx.size
-                    _eval = _BatchIntegrand_from_RBatch(fcn, self.shape)
+    @staticmethod
+    def firstpass_eval(x, self, fcn):
+        """ Temporary eval, used for first call but then replaced by correct eval. 
+        
+        The first pass is used to figure out what kind of integrand ``fcn``
+        is being used. This allows VegasIntegrand to create an optimized 
+        standard batch integrand equivalent to ``fcn``. At the end, 
+        ``self.eval`` is redefined to be the optimized integrand.
+        """
+        # check for scalar functions and convert to batch if is scalar
+        # evaluate at arbitrary point to determine integrand shape
+        x0 = x[0]
+        self.fcntype = getattr(fcn, 'fcntype', 'scalar')
+        if self.fcntype == 'scalar':
+            fx = fcn(x0)
+            if hasattr(fx, 'keys'):
+                if not isinstance(fx, gvar.BufferDict):
+                    fx = gvar.BufferDict(fx)
+                self.size = fx.size
+                self.shape = None
+                self.bdict = fx
+                _eval = _BatchIntegrand_from_NonBatchDict(fcn, self.size)
             else:
-                x0.shape = (1,) + x0.shape
-                fx = fcn(x0)
-                if hasattr(fx, 'keys'):
-                    # build dictionary for non-batch version of function
-                    fxs = gvar.BufferDict()
-                    for k in fx:
-                        fxs[k] = fx[k][0]
-                    self.shape = None
-                    self.bdict = fxs
-                    self.size = self.bdict.size
-                    _eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict)
-                else:
-                    fx = numpy.asarray(fx)
-                    self.shape = fx.shape[1:]
-                    self.size = fx.size
-                    _eval = _BatchIntegrand_from_Batch(fcn, self.shape)
-            if self.nproc > 1:
-                # MPI multiprocessor mode
-                def _mpi_eval(x, self=self, _eval=_eval):
-                    nx = x.shape[0] // self.nproc + 1
-                    i0 = self.rank * nx
-                    i1 = min(i0 + nx, x.shape[0])
-                    f = numpy.empty((nx, self.size), numpy.float_)
-                    if i1 > i0:
-                        # fill f so long as haven't gone off end
-                        f[:(i1-i0)] = _eval(x[i0:i1])
-                    results = numpy.empty((self.nproc * nx, self.size), numpy.float_)
-                    self.comm.Allgather(f, results)
-                    return results[:x.shape[0]]
-                self.eval = _mpi_eval
+                fx = numpy.asarray(fx)
+                self.shape = fx.shape
+                self.size = fx.size
+                _eval = _BatchIntegrand_from_NonBatch(fcn, self.size, self.shape)
+        elif self.fcntype == 'rbatch':
+            x0.shape = x0.shape + (1,)
+            fx = fcn(x0)
+            if hasattr(fx, 'keys'):
+                # build dictionary for non-batch version of function
+                fxs = gvar.BufferDict()
+                for k in fx:
+                    fxs[k] = numpy.asarray(fx[k])[..., 0]
+                self.shape = None
+                self.bdict = fxs
+                self.size = self.bdict.size
+                _eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict, rbatch=True)
             else:
-                self.eval = _eval
-            return self.eval(x)
-        self.eval = eval
+                self.shape = numpy.shape(fx)[:-1]
+                self.size = numpy.product(self.shape)
+                _eval = _BatchIntegrand_from_Batch(fcn, rbatch=True)
+        else:
+            x0.shape = (1,) + x0.shape
+            fx = fcn(x0)
+            if hasattr(fx, 'keys'):
+                # build dictionary for non-batch version of function
+                fxs = gvar.BufferDict()
+                for k in fx:
+                    fxs[k] = fx[k][0]
+                self.shape = None
+                self.bdict = fxs
+                self.size = self.bdict.size
+                _eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict, rbatch=False)
+            else:
+                fx = numpy.asarray(fx)
+                self.shape = fx.shape[1:]
+                self.size = numpy.product(self.shape)
+                _eval = _BatchIntegrand_from_Batch(fcn, rbatch=False) # , self.shape)
+        if self.nproc > 1:
+            # MPI multiprocessor mode
+            def _mpi_eval(x, self=self, _eval=_eval):
+                nx = x.shape[0] // self.nproc + 1
+                i0 = self.rank * nx
+                i1 = min(i0 + nx, x.shape[0])
+                f = numpy.empty((nx, self.size), numpy.float_)
+                if i1 > i0:
+                    # fill f so long as haven't gone off end
+                    f[:(i1-i0)] = _eval(x[i0:i1])
+                results = numpy.empty((self.nproc * nx, self.size), numpy.float_)
+                self.comm.Allgather(f, results)
+                return results[:x.shape[0]]
+            self.eval = _mpi_eval
+        else:
+            self.eval = _eval
+        return self.eval(x)
+
+    def format_result(self, mean, var):
+        if self.shape is None:
+            return gvar.BufferDict(self.bdict, buf=gvar.gvar(mean, var))
+        elif self.shape == ():
+            return gvar.gvar(mean[0], var[0,0] ** 0.5)
+        else:
+            return gvar.gvar(mean, var).reshape(self.shape)
 
     def training(self, x):
         """ Calculate first element of integrand at point ``x``. """
@@ -2420,45 +2436,39 @@ cdef class _BatchIntegrand_from_NonBatchDict(object):
 cdef class _BatchIntegrand_from_Batch(object):
     cdef readonly object fcn
     cdef readonly object shape
+    cdef readonly bint rbatch
     """ BatchIntegrand from batch function. """
-    def __init__(self, fcn, shape):
+    def __init__(self, fcn, rbatch=False):
         self.fcn = fcn
-        self.shape = shape
+        self.rbatch = rbatch
 
     def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
-        if x.shape[0] <= 0:
-            return numpy.empty((0,) + self.shape, float)
-        fx = self.fcn(x)
-        if not isinstance(fx, numpy.ndarray):
-            fx = numpy.asarray(fx)
-        return fx if len(fx.shape) == 2 else fx.reshape((x.shape[0], -1))
+        # if x.shape[0] <= 0:
+        #     return numpy.empty((0,) + self.shape, float)
+        if self.rbatch:
+            fx = self.fcn(x.T)
+            if not isinstance(fx, numpy.ndarray):
+                fx = numpy.asarray(fx)
+            fx = fx.reshape((-1, x.shape[0]))
+            return numpy.ascontiguousarray(fx.T)
+        else:
+            fx = self.fcn(x)
+            if not isinstance(fx, numpy.ndarray):
+                fx = numpy.asarray(fx)
+            return fx.reshape((x.shape[0], -1))
 
-cdef class _BatchIntegrand_from_RBatch(object):
-    cdef readonly object fcn
-    cdef readonly object shape
-    """ BatchIntegrand from rbatch function. """
-    def __init__(self, fcn, shape):
-        self.fcn = fcn
-        self.shape = shape
-
-    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
-        if x.shape[0] <= 0:
-            return numpy.empty((0,) + self.shape, float)
-        fx = self.fcn(x.T)
-        if not isinstance(fx, numpy.ndarray):
-            fx = numpy.asarray(fx)
-        fx = fx.T
-        return fx if len(fx.shape) == 2 else fx.reshape((x.shape[0], -1))
 
 cdef class _BatchIntegrand_from_BatchDict(object):
     cdef readonly numpy.npy_intp size
     cdef readonly object slice
     cdef readonly object shape
     cdef object fcn
+    cdef readonly bint rbatch
     """ BatchIntegrand from batch dict-integrand. """
-    def __init__(self, fcn, bdict):
+    def __init__(self, fcn, bdict, rbatch=False):
         self.fcn = fcn
         self.size = bdict.size
+        self.rbatch = rbatch
         self.slice = collections.OrderedDict()
         self.shape = collections.OrderedDict()
         for k in bdict:
@@ -2469,47 +2479,23 @@ cdef class _BatchIntegrand_from_BatchDict(object):
         cdef numpy.ndarray[numpy.double_t, ndim=2] buf = numpy.empty(
             (x.shape[0], self.size), float
             )
-        if x.shape[0] <= 0:
-            return buf
-        fx = self.fcn(x)
-        for k in self.slice:
-            buf[:, self.slice[k]] = (
-                fx[k]
-                if self.shape[k] is () else
-                numpy.asarray(fx[k]).reshape((x.shape[0], -1))
-                )
+        if self.rbatch:
+            fx = self.fcn(x.T)
+            for k in self.slice:
+                buf[:, self.slice[k]] = (
+                    fx[k]
+                    if self.shape[k] is () else
+                    numpy.reshape(fx[k], (-1, x.shape[0])).T
+                    )
+        else:
+            fx = self.fcn(x)
+            for k in self.slice:
+                buf[:, self.slice[k]] = (
+                    fx[k]
+                    if self.shape[k] is () else
+                    numpy.asarray(fx[k]).reshape((x.shape[0], -1))
+                    )
         return buf
-
-cdef class _BatchIntegrand_from_RBatchDict(object):
-    cdef readonly numpy.npy_intp size
-    cdef readonly object slice
-    cdef readonly object shape
-    cdef object fcn
-    """ BatchIntegrand from rbatch dict-integrand. """
-    def __init__(self, fcn, bdict):
-        self.fcn = fcn
-        self.size = bdict.size
-        self.slice = collections.OrderedDict()
-        self.shape = collections.OrderedDict()
-        for k in bdict:
-            self.slice[k], self.shape[k] = bdict.slice_shape(k)
-
-    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
-        cdef numpy.npy_intp i
-        cdef numpy.ndarray[numpy.double_t, ndim=2] buf = numpy.empty(
-            (x.shape[0], self.size), float
-            )
-        if x.shape[0] <= 0:
-            return buf
-        fx = self.fcn(x.T)
-        for k in self.slice:
-            buf[:, self.slice[k]] = (
-                fx[k]
-                if self.shape[k] is () else
-                (numpy.asarray(fx[k]).T).reshape((x.shape[0], -1))
-                )
-        return buf
-
 
 # BatchIntegrand is a base class for users who want to design
 # batch integrands.
@@ -2547,11 +2533,14 @@ cdef class BatchIntegrand:
     Deriving from :class:`vegas.BatchIntegrand` is the
     easiest way to construct integrands in Cython, and
     gives the fastest results.
+
+    :class:`vegas.LBatchIntegrand` is the same as 
+    :class:`vegas.BatchIntegrand`.
     """
     # cdef object fcntype
     # cdef public object fcn
     def __cinit__(self, *args, **kargs):
-        self.fcntype = 'batch'
+        self.fcntype = 'lbatch'
         self.fcn = None
 
     def __call__(self, x):
@@ -2576,7 +2565,7 @@ def batchintegrand(f):
         import vegas
         import numpy as np
 
-        @vegas.batchintegrand
+        @vegas.batchintegrand      # or @vegas.lbatchintegrand
         def f(x):
             return np.exp(-x[:, 0] - x[:, 1])
 
@@ -2584,9 +2573,11 @@ def batchintegrand(f):
 
     This decorator provides an alternative to deriving an integrand
     class from :class:`vegas.BatchIntegrand`.
+
+    :func:`vegas.lbatchintegrand` is the same as :func:`vegas.batchintegrand`.
     """
     try:
-        f.fcntype = 'batch'
+        f.fcntype = 'lbatch'
         # f.rank = 0 if mpi4py is None else mpi4py.MPI.COMM_WORLD.Get_rank()
         return f
     except:
@@ -2609,7 +2600,7 @@ cdef class RBatchIntegrand:
             raise TypeError('no __call__ method defined (or badly defined)')
 
 def rbatchintegrand(f):
-    """ Same as :func:`vegas.batchintegrand but with batch indices on the right (not left). """
+    """ Same as :func:`vegas.batchintegrand` but with batch indices on the right (not left). """
     try:
         f.fcntype = 'rbatch'
         return f

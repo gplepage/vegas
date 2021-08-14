@@ -1,3 +1,15 @@
+Version 5.0 2021-08-02
+========================
+New implementation of PDFIntegrator which is slightly 
+incompatible with the previous implementation but 
+significantly more capable. In particular,
+it can now be used with non-Gaussian PDFs. It 
+also now works with batch integrands, which 
+lead to big speed increases.  
+
+Also includes a further bug fix 
+when max_nhcube=1.
+
 Version 4.0.3 2021-06-19
 ========================
 Fixes bug when max_nhcube=1.

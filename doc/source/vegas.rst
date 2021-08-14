@@ -293,4 +293,12 @@ Other Objects and Functions
 
 .. autoclass:: vegas.BatchIntegrand
 
+.. autofunction:: vegas.rbatchintegrand
+
+.. autoclass:: vegas.RBatchIntegrand
+
+.. autofunction:: vegas.lbatchintegrand
+
+.. autoclass:: vegas.LBatchIntegrand
+
 
