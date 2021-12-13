@@ -15,7 +15,7 @@ improved over the original ``vegas`` implementation. In particular
 a second adaptive strategy has been added. It also supports
 multi-processor evaluation of integrands using MPI.
 
-The new algorithm is described in G. P. Lepage, 
+The new algorithm (``vegas+``) is described in G. P. Lepage, 
 <https://arxiv.org/abs/2009.05112>
 (J. Comput. Phys. 439 (2021) 110386).
 
@@ -30,7 +30,7 @@ number signals bug fixes.
 
 
 | Created by G. Peter Lepage (Cornell University) 2013
-| Copyright (c) 2013-2018 G. Peter Lepage
+| Copyright (c) 2013-2021 G. Peter Lepage
 
 .. image:: https://zenodo.org/badge/15354897.svg
    :target: https://zenodo.org/badge/latestdoi/15354897

@@ -1113,28 +1113,28 @@ cdef class Integrator(object):
         else:
             # go with existing grid if none of nstrat, neval and neval_frac changed
             nstrat = self.nstrat
-        
-        if not numpy.all(numpy.equal(self.nstrat, nstrat)):
-            # need to recalculate stratification distribution for beta>0
-            self.sum_sigf = HUGE
-            self.nstrat = nstrat
-        
+                
         # 4) reconfigure vegas map, if necessary
         if self.adapt_to_errors:
-            self.map.adapt(ninc=numpy.asarray(self.nstrat))
+            self.map.adapt(ninc=numpy.asarray(nstrat))
         else:
             ni = min(int(self.neval / 10.), self.maxinc_axis)   # increments/axis
             ninc = numpy.empty(self.dim, numpy.intp)
             for d in range(self.dim):
-                if ni >= self.nstrat[d]:
-                    ninc[d] = int(ni / self.nstrat[d]) * self.nstrat[d]
-                elif self.nstrat[d] <= self.maxinc_axis:
-                    ninc[d] = self.nstrat[d]
+                if ni >= nstrat[d]:
+                    ninc[d] = int(ni / nstrat[d]) * nstrat[d]
+                elif nstrat[d] <= self.maxinc_axis:
+                    ninc[d] = nstrat[d]
                 else:
-                    self.nstrat[d] = int(self.nstrat[d] / ni) * ni
+                    nstrat[d] = int(nstrat[d] / ni) * ni
                     ninc[d] = ni
             if not numpy.all(numpy.equal(self.map.ninc, ninc)):
                 self.map.adapt(ninc=ninc)
+
+        if not numpy.all(numpy.equal(self.nstrat, nstrat)):
+            # need to recalculate stratification distribution for beta>0
+            self.sum_sigf = HUGE
+            self.nstrat = nstrat
 
         # 5) set min_neval_hcube 
         # chosen so that actual neval is close to but not larger than self.neval
@@ -1163,7 +1163,7 @@ cdef class Integrator(object):
                 self.sigf = numpy.empty(nsigf, numpy.float_)
             else:
                 self.sigf = numpy.ones(nsigf, numpy.float_)
-                self.sum_sigf = nsigf  
+                self.sum_sigf = nsigf 
         self.neval_hcube = numpy.empty(self.nhcube_batch, dtype=numpy.intp)
         self.neval_hcube[:] = avg_neval_hcube
         self.y = numpy.empty((neval_batch, self.dim), numpy.float_)

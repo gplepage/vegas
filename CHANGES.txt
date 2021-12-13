@@ -1,3 +1,13 @@
+Version 5.0.1 2021-12-13
+==========================
+- Fixes installation issue with Python 3.10.
+
+- Bug fix when using very large number of stratifications 
+  per axis (> ninc per axis). The algorithm was operating
+  sub-optimally in some such situations. Not usually an 
+  issue except for low-dimension integrals.
+
+
 Version 5.0 2021-08-14
 ========================
 New implementation of PDFIntegrator which is slightly 

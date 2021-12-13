@@ -14,12 +14,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
-VEGAS_VERSION = '5.0'
+VEGAS_VERSION = open('src/vegas/_version.py', 'r').readlines()[0].split("'")[1]
 
 from distutils.core import setup
 from distutils.extension import Extension
 from distutils.command.build_ext import build_ext as _build_ext
-from distutils.command.build_py import build_py as _build_py
+from distutils.command.build_py import build_py # as _build_py
 
 # compile from existing .c files if USE_CYTHON is False
 USE_CYTHON = False # True
@@ -38,13 +38,13 @@ class build_ext(_build_ext):
             ext.include_dirs.append(numpy_include)
         _build_ext.build_extensions(self)
 
-class build_py(_build_py):
-    # adds version info
-    def run(self):
-        """ Append version number to vegas/__init__.py """
-        with open('src/vegas/__init__.py', 'a') as vfile:
-            vfile.write("\n__version__ = '%s'\n" % VEGAS_VERSION)
-        _build_py.run(self)
+# class build_py(_build_py):
+#     # adds version info
+#     def run(self):
+#         """ Append version number to vegas/__init__.py """
+#         with open('src/vegas/__init__.py', 'a') as vfile:
+#             vfile.write("\n__version__ = '%s'\n" % VEGAS_VERSION)
+#         _build_py.run(self)
 
 ext_args = dict(
     libraries=[],
