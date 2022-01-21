@@ -41,17 +41,17 @@ run:
 	$(PYTHON) ridge.py > ridge.tmp
 	- diff -w ridge.out ridge.tmp
 	# mpi tests
-	- mpirun -np 2 $(PYTHON) ridge.py > mpi-ridge.tmp
-	- diff -w mpi-ridge.out mpi-ridge.tmp
-	- mpirun -np 2 -output-filename mpi-slow $(PYTHON) slow.py > mpi-slow.tmp
-	- diff -w slow.out mpi-slow/1/rank.0/stdout
-	- diff -w slow.out mpi-slow/1/rank.1/stdout
-	- mpirun -np 2 -output-filename mpi-faster $(PYTHON) faster.py > mpi-faster.tmp
-	- diff -w slow.out mpi-faster/1/rank.0/stdout
-	- diff -w slow.out mpi-faster/1/rank.1/stdout
-	- mpirun -np 2 -output-filename mpi-fastest $(PYTHON) fastest.py > mpi-fastest.tmp
-	- diff -w slow.out mpi-fastest/1/rank.0/stdout
-	- diff -w slow.out mpi-fastest/1/rank.1/stdout
+	- mpirun -np 2 $(PYTHON) ridge.py > ridge.tmp.mpi
+	- diff -w ridge.out ridge.tmp.mpi
+	- mpirun -np 2 -outfile-pattern=slow.tmp.%r $(PYTHON) slow.py
+	- diff -w slow.out slow.tmp.0
+	- diff -w slow.out slow.tmp.1
+	- mpirun -np 2 -outfile-pattern=faster.tmp.%r $(PYTHON) faster.py
+	- diff -w slow.out faster.tmp.0
+	- diff -w slow.out faster.tmp.1
+	- mpirun -np 2 -outfile-pattern=fastest.tmp.%r $(PYTHON) fastest.py
+	- diff -w slow.out fastest.tmp.0
+	- diff -w slow.out fastest.tmp.1
 
 time:
 	time $(MAKE) PYTHON=$(PYTHON) PLOT=False run
@@ -85,8 +85,7 @@ update-all:
 	$(PYTHON) path-integral.py > path-integral.out
 	$(PYTHON) parallel-pools.py > parallel-pools.out
 	$(PYTHON) ridge.py > ridge.out
-	- mpirun -np 2 $(PYTHON) ridge.py > mpi-ridge.out
 
 clean:
-	rm -f *.pyc *.tmp *.p *.prof *.1.0 *.1.1 *.1.2 *.pyxbldc *.so
+	rm -f *.pyc *.tmp *.tmp.0 *.tmp.1 *.tmp.mpi *.p *.prof *.1.0 *.1.1 *.1.2 *.pyxbldc *.so
 

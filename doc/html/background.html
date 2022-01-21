@@ -1,17 +1,18 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>How vegas Works &#8212; vegas 5.0.1 documentation</title>
-    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>How vegas Works &#8212; vegas 5.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Case Study: Bayesian Curve Fitting" href="outliers.html" />
@@ -39,7 +40,8 @@
         <li class="right" >
           <a href="c_fortran.html" title="Integrands in C or Fortran"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">How <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Works</a></li> 
       </ul>
     </div>  
 
@@ -48,12 +50,12 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="how-vegas-works">
+  <section id="how-vegas-works">
 <h1>How <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Works<a class="headerlink" href="#how-vegas-works" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> uses two adaptive strategies: importance sampling, and
 adaptive stratified sampling. Here we discuss the ideas behind each,
 in turn.</p>
-<div class="section" id="importance-sampling">
+<section id="importance-sampling">
 <span id="id1"></span><h2>Importance Sampling<a class="headerlink" href="#importance-sampling" title="Permalink to this headline">¶</a></h2>
 <p>The most important adaptive strategy <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> uses is
 its remapping of the integration variables in each
@@ -124,8 +126,8 @@ These results assume
 that <img class="math" src="_images/math/cd41a74f29ff542365c351ffdfd922124c5f411f.svg" alt="(J(y)\:f(x(y)))^n"/> is integrable for all <img class="math" src="_images/math/931bea88f3909b4bf85497758345b3ef3dde868b.svg" alt="n"/>,
 which need not be the case
 if <img class="math" src="_images/math/fb62ba1e89ca6200f224a445c3f4a567fc451fe1.svg" alt="f(x)"/> has (integrable) singularities.</p>
-</div>
-<div class="section" id="the-vegas-map">
+</section>
+<section id="the-vegas-map">
 <h2>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Map<a class="headerlink" href="#the-vegas-map" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> implements the transformation of an integration variable
 <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/> into a new variable <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/> using a grid in <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/> space:</p>
@@ -210,8 +212,8 @@ images showing the locations of 30 nodes
 of
 the grid in each direction. (The grid uses 99 nodes in all
 on each axis, but that is too many to display at low resolution.)</p>
-</div>
-<div class="section" id="adaptive-stratified-sampling">
+</section>
+<section id="adaptive-stratified-sampling">
 <span id="id2"></span><h2>Adaptive Stratified Sampling<a class="headerlink" href="#adaptive-stratified-sampling" title="Permalink to this headline">¶</a></h2>
 <p>A limitation of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s remapping strategy becomes obvious if we look
 at the grid for the following integral, which has two Gaussians
@@ -308,10 +310,11 @@ integral are reduced by more than a factor of 3 relative to what older
 versions of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> give. This is a relatively easy integral;
 the difference can be much larger for more difficult (and realistic)
 integrals.</p>
-</div>
-</div>
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -344,12 +347,12 @@ integrals.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -369,12 +372,13 @@ integrals.</p>
         <li class="right" >
           <a href="c_fortran.html" title="Integrands in C or Fortran"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">How <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Works</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-18, G.P. Lepage.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
     </div>
   </body>
 </html>

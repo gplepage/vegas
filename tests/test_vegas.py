@@ -685,8 +685,8 @@ class TestIntegrator(unittest.TestCase):
         ans = numpy.sum(x, axis=1).reshape((5,1))
         for f in [f0, f1, f2, f3, f4, f5, f6, f7]:
             fcn = VegasIntegrand(f)
-            self.assertTrue(numpy.allclose(ans, fcn.eval(x)))
-            self.assertTrue(numpy.allclose(ans, fcn.eval(x)))
+            self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
+            self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
             fans = fcn.format_result(x[0,:1], x[:1,:1]**2)
             if f in [f0, f1, f2]:
                 self.assertEqual(numpy.shape(fans), ())
@@ -716,8 +716,8 @@ class TestIntegrator(unittest.TestCase):
         ans[:, 1] = numpy.sum(x, axis=1)
         for f in [f8, f9, f10, f11, f12, f13]:
             fcn = VegasIntegrand(f)
-            self.assertTrue(numpy.allclose(ans, fcn.eval(x)))
-            self.assertTrue(numpy.allclose(ans, fcn.eval(x)))
+            self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
+            self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
             fans = fcn.format_result(x[0,:2], x[:2,:2].dot(x[:2, :2].T))
             if f in [f8, f9, f10]:
                 self.assertEqual(numpy.shape(fans), (2,1))
@@ -979,6 +979,55 @@ class TestIntegrator(unittest.TestCase):
         integ = Integrator([(0,1)],)
         res = integ(g, nitn=4, neval=1e2)
         self.assertEqual(res.mean, 0.0)
+
+    def test_uses_jac(self):
+        " uses_jac=True "
+        integ = Integrator(2 * [[0, 2.]])
+        def test(f, mode):
+            r = integ(f, nitn=1, neval=10, uses_jac=True)
+            if mode == 'array':
+                ans = r[0, 0]
+            elif mode == 'dict':
+                ans = r['a']
+            else:
+                ans = r
+            self.assertAlmostEqual(ans.mean, 1.)
+        
+        def f(x, jac):
+            return 1. / np.prod(jac)
+        test(f, 'scalar')
+        def f(x, jac):
+            return [[1. / np.prod(jac)]]
+        test(f, 'array')
+        def f(x, jac):
+            return dict(a=1. / np.prod(jac))
+        test(f, 'dict')
+
+        @rbatchintegrand
+        def f(x, jac):
+            return 1. / np.prod(jac, axis=0)
+        test(f, 'scalar')
+        @rbatchintegrand
+        def f(x, jac):
+            return [[1. / np.prod(jac, axis=0)]]
+        test(f, 'array')
+        @rbatchintegrand
+        def f(x, jac):
+            return dict(a=1. / np.prod(jac, axis=0))
+        test(f, 'dict')
+
+        @batchintegrand
+        def f(x, jac):
+            return 1. / np.prod(jac, axis=-1)
+        test(f, 'scalar')
+        @batchintegrand
+        def f(x, jac):
+            return [[1. / np.prod(jac, axis=-1)]]
+        test(f, 'array')
+        @batchintegrand
+        def f(x, jac):
+            return dict(a=1. / np.prod(jac, axis=-1))
+        test(f, 'dict')
 
     def test_mem(self):
         " max_mem "

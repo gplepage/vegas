@@ -1,3 +1,10 @@
+Version 5.1 2022-01-21
+=======================
+Adds a new keyword uses_jac that causes vegas to supply 
+the vegas map's Jacobian to the integrand. A sample 
+application is given in the "vegas Jacobian" section of the 
+Tutorial in the documentation.
+
 Version 5.0.1 2021-12-13
 ==========================
 - Fixes installation issue with Python 3.10.

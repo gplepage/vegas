@@ -63,6 +63,7 @@ cdef class Integrator:
     cdef public bint sync_ran
     cdef public bint mpi
     cdef public bint uniform_nstrat
+    cdef public bint uses_jac
     cdef readonly numpy.npy_intp[::1] nstrat
     # generated
     cdef readonly AdaptiveMap map

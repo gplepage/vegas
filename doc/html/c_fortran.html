@@ -1,17 +1,18 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>Integrands in C or Fortran &#8212; vegas 5.0.1 documentation</title>
-    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Integrands in C or Fortran &#8212; vegas 5.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="How vegas Works" href="background.html" />
@@ -39,7 +40,8 @@
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Integrands in C or Fortran</a></li> 
       </ul>
     </div>  
 
@@ -48,7 +50,7 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="integrands-in-c-or-fortran">
+  <section id="integrands-in-c-or-fortran">
 <h1>Integrands in C or Fortran<a class="headerlink" href="#integrands-in-c-or-fortran" title="Permalink to this headline">¶</a></h1>
 <p>Older implementations of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> algorithm
 have been used extensively in C and Fortran codes. The Python
@@ -60,29 +62,29 @@ speed to optimized Cython code.
 There are
 many ways to access C and Fortran integrands from Python. Here we
 review a few of the options.</p>
-<div class="section" id="cffi-for-c">
+<section id="cffi-for-c">
 <h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> for C<a class="headerlink" href="#cffi-for-c" title="Permalink to this headline">¶</a></h2>
 <p>The simplest way to access an integrand coded in C is to use the
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> module in Python. To illustrate, consider the following
 integrand, written in C and stored in file <code class="docutils literal notranslate"><span class="pre">cfcn.c</span></code>:</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="c1">// file cfcn.c</span>
-<span class="cp">#include</span> <span class="cpf">&lt;math.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;math.h&gt;</span><span class="cp"></span>
 
-<span class="kt">double</span> <span class="nf">fcn</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">[],</span> <span class="kt">int</span> <span class="n">dim</span><span class="p">)</span>
-<span class="p">{</span>
-      <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-      <span class="kt">double</span> <span class="n">xsq</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-      <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">dim</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
-            <span class="n">xsq</span> <span class="o">+=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">;</span>
-      <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">xsq</span><span class="p">))</span> <span class="o">*</span> <span class="n">pow</span><span class="p">(</span><span class="mf">100.</span><span class="p">,</span><span class="n">dim</span><span class="p">);</span>
-<span class="p">}</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">fcn</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">dim</span><span class="p">)</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">      </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w"></span>
+<span class="w">      </span><span class="kt">double</span><span class="w"> </span><span class="n">xsq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"></span>
+<span class="w">      </span><span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">&lt;</span><span class="n">dim</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="n">xsq</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="p">;</span><span class="w"></span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">exp</span><span class="p">(</span><span class="mf">-100.</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">xsq</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">pow</span><span class="p">(</span><span class="mf">100.</span><span class="p">,</span><span class="n">dim</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Running the following Python code creates (in file <code class="docutils literal notranslate"><span class="pre">cfcn_cffi.c</span></code>) and
 compiles code for a Python module called <code class="docutils literal notranslate"><span class="pre">cfcn_cffi</span></code> that provides
 access to <code class="docutils literal notranslate"><span class="pre">fcn(x,dim)</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># file cfcn_cffi-builder.py</span>
-<span class="kn">from</span> <span class="nn">cffi</span> <span class="k">import</span> <span class="n">FFI</span>
+<span class="kn">from</span> <span class="nn">cffi</span> <span class="kn">import</span> <span class="n">FFI</span>
 <span class="n">ffibuilder</span> <span class="o">=</span> <span class="n">FFI</span><span class="p">()</span>
 
 <span class="c1"># specify functions, etc to be made available to Python</span>
@@ -105,7 +107,7 @@ access to <code class="docutils literal notranslate"><span class="pre">fcn(x,dim
 Python function (here <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>), which is integrated using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 
-<span class="kn">from</span> <span class="nn">cfcn_cffi</span> <span class="k">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">cfcn_cffi</span> <span class="kn">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
 
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">_x</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;double*&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="c1"># pointer to x&#39;s data</span>
@@ -156,7 +158,7 @@ times more accurate than the first iteration).</p>
 integrand into a batch integrand. We do this by adding a batch
 version of the integrand function to the <code class="docutils literal notranslate"><span class="pre">cfcn_cffi</span></code> module:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># file cfcn_cffi-builder.py</span>
-<span class="kn">from</span> <span class="nn">cffi</span> <span class="k">import</span> <span class="n">FFI</span>
+<span class="kn">from</span> <span class="nn">cffi</span> <span class="kn">import</span> <span class="n">FFI</span>
 <span class="n">ffibuilder</span> <span class="o">=</span> <span class="n">FFI</span><span class="p">()</span>
 
 <span class="c1"># specify functions, etc made available to Python</span>
@@ -191,7 +193,7 @@ version of the integrand function to the <code class="docutils literal notransla
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">cfcn_cffi</span> <span class="k">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">cfcn_cffi</span> <span class="kn">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
 
 <span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
 <span class="k">def</span> <span class="nf">batch_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -218,8 +220,8 @@ creating C wrappers for those functions.
 Another option for accessing C code is
 the <code class="xref py py-mod docutils literal notranslate"><span class="pre">ctypes</span></code> module, but it is more complicated to use and typically
 gives slower code.</p>
-</div>
-<div class="section" id="cffi-for-fortran">
+</section>
+<section id="cffi-for-fortran">
 <h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> for Fortran<a class="headerlink" href="#cffi-for-fortran" title="Permalink to this headline">¶</a></h2>
 <p>Module <code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> can be used for Fortran integrands by calling the
 Fortran function from C code. Consider a Fortran implementation of
@@ -251,7 +253,7 @@ systems <code class="docutils literal notranslate"><span class="pre">nm</span> <
 function’s arguments are passed by address and so are pointers in C. The
 modified script is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># file ffcn_cffi-builder.py</span>
-<span class="kn">from</span> <span class="nn">cffi</span> <span class="k">import</span> <span class="n">FFI</span>
+<span class="kn">from</span> <span class="nn">cffi</span> <span class="kn">import</span> <span class="n">FFI</span>
 <span class="n">ffibuilder</span> <span class="o">=</span> <span class="n">FFI</span><span class="p">()</span>
 
 <span class="c1"># specify functions, etc needed by Python</span>
@@ -288,7 +290,7 @@ module <code class="docutils literal notranslate"><span class="pre">cfcn_ffi</sp
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">ffcn_cffi</span> <span class="k">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
+<span class="kn">from</span> <span class="nn">ffcn_cffi</span> <span class="kn">import</span> <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span>
 
 <span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
 <span class="k">def</span> <span class="nf">batch_f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -311,8 +313,8 @@ module <code class="docutils literal notranslate"><span class="pre">cfcn_ffi</sp
 </div>
 <p>This code runs about as fast as the corresponding C code in the previous
 section.</p>
-</div>
-<div class="section" id="cython-for-c-or-c-or-fortran">
+</section>
+<section id="cython-for-c-or-c-or-fortran">
 <h2>Cython for C (or C++ or Fortran)<a class="headerlink" href="#cython-for-c-or-c-or-fortran" title="Permalink to this headline">¶</a></h2>
 <p>A more flexible interface to a C integrand can be
 created using Cython. To increase efficiency,
@@ -341,7 +343,7 @@ from <code class="docutils literal notranslate"><span class="pre">cfcn.c</span><
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="k">def</span> <span class="nf">make_ext</span><span class="p">(</span><span class="n">modname</span><span class="p">,</span> <span class="n">pyxfilename</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">distutils.extension</span> <span class="k">import</span> <span class="n">Extension</span>
+    <span class="kn">from</span> <span class="nn">distutils.extension</span> <span class="kn">import</span> <span class="n">Extension</span>
     <span class="k">return</span> <span class="n">Extension</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="n">modname</span><span class="p">,</span>
                      <span class="n">sources</span><span class="o">=</span><span class="p">[</span><span class="n">pyxfilename</span><span class="p">,</span> <span class="s1">&#39;cfcn.c&#39;</span><span class="p">],</span>
                      <span class="n">libraries</span><span class="o">=</span><span class="p">[],</span>
@@ -375,8 +377,8 @@ is compiled the first time the code is run.</p>
 <p>This implementation is as fast as the other batch implementations, above.
 Cython also works with C++. It can also work with Fortran code, analogously
 to <code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code>.</p>
-</div>
-<div class="section" id="f2py-for-fortran">
+</section>
+<section id="f2py-for-fortran">
 <h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code> for Fortran<a class="headerlink" href="#f2py-for-fortran" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code> package, which is distributed with <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code>,
 makes it relatively easy to compile Fortran
@@ -441,10 +443,11 @@ is then:</p>
 </div>
 <p>This runs roughly twice as fast as the original, and about the same
 speed as the batch versions of the C code, above.</p>
-</div>
-</div>
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -478,12 +481,12 @@ speed as the batch versions of the C code, above.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -503,12 +506,13 @@ speed as the batch versions of the C code, above.</p>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Integrands in C or Fortran</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-18, G.P. Lepage.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
     </div>
   </body>
 </html>

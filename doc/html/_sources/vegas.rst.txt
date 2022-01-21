@@ -188,6 +188,8 @@ fashion, for use in subsequent iterations of the algorithm.
 
    .. automethod:: jac(y)
 
+   .. automethod:: jac1d(y)
+
    .. automethod:: make_uniform(ninc=None)
 
    .. automethod:: map(y, x, jac, ny=-1)

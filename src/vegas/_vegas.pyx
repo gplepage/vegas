@@ -258,19 +258,48 @@ cdef class AdaptiveMap:
         x.shape = y_shape
         return x
 
+    def jac1d(self, y):
+        """ Return the map's Jacobian at ``y`` for each direction.
+
+        ``y`` can be a single ``dim``-dimensional point, or it
+        can be an array ``y[i,j,...,d]`` of such points (``d=0..dim-1``).
+        Returns an array ``jac`` where ``jac[i,j,...,d]`` is the 
+        (one-dimensional) Jacobian (``dx[d]/dy[d]``) corresponding 
+        to ``y[i,j,...,d]``.
+        """
+        cdef numpy.npy_intp dim = self.grid.shape[0]
+        cdef numpy.npy_intp i, d, ninc, ny, iy
+        cdef double y_ninc, dy_ninc
+        cdef double[:,::1] jac
+        y = numpy.asarray(y)
+        y_shape = y.shape 
+        y.shape = -1, y.shape[-1]
+        ny = y.shape[0]
+        jac = numpy.empty(y.shape, numpy.float_)
+        for i in range(ny):
+            for d in range(dim):
+                ninc = self.ninc[d]
+                y_ninc = y[i, d] * ninc
+                iy = <int>floor(y_ninc)
+                dy_ninc = y_ninc  -  iy
+                if iy < ninc:
+                    jac[i, d] = self.inc[d, iy] * ninc
+                else:
+                    jac[i, d] = self.inc[d, ninc - 1] * ninc
+        ans = numpy.asarray(jac)
+        ans.shape = y.shape 
+        return ans
+
     def jac(self, y):
         """ Return the map's Jacobian at ``y``.
 
         ``y`` can be a single ``dim``-dimensional point, or it
-        can be an array ``y[d,i,j,...]`` of such points (``d=0..dim-1``).
+        can be an array ``y[i,j,...,d]`` of such points (``d=0..dim-1``).
+        Returns an array ``jac`` where ``jac[i,j,...]`` is the 
+        (multidimensional) Jacobian (``dx/dy``) corresponding 
+        to ``y[i,j,...]``.
         """
-        y = numpy.asarray(y)
-        y_shape = y.shape
-        y.shape = -1, y.shape[-1]
-        x = 0 * y
-        jac = numpy.empty(y.shape[0], numpy.float_)
-        self.map(y, x, jac)
-        return jac
+        return numpy.prod(self.jac1d(y), axis=-1)
 
     # @cython.boundscheck(False)
     # @cython.wraparound(False)
@@ -979,6 +1008,7 @@ cdef class Integrator(object):
         ran_array_generator=numpy.random.random,
         sync_ran=True,
         mpi=True,
+        uses_jac=False,
         )
 
     def __init__(Integrator self not None, map, **kargs):
@@ -1283,7 +1313,10 @@ cdef class Integrator(object):
                     y[i, d] = (y0[d] + yran[i, d]) / self.nstrat[d]
             i_start += neval_hcube
         self.map.map(y, x, jac, neval_batch)
-        fx = fcn.training(numpy.asarray(x))
+        if self.uses_jac:
+            fx = fcn.training(numpy.asarray(x), jac=self.map.jac1d(y))
+        else:
+            fx = fcn.training(numpy.asarray(x), jac=None) 
 
         # accumulate sigf for each h-cube
         i_start = 0
@@ -1604,7 +1637,7 @@ cdef class Integrator(object):
             self.synchronize_random()
 
         # Put integrand into standard form
-        fcn = VegasIntegrand(fcn, mpi=self.mpi)
+        fcn = VegasIntegrand(fcn, mpi=self.mpi, uses_jac=self.uses_jac)
 
         sigf = self.sigf
         for itn in range(self.nitn):
@@ -1625,7 +1658,10 @@ cdef class Integrator(object):
                 fdv2 = self.fdv2        # must be inside loop
 
                 # evaluate integrand at all points in x
-                fx = fcn.eval(x)
+                if self.uses_jac:
+                    fx = fcn.eval(x, jac=self.map.jac1d(y))
+                else:
+                    fx = fcn.eval(x, jac=None)
                 if numpy.any(numpy.isnan(fx)):
                     raise ValueError('integrand evaluates to nan')
                 if firsteval:
@@ -2272,7 +2308,7 @@ cdef class VegasIntegrand:
         nproc: Number of processors (=1 if no MPI)
         rank: MPI rank of processors (=0 if no MPI)
     """
-    def __init__(self, fcn, mpi=True):
+    def __init__(self, fcn, mpi=True, uses_jac=False):
         if isinstance(fcn, type(BatchIntegrand)):
             raise ValueError(
                 'integrand given is a class, not an object -- need parentheses?'
@@ -2291,7 +2327,7 @@ cdef class VegasIntegrand:
         self.fcntype = None
 
     @staticmethod
-    def firstpass_eval(x, self, fcn):
+    def firstpass_eval(x, jac, self, fcn):
         """ Temporary eval, used for first call but then replaced by correct eval. 
         
         The first pass is used to figure out what kind of integrand ``fcn``
@@ -2302,9 +2338,11 @@ cdef class VegasIntegrand:
         # check for scalar functions and convert to batch if is scalar
         # evaluate at arbitrary point to determine integrand shape
         x0 = x[0]
+        if jac is not None:
+            jac0 = jac[0]
         self.fcntype = getattr(fcn, 'fcntype', 'scalar')
         if self.fcntype == 'scalar':
-            fx = fcn(x0)
+            fx = fcn(x0) if jac is None else fcn(x0, jac=jac0)
             if hasattr(fx, 'keys'):
                 if not isinstance(fx, gvar.BufferDict):
                     fx = gvar.BufferDict(fx)
@@ -2319,7 +2357,9 @@ cdef class VegasIntegrand:
                 _eval = _BatchIntegrand_from_NonBatch(fcn, self.size, self.shape)
         elif self.fcntype == 'rbatch':
             x0.shape = x0.shape + (1,)
-            fx = fcn(x0)
+            if jac is not None:
+                jac0.shape = jac0.shape + (1,)
+            fx = fcn(x0) if jac is None else fcn(x0, jac=jac0)
             if hasattr(fx, 'keys'):
                 # build dictionary for non-batch version of function
                 fxs = gvar.BufferDict()
@@ -2335,7 +2375,9 @@ cdef class VegasIntegrand:
                 _eval = _BatchIntegrand_from_Batch(fcn, rbatch=True)
         else:
             x0.shape = (1,) + x0.shape
-            fx = fcn(x0)
+            if jac is not None:
+                jac0.shape = (1,) + jac0.shape
+            fx = fcn(x0) if jac is None else fcn(x0, jac=jac0)
             if hasattr(fx, 'keys'):
                 # build dictionary for non-batch version of function
                 fxs = gvar.BufferDict()
@@ -2352,21 +2394,24 @@ cdef class VegasIntegrand:
                 _eval = _BatchIntegrand_from_Batch(fcn, rbatch=False) # , self.shape)
         if self.nproc > 1:
             # MPI multiprocessor mode
-            def _mpi_eval(x, self=self, _eval=_eval):
+            def _mpi_eval(x, jac, self=self, _eval=_eval):
                 nx = x.shape[0] // self.nproc + 1
                 i0 = self.rank * nx
                 i1 = min(i0 + nx, x.shape[0])
                 f = numpy.empty((nx, self.size), numpy.float_)
                 if i1 > i0:
                     # fill f so long as haven't gone off end
-                    f[:(i1-i0)] = _eval(x[i0:i1])
+                    if jac is None:
+                        f[:(i1-i0)] = _eval(x[i0:i1], jac=None)
+                    else:
+                        f[:(i1-i0)] = _eval(x[i0:i1], jac=jac[i0:i1])
                 results = numpy.empty((self.nproc * nx, self.size), numpy.float_)
                 self.comm.Allgather(f, results)
                 return results[:x.shape[0]]
             self.eval = _mpi_eval
         else:
             self.eval = _eval
-        return self.eval(x)
+        return self.eval(x, jac=jac)
 
     def format_result(self, mean, var):
         if self.shape is None:
@@ -2376,9 +2421,9 @@ cdef class VegasIntegrand:
         else:
             return gvar.gvar(mean, var).reshape(self.shape)
 
-    def training(self, x):
+    def training(self, x, jac):
         """ Calculate first element of integrand at point ``x``. """
-        cdef numpy.ndarray fx =self.eval(x)
+        cdef numpy.ndarray fx =self.eval(x, jac=jac)
         if fx.ndim == 1:
             return fx
         else:
@@ -2399,7 +2444,7 @@ cdef class _BatchIntegrand_from_NonBatch(object):
         self.size = size
         self.shape = shape
 
-    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x, jac):
         cdef numpy.npy_intp i
         cdef numpy.ndarray[numpy.float_t, ndim=2] f = numpy.empty(
             (x.shape[0], self.size),  numpy.float_
@@ -2407,10 +2452,12 @@ cdef class _BatchIntegrand_from_NonBatch(object):
         if self.shape == ():
             # very common special case
             for i in range(x.shape[0]):
-                f[i] = self.fcn(x[i])
+                f[i] = self.fcn(x[i]) if jac is None else self.fcn(x[i], jac=jac[i])
         else:
             for i in range(x.shape[0]):
-                f[i] = numpy.asarray(self.fcn(x[i])).reshape((-1,))
+                f[i] = numpy.asarray(
+                    self.fcn(x[i]) if jac is None else self.fcn(x[i], jac=jac[i])
+                    ).reshape((-1,))
         return f
 
 cdef class _BatchIntegrand_from_NonBatchDict(object):
@@ -2421,13 +2468,13 @@ cdef class _BatchIntegrand_from_NonBatchDict(object):
         self.fcn = fcn
         self.size = size
 
-    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x, jac):
         cdef numpy.npy_intp i
         cdef numpy.ndarray[numpy.double_t, ndim=2] f = numpy.empty(
             (x.shape[0], self.size), float
             )
         for i in range(x.shape[0]):
-            fx = self.fcn(x[i])
+            fx = self.fcn(x[i]) if jac is None else self.fcn(x[i], jac=jac[i])
             if not isinstance(fx, gvar.BufferDict):
                 fx = gvar.BufferDict(fx)
             f[i] = fx.buf
@@ -2442,17 +2489,17 @@ cdef class _BatchIntegrand_from_Batch(object):
         self.fcn = fcn
         self.rbatch = rbatch
 
-    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x, jac):
         # if x.shape[0] <= 0:
         #     return numpy.empty((0,) + self.shape, float)
         if self.rbatch:
-            fx = self.fcn(x.T)
+            fx = self.fcn(x.T) if jac is None else self.fcn(x.T, jac=jac.T)
             if not isinstance(fx, numpy.ndarray):
                 fx = numpy.asarray(fx)
             fx = fx.reshape((-1, x.shape[0]))
             return numpy.ascontiguousarray(fx.T)
         else:
-            fx = self.fcn(x)
+            fx = self.fcn(x) if jac is None else self.fcn(x, jac=jac)
             if not isinstance(fx, numpy.ndarray):
                 fx = numpy.asarray(fx)
             return fx.reshape((x.shape[0], -1))
@@ -2474,13 +2521,13 @@ cdef class _BatchIntegrand_from_BatchDict(object):
         for k in bdict:
             self.slice[k], self.shape[k] = bdict.slice_shape(k)
 
-    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x):
+    def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x, jac):
         cdef numpy.npy_intp i
         cdef numpy.ndarray[numpy.double_t, ndim=2] buf = numpy.empty(
             (x.shape[0], self.size), float
             )
         if self.rbatch:
-            fx = self.fcn(x.T)
+            fx = self.fcn(x.T) if jac is None else self.fcn(x.T, jac=jac.T)
             for k in self.slice:
                 buf[:, self.slice[k]] = (
                     fx[k]
@@ -2488,7 +2535,7 @@ cdef class _BatchIntegrand_from_BatchDict(object):
                     numpy.reshape(fx[k], (-1, x.shape[0])).T
                     )
         else:
-            fx = self.fcn(x)
+            fx = self.fcn(x) if jac is None else self.fcn(x, jac=jac)
             for k in self.slice:
                 buf[:, self.slice[k]] = (
                     fx[k]
@@ -2543,9 +2590,9 @@ cdef class BatchIntegrand:
         self.fcntype = 'lbatch'
         self.fcn = None
 
-    def __call__(self, x):
+    def __call__(self, *args, **kargs):
         try:
-            return self.fcn(x)
+            return self.fcn(*args, **kargs)
         except TypeError:
             raise TypeError('no __call__ method defined (or badly defined)')
 
@@ -2593,9 +2640,9 @@ cdef class RBatchIntegrand:
         self.fcntype = 'rbatch'
         self.fcn = None
 
-    def __call__(self, x):
+    def __call__(self, *args, **kargs):
         try:
-            return self.fcn(x)
+            return self.fcn(*args, **kargs)
         except TypeError:
             raise TypeError('no __call__ method defined (or badly defined)')
 
