@@ -1566,7 +1566,7 @@ keyword <code class="docutils literal notranslate"><span class="pre">uses_jac=Tr
 </div>
 <p>Setting <code class="docutils literal notranslate"><span class="pre">uses_jac=True</span></code> causes <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to calll the integrand with
 two arguments instead of one: <code class="docutils literal notranslate"><span class="pre">f(x,</span> <span class="pre">jac=jac)</span></code> where <code class="docutils literal notranslate"><span class="pre">jac[d]</span></code> is
-the Jacobian for direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. This gives much better results –</p>
+the Jacobian for direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. This gives much better results —</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
   <span class="mi">1</span>   <span class="mf">15.3136</span><span class="p">(</span><span class="mi">86</span><span class="p">)</span>     <span class="mf">15.3136</span><span class="p">(</span><span class="mi">86</span><span class="p">)</span>         <span class="mf">0.00</span>     <span class="mf">1.00</span>
@@ -1583,8 +1583,9 @@ the Jacobian for direction <code class="docutils literal notranslate"><span cla
 <span class="n">Ia</span> <span class="o">-</span> <span class="n">Ib</span> <span class="o">=</span> <span class="mf">0.1015</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>– where now the two integrals are comparable in precision and the difference is
-quite accurate.</p>
+<p>— where now the two integrals are comparable in precision and the difference is
+quite accurate. Note that the error on the difference is smaller than either of
+the separate errors, because of correlations between the two results.</p>
 </section>
 <section id="vegas-as-a-random-number-generator">
 <h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> as a Random Number Generator<a class="headerlink" href="#vegas-as-a-random-number-generator" title="Permalink to this headline">¶</a></h2>

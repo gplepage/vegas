@@ -1474,7 +1474,8 @@ the Jacobian for direction |~| ``d``. This gives much better results ---
 .. literalinclude:: eg8b.out
 
 --- where now the two integrals are comparable in precision and the difference is 
-quite accurate.
+quite accurate. Note that the error on the difference is smaller than either of 
+the separate errors, because of correlations between the two results.
 
 |vegas| as a Random Number Generator
 -------------------------------------
