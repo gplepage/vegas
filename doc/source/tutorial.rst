@@ -1469,11 +1469,11 @@ keyword ``uses_jac=True`` in the integrator::
 
 Setting ``uses_jac=True`` causes |vegas| to calll the integrand with 
 two arguments instead of one: ``f(x, jac=jac)`` where ``jac[d]`` is 
-the Jacobian for direction |~| ``d``. This gives much better results -- 
+the Jacobian for direction |~| ``d``. This gives much better results --- 
 
 .. literalinclude:: eg8b.out
 
--- where now the two integrals are comparable in precision and the difference is 
+--- where now the two integrals are comparable in precision and the difference is 
 quite accurate.
 
 |vegas| as a Random Number Generator
