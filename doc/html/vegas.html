@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>vegas Module &#8212; vegas 5.1 documentation</title>
+    <title>vegas Module &#8212; vegas 5.1.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -203,6 +203,12 @@ example, causes vegas to print out a running report
 of its results as they are produced. The default
 is <code class="docutils literal notranslate"><span class="pre">analyzer=None</span></code>.</p>
 </p></li>
+<li><p><strong>uses_jac</strong> (<em>bool</em>) – Setting <code class="docutils literal notranslate"><span class="pre">uses_jac=True</span></code> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to
+call the integrand with two arguments: <code class="docutils literal notranslate"><span class="pre">fcn(x,</span> <span class="pre">jac=jac)</span></code>.
+The second argument is the Jacobian <code class="docutils literal notranslate"><span class="pre">jac[d]</span> <span class="pre">=</span> <span class="pre">dx[d]/dy[d]</span></code>
+of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map. The integral over <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> of <code class="docutils literal notranslate"><span class="pre">1/jac[d]</span></code>
+equals 1 (exactly). The default setting
+is <code class="docutils literal notranslate"><span class="pre">uses_jac=False</span></code>.</p></li>
 <li><p><strong>nhcube_batch</strong> (<em>positive int</em>) – The number of hypercubes (in y space)
 whose integration points are combined into a single
 batch to be passed to the integrand, together,
@@ -1428,7 +1434,7 @@ class from <a class="reference internal" href="#vegas.BatchIntegrand" title="veg
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>

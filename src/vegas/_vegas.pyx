@@ -892,6 +892,12 @@ cdef class Integrator(object):
             example, causes vegas to print out a running report
             of its results as they are produced. The default
             is ``analyzer=None``.
+        uses_jac (bool): Setting ``uses_jac=True`` causes |vegas| to 
+            call the integrand with two arguments: ``fcn(x, jac=jac)``.
+            The second argument is the Jacobian ``jac[d] = dx[d]/dy[d]`` 
+            of the |vegas| map. The integral over ``x[d]`` of ``1/jac[d]``
+            equals 1 (exactly). The default setting 
+            is ``uses_jac=False``.
         nhcube_batch (positive int): The number of hypercubes (in |y| space)
             whose integration points are combined into a single
             batch to be passed to the integrand, together,

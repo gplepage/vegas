@@ -1384,98 +1384,118 @@ integrand evaluations (about 800,000 per iteration):
 
 |vegas| Jacobian
 -------------------
-Consider the integral:
+Consider the integral
 
 .. math::
 
-     \int^2_0 dx_0 \, \frac{1}{(x_0-\delta)^2 + 0.01}
+     \int^{\pi/2}_0 dx_0 \, \frac{1}{(x_0-\delta)^2 + 0.01}.
 
 We want to compare this integral for two different cases: a) 
-where :math:`\delta=x_1` is a random number near zero drawn from an exponential 
-distribution :math:`10^3\mathrm{exp}(-10^3 x_1)` with :math:`0\le x_1 \le 2`; 
-and b) where :math:`\delta=0`.
-The two integrals should be very similar, so we would like to integrate them
-simultaneously; but one integral is two-dimensional (since it requires an
-integral over :math:`x_1`) while the other is one-dimensional.
-
-One solution is to turn both integrals into two-dimensional 
-integrals:
+where :math:`\delta=x_1` is a random number near zero drawn from a distribution
+proportional to :math:`\mathrm{exp}(-100\, \mathrm{sin} (x_1))` 
+with :math:`0\le x_1 \le \pi/2`; 
+and b) where :math:`\delta=0`. The result for the first case is 
+:math:`I_a = I_a^\mathrm{num}/I_a^\mathrm{den}` where
 
 .. math::
 
-    I_a = 10^3 \int^2_0 dx_0 \int^2_0 dx_1
-    \, \mathrm{e}^{-10^3 x_1}
-     \, \frac{1}{(x_0-x_1)^2 + 0.01}
+    I_a^\mathrm{num} &= \int^{\pi/2}_0 dx_0 \int^{\pi/2}_0 dx_1
+    \, \mathrm{e}^{-100\,\mathrm{sin}(x_1)}
+     \, \frac{1}{(x_0-x_1)^2 + 0.01} \\
+    I_a^\mathrm{den} &= \int^{\pi/2}_0 dx_1 
+    \, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}.
 
-and 
+The result for the second case is
 
 .. math::
 
-    I_b = \frac{1}{2} \int^2_0 dx_0 \int^2_0 dx_1 
+    I_b = \int^{\pi/2}_0 dx_0 
     \, \frac{1}{(x_0)^2 + 0.01}.
 
+The first two integrals should have very similar dependence on :math:`x_1`, while 
+the first and third integrals should have similar dependence on :math:`x_0`.
+Given these similarities, we would like to do all three integrals simultaneously;
+but one integral is two-dimensional and the other two are one-dimensional.
+
+One solution is to turn the one-dimensional integrals into two-dimensional 
+integrals by rewriting :math:`I_a^\mathrm{den}` as
+
+.. math::
+
+    I_a^\mathrm{den} &= 
+    \int^{\pi/2}_0 \frac{dx_0}{\pi/2} 
+    \int^{\pi/2}_0 dx_1 
+    \, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}.
+
+and similarly for :math:`I_b`.
 These are then easily integrated together --- ::
 
     import vegas
     import numpy as np
 
-    integ = vegas.Integrator(2 * [(0., 2.)])
+    integ = vegas.Integrator(2 * [(0., np.pi/2.)])
 
     @vegas.rbatchintegrand
     def f(x):
-        Ia = 1e3 * np.exp(-1e3 * x[1]) / ((x[0] - x[1])**2 + 0.01)
-        Ib = 0.5 /  (x[0]**2 + 0.01) 
-        return dict(Ia=Ia, Ib=Ib)
+        Ia_num = np.exp(-1e2 * np.sin(x[1])) / ((x[0] - x[1])**2 + 0.01)
+        Ia_den = np.exp(-1e2 * np.sin(x[1])) / (np.pi/2)
+        Ib = 1 /  (x[0]**2 + 0.01) / (np.pi/2)
+        return dict(Ia_num=Ia_num, Ia_den=Ia_den, Ib=Ib)
 
     w = integ(f, neval=20000, nitn=10)
     r = integ(f, neval=20000, nitn=5)
     print(r.summary(True))
-    print('Ia - Ib =', r['Ia'] - r['Ib'])
+    print('Ia =', r['Ia_num'] / r['Ia_den'], 'Ia - Ib =', r['Ia_num'] / r['Ia_den'] - r['Ib'])
 
 --- but the result is useless:
 
 .. literalinclude:: eg8a.out
 
-The second integral is almost 400x less accurate than the first, despite 
+:math:`I_b` is almost 100x less accurate than :math:`I_a`, despite 
 having an integrand with no ``x[1]`` dependence. The problem is that the 
-|vegas| map for ``x[1]`` is tailored to the first integral, which has 
+|vegas| map for ``x[1]`` is tailored to :math:`I_a^\mathrm{num}`, which has 
 a strong peak at ``x[1]=0``. That map is highly sub-optimal for integrating
-a function, like that in the second integral, that is independent of ``x[1]``.
+a function, like that in :math:`I_b`, that is independent of ``x[1]``.
 
-A much better approach is to express the second integral in terms of the 
-Jacobian for the |vegas| map in direction |~| 1:
+A much better approach is to rewrite the one-dimensional integrals
+as two-dimensional integrals using the |vegas|
+map's Jacobian :math:`dx_d/dy_d` in the extra direction |~| :math:`d`.
+For example,
 
 .. math::
 
-    I_b = \int^2_0 dx_0 \int^2_0 \frac{dx_1}{dx_1/dy_1}  
-    \,\, \frac{1}{(x_0)^2 + 0.01}.
+    I_a^\mathrm{den} &= 
+    \int^{\pi/2}_0 \frac{dx_0}{dx_0/dy_0} 
+    \int^{\pi/2}_0 dx_1 
+    \, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}.
 
-This turns the :math:`x_1` integral into an integral over :math:`0\le y_1 \le 1`` 
-with an integrand equal to |~| 1. The Monte Carlo integral over :math:`y_1` 
+This turns the :math:`x_0` integral into an integral over :math:`0\le y_0 \le 1`` 
+with an integrand equal to |~| 1. The Monte Carlo integral over :math:`y_0` 
 in |vegas| is then exact; it is unaffected by the map for that direction. 
-This is easily implemented by setting 
+This is easily implemented for both one-dimensional integrals by setting 
 keyword ``uses_jac=True`` in the integrator::
 
     @vegas.rbatchintegrand
     def f(x, jac):
-        Ia = 1e3 * np.exp(-1e3 * x[1]) / ((x[0] - x[1])**2 + 0.01)
+        Ia_num = np.exp(-1e2 * np.sin(x[1])) / ((x[0] - x[1])**2 + 0.01)
+        Ia_den = np.exp(-1e2 * np.sin(x[1])) / jac[0]
         Ib = 1 /  (x[0]**2 + 0.01) / jac[1]
-        return dict(Ia=Ia, Ib=Ib)
+        return dict(Ia_num=Ia_num, Ia_den=Ia_den, Ib=Ib)
 
     w = integ(f, uses_jac=True, neval=20000, nitn=10)
     r = integ(f, uses_jac=True, neval=20000, nitn=5)
-    print(r.summary(True))
-    print('Ia - Ib =', r['Ia'] - r['Ib'])
 
-Setting ``uses_jac=True`` causes |vegas| to calll the integrand with 
+Setting ``uses_jac=True`` causes |vegas| to call the integrand with 
 two arguments instead of one: ``f(x, jac=jac)`` where ``jac[d]`` is 
-the Jacobian for direction |~| ``d``. This gives much better results --- 
+the Jacobian for direction |~| ``d`` (array ``jac`` has the same shape
+as ``x``). This gives much better results --- 
 
 .. literalinclude:: eg8b.out
 
---- where now the two integrals are comparable in precision and the difference is 
+--- where now :math:`I_a` and :math:`I_b` are comparable in precision and the difference is 
 quite accurate. Note that the error on the difference is smaller than either of 
 the separate errors, because of correlations between the two results.
+
 
 |vegas| as a Random Number Generator
 -------------------------------------

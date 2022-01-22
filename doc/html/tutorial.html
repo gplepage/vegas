@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Tutorial &#8212; vegas 5.1 documentation</title>
+    <title>Tutorial &#8212; vegas 5.1.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -40,7 +40,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>  
@@ -1482,108 +1482,126 @@ integrand evaluations (about 800,000 per iteration):</p>
 </section>
 <section id="vegas-jacobian">
 <h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Jacobian<a class="headerlink" href="#vegas-jacobian" title="Permalink to this headline">¶</a></h2>
-<p>Consider the integral:</p>
+<p>Consider the integral</p>
 <div class="math">
-<p><img src="_images/math/66ec72a113d16297a25c510f4c47cf0b1a9202d0.svg" alt="\int^2_0 dx_0 \, \frac{1}{(x_0-\delta)^2 + 0.01}"/></p>
+<p><img src="_images/math/f1929d906e21bdd8fa0dd0ac206d9271290ed80a.svg" alt="\int^{\pi/2}_0 dx_0 \, \frac{1}{(x_0-\delta)^2 + 0.01}."/></p>
 </div><p>We want to compare this integral for two different cases: a)
-where <img class="math" src="_images/math/90057b4db4589ddd94bcb6ef4e237cbaf129d964.svg" alt="\delta=x_1"/> is a random number near zero drawn from an exponential
-distribution <img class="math" src="_images/math/60e30ed691903779bb8a390263cbaf9f1ee44b64.svg" alt="10^3\mathrm{exp}(-10^3 x_1)"/> with <img class="math" src="_images/math/46ac4e39843729a062387a150f24ff2f867d373b.svg" alt="0\le x_1 \le 2"/>;
-and b) where <img class="math" src="_images/math/6b7383edd5b38c8fc7f48d0f20e1742a3aedc8cb.svg" alt="\delta=0"/>.
-The two integrals should be very similar, so we would like to integrate them
-simultaneously; but one integral is two-dimensional (since it requires an
-integral over <img class="math" src="_images/math/212712c54959852f9475bf600ab722a654434b96.svg" alt="x_1"/>) while the other is one-dimensional.</p>
-<p>One solution is to turn both integrals into two-dimensional
-integrals:</p>
+where <img class="math" src="_images/math/90057b4db4589ddd94bcb6ef4e237cbaf129d964.svg" alt="\delta=x_1"/> is a random number near zero drawn from a distribution
+proportional to <img class="math" src="_images/math/e5e8ace873852c2f0a8ea0785cc39db97a7b5b18.svg" alt="\mathrm{exp}(-100\, \mathrm{sin} (x_1))"/>
+with <img class="math" src="_images/math/2042c108a638219d4268724b3fca8329ee46b0e4.svg" alt="0\le x_1 \le \pi/2"/>;
+and b) where <img class="math" src="_images/math/6b7383edd5b38c8fc7f48d0f20e1742a3aedc8cb.svg" alt="\delta=0"/>. The result for the first case is
+<img class="math" src="_images/math/1a570870b3eca321272b1fb845873a1b095b6b04.svg" alt="I_a = I_a^\mathrm{num}/I_a^\mathrm{den}"/> where</p>
 <div class="math">
-<p><img src="_images/math/655b6656e94deff6c8dc93658abe0f3a1d1fd706.svg" alt="I_a = 10^3 \int^2_0 dx_0 \int^2_0 dx_1
-\, \mathrm{e}^{-10^3 x_1}
- \, \frac{1}{(x_0-x_1)^2 + 0.01}"/></p>
-</div><p>and</p>
+<p><img src="_images/math/3889054504efe42e12038ffe759d4f6594167b9d.svg" alt="I_a^\mathrm{num} &amp;= \int^{\pi/2}_0 dx_0 \int^{\pi/2}_0 dx_1
+\, \mathrm{e}^{-100\,\mathrm{sin}(x_1)}
+ \, \frac{1}{(x_0-x_1)^2 + 0.01} \\
+I_a^\mathrm{den} &amp;= \int^{\pi/2}_0 dx_1
+\, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}."/></p>
+</div><p>The result for the second case is</p>
 <div class="math">
-<p><img src="_images/math/0dfa46bc38c8681b32b1de49f18c03d99383dbbf.svg" alt="I_b = \frac{1}{2} \int^2_0 dx_0 \int^2_0 dx_1
+<p><img src="_images/math/146e265b4ff0a009f454279f6fd9f9386bc296dd.svg" alt="I_b = \int^{\pi/2}_0 dx_0
 \, \frac{1}{(x_0)^2 + 0.01}."/></p>
-</div><p>These are then easily integrated together —</p>
+</div><p>The first two integrals should have very similar dependence on <img class="math" src="_images/math/212712c54959852f9475bf600ab722a654434b96.svg" alt="x_1"/>, while
+the first and third integrals should have similar dependence on <img class="math" src="_images/math/cedacf3e2b5e3647040e2088bd52ca1f59dc7829.svg" alt="x_0"/>.
+Given these similarities, we would like to do all three integrals simultaneously;
+but one integral is two-dimensional and the other two are one-dimensional.</p>
+<p>One solution is to turn the one-dimensional integrals into two-dimensional
+integrals by rewriting <img class="math" src="_images/math/34d1ab9b9fa6e6a13feac39116e27a5a49d06d59.svg" alt="I_a^\mathrm{den}"/> as</p>
+<div class="math">
+<p><img src="_images/math/090edb6e16048bc0fcff8ef72d8e0972a6e0e613.svg" alt="I_a^\mathrm{den} &amp;=
+\int^{\pi/2}_0 \frac{dx_0}{\pi/2}
+\int^{\pi/2}_0 dx_1
+\, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}."/></p>
+</div><p>and similarly for <img class="math" src="_images/math/129d5e5e3591bf98b702018df32d92f8a4d30303.svg" alt="I_b"/>.
+These are then easily integrated together —</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">)])</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">2.</span><span class="p">)])</span>
 
 <span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">Ia</span> <span class="o">=</span> <span class="mf">1e3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">1e3</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span>
-    <span class="n">Ib</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">/</span>  <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">Ia</span><span class="o">=</span><span class="n">Ia</span><span class="p">,</span> <span class="n">Ib</span><span class="o">=</span><span class="n">Ib</span><span class="p">)</span>
+    <span class="n">Ia_num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">1e2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">/</span> <span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span>
+    <span class="n">Ia_den</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">1e2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">Ib</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span>  <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">Ia_num</span><span class="o">=</span><span class="n">Ia_num</span><span class="p">,</span> <span class="n">Ia_den</span><span class="o">=</span><span class="n">Ia_den</span><span class="p">,</span> <span class="n">Ib</span><span class="o">=</span><span class="n">Ib</span><span class="p">)</span>
 
 <span class="n">w</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">20000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">20000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Ia - Ib =&#39;</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;Ia&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;Ib&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Ia =&#39;</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;Ia_num&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;Ia_den&#39;</span><span class="p">],</span> <span class="s1">&#39;Ia - Ib =&#39;</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;Ia_num&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;Ia_den&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;Ib&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>— but the result is useless:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">15.3136</span><span class="p">(</span><span class="mi">86</span><span class="p">)</span>     <span class="mf">15.3136</span><span class="p">(</span><span class="mi">86</span><span class="p">)</span>         <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">15.3168</span><span class="p">(</span><span class="mi">69</span><span class="p">)</span>     <span class="mf">15.3156</span><span class="p">(</span><span class="mi">54</span><span class="p">)</span>         <span class="mf">0.19</span>     <span class="mf">0.83</span>
-  <span class="mi">3</span>   <span class="mf">15.3156</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>     <span class="mf">15.3155</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>         <span class="mf">0.10</span>     <span class="mf">0.98</span>
-  <span class="mi">4</span>   <span class="mf">15.3099</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span>     <span class="mf">15.3136</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>         <span class="mf">0.18</span>     <span class="mf">0.98</span>
-  <span class="mi">5</span>   <span class="mf">15.3080</span><span class="p">(</span><span class="mi">48</span><span class="p">)</span>     <span class="mf">15.3117</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>         <span class="mf">0.31</span>     <span class="mf">0.96</span>
+  <span class="mi">1</span>   <span class="mf">0.160568</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>    <span class="mf">0.160568</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>        <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.160551</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>    <span class="mf">0.160559</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>        <span class="mf">0.13</span>     <span class="mf">0.94</span>
+  <span class="mi">3</span>   <span class="mf">0.160533</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span>    <span class="mf">0.160549</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>        <span class="mf">0.36</span>     <span class="mf">0.90</span>
+  <span class="mi">4</span>   <span class="mf">0.160568</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>    <span class="mf">0.160555</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>        <span class="mf">0.96</span>     <span class="mf">0.47</span>
+  <span class="mi">5</span>   <span class="mf">0.160553</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>    <span class="mf">0.160554</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>        <span class="mf">0.73</span>     <span class="mf">0.72</span>
 
-  <span class="n">key</span><span class="o">/</span><span class="n">index</span>           <span class="n">value</span>
-<span class="o">---------------------------</span>
-         <span class="n">Ia</span>    <span class="mf">15.3117</span> <span class="p">(</span><span class="mi">27</span><span class="p">)</span>
-         <span class="n">Ib</span>      <span class="mf">14.5</span> <span class="p">(</span><span class="mf">1.2</span><span class="p">)</span>
+  <span class="n">key</span><span class="o">/</span><span class="n">index</span>             <span class="n">value</span>
+<span class="o">-----------------------------</span>
+     <span class="n">Ia_num</span>     <span class="mf">0.160554</span> <span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+     <span class="n">Ia_den</span>    <span class="mf">0.0099995</span> <span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+         <span class="n">Ib</span>        <span class="mf">14.62</span> <span class="p">(</span><span class="mi">88</span><span class="p">)</span>
 
-<span class="n">Ia</span> <span class="o">-</span> <span class="n">Ib</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">(</span><span class="mf">1.3</span><span class="p">)</span>
+<span class="n">Ia</span> <span class="o">=</span> <span class="mf">16.0562</span><span class="p">(</span><span class="mi">99</span><span class="p">)</span> <span class="n">Ia</span> <span class="o">-</span> <span class="n">Ib</span> <span class="o">=</span> <span class="mf">1.43</span><span class="p">(</span><span class="mi">88</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The second integral is almost 400x less accurate than the first, despite
+<p><img class="math" src="_images/math/129d5e5e3591bf98b702018df32d92f8a4d30303.svg" alt="I_b"/> is almost 100x less accurate than <img class="math" src="_images/math/c150b60b5edc3a5c09fabddc71d7a09d7c52291e.svg" alt="I_a"/>, despite
 having an integrand with no <code class="docutils literal notranslate"><span class="pre">x[1]</span></code> dependence. The problem is that the
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map for <code class="docutils literal notranslate"><span class="pre">x[1]</span></code> is tailored to the first integral, which has
+<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map for <code class="docutils literal notranslate"><span class="pre">x[1]</span></code> is tailored to <img class="math" src="_images/math/5af8a3ee2729271982a439fe302eb384645d0e64.svg" alt="I_a^\mathrm{num}"/>, which has
 a strong peak at <code class="docutils literal notranslate"><span class="pre">x[1]=0</span></code>. That map is highly sub-optimal for integrating
-a function, like that in the second integral, that is independent of <code class="docutils literal notranslate"><span class="pre">x[1]</span></code>.</p>
-<p>A much better approach is to express the second integral in terms of the
-Jacobian for the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map in direction 1:</p>
+a function, like that in <img class="math" src="_images/math/129d5e5e3591bf98b702018df32d92f8a4d30303.svg" alt="I_b"/>, that is independent of <code class="docutils literal notranslate"><span class="pre">x[1]</span></code>.</p>
+<p>A much better approach is to rewrite the one-dimensional integrals
+as two-dimensional integrals using the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
+map’s Jacobian <img class="math" src="_images/math/4f252a7f4470b972a280445b0d1634e45d1db20f.svg" alt="dx_d/dy_d"/> in the extra direction <img class="math" src="_images/math/71ad8370b0b8e9dafe0121a2623e940d29f4cae5.svg" alt="d"/>.
+For example,</p>
 <div class="math">
-<p><img src="_images/math/92ba20442a4b95a3468f9c6aef91c73261155d27.svg" alt="I_b = \int^2_0 dx_0 \int^2_0 \frac{dx_1}{dx_1/dy_1}
-\,\, \frac{1}{(x_0)^2 + 0.01}."/></p>
-</div><p>This turns the <img class="math" src="_images/math/212712c54959852f9475bf600ab722a654434b96.svg" alt="x_1"/> integral into an integral over <img class="math" src="_images/math/7e3fa98013978802ede04b2ae71a95a5f37179bf.svg" alt="0\le y_1 \le 1"/>
-with an integrand equal to 1. The Monte Carlo integral over <img class="math" src="_images/math/4263fa39f5346b8e8a52e1bf08797583555716c0.svg" alt="y_1"/>
+<p><img src="_images/math/0c0d1ed9170a223387ee25d79f0630047e95c4fb.svg" alt="I_a^\mathrm{den} &amp;=
+\int^{\pi/2}_0 \frac{dx_0}{dx_0/dy_0}
+\int^{\pi/2}_0 dx_1
+\, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}."/></p>
+</div><p>This turns the <img class="math" src="_images/math/cedacf3e2b5e3647040e2088bd52ca1f59dc7829.svg" alt="x_0"/> integral into an integral over <img class="math" src="_images/math/97fc710c1932de96de6c04b323701bf30b7538ab.svg" alt="0\le y_0 \le 1"/>
+with an integrand equal to 1. The Monte Carlo integral over <img class="math" src="_images/math/b543363ec2b79d432aba848d80a0ad4a5eba2445.svg" alt="y_0"/>
 in <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is then exact; it is unaffected by the map for that direction.
-This is easily implemented by setting
+This is easily implemented for both one-dimensional integrals by setting
 keyword <code class="docutils literal notranslate"><span class="pre">uses_jac=True</span></code> in the integrator:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">jac</span><span class="p">):</span>
-    <span class="n">Ia</span> <span class="o">=</span> <span class="mf">1e3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">1e3</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span>
+    <span class="n">Ia_num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">1e2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">/</span> <span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span>
+    <span class="n">Ia_den</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">1e2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">/</span> <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">Ib</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span>  <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">)</span> <span class="o">/</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">Ia</span><span class="o">=</span><span class="n">Ia</span><span class="p">,</span> <span class="n">Ib</span><span class="o">=</span><span class="n">Ib</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">Ia_num</span><span class="o">=</span><span class="n">Ia_num</span><span class="p">,</span> <span class="n">Ia_den</span><span class="o">=</span><span class="n">Ia_den</span><span class="p">,</span> <span class="n">Ib</span><span class="o">=</span><span class="n">Ib</span><span class="p">)</span>
 
 <span class="n">w</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">uses_jac</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">20000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">uses_jac</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">20000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Ia - Ib =&#39;</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;Ia&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;Ib&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Setting <code class="docutils literal notranslate"><span class="pre">uses_jac=True</span></code> causes <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to calll the integrand with
+<p>Setting <code class="docutils literal notranslate"><span class="pre">uses_jac=True</span></code> causes <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to call the integrand with
 two arguments instead of one: <code class="docutils literal notranslate"><span class="pre">f(x,</span> <span class="pre">jac=jac)</span></code> where <code class="docutils literal notranslate"><span class="pre">jac[d]</span></code> is
-the Jacobian for direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. This gives much better results —</p>
+the Jacobian for direction <code class="docutils literal notranslate"><span class="pre">d</span></code> (array <code class="docutils literal notranslate"><span class="pre">jac</span></code> has the same shape
+as <code class="docutils literal notranslate"><span class="pre">x</span></code>). This gives much better results —</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">15.3136</span><span class="p">(</span><span class="mi">86</span><span class="p">)</span>     <span class="mf">15.3136</span><span class="p">(</span><span class="mi">86</span><span class="p">)</span>         <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">15.3168</span><span class="p">(</span><span class="mi">69</span><span class="p">)</span>     <span class="mf">15.3154</span><span class="p">(</span><span class="mi">54</span><span class="p">)</span>         <span class="mf">0.33</span>     <span class="mf">0.72</span>
-  <span class="mi">3</span>   <span class="mf">15.3156</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>     <span class="mf">15.3156</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>         <span class="mf">0.21</span>     <span class="mf">0.94</span>
-  <span class="mi">4</span>   <span class="mf">15.3099</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span>     <span class="mf">15.3135</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>         <span class="mf">0.27</span>     <span class="mf">0.95</span>
-  <span class="mi">5</span>   <span class="mf">15.3080</span><span class="p">(</span><span class="mi">48</span><span class="p">)</span>     <span class="mf">15.3118</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>         <span class="mf">0.32</span>     <span class="mf">0.96</span>
+  <span class="mi">1</span>   <span class="mf">0.160568</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>    <span class="mf">0.160568</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>        <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.160551</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>    <span class="mf">0.160560</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>        <span class="mf">0.28</span>     <span class="mf">0.84</span>
+  <span class="mi">3</span>   <span class="mf">0.160533</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span>    <span class="mf">0.160547</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>        <span class="mf">0.38</span>     <span class="mf">0.89</span>
+  <span class="mi">4</span>   <span class="mf">0.160568</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>    <span class="mf">0.160554</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>        <span class="mf">0.58</span>     <span class="mf">0.82</span>
+  <span class="mi">5</span>   <span class="mf">0.160553</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>    <span class="mf">0.160553</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>        <span class="mf">0.58</span>     <span class="mf">0.86</span>
 
-  <span class="n">key</span><span class="o">/</span><span class="n">index</span>           <span class="n">value</span>
-<span class="o">---------------------------</span>
-         <span class="n">Ia</span>    <span class="mf">15.3118</span> <span class="p">(</span><span class="mi">27</span><span class="p">)</span>
-         <span class="n">Ib</span>    <span class="mf">15.2103</span> <span class="p">(</span><span class="mi">24</span><span class="p">)</span>
+  <span class="n">key</span><span class="o">/</span><span class="n">index</span>              <span class="n">value</span>
+<span class="o">------------------------------</span>
+     <span class="n">Ia_num</span>      <span class="mf">0.160553</span> <span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+     <span class="n">Ia_den</span>    <span class="mf">0.01000103</span> <span class="p">(</span><span class="mi">59</span><span class="p">)</span>
+         <span class="n">Ib</span>       <span class="mf">15.0749</span> <span class="p">(</span><span class="mi">11</span><span class="p">)</span>
 
-<span class="n">Ia</span> <span class="o">-</span> <span class="n">Ib</span> <span class="o">=</span> <span class="mf">0.1015</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
+<span class="n">Ia</span> <span class="o">=</span> <span class="mf">16.0536</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> <span class="n">Ia</span> <span class="o">-</span> <span class="n">Ib</span> <span class="o">=</span> <span class="mf">0.97868</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>— where now the two integrals are comparable in precision and the difference is
+<p>— where now <img class="math" src="_images/math/c150b60b5edc3a5c09fabddc71d7a09d7c52291e.svg" alt="I_a"/> and <img class="math" src="_images/math/129d5e5e3591bf98b702018df32d92f8a4d30303.svg" alt="I_b"/> are comparable in precision and the difference is
 quite accurate. Note that the error on the difference is smaller than either of
 the separate errors, because of correlations between the two results.</p>
 </section>
@@ -1736,7 +1754,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.1.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>
