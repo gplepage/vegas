@@ -10,7 +10,7 @@ cpdef f(double[::1] x):
     cdef double ans =  0
     cdef double norm = (100. / np.pi) ** 2 / N
     for j in range(N):
-        x0 = j / (N - 1.)
+        x0 = 0.4 + 0.2 * j / (N - 1.)
         dx2 = 0.0
         for d in range(dim):
             dx2 += (x[d] - x0) ** 2
