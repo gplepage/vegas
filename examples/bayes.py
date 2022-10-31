@@ -10,7 +10,7 @@ numpy = np
 # options (default is 2nd in each case)
 SHOW_PLOT = True 
 SHOW_PLOT = False
-USE_FIT = True
+USE_FIT = True    # integration errors much smaller in this case
 USE_FIT = False
 W_SHAPE = 19
 W_SHAPE = ()
@@ -35,66 +35,73 @@ def main():
     # modified probability density function
     mod_pdf = ModifiedPDF(data=(x, y), fcn=fitfcn, prior=prior)
 
-    # evaluate expectation value of g(p)
-    @vegas.rbatchintegrand
-    def g(p):
-        w = p['w']
-        c = p['c']
-        c_outer = c[:, None] * c[None,:]
-        b = p['b']
-        return dict(w=[w, w**2] , c_mean=c, c_outer=c_outer, b=[b, b**2])
-
     # integrator for expectation values with modified PDF
+    # nproc=8 makes things go only a little bit faster
     if USE_FIT:
         fit = lsqfit.nonlinear_fit(data=(x,y), prior=prior, fcn=fitfcn)
-        expval = vegas.PDFIntegrator(fit.p, pdf=mod_pdf)
+        expval = vegas.PDFIntegrator(fit.p, pdf=mod_pdf, nproc=8)
     else:
-        expval = vegas.PDFIntegrator(prior, pdf=mod_pdf)
+        expval = vegas.PDFIntegrator(prior, pdf=mod_pdf, nproc=8)
 
     # adapt integrator to pdf
     nitn = 10
-    neval = 1_000
-    warmup = expval(g, neval=neval, nitn=nitn)
+    neval = 10_000
+    warmup = expval(neval=neval, nitn=nitn)
 
     # calculate expectation values
+    # N.B. nproc > 1 slows things down (integrand too simple, neval too small)
+    # but including it here to make sure it works.
     results = expval(g, neval=neval, nitn=nitn, adapt=False)
     print(results.summary())
 
-    # parameters c[i]
-    c_mean = results['c_mean']
-    cov = results['c_outer'] - np.outer(c_mean, c_mean)
+    print('vegas results:')
+    # c[i]
+    cmean = results['c_mean']
+    cov = results['c_outer'] - np.outer(cmean, cmean)
     cov = (cov + cov.T) / 2
-    # combine Monte Carlo vegas error with covariance
-    c = c_mean + gv.gvar(np.zeros(c_mean.shape), gv.mean(cov))
-    print('c =', c)
-    print(
-        'corr(c) =',
-        np.array2string(gv.evalcorr(c), prefix=10 * ' '),
-        '\n',
-        )
-
-    # parameter w
+    # w, b
     wmean, w2mean = results['w']
-    wsdev = gv.mean(w2mean - wmean ** 2) ** 0.5
-    w = wmean + gv.gvar(np.zeros(np.shape(wmean)), wsdev)
-    print('w =', w, '\n')
-
-    # parameter b
+    wsdev = (w2mean - wmean**2)**0.5
     bmean, b2mean = results['b']
-    bsdev = gv.mean(b2mean - bmean ** 2) ** 0.5
-    b = bmean + gv.gvar(np.zeros(np.shape(bmean)), bsdev)
-    print('b =', b, '\n')
-
+    bsdev = (b2mean - bmean**2)**0.5
+    print('  c means =', cmean)
+    print('  c cov =', str(cov).replace('\n', '\n' + 10 * ' '))
+    print('  w mean =', str(wmean).replace('\n', '\n' + 11 * ' '))
+    print('  w sdev =', str(wsdev).replace('\n', '\n' + 11 * ' '))
+    print('  b mean =', bmean)
+    print('  b sdev =', bsdev)
     # Bayes Factor
-    print('logBF =', np.log(results.pdfnorm))
+    print('\n  logBF =', np.log(results.pdfnorm))
+    
+    print('\nCombine vegas errors with covariances for final results:')
+    # N.B. vegas errors are actually insignificant compared to covariances
+    c = cmean + gv.gvar(np.zeros(cmean.shape), gv.mean(cov))
+    w = wmean + gv.gvar(np.zeros(np.shape(wmean)), gv.mean(wsdev))
+    b = bmean + gv.gvar(np.zeros(np.shape(bmean)), bsdev.mean)
+    print('  c =', c)
+    print('  corr(c) =', str(gv.evalcorr(c)).replace('\n', '\n' + 12*' '))
+    print('  w =', str(w).replace('\n', '\n' + 6*' '))
+    print('  b =', b, '\n')
 
     ### Plot results
     make_plot(data=(x, y), prior=prior, c=c)
 
+# evaluating expectation value of g(p)
+@vegas.rbatchintegrand
+def g(p):
+    try:
+        w = p['w']
+    except KeyError:
+        print(type(p), p)
+        exit(0)
+    c = p['c']
+    c_outer = c[:, None] * c[None,:]
+    b = p['b']
+    return dict(w=[w, w**2] , c_mean=c, c_outer=c_outer, b=[b, b**2])
+
 @vegas.rbatchintegrand
 class ModifiedPDF:
     """ Modified PDF to account for measurement failure. """
-
     def __init__(self, data, fcn, prior):
         x, y = data
         # add rbatch index to arrays
@@ -103,11 +110,20 @@ class ModifiedPDF:
         self.fcn = fcn
         self.prior = gv.BufferDict()
         self.prior['c'] = prior['c'][:, None]
+        # check whether one w or lots of w's
         if np.shape(prior['gw(w)']) != ():
             self.prior['gw(w)'] = prior['gw(w)'][:, None]
         else:
             self.prior['gw(w)'] = prior['gw(w)']
         self.prior['gb(b)'] = prior['gb(b)']
+
+    # support pickling (needed because of GVars in y and prior) 
+    # allows nproc>1
+    def __getstate__(self):
+        return gv.dumps(self.__dict__)
+
+    def __setstate__(self, bstr):
+        self.__dict__ = gv.loads(bstr)
 
     def __call__(self, p):
         y_fx = self.y - self.fcn(self.x, p)
@@ -164,7 +180,7 @@ def make_plot(data, prior, c):
     yp = gv.mean(yline) + gv.sdev(yline)
     ym = gv.mean(yline) - gv.sdev(yline)
     plt.fill_between(xline, yp, ym, color='r', alpha=0.2)
-    # plt.savefig('outliers2.png', bbox_inches='tight')
+    plt.savefig('outliers2.png', bbox_inches='tight')
     plt.show()
 
 if __name__ == '__main__':

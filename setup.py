@@ -1,7 +1,7 @@
 """ to build modules in module_list:   python setup.py build_ext --inplace
 
 Created by G. Peter Lepage (Cornell University) in 12/2013.
-Copyright (c) 2013-21 G. Peter Lepage.
+Copyright (c) 2013-22 G. Peter Lepage.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,7 +22,11 @@ from distutils.command.build_ext import build_ext as _build_ext
 from distutils.command.build_py import build_py # as _build_py
 
 # compile from existing .c files if USE_CYTHON is False
-USE_CYTHON = False # True
+from sys import version_info
+if version_info[0] == 3 and version_info[1] >= 11:
+    USE_CYTHON = True
+else:
+    USE_CYTHON = False
 
 class build_ext(_build_ext):
     # delays using numpy and cython until they are installed;

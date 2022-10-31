@@ -755,7 +755,7 @@ code::
     # multi-dimensional Gaussian distribution
     g = gv.BufferDict()
     g['a'] = gv.gvar([0., 1.], [[1., 0.99], [0.99, 1.]])
-    g['b'] = gv.gvar('1(1)')
+    g['fb(b)'] = gv.BufferDict.uniform('fb', 0.0, 2.0)
 
     # integrator for expectation values in distribution g
     g_expval = vegas.PDFIntegrator(g)
@@ -781,15 +781,17 @@ code::
     # g's pdf norm
     print('PDF norm =', results.pdfnorm)
 
-Here the distribution ``g`` describes two highly correlated variables,
-``a[0]`` and ``a[1]``, and a third uncorrelated variable ``b``.
+Here the distribution ``g`` describes two highly correlated Gaussian
+variables, ``a[0]`` and ``a[1]``, and a third uncorrelated variable ``b``
+that is uniformly distributed on the interval [0,2] (see the :mod:`gvar` 
+documentation for more information).
 We use the integrator to calculated  the expectation value of 
 ``fp = a[0] * a[1] + b`` and ``fp**2``, so we can compute the 
 mean and standard 
 deviation of the ``fp`` |~| distribution. The output from this code 
-shows that the Gaussian approximation 1.0(1.4) for the mean and 
+shows that the Gaussian approximation 1.0(1.3) for the mean and 
 standard deviation is not particularly 
-close to the correct value |~| 2.0(2.0):
+close to the correct value |~| 2.0(1.8):
 
 .. literalinclude:: eg7.out
 
@@ -876,8 +878,9 @@ behaves like a batch integrand::
     import vegas
     import numpy as np
 
-    class f_batch(vegas.BatchIntegrand):
-        def __init__(self, dim):
+    @vegas.batchintegrand
+    class f_batch:
+        def __init__(self, dim):         
             self.dim = dim
             self.norm = 1013.2118364296088 ** (dim / 4.)
 
@@ -897,7 +900,8 @@ behaves like a batch integrand::
 
 This version is as fast as the previous batch integrand, but is
 potentially more flexible because it is built around a class rather
-than a function.
+than a function.  (Some classes won't allow decorators. An alternative 
+to the decorator is to derive the class from ``vegas.BatchIntegrand``.)
 
 The batch integrands here are fast because they are expressed in terms
 :mod:`numpy` operators that act on entire arrays --- they evaluate the
@@ -1006,62 +1010,76 @@ by a dictionary-valued batch integrand: e.g., ::
 
 It is sometimes more convenient to have the batch index be the last index 
 (the rightmost) rather than the first. Then ``@vegas.batchintegrand`` is
-replaced by ``@vegas.rbatchintegrand``. (Note that ``@vegas.batchintegrand``
-is the same as ``@vegas.lbatchintegrand``.)
+replaced by ``@vegas.rbatchintegrand``, and ``vegas.BatchIntegrand`` by
+``vegas.RBatchIntegrand``. (Note that ``@vegas.batchintegrand``
+and ``@vegas.lbatchintegrand`` are the same, as are ``vegas.BatchIntegrand``
+and ``vegas.LBatchIntegrand``.)
 
 
 Multiple Processors
 ---------------------------
-|vegas| supports multi-processor evaluation of integrands using MPI,
-via the Python module :mod:`mpi4py` (which must be installed separately).
-This can shorten execution time
-substantially when the integrand is costly to evaluate.
-
-MPI support works for any integrand. For example, the script ::
-
-    # file: ridge.py
+|vegas| supports parallel evaluation of integrands 
+on multiple processors. This
+can shorten execution time substantially when the integrand is 
+costly to evaluate. The following code, for example,
+runs more than five times faster 
+when using ``nproc=8`` processors instead of the 
+default ``nproc=1`` (on a 2019 laptop)::
 
     import vegas
     import numpy as np
 
-    # Integrand: ridge of N Gaussians spread evenly along the diagonal
+    # Integrand: ridge of N Gaussians spread along part of the diagonal
     def ridge(x):
         N = 10000
-        x0 = np.arange(0.0, N) / (N - 1.)
+        x0 = np.linspace(0.4, 0.6, N)
         dx2 = 0.0
         for xd in x:
             dx2 += (xd - x0) ** 2
         return np.average(np.exp(-100. * dx2)) *  (100. / np.pi) ** (len(x) / 2.)
 
     def main():
-        integ = vegas.Integrator(4 * [[0, 1]])
+        integ = vegas.Integrator(4 * [[0, 1]], nproc=8)  # 8 processors
         # adapt
         integ(ridge, nitn=10, neval=1e4)
         # final results
         result = integ(ridge, nitn=10, neval=1e4)
-        if integ.mpi_rank == 0:
-            print('result = %s    Q = %.2f' % (result, result.Q))
+        print('result = %s    Q = %.2f' % (result, result.Q))
 
     if __name__ == '__main__':
         main()
 
-can be run on 2 processors using ::
+The code doesn't run eight times faster because it takes time to 
+initiate the ``nproc`` processes, and to feed data and 
+collect results from them. 
+Parallel processing only becomes useful when integrands are 
+sufficiently costly that such overheads become negligible.
 
-    mpirun -np 2 python ridge.py
+Parallel processing is managed by Python's 
+:mod:`multiprocessing` module. 
+The ``if __name__ == '__main__'`` construct at the end of
+this code is essential when running on Windows or MacOS (in its 
+default mode) as it prevents additional processes being launched
+when the main module is imported as part of spawning the ``nproc`` 
+processes; see the :mod:`multiprocessing` documentation for more 
+details. This is not an issue for Linux/Unix. It is also important 
+that the integrand and its return values can be pickled using 
+Python's :mod:`pickle` module. This is the case for most pure 
+Python integrands.
 
-This cuts the run time almost in half. The speed is not exactly doubled because
-time is required to move integration results between the different CPUs.
-The code uses the MPI rank of the processes so that only one of them
-prints out results::
+|vegas| also supports multi-processor evaluation of integrands using MPI
+(via the Python module :mod:`mpi4py` which must be installed separately).
+Placing the code above in a file ``ridge.py``, with ``nproc=1`` (or 
+omitting ``nproc``), it can be run on 8 processors using ::
 
-    result = 0.8559(39)    Q = 0.52
+    mpirun -np 8 python ridge.py
 
+The speedup is similar to that from using the 
+:mod:`multiprocessing` module, above. 
 Note that the random number generator used by |vegas| must be
 synchronized so that it
 produces the same random numbers on the different processors. This
-happens automatically for the default random-number generator
-(unless :class:`vegas.Integrator` parameter ``sync_ran``
-is set to ``False``).
+happens automatically for the default random-number generator.
 
 |vegas|'s batch mode makes it possible to implement other strategies
 for distributing integrand evaluations across multiple processors.
@@ -1081,6 +1099,7 @@ but where Python's
         """
         def __init__(self, fcn, nproc=4):
             " Save integrand; create pool of nproc processes. "
+            super().__init__()
             self.fcn = fcn
             self.nproc = nproc
             self.pool = multiprocessing.Pool(processes=nproc)
@@ -1101,10 +1120,7 @@ but where Python's
             return np.concatenate(results)
 
 Then ``fparallel = parallelintegrand(f, 4)``, for example, will create a
-new integrand ``fparallel(x)`` that uses 4 CPUs. Python's
-:mod:`multiprocessing` module has limitations, particularly on Windows
-machines, which make this approach to multi-processing less robust than
-MPI.
+new integrand ``fparallel(x)`` that uses 4 CPU cores.
 
 
 Sums with |vegas|
@@ -1132,7 +1148,7 @@ integral::
     def ridge(x):
         N = 10000
         dim = 4
-        x0 = np.floor(x[-1] * N) / (N - 1.)
+        x0 = 0.4 + 0.2 * np.floor(x[-1] * N) / (N - 1.)
         dx2 = 0.0
         for xd in x[:-1]:
             dx2 += (xd - x0) ** 2
@@ -1149,10 +1165,9 @@ integral::
     if __name__ == '__main__':
         main()
 
-This code gives a result with the same precision, but is 5x faster
-than the code in the previous section. (The difference would be much
-larger if both integrands were coded in Cython. Also running
-the code on two processors with MPI again cuts the time almost in half.)
+This code gives a result with the same precision, but is 5x |~| faster
+than the code in the previous section (with ``nproc=1``; it is another 
+3x |~| faster when ``nproc=8``).
 
 The same trick can be generalized to sums over multiple indices, including sums
 to infinity. |vegas| will provide Monte Carlo estimates of the sums, emphasizing
@@ -1381,10 +1396,13 @@ integrand evaluations (about 800,000 per iteration):
 
 .. literalinclude:: eg6b.out 
 
+.. _vegas_Jacobian:
 
 |vegas| Jacobian
 -------------------
-Consider the integral
+The |vegas| Jacobian is useful when integrating multiple integrands simultaneously when some of the integrands depend only on a subset of the integration variables.
+
+Consider, for example, the integral
 
 .. math::
 
@@ -1473,7 +1491,7 @@ This turns the :math:`x_0` integral into an integral over :math:`0\le y_0 \le 1`
 with an integrand equal to |~| 1. The Monte Carlo integral over :math:`y_0` 
 in |vegas| is then exact; it is unaffected by the map for that direction. 
 This is easily implemented for both one-dimensional integrals by setting 
-keyword ``uses_jac=True`` in the integrator::
+keyword ``uses_jac=True`` in the integrator and modifying the integrand::
 
     @vegas.rbatchintegrand
     def f(x, jac):
@@ -1560,7 +1578,15 @@ shows how this is done::
     # answer = integral;   standard deviation = variance ** 0.5
     result = gvar.gvar(integral, variance ** 0.5)
 
-Here ``hcube[i]`` identifies the hypercube containing ``x[i, d]``.
+Here ``hcube[i]`` identifies the hypercube containing ``x[i, d]``. This example is 
+easily modified to provide information about the |vegas| Jacobian to the integrand, if needed 
+(see the section :ref:`vegas_Jacobian`)::
+
+    integral = 0.0
+    variance = 0.0
+    for x, y, wgt, hcube in integ.random_batch(yield_hcube=True, yield_y=True):
+        wgt_fx = wgt * batch_f(x, jac=integ.map.jac1d(y))
+        ...
 
 Implementation Notes
 ---------------------

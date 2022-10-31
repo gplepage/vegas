@@ -1,6 +1,6 @@
 # cython: language_level=3
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-21 G. Peter Lepage.
+# Copyright (c) 2013-22 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,24 +17,18 @@ cimport numpy
 # -- same as numpy.intp_t and Py_ssize_t (usually) in Cython
 
 cdef class BatchIntegrand:
-    cdef readonly object fcntype
     cdef public object fcn
 
 cdef class RBatchIntegrand:
-    cdef readonly object fcntype
     cdef public object fcn
-
-# legacy name
-cdef class VecIntegrand(BatchIntegrand):
-    pass
 
 cdef class AdaptiveMap:
     # first index is direction, second is increment
     cdef readonly double[:, ::1] grid
     cdef readonly double[:, ::1] inc
     cdef readonly numpy.npy_intp[::1] ninc
-    cdef double[:, ::1] sum_f
-    cdef double[:, ::1] n_f
+    cdef public double[:, ::1] sum_f
+    cdef public double[:, ::1] n_f
 
     cpdef map(self, double[:, ::1] y, double[:, ::1] x, double[::1] J, numpy.npy_intp ny=*)
     cpdef invmap(self, double[:, ::1] x, double[:, ::1] y, double[::1] J, numpy.npy_intp nx=*)
@@ -51,6 +45,7 @@ cdef class Integrator:
     cdef public double neval_frac
     cdef public double max_mem
     cdef public numpy.npy_intp nitn
+    cdef public numpy.npy_intp nproc
     cdef public double alpha
     cdef public double rtol
     cdef public double atol
@@ -67,6 +62,7 @@ cdef class Integrator:
     cdef readonly numpy.npy_intp[::1] nstrat
     # generated
     cdef readonly AdaptiveMap map
+    cdef readonly object pool
     cdef readonly double sum_sigf
     cdef readonly numpy.npy_intp dim
     cdef readonly numpy.npy_intp last_neval

@@ -150,7 +150,7 @@ is clear from the output:
 .. literalinclude:: eg2a.out
 
 The grid increments along direction 0 shrink at larger
-values ``x[0]``, varying as ``1/x[0]``. Along direction 1
+values ``x[0]``,  varying as ``1/x[0]``. Along direction 1
 the increments shrink more quickly varying like ``1/x[1]**2``.
 
 |vegas| samples the integrand in order to estimate the integral.
@@ -182,7 +182,7 @@ fashion, for use in subsequent iterations of the algorithm.
 
    .. automethod:: add_training_data(y, f, ny=-1)
 
-   .. automethod:: adapt_to_samples(x, f, nitn=5, alpha=1.0)
+   .. automethod:: adapt_to_samples(x, f, nitn=5, alpha=1.0, nproc=1)
 
    .. automethod:: __call__(y)
 

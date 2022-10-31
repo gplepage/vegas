@@ -24,34 +24,25 @@ endif
 run:
 	$(PYTHON) simple.py $(PLOT) > simple.tmp
 	- diff -w simple.out simple.tmp
-	$(PYTHON) slow.py > slow.tmp     # about 6s
+	$(PYTHON) slow.py > slow.tmp
 	- diff -w slow.out slow.tmp
 	$(PYTHON) faster.py > faster.tmp
 	- diff -w slow.out faster.tmp
 	$(PYTHON) fastest.py > fastest.tmp
-	- diff -w slow.out fastest.tmp
+	- diff -w fastest.out fastest.tmp
 	$(PYTHON) bayes.py > bayes.tmp
 	- diff -w bayes.out bayes.tmp
 	$(PYTHON) distribution.py > distribution.tmp
 	- diff -w distribution.out distribution.tmp
-	$(PYTHON) path-integral.py $(PLOT) > path-integral.tmp  # about 16s
+	$(PYTHON) path-integral.py $(PLOT) > path-integral.tmp 
 	- diff -w path-integral.out path-integral.tmp
 	- $(PYTHON) parallel-pools.py > parallel-pools.tmp
 	- diff -w parallel-pools.out parallel-pools.tmp
-	$(PYTHON) ridge.py > ridge.tmp
+	$(PYTHON) ridge.py 8 > ridge.tmp
 	- diff -w ridge.out ridge.tmp
-	# mpi tests
-	- mpirun -np 2 $(PYTHON) ridge.py > ridge.tmp.mpi
+	# mpi test
+	- mpirun -np 8 $(PYTHON) ridge.py > ridge.tmp.mpi
 	- diff -w ridge.out ridge.tmp.mpi
-	- mpirun -np 2 -outfile-pattern=slow.tmp.%r $(PYTHON) slow.py
-	- diff -w slow.out slow.tmp.0
-	- diff -w slow.out slow.tmp.1
-	- mpirun -np 2 -outfile-pattern=faster.tmp.%r $(PYTHON) faster.py
-	- diff -w slow.out faster.tmp.0
-	- diff -w slow.out faster.tmp.1
-	- mpirun -np 2 -outfile-pattern=fastest.tmp.%r $(PYTHON) fastest.py
-	- diff -w slow.out fastest.tmp.0
-	- diff -w slow.out fastest.tmp.1
 
 time:
 	time $(MAKE) PYTHON=$(PYTHON) PLOT=False run

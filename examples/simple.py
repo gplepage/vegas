@@ -1,13 +1,13 @@
 """
 vegas example from the Basic Integrals section
 of the Tutorial and Overview section of the
-vegas documentation.
+vegas documentation (slightly modified).
 """
 from __future__ import print_function   # makes this work for python2 and 3
 
 import vegas
-import math
-import numpy
+
+import numpy as np
 import sys
 
 if sys.argv[1:]:
@@ -19,11 +19,11 @@ def f(x):
     dx2 = 0
     for d in range(4):
         dx2 += (x[d] - 0.5) ** 2
-    return math.exp(-dx2 * 100.) * 1013.2118364296088
+    return np.exp(-dx2 * 100.) * 1013.2118364296088
 
 def main():
     # seed the random number generator so results reproducible
-    numpy.random.seed((1, 2, 3))
+    np.random.seed((1, 2, 3))
 
     # assign integration volume to integrator
     integ = vegas.Integrator([[-1., 1.], [0., 1.], [0., 1.], [0., 1.]])
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     main()
 
 
-# Copyright (c) 2013-14 G. Peter Lepage.
+# Copyright (c) 2013-22 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

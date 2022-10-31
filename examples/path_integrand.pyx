@@ -3,12 +3,11 @@
 """
 Cython code for the integrand used in path-integral.py.
 
-class PathIntegral is a base class for classes that
-do path integrals for 1-d systems. class Oscillator
-is derived from it and specifies a specific potential.
+class PathIntegral objects are integrands for 1-d path 
+integrals specified by an arbitrary potential V.
 """
 
-# import Cython description of vegas
+# import both cython and python versions of vegas
 cimport vegas
 
 # import exp(),  tan() from C
@@ -16,8 +15,6 @@ from libc.math cimport exp, tan
 
 import collections
 import numpy as np
-import vegas
-
 
 cdef class PathIntegrand(vegas.BatchIntegrand):
     """ Integrand for path integral corresponding to < x0 | exp(-H*T) | x0 >
@@ -68,11 +65,12 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
     cdef readonly double xscale
     cdef readonly double norm
     cdef readonly double norm_x0
-    cdef readonly double[::1] x0list
-    cdef readonly double[::1] Vx0list
+    cdef readonly object x0list
+    cdef readonly object Vx0list
     cdef readonly object region
 
     def __init__(self, V, T, x0list=[], ndT=10, m=1, xscale=1.):
+        super().__init__()
         self.V = V
         self.ndT = ndT
         self.T = T
@@ -83,6 +81,9 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
         self.norm = (self.m * self.ndT / 2. / np.pi / T) ** (self.ndT / 2.)
         self.norm_x0 = self.norm / np.pi
         self.region = self.ndT * [[-np.pi/2, np.pi/2]]
+
+    def __reduce__(self):  # support pickling so nproc>1 works
+            return (PathIntegrand,(self.V, self.T, self.x0list, self.ndT, self.m, self.xscale))
 
     def __call__(self, theta):
         """ integrand for the path integral """
@@ -97,8 +98,9 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
         cdef double[:, ::1] f = np.empty((theta.shape[0], len(x0list)), float)
 
         # set up non-changing part of x0list
-        x0list[1:] = self.x0list
-        Vx0list[1:] = self.Vx0list
+        for i in range(len(self.x0list)):
+            x0list[i + 1] = self.x0list[i]
+            Vx0list[i + 1] = self.Vx0list[i]
 
         # map back to range -oo to +oo and compute V(x)
         #
@@ -141,7 +143,7 @@ cdef class PathIntegrand(vegas.BatchIntegrand):
 
 
 
-# Copyright (c) 2013-16 G. Peter Lepage.
+# Copyright (c) 2013-22 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

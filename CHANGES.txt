@@ -1,3 +1,18 @@
+Version 5.2 2022-10-31
+======================
+- New implementation for using multiple processors to evaluate expensive 
+  integrands. This new implementation is simpler than using MPI (which is 
+  still supported) and is based on Python's standard multiprocessing library 
+  (so, unlike MPI, does not require additional software beyond what comes 
+  standard with Python). New keyword nproc specifies the number of 
+  processes/processors that are used in parallel to evaluate the integrand.
+
+- Improvements to PDFIntegrator. Can now be pickled which allows it to work 
+  with nproc > 1.
+
+- Multiple processors also supported for AdaptiveMap.adapt_to_samples. This 
+  is useful for very high dimensions or large number of samples.
+
 Version 5.1 2022-01-21
 =======================
 Adds a new keyword uses_jac that causes vegas to supply 

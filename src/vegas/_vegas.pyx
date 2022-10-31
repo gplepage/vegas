@@ -1,5 +1,5 @@
 # cython: language_level=3, binding=True
-# c#ython: profile=True
+# cython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
 # Copyright (c) 2013-21 G. Peter Lepage.
@@ -20,7 +20,10 @@ from libc.math cimport floor, log, abs, tanh, erf, exp, sqrt, lgamma
 
 import collections
 import functools
+import inspect
 import math
+import multiprocessing
+import os
 import sys
 import time
 import warnings
@@ -721,7 +724,7 @@ cdef class AdaptiveMap:
         else:
             return plt
 
-    def adapt_to_samples(self, x, f, nitn=5, alpha=1.0): # , ninc=None):
+    def adapt_to_samples(self, x, f, nitn=5, alpha=1.0, nproc=1):
         """ Adapt map to data ``{x, f(x)}``.
 
         Replace grid with one that is optimized for integrating 
@@ -738,11 +741,39 @@ cdef class AdaptiveMap:
             alpha (float): Damping parameter for adaptation. Default 
                 is ``alpha=1.0``. Smaller values slow the iterative 
                 adaptation, to improve stability of convergence.
+            nproc (int or None): Number of processes/processors to use. 
+                If ``nproc>1`` Python's :mod:`multiprocessing` module is 
+                used to spread the calculation across multiple processors.
+                There is a significant overhead involved in using
+                multiple processors so this option is useful mainly
+                when very high dimenions or large numbers of samples
+                are involved. When using the :mod:`multiprocessing` 
+                module in its default mode for MacOS and Windows,
+                it is important that the main module can be 
+                safely imported (i.e., without launching new 
+                processes). This can be accomplished with
+                some version of the ``if __name__ == '__main__`:``
+                construct in the main module: e.g., ::
+
+                    if __name__ == '__main__': 
+                        main()
+
+                This is not an issue on other Unix platforms.
+                See the :mod:`multiprocessing` documentation 
+                for more information.
+                Set ``nproc=None`` to use all the processors 
+                on the machine (equivalent to ``nproc=os.cpu_count()``). 
+                Default value is ``nproc=1``. 
         """
         cdef numpy.npy_intp i, tmp_ninc, old_ninc
         x = numpy.ascontiguousarray(x)
         if len(x.shape) != 2 or x.shape[1] != self.dim:
             raise ValueError('incompatible shape of x: {}'.format(x.shape))
+        if nproc is None:
+            nproc = os.cpu_count()
+            if nproc is None:
+                raise ValueError("need to specify nproc (nproc=None does't work on this machine)")
+        nproc = int(nproc)
         if callable(f):
             fx = numpy.ascontiguousarray(f(x))
         else:
@@ -755,14 +786,49 @@ cdef class AdaptiveMap:
             raise ValueError('not enough samples: {}'.format(x.shape[0]))
         y = numpy.empty(x.shape, float)
         jac = numpy.empty(x.shape[0], float)
-        for i in range(nitn):
-            self.invmap(x, y, jac)
-            self.add_training_data(y, (jac * fx) ** 2)
-            self.adapt(alpha=alpha, ninc=tmp_ninc)
+        self.adapt(ninc=tmp_ninc)
+        if nproc > 1:
+            pool = multiprocessing.Pool(processes=nproc)
+            for i in range(nitn):
+                self._add_training_data(x, f, fx, nproc, pool)
+                self.adapt(alpha=alpha, ninc=tmp_ninc)
+            pool.close()
+            pool.join()       
+        else:     
+            for i in range(nitn):
+                self.invmap(x, y, jac)
+                self.add_training_data(y, (jac * fx) ** 2)
+                self.adapt(alpha=alpha, ninc=tmp_ninc)
         if numpy.any(tmp_ninc != old_ninc):
             self.adapt(ninc=old_ninc)
 
+    def _add_training_data(self, x, f, fx, nproc, pool):
+        " Used by self.adapt_to_samples in multiprocessing mode. "
+        nx = x.shape[0]
+        end = 0
+        args = []
+        for i in range(nproc):
+            nx = (x.shape[0] - end) // (nproc - i)
+            start = end
+            end = start + nx 
+            args += [(
+                self,
+                x[start:end, :],
+                fx[start:end]
+                )]
+        res = pool.starmap(self._collect_training_data, args, 1)
+        self.sum_f = numpy.sum([resi[0] for resi in res], axis=0)
+        self.n_f = numpy.sum([resi[1] for resi in res], axis=0) + TINY
 
+    @staticmethod
+    def _collect_training_data(map, x, fx):
+        " Used by self.adapt_to_samples in multiprocessing mode. "
+        map.clear()
+        y = numpy.empty(x.shape, float)
+        jac = numpy.empty(x.shape[0], float)
+        map.invmap(x, y, jac)
+        map.add_training_data(y, (fx * jac)**2)
+        return (numpy.asarray(map.sum_f), numpy.asarray(map.n_f))
 
 cdef class Integrator(object):
     """ Adaptive multidimensional Monte Carlo integration.
@@ -874,6 +940,31 @@ cdef class Integrator(object):
             unweighted averages to combine results from different
             iterations when ``adapt=False``. The default setting
             is ``adapt=True``.
+        nproc (int or None): Number of processes/processors used
+            to evalute the integrand. If ``nproc>1`` Python's 
+            :mod:`multiprocessing` module is used to spread 
+            integration points across multiple processors, thereby 
+            potentially reducing the time required to evaluate the 
+            integral. There is a significant overhead involved in using
+            multiple processors so this option is useful only when 
+            the integrand is expensive to evaluate. When using the 
+            :mod:`multiprocessing` module in its default mode for 
+            MacOS and Windows, it is important that the main module 
+            can be safely imported (i.e., without launching new 
+            processes). This can be accomplished with
+            some version of the ``if __name__ == '__main__`:``
+            construct in the main module: e.g., ::
+
+                if __name__ == '__main__': 
+                    main()
+
+            This is not an issue on other Unix platforms.
+            See the :mod:`multiprocessing` documentation 
+            for more information. Note that setting ``nproc``
+            greater than 1 disables MPI support.
+            Set ``nproc=None`` to use all the processors 
+            on the machine (equivalent to ``nproc=os.cpu_count()``). 
+            Default value is ``nproc=1``.         
         analyzer: An object with methods
 
                 ``analyzer.begin(itn, integrator)``
@@ -902,7 +993,7 @@ cdef class Integrator(object):
             whose integration points are combined into a single
             batch to be passed to the integrand, together,
             when using |vegas| in batch mode.
-            The default value is 1000. Larger values may be
+            The default value is 10,000. Larger values may be
             lead to faster evaluations, but at the cost of
             more memory for internal work arrays.
         maxinc_axis (positive int): The maximum number of increments
@@ -996,7 +1087,7 @@ cdef class Integrator(object):
         map=None,
         neval=1000,         # number of evaluations per iteration
         maxinc_axis=1000,   # number of adaptive-map increments per axis
-        nhcube_batch=1000,  # number of h-cubes per batch
+        nhcube_batch=10000, # number of h-cubes per batch
         max_nhcube=1e9,     # max number of h-cubes
         max_neval_hcube=1e6,# max number of evaluations per h-cube
         neval_frac=0.75,    # fraction of evaluations used for adaptive stratified sampling
@@ -1015,6 +1106,7 @@ cdef class Integrator(object):
         sync_ran=True,
         mpi=True,
         uses_jac=False,
+        nproc=1,
         )
 
     def __init__(Integrator self not None, map, **kargs):
@@ -1024,6 +1116,7 @@ cdef class Integrator(object):
         self.sum_sigf = HUGE
         self.neval_hcube_range = None
         self.last_neval = 0
+        self.pool = None
         if isinstance(map, Integrator):
             args = {}
             for k in Integrator.defaults:
@@ -1043,6 +1136,12 @@ cdef class Integrator(object):
         if 'neval' in kargs and 'nstrat' not in kargs and 'nstrat' in args:
             del args['nstrat']
         self.set(args)
+
+    def __del__(self):
+        if self.pool is not None:
+            self.pool.close()
+            self.pool.join()
+            self.pool = None
 
     def __reduce__(Integrator self not None):
         """ Capture state for pickling. """
@@ -1092,6 +1191,23 @@ cdef class Integrator(object):
                 old_val['sigf'] = self.sigf 
                 self.sigf = numpy.fabs(kargs['sigf'])
                 self.sum_sigf = numpy.sum(self.sigf)
+            elif k == 'nproc':
+                old_val['nproc'] = self.nproc 
+                self.nproc = kargs['nproc'] if kargs['nproc'] is not None else os.cpu_count()
+                if self.nproc is None:
+                    self.nproc = 1
+                if self.nproc != old_val['nproc']:
+                    if self.pool is not None:
+                        self.pool.close()
+                        self.pool.join()
+                    if self.nproc != 1:
+                        try:
+                            self.pool = multiprocessing.Pool(processes=self.nproc)
+                        except:
+                            self.nproc = 1
+                            self.pool = None
+                    else:
+                        self.pool = None
             elif k in Integrator.defaults:
                 # ignore entry if set to None (useful for debugging)
                 if kargs[k] is None:
@@ -1614,6 +1730,7 @@ cdef class Integrator(object):
         ``self(fcn, nitn=20, neval=1e6)``.
         """
         cdef numpy.ndarray[numpy.double_t, ndim=2] x
+        cdef numpy.ndarray[numpy.double_t, ndim=2] jac
         cdef numpy.ndarray[numpy.double_t, ndim=1] wgt
         cdef numpy.ndarray[numpy.npy_intp, ndim=1] hcube
         cdef double[::1] sigf
@@ -1633,6 +1750,11 @@ cdef class Integrator(object):
 
         if kargs:
             self.set(kargs)
+        if self.nproc > 1:
+            old_defaults = self.set(dict(mpi=False, nhcube_batch=self.nproc * self.nhcube_batch))
+        elif self.mpi:
+            pass
+
         adaptive_strat = (
             self.beta > 0 and self.nhcube > 1 
             and self.adapt and not self.adapt_to_errors
@@ -1643,7 +1765,22 @@ cdef class Integrator(object):
             self.synchronize_random()
 
         # Put integrand into standard form
-        fcn = VegasIntegrand(fcn, mpi=self.mpi, uses_jac=self.uses_jac)
+        fcn = VegasIntegrand(
+            fcn, map=self.map, uses_jac=self.uses_jac, 
+            mpi=False if self.nproc > 1 else self.mpi
+            )
+
+
+        # allocate work arrays
+        wf = numpy.empty(fcn.size, numpy.float_)
+        sum_wf = numpy.empty(fcn.size, numpy.float_)
+        sum_wf2 = numpy.empty((fcn.size, fcn.size), numpy.float_)
+        mean = numpy.empty(fcn.size, numpy.float_)
+        var = numpy.empty((fcn.size, fcn.size), numpy.float_)
+        dvar = numpy.empty(fcn.size, numpy.float_)
+        mean[:] = 0.0
+        var[:, :] = 0.0
+        result = VegasResult(fcn, weighted=self.adapt)
 
         sigf = self.sigf
         for itn in range(self.nitn):
@@ -1664,25 +1801,28 @@ cdef class Integrator(object):
                 fdv2 = self.fdv2        # must be inside loop
 
                 # evaluate integrand at all points in x
-                if self.uses_jac:
-                    fx = fcn.eval(x, jac=self.map.jac1d(y))
+                if self.nproc > 1:
+                    nx = x.shape[0] // self.nproc + 1
+                    if self.uses_jac:
+                        jac = self.map.jac1d(y)
+                        results = self.pool.starmap(
+                            fcn.eval,
+                            [(x[i*nx : (i+1)*nx], jac[i*nx : (i+1)*nx]) for i in range(self.nproc)],
+                            1,
+                            )
+                    else:
+                        results = self.pool.starmap(
+                            fcn.eval,
+                            [(x[i*nx : (i+1)*nx], None) for i in range(self.nproc)],
+                            1,
+                            )
+                    fx = numpy.concatenate(results, axis=0)
                 else:
-                    fx = fcn.eval(x, jac=None)
+                    fx = fcn.eval(x, jac=self.map.jac1d(y) if self.uses_jac else None)
+                
+                # sanity check
                 if numpy.any(numpy.isnan(fx)):
                     raise ValueError('integrand evaluates to nan')
-                if firsteval:
-                    # allocate work arrays on first pass through;
-                    # (needed a sample fcn evaluation in order to do this)
-                    firsteval = False
-                    wf = numpy.empty(fcn.size, numpy.float_)
-                    sum_wf = numpy.empty(fcn.size, numpy.float_)
-                    sum_wf2 = numpy.empty((fcn.size, fcn.size), numpy.float_)
-                    mean = numpy.empty(fcn.size, numpy.float_)
-                    var = numpy.empty((fcn.size, fcn.size), numpy.float_)
-                    dvar = numpy.empty(fcn.size, numpy.float_)
-                    mean[:] = 0.0
-                    var[:, :] = 0.0
-                    result = VegasResult(fcn, weighted=self.adapt)
 
                 # compute integral and variance for each h-cube
                 # j is index of point within batch, i is hcube index
@@ -1746,6 +1886,8 @@ cdef class Integrator(object):
 
             if result.converged(self.rtol, self.atol):
                 break
+        if self.nproc > 1:
+            self.set(old_defaults)
         return result.result
 
 class reporter:
@@ -1760,7 +1902,8 @@ class reporter:
     """
     def __init__(self, ngrid=0):
         self.ngrid = ngrid
-        self.clock = time.process_time if hasattr(time, 'process_time') else time.time
+        self.clock = time.perf_counter if hasattr(time, 'perf_counter') else time.time
+        # self.clock = time.time
 
     def begin(self, itn, integrator):
         self.integrator = integrator
@@ -2281,7 +2424,7 @@ cdef class VegasIntegrand:
     cdef public numpy.npy_intp size
     cdef public object eval
     cdef public object bdict
-    cdef public int nproc
+    cdef public int nproc       # number of MPI processors
     cdef public int rank
     cdef public object comm
     """ Integand object --- standard interface for integrands
@@ -2289,19 +2432,13 @@ cdef class VegasIntegrand:
     This class provides a standard interface for all |vegas| integrands.
     It analyzes the integrand to determine the shape of its output.
 
-    All integrands are converted to batch integrands. Method ``eval(x)``
+    All integrands are converted to lbatch integrands. Method ``eval(x)``
     returns results packed into a 2-d array ``f[i, d]`` where ``i``
     is the batch index and ``d`` indexes the different elements of the
     integrand.
 
-    :class:`vegas.Integrand` doesn't know anything about the integrand
-    until method ``eval(x)`` is called the first time. It then examines
-    the result returned by the integrand function to figure out what
-    kind of integrand it is dealing with. It waits until this point
-    because it needs a valid ``x`` at which to evaluate the integrand.
-
-    The integrands are automatically configured for parallel processing
-    using MPI (via :mod:`mpi4py`).
+    The integrands are configured for parallel processing
+    using MPI (via :mod:`mpi4py`) if ``mpi=True``.
 
     Args:
         fcn: Integrand function.
@@ -2311,13 +2448,13 @@ cdef class VegasIntegrand:
         eval: ``eval(x)`` returns ``fcn(x)`` repacked as a 2-d array.
         shape: Shape of integrand ``fcn(x)`` or ``None`` if it is a dictionary.
         size: Size of integrand.
-        nproc: Number of processors (=1 if no MPI)
+        nproc: Number of MPI processors (=1 if no MPI)
         rank: MPI rank of processors (=0 if no MPI)
     """
-    def __init__(self, fcn, mpi=True, uses_jac=False):
-        if isinstance(fcn, type(BatchIntegrand)):
+    def __init__(self, fcn, map, uses_jac, mpi):
+        if isinstance(fcn, type(BatchIntegrand)) or isinstance(fcn, type(RBatchIntegrand)):
             raise ValueError(
-                'integrand given is a class, not an object -- need parentheses?'
+                'integrand given is a class, not an object -- need to initialize?'
                 )
         if mpi:
             try:
@@ -2329,26 +2466,23 @@ cdef class VegasIntegrand:
                 self.nproc = 1 
         else:
             self.nproc = 1
-        self.eval = functools.partial(VegasIntegrand.firstpass_eval, self=self, fcn=fcn)
-        self.fcntype = None
 
-    @staticmethod
-    def firstpass_eval(x, jac, self, fcn):
-        """ Temporary eval, used for first call but then replaced by correct eval. 
-        
-        The first pass is used to figure out what kind of integrand ``fcn``
-        is being used. This allows VegasIntegrand to create an optimized 
-        standard batch integrand equivalent to ``fcn``. At the end, 
-        ``self.eval`` is redefined to be the optimized integrand.
-        """
-        # check for scalar functions and convert to batch if is scalar
-        # evaluate at arbitrary point to determine integrand shape
-        x0 = x[0]
-        if jac is not None:
-            jac0 = jac[0]
+        # configure using sample evaluation fcn(x) to
+        # determine integrand shape
+
+        # sample integration point
+        y0 = numpy.array([map.dim * [0.5]])
+        x0 = map(y0)
+        x0 = x0[0]
+        if uses_jac:
+            jac0 = map.jac1d(y0)[0]
+        else:
+            jac0 = None
+
+        # configure self.eval
         self.fcntype = getattr(fcn, 'fcntype', 'scalar')
         if self.fcntype == 'scalar':
-            fx = fcn(x0) if jac is None else fcn(x0, jac=jac0)
+            fx = fcn(x0) if jac0 is None else fcn(x0, jac=jac0)
             if hasattr(fx, 'keys'):
                 if not isinstance(fx, gvar.BufferDict):
                     fx = gvar.BufferDict(fx)
@@ -2363,9 +2497,9 @@ cdef class VegasIntegrand:
                 _eval = _BatchIntegrand_from_NonBatch(fcn, self.size, self.shape)
         elif self.fcntype == 'rbatch':
             x0.shape = x0.shape + (1,)
-            if jac is not None:
+            if jac0 is not None:
                 jac0.shape = jac0.shape + (1,)
-            fx = fcn(x0) if jac is None else fcn(x0, jac=jac0)
+            fx = fcn(x0) if jac0 is None else fcn(x0, jac=jac0)
             if hasattr(fx, 'keys'):
                 # build dictionary for non-batch version of function
                 fxs = gvar.BufferDict()
@@ -2381,9 +2515,9 @@ cdef class VegasIntegrand:
                 _eval = _BatchIntegrand_from_Batch(fcn, rbatch=True)
         else:
             x0.shape = (1,) + x0.shape
-            if jac is not None:
+            if jac0 is not None:
                 jac0.shape = (1,) + jac0.shape
-            fx = fcn(x0) if jac is None else fcn(x0, jac=jac0)
+            fx = fcn(x0) if jac0 is None else fcn(x0, jac=jac0)
             if hasattr(fx, 'keys'):
                 # build dictionary for non-batch version of function
                 fxs = gvar.BufferDict()
@@ -2397,7 +2531,7 @@ cdef class VegasIntegrand:
                 fx = numpy.asarray(fx)
                 self.shape = fx.shape[1:]
                 self.size = numpy.product(self.shape)
-                _eval = _BatchIntegrand_from_Batch(fcn, rbatch=False) # , self.shape)
+                _eval = _BatchIntegrand_from_Batch(fcn, rbatch=False) 
         if self.nproc > 1:
             # MPI multiprocessor mode
             def _mpi_eval(x, jac, self=self, _eval=_eval):
@@ -2417,7 +2551,6 @@ cdef class VegasIntegrand:
             self.eval = _mpi_eval
         else:
             self.eval = _eval
-        return self.eval(x, jac=jac)
 
     def format_result(self, mean, var):
         if self.shape is None:
@@ -2550,58 +2683,29 @@ cdef class _BatchIntegrand_from_BatchDict(object):
                     )
         return buf
 
-# BatchIntegrand is a base class for users who want to design
-# batch integrands.
-cdef class BatchIntegrand:
-    """ Base class for classes providing batch integrands.
+# BatchIntegrand is a container class for batch integrands.
+cdef class BatchIntegrand(object):
+    """ Wrapper for l-batch integrands.
 
-    A class derived from :class:`vegas.BatchIntegrand` will normally
-    provide a ``__call__(self, x)`` method that returns an
-    array ``f`` where:
-
-        ``x[i, d]`` is a contiguous :mod:`numpy` array where ``i=0...``
-        labels different integrtion points and ``d=0...`` labels
-        different directions in the integration space.
-
-        ``f[i]`` is a contiguous array containing the integrand
-        values corresponding to the integration
-        points ``x[i, :]``. ``f[i]`` is either a number,
-        for a single integrand, or an array (of any shape)
-        for multiple integrands (i.e., an
-        array-valued integrand).
-
-    An example is ::
-
-        import vegas
-        import numpy as np
-
-        class batchf(vegas.BatchIntegrand):
-            def __call__(x):
-                return np.exp(-x[:, 0] - x[:, 1])
-
-        f = batchf()      # the integrand
-
-    for the two-dimensional integrand :math:`\exp(-x_0 - x_1)`.
-
-    Deriving from :class:`vegas.BatchIntegrand` is the
-    easiest way to construct integrands in Cython, and
-    gives the fastest results.
+    Used by :func:`vegas.batchintegrand`.
 
     :class:`vegas.LBatchIntegrand` is the same as 
     :class:`vegas.BatchIntegrand`.
     """
-    # cdef object fcntype
     # cdef public object fcn
-    def __cinit__(self, *args, **kargs):
-        self.fcntype = 'lbatch'
-        self.fcn = None
+    def __init__(self, fcn=None):
+        self.fcn = self if fcn is None else fcn
+
+    property fcntype:
+        def __get__(self):
+            return 'lbatch'
 
     def __call__(self, *args, **kargs):
-        try:
-            return self.fcn(*args, **kargs)
-        except TypeError:
-            raise TypeError('no __call__ method defined (or badly defined)')
+        return self.fcn(*args, **kargs)
 
+    def __getattr__(self, attr):
+        return getattr(self.fcn, attr)
+    
 def batchintegrand(f):
     """ Decorator for batch integrand functions.
 
@@ -2624,33 +2728,30 @@ def batchintegrand(f):
 
     for the two-dimensional integrand :math:`\exp(-x_0 - x_1)`.
 
-    This decorator provides an alternative to deriving an integrand
-    class from :class:`vegas.BatchIntegrand`.
-
     :func:`vegas.lbatchintegrand` is the same as :func:`vegas.batchintegrand`.
     """
     try:
         f.fcntype = 'lbatch'
-        # f.rank = 0 if mpi4py is None else mpi4py.MPI.COMM_WORLD.Get_rank()
         return f
     except:
-        ans = BatchIntegrand()
-        ans.fcn = f
-        return ans
+        return BatchIntegrand(f)
 
-cdef class RBatchIntegrand:
+cdef class RBatchIntegrand(object):
     """ Same as :class:`vegas.BatchIntegrand` but with batch indices on the right (not left). """
-    # cdef object fcntype
     # cdef public object fcn
-    def __cinit__(self, *args, **kargs):
-        self.fcntype = 'rbatch'
-        self.fcn = None
+    def __init__(self, fcn=None):
+        self.fcn = self if fcn is None else fcn
+
+    property fcntype:
+        def __get__(self):
+            return 'rbatch'
 
     def __call__(self, *args, **kargs):
-        try:
-            return self.fcn(*args, **kargs)
-        except TypeError:
-            raise TypeError('no __call__ method defined (or badly defined)')
+        return self.fcn(*args, **kargs)
+
+    def __getattr__(self, attr):
+        return getattr(self.fcn, attr)
+
 
 def rbatchintegrand(f):
     """ Same as :func:`vegas.batchintegrand` but with batch indices on the right (not left). """
@@ -2658,9 +2759,7 @@ def rbatchintegrand(f):
         f.fcntype = 'rbatch'
         return f
     except:
-        ans = RBatchIntegrand()
-        ans.fcn = f 
-        return ans 
+        return RBatchIntegrand(f)
 
 lbatchintegrand = batchintegrand 
 LBatchIntegrand = BatchIntegrand
@@ -2669,4 +2768,5 @@ LBatchIntegrand = BatchIntegrand
 vecintegrand = batchintegrand
 MPIintegrand = batchintegrand
 
-
+class VecIntegrand(BatchIntegrand):
+    pass

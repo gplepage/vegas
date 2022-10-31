@@ -15,6 +15,7 @@ import collections
 import math
 import os
 import pickle
+from re import A
 import unittest
 import warnings
 
@@ -487,7 +488,7 @@ class TestIntegrator(unittest.TestCase):
             "    number of:  strata/axis = [{nstrat0} {nstrat1}]",
             "                increments/axis = [{ninc0} {ninc1}]",
             "                h-cubes = {nhcube}  evaluations/h-cube = {min_neval_hcube} (min)",
-            "                h-cubes/batch = 1000",
+            "                h-cubes/batch = 10000",
             "    minimize_mem = False",
             "    adapt_to_errors = False",
             "    damping parameters: alpha = {alpha}  beta= {beta}",
@@ -632,27 +633,38 @@ class TestIntegrator(unittest.TestCase):
 
     def test_batch(self):
         " integrate batch fcn "
-        class f_batch(BatchIntegrand):
+        @batchintegrand
+        class f_batch:
             def __call__(self, x):
-                f = np.empty(x.shape[0], float)
-                for i in range(f.shape[0]):
-                    f[i] = (
-                        math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
-                        ) / math.pi ** 2
-                return f
+                return (np.sin(x[:, 0]) ** 2 + np.cos(x[:, 1]) ** 2) / np.pi ** 2
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
         r = I(f_batch(), neval=10000)
         self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
         self.assertGreater(r.Q, 1e-3)
         self.assertLess(r.sdev, 1e-3)
+        class f_batch(BatchIntegrand):
+            def __call__(self, x):
+                return (np.sin(x[:, 0]) ** 2 + np.cos(x[:, 1]) ** 2) / np.pi ** 2
+        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
+        r = I(f_batch(), neval=10000)
+        self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
+        self.assertGreater(r.Q, 1e-3)
+        self.assertLess(r.sdev, 1e-3)
+        class f_batch:
+            def info(self):
+                return 'hi'
+            def __call__(self, x):
+                return (np.sin(x[:, 0]) ** 2 + np.cos(x[:, 1]) ** 2) / np.pi ** 2
+        f = batchintegrand(f_batch())
+        I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
+        r = I(f, neval=10000)
+        self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
+        self.assertGreater(r.Q, 1e-3)
+        self.assertLess(r.sdev, 1e-3)
+        self.assertEqual(f.info(), 'hi')
         @batchintegrand
         def f_batch(x):
-            f = np.empty(x.shape[0], float)
-            for i in range(f.shape[0]):
-                f[i] = (
-                    math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
-                    ) / math.pi ** 2
-            return f
+            return (np.sin(x[:, 0]) ** 2 + np.cos(x[:, 1]) ** 2) / np.pi ** 2
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]])
         r = I(f_batch, neval=10000)
         self.assertLess(abs(r.mean - 1.), 5 * r.sdev)
@@ -665,16 +677,29 @@ class TestIntegrator(unittest.TestCase):
         def f0(x):
             return x[0] + x[1] + x[2]
         @lbatchintegrand 
-        def f1(x):
-            return x[:, 0] + x[:, 1] + x[:, 2]
+        class f1_class:
+            def __call__(self, x):
+                return x[:, 0] + x[:, 1] + x[:, 2]
+            def __getattr__(self, name):
+                raise AttributeError()
+            def __setattr__(self, name, value):
+                raise AttributeError()
+        f1 = f1_class()
         self.assertTrue(batchintegrand is lbatchintegrand)
+        self.assertTrue(BatchIntegrand is LBatchIntegrand)
         f2 = rbatchintegrand(f0)
         @lbatchintegrand
         def f3(x):
             return [[x[:, 0] + x[:, 1] + x[:, 2]]]
         @rbatchintegrand
-        def f4(x):
-            return [[x[0] + x[1] + x[2]]]
+        class f4_class:
+            def __call__(self, x):
+                return [[x[0] + x[1] + x[2]]]
+            def __getattr__(self, name):
+                raise AttributeError()
+            def __setattr__(self, name, value):
+                raise AttributeError()
+        f4 = f4_class()
         def f5(x):
             return collections.OrderedDict([('a', [[x[0] + x[1] + x[2]]])])
         @lbatchintegrand
@@ -683,8 +708,9 @@ class TestIntegrator(unittest.TestCase):
         f7 = rbatchintegrand(f5)
         x = numpy.random.uniform(size=(5,3))
         ans = numpy.sum(x, axis=1).reshape((5,1))
+        map = AdaptiveMap(3 * [(0,1)])
         for f in [f0, f1, f2, f3, f4, f5, f6, f7]:
-            fcn = VegasIntegrand(f)
+            fcn = VegasIntegrand(f, map, uses_jac=False, mpi=False)
             self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
             self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
             fans = fcn.format_result(x[0,:1], x[:1,:1]**2)
@@ -714,8 +740,9 @@ class TestIntegrator(unittest.TestCase):
         ans = numpy.empty((5,2), float)
         ans[:, 0] = x[:, 0]
         ans[:, 1] = numpy.sum(x, axis=1)
+        map = AdaptiveMap(3 * [(0,1)])
         for f in [f8, f9, f10, f11, f12, f13]:
-            fcn = VegasIntegrand(f)
+            fcn = VegasIntegrand(f, map, uses_jac=False, mpi=False)
             self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
             self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
             fans = fcn.format_result(x[0,:2], x[:2,:2].dot(x[:2, :2].T))
@@ -729,7 +756,8 @@ class TestIntegrator(unittest.TestCase):
 
     def test_min_sigf(self):
         " test minimize_mem=True mode "
-        class f_batch(BatchIntegrand):
+        @batchintegrand
+        class f_batch:
             def __call__(self, x):
                 f = np.empty(x.shape[0], float)
                 for i in range(f.shape[0]):
@@ -757,7 +785,8 @@ class TestIntegrator(unittest.TestCase):
 
     def test_batch_exception(self):
         " integrate batch fcn "
-        class f_batch(BatchIntegrand):
+        @batchintegrand
+        class f_batch:
             def __call__(self, x):
                 f = 1/0.
                 return (np.sin(x[:, 0]) ** 2 + np.cos(x[:, 1]) ** 2) / f
@@ -767,13 +796,10 @@ class TestIntegrator(unittest.TestCase):
 
     def test_batch_b0(self):
         " integrate batch fcn beta=0 "
-        class f_batch(BatchIntegrand):
+        @batchintegrand
+        class f_batch:
             def __call__(self, x):
                 return (np.sin(x[:, 0]) ** 2 + np.cos(x[:, 1]) ** 2) / math.pi ** 2
-                # for i in range(nx):
-                #     f[i] = (
-                #         math.sin(x[i, 0]) ** 2 + math.cos(x[i, 1]) ** 2
-                #         ) / math.pi ** 2
         I = Integrator([[0, math.pi], [-math.pi/2., math.pi/2.]], beta=0.0)
         r = I(f_batch(), neval=10000)
         self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
@@ -852,7 +878,8 @@ class TestIntegrator(unittest.TestCase):
                 dx2 += (x[d] - 0.5) ** 2
             f = math.exp(-100. * dx2)
             return [[f, f * x[0]]]
-        class f_multi_v(BatchIntegrand):
+        @batchintegrand
+        class f_multi_v:
             def __call__(self, x):
                 x = np.asarray(x)
                 f = np.empty((x.shape[0], 1, 2), float)

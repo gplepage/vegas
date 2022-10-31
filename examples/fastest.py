@@ -15,7 +15,6 @@ twice as fast in Cython compared with the numpy-vectorized integrand
 from __future__ import print_function   # makes this work for python2 and 3
 
 import vegas
-import math
 import numpy as np
 
 # compile fastest_integrand.pyx, if necessary
@@ -27,12 +26,13 @@ pyximport.install(
 
 from fastest_integrand import f_cython
 
-np.random.seed((1,2, 3))   # causes reproducible random numbers
+np.random.seed((1, 2, 3))   # causes reproducible random numbers
 
 def main():
     # create integrand and integrator
     f = f_cython(dim=6)
-    integ = vegas.Integrator(f.dim * [[0, 1]], sync_ran=False)
+    f.info()
+    integ = vegas.Integrator(f.dim * [[0, 1]])
 
     # adapt the grid; discard these results
     integ(f, neval=25000, nitn=10)
@@ -45,22 +45,12 @@ def main():
 
 
 if __name__ == '__main__':
-    if True:
-        main()
-    else:
-        import hotshot, hotshot.stats
-        prof = hotshot.Profile("vegas.prof")
-        prof.runcall(main)
-        prof.close()
-        stats = hotshot.stats.load("vegas.prof")
-        stats.strip_dirs()
-        stats.sort_stats('time', 'calls')
-        stats.print_stats(40)
+    main()
 
 
 
 
-# Copyright (c) 2013-16 G. Peter Lepage.
+# Copyright (c) 2013-22 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

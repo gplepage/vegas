@@ -8,7 +8,7 @@ log_stdout('eg7.out')
 # multi-dimensional Gaussian distribution
 g = gv.BufferDict()
 g['a'] = gv.gvar([0., 1.], [[1., 0.99], [0.99, 1.]])
-g['b'] = gv.gvar('1(1)')
+g['fb(b)'] = gv.BufferDict.uniform('fb', 0.0, 2.0)
 
 # integrator for expectation values in distribution g
 g_expval = vegas.PDFIntegrator(g)

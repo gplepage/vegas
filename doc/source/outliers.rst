@@ -80,7 +80,7 @@ The following code does a Bayesian fit with this modified PDF::
         # 3) create integrator and adapt it to the modified PDF
         expval = vegas.PDFIntegrator(prior, pdf=mod_pdf)
         nitn = 10
-        neval = 1_000
+        neval = 10_000
         warmup = expval(neval=neval, nitn=nitn)
 
         # 4) evaluate expectation value of g(p)
@@ -94,34 +94,36 @@ The following code does a Bayesian fit with this modified PDF::
         results = expval(g, neval=neval, nitn=nitn, adapt=False)
         print(results.summary())
 
-        # parameters c[i]
-        c_mean = results['c_mean']
-        c_cov = results['c_outer'] - np.outer(c_mean, c_mean)
-        c_cov = (c_cov + c_cov.T) / 2
-        # combine Monte Carlo vegas uncertainty in c_mean with covariance
-        c = c_mean + gv.gvar(np.zeros(c_mean.shape), gv.mean(c_cov))
-        print('c =', c)
-        print(
-            'corr(c) =',
-            np.array2string(gv.evalcorr(c), prefix=10 * ' '),
-            '\n',
-            )
-
-        # parameter w
+        # 5) print out results
+        print('vegas results:')
+        # c[i]
+        cmean = results['c_mean']
+        cov = results['c_outer'] - np.outer(cmean, cmean)
+        cov = (cov + cov.T) / 2
+        # w, b
         wmean, w2mean = results['w']
-        wsdev = gv.mean(w2mean - wmean ** 2) ** 0.5
-        w = wmean + gv.gvar(np.zeros(np.shape(wmean)), wsdev)
-        print('w =', w, '\n')
-
-        # parameter b
+        wsdev = (w2mean - wmean**2)**0.5
         bmean, b2mean = results['b']
-        bsdev = gv.mean(b2mean - bmean ** 2) ** 0.5
-        b = bmean + gv.gvar(np.zeros(np.shape(bmean)), bsdev)
-        print('b =', b, '\n')
-
+        bsdev = (b2mean - bmean**2)**0.5        
+        print('  c means =', cmean)
+        print('  c cov =', str(cov).replace('\n', '\n' + 10*' '))
+        print('  w mean =', str(wmean).replace('\n', '\n' + 11*' '))
+        print('  w sdev =', str(wsdev).replace('\n', '\n' + 11*' '))
+        print('  b mean =', bmean)
+        print('  b sdev =', bsdev)
         # Bayes Factor
-        print('logBF =', np.log(results.pdfnorm))
-
+        print('\n  logBF =', np.log(results.pdfnorm))
+        
+        print('\nCombine vegas errors with covariances for final results:')
+        # N.B. vegas errors are actually insignificant compared to covariances
+        c = cmean + gv.gvar(np.zeros(cmean.shape), gv.mean(cov))
+        w = wmean + gv.gvar(np.zeros(np.shape(wmean)), gv.mean(wsdev))
+        b = bmean + gv.gvar(np.zeros(np.shape(bmean)), bsdev.mean)
+        print('  c =', c)
+        print('  corr(c) =', str(gv.evalcorr(c)).replace('\n', '\n' + 12*' '))
+        print('  w =', str(w).replace('\n', '\n' + 6*' '))
+        print('  b =', b, '\n')
+            
     def fitfcn(x, p):
         c = p['c']
         return c[0] + c[1] * x
@@ -248,7 +250,8 @@ The results from this code are as follows:
 The table shows results for the normalization of the
 modified PDF from each of the ``nitn=10`` iterations of the :mod:`vegas`
 algorithm used to estimate the integrals. The logarithm of the normalization
-(``logBF``) is -23.8. This is the logarithm of the Bayes Factor for the fit. It
+(``logBF``) is -23.8. This is the logarithm of the Bayes Factor (or Evidence)
+for the fit. It
 is much larger than the value -117.5 obtained from a least-squares fit (i.e.,
 from the script above but with ``w=0`` in the PDF). This means that the 
 data much prefer the
@@ -256,7 +259,7 @@ modified prior (by a factor of :math:`exp(-23.8 + 117.4)` or about 10\ :sup:`41`
 
 The new fit parameters are much more reasonable than the results from the 
 least-squares fit. In particular the
-intercept is 0.29(13) which 
+intercept is 0.29(14) which 
 is much more plausible than the least-squares result (compare the dashed line in red
 with the dotted line):
 
@@ -267,7 +270,7 @@ Note, from the correlation matrix, that the intercept and slope are
 anti-correlated, as one might guess for this fit.
 The analysis also gives us an estimate for the failure rate ``w=0.27(12)``
 of our devices --- they fail about a quarter of the time --- and 
-shows that the ``y`` errors are ``b=10.7(3.6)`` times larger when 
+shows that the ``y`` errors are ``b=10.6(3.7)`` times larger when 
 there is a failure.
 
 Finally, note that the Monte Carlo integrations can be made more than 
@@ -302,14 +305,14 @@ is replaced by ::
     prior = make_prior(w_shape=19)
 
 The Bayesian integral then has 22 |~| parameters, rather than the 4 |~| parameters
-before. The code still takes only a couple of seconds to run on a 2020 laptop.
+before. The code still takes only seconds to run on a 2020 laptop.
 
 The final results are quite similar to the other model:
 
 .. literalinclude:: outliers2.out
 
 The logarithm of the Bayes Factor ``logBF`` is slightly lower for
-this model than before. It is also less accurately determined (10x), because
+this model than before. It is also less accurately determined (15x), because
 22-parameter integrals are considerably more difficult than 4-parameter
 integrals. More precision can be obtained by increasing ``neval``, but
 the current precision is more than adequate.

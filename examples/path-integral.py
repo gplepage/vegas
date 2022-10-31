@@ -29,9 +29,7 @@ from __future__ import print_function   # makes this work for python2 and 3
 
 import vegas
 import numpy as np
-import math
 import sys
-import gvar as gv
 
 # compiles path_integrand.pyx, if needed
 import pyximport
@@ -47,7 +45,6 @@ if sys.argv[1:]:
     SHOW_PLOT = eval(sys.argv[1])   # display picture of grid ?
 else:
     SHOW_PLOT = True
-
 
 def main():
     # seed random numbers so reproducible
@@ -83,14 +80,14 @@ def analyze_theory(V, x0list=[], plot=False):
     """ Extract ground-state energy E0 and psi**2 for potential V. """
     # initialize path integral
     T = 4.
-    ndT = 8.         # use larger ndT to reduce discretization error (goes like 1/ndT**2)
-    neval = 3e5   # should probably use more evaluations (10x?)
+    ndT = 8.        # use larger ndT to reduce discretization error (goes like 1/ndT**2)
+    neval = 3e5     # should probably use more evaluations (10x?)
     nitn = 6
     alpha = 0.1     # damp adaptation
 
     # create integrator and train it (no x0list)
     integrand = PathIntegrand(V=V, T=T, ndT=ndT)
-    integ = vegas.Integrator(integrand.region, alpha=alpha)
+    integ = vegas.Integrator(integrand.region, alpha=alpha, nproc=8)
     integ(integrand, neval=neval, nitn=nitn / 2, alpha=2 * alpha)
 
     # evaluate path integral with trained integrator and x0list
@@ -136,11 +133,6 @@ def plot_results(E0, x0, corr, T):
         plt.text(1.4, 0.475, '$E_0 =$ %s' % E0)
         plt.title("Harmonic Oscillator Wavefunction ** 2 (type 'q' to continue)")
         plt.draw()
-    def onpress(event):
-        if event.key == 'q':
-            plt.close()
-            return
-    plt.gcf().canvas.mpl_connect('key_press_event', onpress)
     make_plot()
     plt.show()
 
@@ -150,7 +142,7 @@ if __name__ == '__main__':
 
 
 
-# Copyright (c) 2013-16 G. Peter Lepage.
+# Copyright (c) 2013-22 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

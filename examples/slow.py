@@ -2,7 +2,8 @@
 Three Gaussians spread along the diagonal of a  six-dimensional hypercube.
 
 This coding style for the integrand is the  simplest but also gives the
-slowest runtime. Compare performance with faster.py and fastest.py.
+slowest runtime. It is made 3x faster by using nproc=8 processors, but 
+is still slower than faster.py and fastest.py (using nproc=1 processor).
 """
 from __future__ import print_function   # makes this work for python2 and 3
 
@@ -12,28 +13,28 @@ import numpy as np
 
 np.random.seed((1,2, 3))   # causes reproducible random numbers
 
-dim = 6
-norm_ac = 1. / 0.17720931990702889842 ** dim
-norm_b = 1. / 0.17724538509027909508 ** dim
+DIM = 6
+NORM_AC = 1. / 0.17720931990702889842 ** DIM
+NORM_B = 1. / 0.17724538509027909508 ** DIM
 
 def f(x):
     dx2a = 0
-    for d in range(dim):
+    for d in range(DIM):
         dx2a += (x[d] - 0.25) ** 2
     dx2b = 0
-    for d in range(dim):
+    for d in range(DIM):
         dx2b += (x[d] - 0.5) ** 2
     dx2c = 0
-    for d in range(dim):
+    for d in range(DIM):
         dx2c += (x[d] - 0.75) ** 2
     return (
-        math.exp(- 100. * dx2a) * norm_ac
-        + math.exp(-100. * dx2b) * norm_b
-        + math.exp(-100. * dx2c) * norm_ac
+        math.exp(- 100. * dx2a) * NORM_AC
+        + math.exp(-100. * dx2b) * NORM_B
+        + math.exp(-100. * dx2c) * NORM_AC
         ) / 3.
 
 def main():
-    integ = vegas.Integrator(dim * [[0, 1]], sync_ran=False)
+    integ = vegas.Integrator(DIM * [[0, 1]], nproc=8)  # 8 processors
 
     # adapt the grid; discard these results
     integ(f, neval=25000, nitn=10)
@@ -44,24 +45,13 @@ def main():
 
     print(result.summary())
 
-
 if __name__ == '__main__':
-    if True:
-        main()
-    else:
-        import hotshot, hotshot.stats
-        prof = hotshot.Profile("vegas.prof")
-        prof.runcall(main)
-        prof.close()
-        stats = hotshot.stats.load("vegas.prof")
-        stats.strip_dirs()
-        stats.sort_stats('time', 'calls')
-        stats.print_stats(40)
+    main()
 
 
 
 
-# Copyright (c) 2013-16 G. Peter Lepage.
+# Copyright (c) 2013-22 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

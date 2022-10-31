@@ -3,22 +3,19 @@
 """
 Cython code for the integrator used in fastest.py.
 
-Note that this achieves better performance than the integrand in faster.py
-without the complication of using numpy vectorization.
-Some problems are not easily coded using whole-array operators.
+Note that this achieves (slightly) better performance than the integrand 
+in faster.py without the complication of using numpy vectorization.
+Some problems are not easily coded using whole-array operations.
 """
-
-# import Cython description of vegas (to derive from vegas.BatchIntegrand)
-cimport vegas
 
 # import exp() from C
 from libc.math cimport exp
 
 import numpy as np
-import vegas
-import math
+cimport vegas
 
-
+# cython doesn't like @vegas.batchintegrand here, 
+# so derive from BatchIntegrand instead
 cdef class f_cython(vegas.BatchIntegrand):
     cdef readonly int dim
     cdef double norm_ac
@@ -27,6 +24,9 @@ cdef class f_cython(vegas.BatchIntegrand):
         self.dim = dim
         self.norm_ac = 1. / 0.17720931990702889842 ** dim
         self.norm_b = 1. / 0.17724538509027909508 ** dim
+
+    def info(self):
+        print('dim =', self.dim)
 
     def __call__(self, double[:, ::1] x):
         cdef int d, j
@@ -53,7 +53,7 @@ cdef class f_cython(vegas.BatchIntegrand):
         return f
 
 
-# Copyright (c) 2013-14 G. Peter Lepage.
+# Copyright (c) 2013-22 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

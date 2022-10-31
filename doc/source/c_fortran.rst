@@ -255,7 +255,7 @@ modified script is::
 
 The new Python module is used exactly
 the same way as for C code, with module ``ffcn_cffi`` replacing
-module ``cfcn_ffi`` (see the previous section)::
+module ``cfcn_cffi`` (see the previous section)::
 
   import vegas
   import numpy as np

@@ -14,15 +14,16 @@ import vegas
 import math
 import numpy as np
 
-np.random.seed((1,2, 3))   # causes reproducible random numbers
+np.random.seed((1,2,3))   # causes reproducible random numbers
 
-
-class f_batch(vegas.BatchIntegrand):
+@vegas.batchintegrand
+class f_batch:
     def __init__(self, dim):
+        super(f_batch, self).__init__()
         self.dim = dim
         self.norm_ac = 1. / 0.17720931990702889842 ** dim
         self.norm_b = 1. / 0.17724538509027909508 ** dim
-
+        
     def __call__(self, x):
         dx2a = 0
         for d in range(self.dim):
@@ -43,8 +44,7 @@ def main():
     # create integrand
     f = f_batch(dim=6)
 
-    # increase batch size (using nhcube_batch) to improve efficiency
-    integ = vegas.Integrator(f.dim * [[0, 1]], nhcube_batch=2000, sync_ran=False)
+    integ = vegas.Integrator(f.dim * [[0, 1]])
 
     # adapt the grid; discard these results
     integ(f, neval=25000, nitn=10)
@@ -57,22 +57,12 @@ def main():
 
 
 if __name__ == '__main__':
-    if True:
-        main()
-    else:
-        import hotshot, hotshot.stats
-        prof = hotshot.Profile("vegas.prof")
-        prof.runcall(main)
-        prof.close()
-        stats = hotshot.stats.load("vegas.prof")
-        stats.strip_dirs()
-        stats.sort_stats('time', 'calls')
-        stats.print_stats(40)
+    main()
 
 
 
 
-# Copyright (c) 2013-16 G. Peter Lepage.
+# Copyright (c) 2013-22 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
