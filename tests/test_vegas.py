@@ -15,7 +15,6 @@ import collections
 import math
 import os
 import pickle
-from re import A
 import unittest
 import warnings
 

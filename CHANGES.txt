@@ -6,12 +6,17 @@ Version 5.2 2022-10-31
   (so, unlike MPI, does not require additional software beyond what comes 
   standard with Python). New keyword nproc specifies the number of 
   processes/processors that are used in parallel to evaluate the integrand.
+  Assumes Python 3.3 or later.
 
 - Improvements to PDFIntegrator. Can now be pickled which allows it to work 
   with nproc > 1.
 
 - Multiple processors also supported for AdaptiveMap.adapt_to_samples. This 
   is useful for very high dimensions or large number of samples.
+
+- Forces Cython to regenerate *.c files when using Python 3.11 or later (deals
+  with incompatibilities introduced by 3.11).
+
 
 Version 5.1 2022-01-21
 =======================
