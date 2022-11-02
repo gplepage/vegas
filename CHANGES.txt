@@ -1,4 +1,4 @@
-Version 5.2 2022-10-31
+Version 5.2 2022-11-02
 ======================
 - New implementation for using multiple processors to evaluate expensive 
   integrands. This new implementation is simpler than using MPI (which is 
