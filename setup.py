@@ -67,15 +67,15 @@ ext_modules = [
 
 # for distutils:
 requires = (
-    ["cython (>=0.17)","numpy (>=1.7)", "gvar (>=8.0)"]
+    ["cython (>=0.17)","numpy (>=1.7)", "gvar (>=11.11)"]
     if USE_CYTHON else
-    ["numpy (>=1.7)", "gvar (>=8.0)"]
+    ["numpy (>=1.7)", "gvar (>=11.11)"]
     )
 # for pip:
 install_requires = (
-    ['cython>=0.17', 'numpy>=1.7', 'gvar>=8.0']
+    ['cython>=0.17', 'numpy>=1.7', 'gvar>=11.11']
     if USE_CYTHON else
-    ['numpy>=1.7', 'gvar>=8.0']
+    ['numpy>=1.7', 'gvar>=11.11']
     )
 
 # pypi
