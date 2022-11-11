@@ -2006,7 +2006,7 @@ class RAvg(gvar.GVar):
         self.sum_neval = sum_neval 
 
     def extend(self, ravg):
-        """ Add results from :class:`RAvg` object ``ravg`` after results currently in ``self``. """
+        """ Merge results from :class:`RAvg` object ``ravg`` after results currently in ``self``. """
         for r in ravg.itn_results:
             self.add(r)
         self.sum_neval += ravg.sum_neval
@@ -2171,7 +2171,7 @@ class RAvgDict(gvar.BufferDict):
         self.sum_neval = sum_neval
 
     def extend(self, ravg):
-        """ Add results from :class:`RAvgDict` object ``ravg`` after results currently in ``self``. """
+        """ Merge results from :class:`RAvgDict` object ``ravg`` after results currently in ``self``. """
         for r in ravg.itn_results:
             self.add(r)
         self.sum_neval += ravg.sum_neval
@@ -2369,7 +2369,7 @@ class RAvgArray(numpy.ndarray):
                 self.add(r)
 
     def extend(self, ravg):
-        """ Add results from :class:`RAvgArray` object ``ravg`` after results currently in ``self``. """
+        """ Merge results from :class:`RAvgArray` object ``ravg`` after results currently in ``self``. """
         for r in ravg.itn_results:
             self.add(r)
         self.sum_neval += ravg.sum_neval

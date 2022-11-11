@@ -408,14 +408,6 @@ the following at the end of the original code,</p>
 <p>Again the grid is almost optimal for <code class="docutils literal notranslate"><span class="pre">g(x)</span></code> from the start,
 because <code class="docutils literal notranslate"><span class="pre">g(x)</span></code> peaks in the same region as <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>.
 The exact value for this integral is very close to 0.5.</p>
-<p>Note that <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>s can be saved in files and reloaded later using
-Python’s <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module: for example,
-<code class="docutils literal notranslate"><span class="pre">pickle.dump(integ,</span> <span class="pre">openfile)</span></code> saves integrator <code class="docutils literal notranslate"><span class="pre">integ</span></code>
-in file <code class="docutils literal notranslate"><span class="pre">openfile</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">integ</span> <span class="pre">=</span> <span class="pre">pickle.load(openfile)</span></code> reloads it. The is useful for costly
-integrations that might need to be reanalyzed later since the integrator
-remembers the variable transformations made to minimize errors, and
-so need not be readapted to the integrand when used later.</p>
 <p><strong>Non-Rectangular Volumes:</strong> <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> can integrate over volumes of
 non-rectangular shape. For example, we can replace integrand <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>
 above
@@ -1214,9 +1206,9 @@ but where Python’s
 <p>Then <code class="docutils literal notranslate"><span class="pre">fparallel</span> <span class="pre">=</span> <span class="pre">parallelintegrand(f,</span> <span class="pre">4)</span></code>, for example, will create a
 new integrand <code class="docutils literal notranslate"><span class="pre">fparallel(x)</span></code> that uses 4 CPU cores.</p>
 </section>
-<section id="saving-results">
-<h2>Saving results<a class="headerlink" href="#saving-results" title="Permalink to this headline">¶</a></h2>
-<p>Results returned by a <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator can be pickled using <code class="docutils literal notranslate"><span class="pre">pickle.dump/load</span></code> (or
+<section id="saving-results-automatically">
+<h2>Saving Results Automatically<a class="headerlink" href="#saving-results-automatically" title="Permalink to this headline">¶</a></h2>
+<p>Results returned by a <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator can be pickled for later use using <code class="docutils literal notranslate"><span class="pre">pickle.dump/load</span></code> (or
 <code class="docutils literal notranslate"><span class="pre">gvar.dump/load</span></code>) in the usual way. Results can also be saved automatically using the
 <code class="docutils literal notranslate"><span class="pre">save</span></code> keyword to specify a file name for the pickled result: for example, running</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
@@ -1250,8 +1242,10 @@ new integrand <code class="docutils literal notranslate"><span class="pre">fpara
 <p>but also store <code class="docutils literal notranslate"><span class="pre">result</span></code> in file <code class="docutils literal notranslate"><span class="pre">save.pkl</span></code>. The result can be retrieved
 later using, for example,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;save.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
+
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
@@ -1261,10 +1255,10 @@ later using, for example,</p>
 to complete. This is because the pickled file is updated after every <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
 iteration. This means that a short script like the one above can be used to
 monitor progress before the integration is finished. It also means that results
-up through the last iteration are saved even if the integration script is
+up through the most recent iteration are saved even if the integration script is
 terminated early or crashes.</p>
 <p>It is also possible to save an adapted integrator using <code class="docutils literal notranslate"><span class="pre">pickle.dump/load</span></code>
-(or <code class="docutils literal notranslate"><span class="pre">gvar.dump/load</span></code>). This can also be done automatically by
+(or <code class="docutils literal notranslate"><span class="pre">gvar.dump/load</span></code>). This can also be done automatically, by
 replacing, for example, <code class="docutils literal notranslate"><span class="pre">save='save.pkl'</span></code> with <code class="docutils literal notranslate"><span class="pre">saveall='saveall.pkl'</span></code>
 in the script above. The pickled file then returns a tuple containing
 the most recent <code class="docutils literal notranslate"><span class="pre">result</span></code> and <code class="docutils literal notranslate"><span class="pre">integ</span></code>. Having the (adapted) integrator,
@@ -1279,19 +1273,19 @@ it is possible to further refine a result later: for example, running</p>
 
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;saveall.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
     <span class="n">result</span><span class="p">,</span> <span class="n">integ</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
-<span class="n">new_result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="n">new_result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">nNew results:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">New results:&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">new_result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">nCombined results:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Combined results:&#39;</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_result</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Combined result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>gretly improves the final result by adding an additional 5  iterations
-on to whaat was done  earlier. The new iterations are in <code class="docutils literal notranslate"><span class="pre">new_result</span></code>
+<p>greatly improves the final result by adding 5 additional iterations
+to what was done  earlier. The new iterations are in <code class="docutils literal notranslate"><span class="pre">new_result</span></code>
 and tabulated under “New Results” in the output:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
 <span class="n">New</span> <span class="n">results</span><span class="p">:</span>
@@ -1321,8 +1315,16 @@ and tabulated under “New Results” in the output:</p>
 <span class="n">Combined</span> <span class="n">result</span> <span class="o">=</span> <span class="mf">1.0057</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.25</span>
 </pre></div>
 </div>
-<p>These are merged onto the end of the original results using
-<code class="docutils literal notranslate"><span class="pre">result.extend(new_result)</span></code> to obtain the combined results.</p>
+<p>The new results are merged onto the end of the original results using
+<code class="docutils literal notranslate"><span class="pre">result.extend(new_result)</span></code> to obtain the combined results from all
+10 iterations (old plus new).</p>
+<p>Saving integrators is again useful for costly
+integrations that might need to be reanalyzed later since the saved integrator
+remembers the variable transformations made to minimize errors, and
+so need not be readapted to the integrand when used later. The resulting
+pickle file can be large, however, particularly if <code class="docutils literal notranslate"><span class="pre">neval</span></code> is large.
+The (adapted) <a class="reference internal" href="vegas.html#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.AdaptiveMap</span></code></a> <code class="docutils literal notranslate"><span class="pre">integ.map</span></code> can also
+be pickled by itself and results in a smaller file.</p>
 </section>
 <section id="sums-with-vegas">
 <h2>Sums with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#sums-with-vegas" title="Permalink to this headline">¶</a></h2>
@@ -1840,7 +1842,7 @@ deviations, and properly correlated with other
 <li><a class="reference internal" href="#bayesian-integrals">Bayesian Integrals</a></li>
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>
 <li><a class="reference internal" href="#multiple-processors">Multiple Processors</a></li>
-<li><a class="reference internal" href="#saving-results">Saving results</a></li>
+<li><a class="reference internal" href="#saving-results-automatically">Saving Results Automatically</a></li>
 <li><a class="reference internal" href="#sums-with-vegas">Sums with <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a></li>
 <li><a class="reference internal" href="#vegas-maps-and-preconditioning-vegas"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Maps and Preconditioning <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a></li>
 <li><a class="reference internal" href="#vegas-stratifications"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Stratifications</a></li>

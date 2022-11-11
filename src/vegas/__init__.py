@@ -188,7 +188,7 @@ class PDFRAvg(_gvar.GVar):
         super(PDFRAvg, self).__init__(*ans.internaldata)
 
     def extend(self, pdfravg):
-        """ Add results from :class:`PDFRAvg` object ``pdfravg`` after results currently in ``self``. """
+        """ Merge results from :class:`PDFRAvg` object ``pdfravg`` after results currently in ``self``. """
         self.results.extend(pdfravg.results)
 
     def __getattr__(self, k):
@@ -217,7 +217,7 @@ class PDFRAvgArray(numpy.ndarray):
         return self 
 
     def extend(self, pdfravg):
-        """ Add results from :class:`PDFRAvgArray` object ``pdfravg`` after results currently in ``self``. """
+        """ Merge results from :class:`PDFRAvgArray` object ``pdfravg`` after results currently in ``self``. """
         self.results.extend(pdfravg.results)
 
     def __getattr__(self, k):
@@ -248,7 +248,7 @@ class PDFRAvgDict(_gvar.BufferDict):
         self.buf[:] /= self.results['pdf']
 
     def extend(self, pdfravg):
-        """ Add results from :class:`PDFRAvgDict` object ``pdfravg`` after results currently in ``self``. """
+        """ Merge results from :class:`PDFRAvgDict` object ``pdfravg`` after results currently in ``self``. """
         self.results.extend(pdfravg.results)
 
     def _remove_gvars(self, gvlist):
