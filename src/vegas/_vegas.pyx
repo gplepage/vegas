@@ -1424,9 +1424,7 @@ cdef class Integrator(object):
             % (float(self.max_nhcube), float(max_neval_hcube))
             )
         ans = ans + ("    accuracy: relative = %g" % self.rtol)
-        ans = ans + ("  absolute accuracy = %g\n" % self.atol)
-        ans = ans + ("    save = %s  saveall = %s\n]n" % (self.save, save.saveall))
-        ans = ans + 
+        ans = ans + ("  absolute accuracy = %g\n\n" % self.atol)
         for d in range(self.dim):
             ans = ans +(
                 "    axis %d covers %s\n" % (d, str(self.map.region(d)))
