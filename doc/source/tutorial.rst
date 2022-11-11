@@ -355,15 +355,6 @@ There are several things to note here:
     because ``g(x)`` peaks in the same region as ``f(x)``.
     The exact value for this integral is very close to 0.5.
 
-    Note that |Integrator|\s can be saved in files and reloaded later using
-    Python's :mod:`pickle` module: for example,
-    ``pickle.dump(integ, openfile)`` saves integrator ``integ``
-    in file ``openfile``, and
-    ``integ = pickle.load(openfile)`` reloads it. The is useful for costly
-    integrations that might need to be reanalyzed later since the integrator
-    remembers the variable transformations made to minimize errors, and
-    so need not be readapted to the integrand when used later.
-
     **Non-Rectangular Volumes:** |vegas| can integrate over volumes of
     non-rectangular shape. For example, we can replace integrand ``f(x)``
     above
@@ -1067,6 +1058,11 @@ that the integrand and its return values can be pickled using
 Python's :mod:`pickle` module. This is the case for most pure 
 Python integrands.
 
+The code above will generate an ``AttributeError`` when run in some 
+interactive environments (as opposed to running from the command line)
+on some platforms. This can usually be fixed by putting the integrand 
+function ``ridge(x)`` into a file and importing it into the script.
+
 |vegas| also supports multi-processor evaluation of integrands using MPI
 (via the Python module :mod:`mpi4py` which must be installed separately).
 Placing the code above in a file ``ridge.py``, with ``nproc=1`` (or 
@@ -1121,6 +1117,97 @@ but where Python's
 
 Then ``fparallel = parallelintegrand(f, 4)``, for example, will create a
 new integrand ``fparallel(x)`` that uses 4 CPU cores.
+
+Saving Results Automatically
+-----------------------------
+Results returned by a |vegas| integrator can be pickled for later use using ``pickle.dump/load`` (or 
+``gvar.dump/load``) in the usual way. Results can also be saved automatically using the 
+``save`` keyword to specify a file name for the pickled result: for example, running ::
+
+    import vegas
+    import math
+
+    def f(x):
+        dx2 = 0
+        for d in range(4):
+            dx2 += (x[d] - 0.5) ** 2
+        return math.exp(-dx2 * 100.) * 1013.2118364296088
+
+    integ = vegas.Integrator([[-1, 1], [0, 1], [0, 1], [0, 1]])
+
+    result = integ(f, nitn=5, neval=1000, save='save.pkl')
+    print(result.summary())
+    print('result = %s    Q = %.2f' % (result, result.Q))
+
+prints out
+
+.. literalinclude:: eg9a.out
+
+but also store ``result`` in file ``save.pkl``. The result can be retrieved 
+later using, for example, ::
+
+    import pickle
+
+    with open('save.pkl', 'rb') as ifile:
+        result = pickle.load(ifile)
+
+    print(result.summary())
+    print('result = %s    Q = %.2f' % (result, result.Q))
+
+which gives exactly the same output.
+
+This feature is most useful for expensive integrations, ones taking minutes or hours
+to complete. This is because the pickled file is updated after every |vegas| 
+iteration. This means that a short script like the one above can be used to 
+monitor progress before the integration is finished. It also means that results 
+up through the most recent iteration are saved even if the integration script is 
+terminated early or crashes.
+
+It is also possible to save an adapted integrator using ``pickle.dump/load`` 
+(or ``gvar.dump/load``). This can also be done automatically, by 
+replacing, for example, ``save='save.pkl'`` with ``saveall='saveall.pkl'``
+in the script above. The pickled file then returns a tuple containing
+the most recent ``result`` and ``integ``. Having the (adapted) integrator,
+it is possible to further refine a result later: for example, running ::
+
+    import pickle
+
+    def f(x):
+        dx2 = 0
+        for d in range(4):
+            dx2 += (x[d] - 0.5) ** 2
+        return math.exp(-dx2 * 100.) * 1013.2118364296088
+
+    with open('saveall.pkl', 'rb') as ifile:
+        result, integ = pickle.load(ifile)
+    new_result = integ(f, nitn=5)
+
+    print('\nNew results:')
+    print(new_result.summary())
+
+    print('\nCombined results:')
+    result.extend(new_result)
+    print(result.summary())
+    print('Combined result = %s    Q = %.2f' % (result, result.Q))
+
+greatly improves the final result by adding 5 |~| additional iterations 
+to what was done  earlier. The new iterations are in ``new_result``
+and tabulated under "New Results" in the output:
+
+.. literalinclude:: eg9b.out
+
+The new results are merged onto the end of the original results using 
+``result.extend(new_result)`` to obtain the combined results from all 
+10 |~| iterations (old plus new).
+
+Saving integrators is again useful for costly
+integrations that might need to be reanalyzed later since the integrator
+remembers the variable transformations made to minimize errors, and
+so need not be readapted to the integrand when used later. The resulting 
+pickle file can be large, however, particularly if ``neval`` is large. 
+The adapted :class:`vegas.AdaptiveMap` ``integ.map`` can also 
+be pickled by itself and results in a smaller file.
+
 
 
 Sums with |vegas|

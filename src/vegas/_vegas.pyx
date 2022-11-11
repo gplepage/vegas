@@ -23,6 +23,7 @@ import functools
 import inspect
 import math
 import multiprocessing
+import pickle
 import os
 import sys
 import time
@@ -964,7 +965,28 @@ cdef class Integrator(object):
             greater than 1 disables MPI support.
             Set ``nproc=None`` to use all the processors 
             on the machine (equivalent to ``nproc=os.cpu_count()``). 
-            Default value is ``nproc=1``.         
+            Default value is ``nproc=1``.
+        save (str or file or None): Writes ``results`` into pickle file specified
+            by ``save`` at the end of each iteration. For example, setting
+            ``save='results.pkl'`` means that the results returned by the last 
+            vegas iteration can be reconstructed later using::
+
+                import pickle
+                with open('results.pkl', 'rb') as ifile:
+                    results = pickle.load(ifile)
+            
+            Ignored if ``save=None`` (default).
+        saveall (str or file or None): Writes ``(results, integrator)`` into pickle 
+            file specified by ``saveall`` at the end of each iteration. For example, 
+            setting ``saveall='allresults.pkl'`` means that the results returned by 
+            the last vegas iteration, together with a clone of the (adapted) integrator, 
+            can be reconstructed later using::
+
+                import pickle
+                with open('allresults.pkl', 'rb') as ifile:
+                    results, integrator = pickle.load(ifile)
+            
+            Ignored if ``saveall=None`` (default).
         analyzer: An object with methods
 
                 ``analyzer.begin(itn, integrator)``
@@ -1107,6 +1129,8 @@ cdef class Integrator(object):
         mpi=True,
         uses_jac=False,
         nproc=1,
+        save=None,
+        saveall=None,
         )
 
     def __init__(Integrator self not None, map, **kargs):
@@ -1150,6 +1174,8 @@ cdef class Integrator(object):
             if k in ['map']:
                 continue
             odict[k] = getattr(self, k)
+        odict['nstrat'] = numpy.asarray(self.nstrat)
+        odict['sigf'] = numpy.asarray(self.sigf)
         return (Integrator, (self.map,), odict)
 
     def __setstate__(Integrator self not None, odict):
@@ -1210,8 +1236,8 @@ cdef class Integrator(object):
                         self.pool = None
             elif k in Integrator.defaults:
                 # ignore entry if set to None (useful for debugging)
-                if kargs[k] is None:
-                    continue
+                # if kargs[k] is None:
+                #     continue
                 old_val[k] = getattr(self, k)
                 setattr(self, k, kargs[k])
             else:
@@ -1284,8 +1310,10 @@ cdef class Integrator(object):
                 self.map.adapt(ninc=ninc)
 
         if not numpy.all(numpy.equal(self.nstrat, nstrat)):
-            # need to recalculate stratification distribution for beta>0
-            self.sum_sigf = HUGE
+            if 'sigf' not in old_val:
+                # need to recalculate stratification distribution for beta>0
+                # unless a new sigf was set
+                self.sum_sigf = HUGE
             self.nstrat = nstrat
 
         # 5) set min_neval_hcube 
@@ -1366,7 +1394,7 @@ cdef class Integrator(object):
                     "                h-cubes = %.6g evaluations/h-cube = %d\n"
                     % (nhcube, self.min_neval_hcube)
                     )
-        ans += "                h-cubes/batch = %d\n" % self.nhcube_batch
+        ans += "                h-cubes/batch = %d  processors = %d\n" % (self.nhcube_batch, self.nproc)
         ans = ans + (
             "    minimize_mem = %s\n"
             % ('True' if self.minimize_mem else 'False')
@@ -1396,7 +1424,9 @@ cdef class Integrator(object):
             % (float(self.max_nhcube), float(max_neval_hcube))
             )
         ans = ans + ("    accuracy: relative = %g" % self.rtol)
-        ans = ans + ("  absolute accuracy = %g\n\n" % self.atol)
+        ans = ans + ("  absolute accuracy = %g\n" % self.atol)
+        ans = ans + ("    save = %s  saveall = %s\n]n" % (self.save, save.saveall))
+        ans = ans + 
         for d in range(self.dim):
             ans = ans +(
                 "    axis %d covers %s\n" % (d, str(self.map.region(d)))
@@ -1751,7 +1781,7 @@ cdef class Integrator(object):
         if kargs:
             self.set(kargs)
         if self.nproc > 1:
-            old_defaults = self.set(dict(mpi=False, nhcube_batch=self.nproc * self.nhcube_batch))
+            old_defaults = self.set(mpi=False, nhcube_batch=self.nproc * self.nhcube_batch)
         elif self.mpi:
             pass
 
@@ -1884,6 +1914,11 @@ cdef class Integrator(object):
             if self.analyzer is not None:
                 result.update_analyzer(self.analyzer)
 
+            if self.saveall is not None:
+                result.saveall(self, self.saveall)
+            if self.save is not None:
+                result.save(self.save)
+                
             if result.converged(self.rtol, self.atol):
                 break
         if self.nproc > 1:
@@ -1948,7 +1983,7 @@ class RAvg(gvar.GVar):
     inverse variances if parameter ``weight=True``;
     otherwise straight, unweighted averages are used.
     """
-    def __init__(self, weighted=True):
+    def __init__(self, weighted=True, itn_results=None, sum_neval=0):
         if weighted:
             self._v_s2 = 0.
             self._v2_s2 = 0.
@@ -1961,9 +1996,38 @@ class RAvg(gvar.GVar):
             self._n = 0
             self.weighted = False
         self.itn_results = []
-        super(RAvg, self).__init__(
-            *gvar.gvar(0., 0.).internaldata,
-           )
+        if itn_results is None:
+            super(RAvg, self).__init__(
+                *gvar.gvar(0., 0.).internaldata,
+                )
+        else:
+            if isinstance(itn_results, bytes):
+                itn_results = gvar.loads(itn_results)
+            for r in itn_results:
+                self.add(r)
+        self.sum_neval = sum_neval 
+
+    def extend(self, ravg):
+        """ Add results from :class:`RAvg` object ``ravg`` after results currently in ``self``. """
+        for r in ravg.itn_results:
+            self.add(r)
+        self.sum_neval += ravg.sum_neval
+
+    def __reduce_ex__(self, protocol):
+        return (
+            RAvg, 
+            (self.weighted, gvar.dumps(self.itn_results, protocol=protocol), self.sum_neval)
+            )
+
+    def _remove_gvars(self, gvlist):
+        tmp = RAvg(itn_results=self.itn_results)
+        tmp.itn_results = gvar.remove_gvars(tmp.itn_results, gvlist)
+        tgvar = gvar.gvar_factory() # small cov matrix
+        super(RAvg, tmp).__init__(*tgvar(0,0).internaldata)
+        return tmp 
+
+    def _distribute_gvars(self, gvlist):
+        return RAvg(itn_results = gvar.distribute_gvars(self.itn_results, gvlist))
 
     def _chi2(self):
         if len(self.itn_results) <= 1:
@@ -1991,7 +2055,6 @@ class RAvg(gvar.GVar):
 
     def _nitn(self):
         return len(self.itn_results)
-
     nitn = property(_nitn, None, None, "Number of iterations.")
 
     def _Q(self):
@@ -2006,6 +2069,10 @@ class RAvg(gvar.GVar):
         None,
         "*Q* or *p-value* of weighted average's *chi**2*.",
         )
+    
+    def _avg_neval(self):
+        return self.sum_neval / self.nitn if self.nitn > 0 else 0 
+    avg_neval = property(_avg_neval, None, None, "Average number of integrand evaluations per iteration.")
 
     def converged(self, rtol, atol):
         return self.sdev < atol + rtol * abs(self.mean)
@@ -2013,6 +2080,8 @@ class RAvg(gvar.GVar):
     def add(self, g):
         """ Add estimate ``g`` to the running average. """
         self.itn_results.append(g)
+        if isinstance(g, gvar.GVarRef):
+            return
         if self.weighted:
             var = g.sdev ** 2 if g.sdev > 0 else TINY
             if var < TINY:
@@ -2033,7 +2102,6 @@ class RAvg(gvar.GVar):
                 self._v / self._n,
                 sqrt(self._s2) / self._n,
                 ).internaldata)
-
 
     def summary(self, extended=False, weighted=None):
         """ Assemble summary of results, iteration-by-iteration, into a string.
@@ -2089,12 +2157,43 @@ class RAvgDict(gvar.BufferDict):
     inverse covariance matrices if parameter ``weight=True``;
     otherwise straight, unweighted averages are used.
     """
-    def __init__(self, dictionary, weighted=True):
-        super(RAvgDict, self).__init__(dictionary)
+    def __init__(self, dictionary=None, weighted=True, itn_results=None, sum_neval=0):
+        if dictionary is None and (itn_results is None or len(itn_results) < 1):
+            raise ValueError('must specificy dictionary or itn_results')
+        super(RAvgDict, self).__init__(dictionary if dictionary is not None else itn_results[0])
         self.rarray = RAvgArray(shape=(self.size,), weighted=weighted)
-        self.buf = numpy.array(self.rarray)
+        self.buf = numpy.asarray(self.rarray) # turns it into a normal ndarray
         self.itn_results = []
         self.weighted = weighted
+        if itn_results is not None:
+            if isinstance(itn_results, bytes):
+                itn_results = gvar.loads(itn_results)
+            for r in itn_results:
+                self.add(r)
+        self.sum_neval = sum_neval
+
+    def extend(self, ravg):
+        """ Add results from :class:`RAvgDict` object ``ravg`` after results currently in ``self``. """
+        for r in ravg.itn_results:
+            self.add(r)
+        self.sum_neval += ravg.sum_neval
+
+    def __reduce_ex__(self, protocol):
+        return (
+            RAvgDict, 
+            (super(RAvgDict, self), self.weighted, gvar.dumps(self.itn_results, protocol=protocol), self.sum_neval),
+            )
+
+    def _remove_gvars(self, gvlist):
+        tmp = RAvgDict(itn_results=[gvar.BufferDict(x) for x in self.itn_results])
+        tmp.rarray = gvar.remove_gvars(tmp.rarray, gvlist)
+        tmp._buf = gvar.remove_gvars(tmp.buf, gvlist)
+        return tmp
+
+    def _distribute_gvars(self, gvlist):
+        self.rarray = gvar.distribute_gvars(self.rarray, gvlist)
+        self._buf = gvar.distribute_gvars(self.buf, gvlist)
+        return self
 
     def converged(self, rtol, atol):
         return numpy.all(
@@ -2116,7 +2215,6 @@ class RAvgDict(gvar.BufferDict):
                         )
         self.itn_results.append(newg)
         self.rarray.add(newg.buf)
-        self.buf = numpy.array(self.rarray)
 
     def summary(self, extended=False, weighted=None):
         """ Assemble summary of results, iteration-by-iteration, into a string.
@@ -2148,7 +2246,6 @@ class RAvgDict(gvar.BufferDict):
 
     def _nitn(self):
         return len(self.itn_results)
-
     nitn = property(_nitn, None, None, "Number of iterations.")
 
     def _Q(self):
@@ -2157,6 +2254,10 @@ class RAvgDict(gvar.BufferDict):
         _Q, None, None,
         "*Q* or *p-value* of weighted average's *chi**2*.",
         )
+    
+    def _avg_neval(self):
+        return self.sum_neval / self.nitn if self.nitn > 0 else 0 
+    avg_neval = property(_avg_neval, None, None, "Average number of integrand evaluations per iteration.")
 
 
 class RAvgArray(numpy.ndarray):
@@ -2174,16 +2275,20 @@ class RAvgArray(numpy.ndarray):
     otherwise straight, unweighted averages are used.
     """
     def __new__(
-        subtype, shape, weighted=True,
-        dtype=object, buffer=None, offset=0, strides=None, order=None
+        subtype, shape=None,
+        dtype=object, buffer=None, offset=0, strides=None, order=None,
+        weighted=True, itn_results=None, sum_neval=0
         ):
+        if shape is None and (itn_results is None or len(itn_results) < 1):
+            raise ValueError('must specificy shape or itn_results')
         obj = numpy.ndarray.__new__(
-            subtype, shape=shape, dtype=object, buffer=buffer, offset=offset,
+            subtype, shape=shape if shape is not None else numpy.shape(itn_results[0]), 
+            dtype=object, buffer=buffer, offset=offset,
             strides=strides, order=order
             )
         if buffer is None:
             obj.flat = numpy.array(obj.size * [gvar.gvar(0,0)])
-        obj.itn_results = []
+        obj.itn_results = [] 
         if weighted:
             obj._invcov_v = 0.
             obj._v_invcov_v = 0.
@@ -2195,12 +2300,50 @@ class RAvgArray(numpy.ndarray):
             obj._cov = 0.
             obj._n = 0
             obj.weighted = False
+        obj.sum_neval = sum_neval 
         return obj
+
+    def _remove_gvars(self, gvlist):
+        tmp = RAvgArray(itn_results= [numpy.array(x) for x in self.itn_results])
+        tmp.itn_results = gvar.remove_gvars(tmp.itn_results, gvlist)
+        tmp.flat[:] = gvar.remove_gvars(numpy.array(tmp), gvlist)
+        return tmp
+
+    def _distribute_gvars(self, gvlist):
+        return(RAvgArray(itn_results = gvar.distribute_gvars(self.itn_results, gvlist)))
+
+    def __reduce_ex__(self, protocol):
+        save = numpy.array(self.flat[:])
+        self.flat[:] = 0
+        superpickled = super(RAvgArray, self).__reduce__()
+        self.flat[:] = save
+        state = superpickled[2] + (
+            self.weighted, gvar.dumps(self.itn_results, protocol=protocol),
+            self.sum_neval,
+            )
+        return (superpickled[0], superpickled[1], state)
+
+    def __setstate__(self, state):
+        super(RAvgArray, self).__setstate__(state[:-3])
+        self.weighted = state[-3]
+        itn_results = gvar.loads(state[-2])
+        self.sum_neval = state[-1]
+        if self.weighted:
+            self._invcov_v = 0.
+            self._v_invcov_v = 0.
+            self._invcov = 0.
+        else:
+            self._v = 0.
+            self._v2 = 0.
+            self._cov = 0.
+            self._n = 0
+        self.itn_results = []
+        for r in itn_results:
+            self.add(r)
 
     def __array_finalize__(self, obj):
         if obj is None:
             return
-        self.itn_results = getattr(obj, 'itn_results', [])
         if obj.weighted:
             self._invcov_v = getattr(obj, '_invcov_v', 0.0)
             self._v_invcov_v = getattr(obj, '_v_invcov_v', 0.0)
@@ -2212,6 +2355,26 @@ class RAvgArray(numpy.ndarray):
             self._cov = getattr(obj, '_cov', 0.)
             self._n = getattr(obj, '_n', 0.)
             self.weighted = getattr(obj, 'weighted', False)
+        self.itn_results = getattr(obj, 'itn_results', [])
+        self.sum_neval = getattr(obj, 'sum_neval', 0)
+    
+    def __init__(self, shape=None,
+        dtype=object, buffer=None, offset=0, strides=None, order=None,
+        weighted=True, itn_results=None, sum_neval=0):
+        # needed because array_finalize can't handle self.add(r)
+        self[:] *= 0
+        if itn_results is not None:
+            if isinstance(itn_results, bytes):
+                itn_results = gvar.loads(itn_results)
+            self.itn_results = []
+            for r in itn_results:
+                self.add(r)
+
+    def extend(self, ravg):
+        """ Add results from :class:`RAvgArray` object ``ravg`` after results currently in ``self``. """
+        for r in ravg.itn_results:
+            self.add(r)
+        self.sum_neval += ravg.sum_neval
 
     def _inv(self, matrix):
         " Invert matrix, with protection against singular matrices. "
@@ -2260,7 +2423,6 @@ class RAvgArray(numpy.ndarray):
 
     def _nitn(self):
         return len(self.itn_results)
-
     nitn = property(_nitn, None, None, "Number of iterations.")
 
     def _Q(self):
@@ -2271,11 +2433,17 @@ class RAvgArray(numpy.ndarray):
         _Q, None, None,
         "*Q* or *p-value* of weighted average's *chi**2*.",
         )
+    
+    def _avg_neval(self):
+        return self.sum_neval / self.nitn if self.nitn > 0 else 0 
+    avg_neval = property(_avg_neval, None, None, "Average number of integrand evaluations per iteration.")
 
     def add(self, g):
         """ Add estimate ``g`` to the running average. """
         g = numpy.asarray(g)
         self.itn_results.append(g)
+        if g.size > 1 and isinstance(g.flat[0], gvar.GVarRef):
+            return 
         g = g.reshape((-1,))
         gmean = gvar.mean(g)
         gcov = gvar.evalcov(g)
@@ -2347,7 +2515,6 @@ class RAvgArray(numpy.ndarray):
             ans += '\n' + gvar.tabulate(self) + '\n'
         return ans
 
-
 ################
 # Classes that standarize the interface for integrands. Internally vegas
 # assumes batch integrands that return an array fx[i, d] where i = batch index
@@ -2395,20 +2562,27 @@ cdef class VegasResult:
         else:
             self.result = RAvgArray(self.shape, weighted=weighted)
 
-    property  avg_neval:
-        " Average number of integrand evaluations per iteration."
-        def __get__(self):
-            if len(self.result.itn_results) > 0:
-                return int(self.sum_neval / len(self.result.itn_results))
-            else:
-                return 0.
+    def save(self, outfile):
+        " pickle current results in ``outfile`` for later use. "
+        if isinstance(outfile, str):
+            with open(outfile, 'wb') as ofile:
+                pickle.dump(self.result, ofile)
+        else:
+            pickle.dump(self.result, outfile)
+
+    def saveall(self, integrator, outfile):
+        " pickle current (results,integrator) in ``outfile`` for later use. "
+        if isinstance(outfile, str):
+            with open(outfile, 'wb') as ofile:
+                pickle.dump((self.result, integrator), ofile)
+        else:
+            pickle.dump((self.result, integrator), outfile)
 
     def update(self, mean, var, last_neval=None):
         self.result.add(self.integrand.format_result(mean, var))
         if last_neval is not None:
             self.sum_neval += last_neval
             self.result.sum_neval = self.sum_neval
-            self.result.avg_neval = self.avg_neval
 
     def update_analyzer(self, analyzer):
         """ Update analyzer at end of an iteration. """

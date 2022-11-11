@@ -72,6 +72,7 @@ from ._vegas import vecintegrand, VecIntegrand
 import gvar as _gvar
 import functools
 import numpy
+import pickle 
 
 # import multiprocessing
 # import os
@@ -177,75 +178,97 @@ import numpy
 #         else:
 #             return numpy.concatenate(results, axis=0 if self.fcntype == 'lbatch' else -1)
 
+#########################################
+# PDFRAvg, etc are wrappers for RAvg, etc
 
 class PDFRAvg(_gvar.GVar):
     def __init__(self, results):
-        ans = results['f(p)*pdf'] / results['pdf']
+        self.results = pickle.loads(results) if isinstance(results, bytes) else results
+        ans = self.results['f(p)*pdf'] / self.results['pdf']
         super(PDFRAvg, self).__init__(*ans.internaldata)
-        self.chi2 = results.chi2 
-        self.dof = results.dof 
-        self.Q = results.Q
-        self.summaryTrue = results.summary(True)
-        self.summaryFalse = results.summary()
-        self.itn_results = results.itn_results
-        self.sum_neval = results.sum_neval
-        self.avg_neval = results.avg_neval
-        self.pdfnorm = results['pdf']
-        self.weighted = results.weighted
 
-    def summary(self, extended=False):
-        if extended:
-            return self.summaryTrue 
-        else:
-            return self.summaryFalse
+    def extend(self, pdfravg):
+        """ Add results from :class:`PDFRAvg` object ``pdfravg`` after results currently in ``self``. """
+        self.results.extend(pdfravg.results)
+
+    def __getattr__(self, k):
+        if k == 'pdfnorm':
+            return self.results['pdf']
+        return getattr(self.results, k)
+
+    def _remove_gvars(self, gvlist):
+        tmp = PDFRAvg(results=self.results)
+        tmp.results = _gvar.remove_gvars(tmp.results, gvlist)
+        tgvar = _gvar.gvar_factory() # small cov matrix
+        super(PDFRAvg, tmp).__init__(*tgvar(0,0).internaldata)
+        return tmp 
+
+    def _distribute_gvars(self, gvlist):
+        return PDFRAvg(results = _gvar.distribute_gvars(self.results, gvlist))
+
+    def __reduce_ex__(self, protocol):
+        return (PDFRAvg, (pickle.dumps(self.results), ))
 
 class PDFRAvgArray(numpy.ndarray):
     def __new__(cls, results):
-        ans = results['f(p)*pdf'] / results['pdf']
-        self = numpy.array(ans).view(cls)
-        self.chi2 = results.chi2 
-        self.dof = results.dof 
-        self.Q = results.Q
-        self.summaryTrue = results.summary(True)
-        self.summaryFalse = results.summary() 
-        self.itn_results = results.itn_results
-        self.pdfnorm = results['pdf']
-        self.weighted = results.weighted
-        self.sum_neval = results.sum_neval
-        self.avg_neval = results.avg_neval
+        results = pickle.loads(results) if isinstance(results, bytes) else results
+        self = numpy.array(results['f(p)*pdf'] / results['pdf']).view(cls)
+        self.results = results
         return self 
 
-    def summary(self, extended=False):
-        if extended:
-            return self.summaryTrue 
-        else:
-            return self.summaryFalse
+    def extend(self, pdfravg):
+        """ Add results from :class:`PDFRAvgArray` object ``pdfravg`` after results currently in ``self``. """
+        self.results.extend(pdfravg.results)
+
+    def __getattr__(self, k):
+        if k == 'pdfnorm':
+            return self.results['pdf']
+        return getattr(self.results, k)
+
+    def _remove_gvars(self, gvlist):
+        tmp = PDFRAvgArray(results=self.results)
+        tmp.results = _gvar.remove_gvars(tmp.results, gvlist)
+        tmp.flat[:] = _gvar.remove_gvars(numpy.array(tmp), gvlist)
+        return tmp 
+
+    def _distribute_gvars(self, gvlist):
+        return PDFRAvgArray(results=_gvar.distribute_gvars(self.results, gvlist))
+
+    def __reduce_ex__(self, protocol):
+        return (PDFRAvgArray, (pickle.dumps(self.results), ))
 
 class PDFRAvgDict(_gvar.BufferDict):
     def __init__(self, results):
-        self.chi2 = results.chi2 
-        self.dof = results.dof 
-        self.Q = results.Q
-        self.summaryTrue = results.summary(True)
-        self.summaryFalse = results.summary()
-        self.itn_results = results.itn_results
-        self.weighted = results.weighted
-        self.pdfnorm = results['pdf']
-        self.sum_neval = results.sum_neval
-        self.avg_neval = results.avg_neval
-        results.buf[:] /= self.pdfnorm
-        r = _gvar.BufferDict()
-        for k in results:
+        super(PDFRAvgDict, self).__init__()
+        self.results = pickle.loads(results) if isinstance(results, bytes) else results
+        for k in self.results:
             if k == 'pdf':
                 continue 
-            r[k[1]] = results[k]
-        super(PDFRAvgDict, self).__init__(r)
+            self[k[1]] = self.results[k]
+        self.buf[:] /= self.results['pdf']
 
-    def summary(self, extended=False):
-        if extended:
-            return self.summaryTrue 
-        else:
-            return self.summaryFalse
+    def extend(self, pdfravg):
+        """ Add results from :class:`PDFRAvgDict` object ``pdfravg`` after results currently in ``self``. """
+        self.results.extend(pdfravg.results)
+
+    def _remove_gvars(self, gvlist):
+        tmp = PDFRAvgDict(results=self.results)
+        tmp.results = _gvar.remove_gvars(tmp.results, gvlist)
+        tmp._buf = _gvar.remove_gvars(tmp.buf, gvlist)
+        return tmp 
+
+    def _distribute_gvars(self, gvlist):
+        return PDFRAvgDict(results=_gvar.distribute_gvars(self.results, gvlist))
+
+
+    def __getattr__(self, k):
+        if k == 'pdfnorm':
+            return self.results['pdf']
+        return getattr(self.results, k)
+
+    def __reduce_ex__(self, protocol):
+        pickle.dumps(self.results)
+        return (PDFRAvgDict, (pickle.dumps(self.results), ))
 
 class PDFIntegrator(Integrator):
     """ :mod:`vegas` integrator for PDF expectation values.
@@ -287,7 +310,7 @@ class PDFIntegrator(Integrator):
     value of ``f(p)`` is the ratio of these two integrals (so 
     ``pdf(p)`` need not be normalized). Integration variables 
     are chosen to optimize the integral, and the integrator is 
-    pre-adapted to ``pdf(p)`` (so it is usually unnecessary to discard 
+    pre-adapted to ``pdf(p)`` (so it is often unnecessary to discard 
     early iterations). The result of a ``PDFIntegrator`` integration
     has an extra attribute, ``result.pdfnorm``, which is the 
     |vegas| estimate of the integral over the PDF. 
@@ -361,10 +384,10 @@ class PDFIntegrator(Integrator):
         self.scale = scale
         self.adapt_to_pdf = adapt_to_pdf
         self._make_pdf(pdf)
-        if 'uses_jac' in kargs:
+        integ_map = self._make_map(self.limit / self.scale)
+        if kargs and 'uses_jac' in kargs:
             kargs = dict(kargs)
             del kargs['uses_jac']
-        integ_map = self._make_map(self.limit / self.scale)
         super(PDFIntegrator, self).__init__(
             self.g_pdf.size * [integ_map], **kargs
             )
@@ -377,6 +400,7 @@ class PDFIntegrator(Integrator):
         for k in Integrator.defaults:
             if Integrator.defaults[k] != getattr(self, k) and k != 'uses_jac':
                 kargs[k] = getattr(self, k)
+        kargs['sigf'] = numpy.array(self.sigf)
         return (
             PDFIntegrator, 
             (_gvar.dumps(self.g_pdf), self.pdf, self.adapt_to_pdf, self.limit, self.scale),
@@ -460,6 +484,14 @@ class PDFIntegrator(Integrator):
         """
         # if self.adapt_to_pdf and set(['adapt', 'alpha', 'beta']).isdisjoint(kargs):
         #     kargs['adapt'] = False
+        if kargs and 'uses_jac' in kargs:
+            kargs = dict(kargs)
+            del kargs['uses_jac']
+        if kargs:
+            self.set(kargs)
+        save_args = self.set(save=None, saveall=None)
+        if save_args['save'] is not None or save_args['saveall'] is not None:
+            self.set(analyzer=PDFAnalyzer(self, analyzer=self.analyzer, **save_args))
         if f is None:
             f = PDFIntegrator._fdummy
         if pdf is not None:
@@ -467,13 +499,16 @@ class PDFIntegrator(Integrator):
         if adapt_to_pdf is not None:
             self.adapt_to_pdf = adapt_to_pdf
         integrand = self._expval(f) 
-        results = super(PDFIntegrator, self).__call__(integrand, **kargs)
+        results = super(PDFIntegrator, self).__call__(integrand) #*, **kargs)
         if self.ans_type == 'scalar':
             ans = PDFRAvg(results)
         elif self.ans_type == 'array':
             ans = PDFRAvgArray(results)
         else:
             ans = PDFRAvgDict(results)
+        self.set(save_args)
+        if isinstance(self.analyzer, PDFAnalyzer):
+            self.set(analyzer=self.analyzer.analyzer)
         self.ans_type = None
         return ans
 
@@ -484,11 +519,6 @@ class PDFIntegrator(Integrator):
             # convert to lbatch
             f = functools.partial(PDFIntegrator.scalar2lbatch, f=f)
             fcntype = 'lbatch'
-        # elif fcntype == 'rbatch':
-        #     # convert to lbatch
-        #     f = functools.partial(PDFIntegrator.rbatch2lbatch, f=f)
-        #     fcntype = 'lbatch'
-        # return lbatchintegrand(functools.partial(self._f_lbatch, f=f))
         if fcntype == 'rbatch':
             return rbatchintegrand(
                 functools.partial(self._f_rbatch, f=f)
@@ -687,4 +717,125 @@ class PDFIntegrator(Integrator):
             ans_pdf = ans.pop('pdf')
             ans['pdf'] = ans_pdf
         return ans
+
+class PDFAnalyzer(object):
+    """ |vegas| analyzer for implementing ``save``, ``saveall`` keywords for :class:`PDFIntegrator` """
+    def __init__(self, pdfinteg, analyzer, save=None, saveall=None):
+        self.pdfinteg = pdfinteg 
+        self.analyzer = analyzer 
+        self.save = save 
+        self.saveall = saveall
+    
+    def begin(self, itn, integrator):
+        if self.analyzer is not None:
+            self.analyzer.begin(itn, integrator)
+
+    def end(self, itn_result, results):
+        if self.analyzer is not None:
+            self.analyzer.end(itn_result, results)
+        if self.save is None and self.saveall is None:
+            return
+        if self.pdfinteg.ans_type == 'scalar':
+            ans = PDFRAvg(results)
+        elif self.pdfinteg.ans_type == 'array':
+            ans = PDFRAvgArray(results)
+        else:
+            ans = PDFRAvgDict(results)
+        if isinstance(self.save, str):
+            with open(self.save, 'wb') as ofile:
+                pickle.dump(ans, ofile)
+        elif self.save is not None:
+            pickle.dump(ans, self.save)
+        if isinstance(self.saveall, str):
+            with open(self.saveall, 'wb') as ofile:
+                pickle.dump((ans,self.pdfinteg), ofile)
+        elif self.saveall is not None:
+            pickle.dump((ans,self.pdfinteg), self.saveall)
+            
+            
+
+
+    
+    
+
+def ravg(reslist, weighted=True):
+    """ Create running average from list of :mod:`vegas` results.
+
+    A typical application is to change parameter ``weighted`` from
+    its default value::
+
+        import vegas
+
+        def fcn(p):
+            return p[0] * p[1] * p[2] * p[3] * 16.
+
+        itg = vegas.Integrator(4 * [[0,1]])
+        r = itg(fcn)
+        print(r.summary())
+        ur = vegas.ravg(r, weighted=False)
+        print(ur.summary())
+
+    Here a new version ``ur`` of the :mod:`vegas` results ``r`` 
+    is created where final results are the unweighted average 
+    over results from each iteration. The output is::
+    
+        itn   integral        wgt average     chi2/dof        Q
+        -------------------------------------------------------
+          1   0.986(20)       0.986(20)           0.00     1.00
+          2   0.976(13)       0.979(11)           0.16     0.69
+          3   1.011(12)       0.9933(79)          2.08     0.13
+          4   1.001(10)       0.9960(62)          1.49     0.21
+          5   0.9967(83)      0.9963(50)          1.12     0.34
+          6   1.0022(78)      0.9980(42)          0.98     0.43
+          7   1.0036(66)      0.9996(35)          0.90     0.50
+          8   0.9930(61)      0.9979(31)          0.89     0.51
+          9   0.9976(51)      0.9978(26)          0.78     0.62
+         10   1.0031(43)      0.9993(22)          0.82     0.60
+
+        itn   integral        average         chi2/dof        Q
+        -------------------------------------------------------
+          1   0.986(20)       0.986(20)           0.00     1.00
+          2   0.976(13)       0.981(12)           0.16     0.69
+          3   1.011(12)       0.9908(87)          1.39     0.25
+          4   1.001(10)       0.9933(70)          1.19     0.31
+          5   0.9967(83)      0.9940(58)          1.04     0.38
+          6   1.0022(78)      0.9953(50)          1.00     0.41
+          7   1.0036(66)      0.9965(44)          1.00     0.42
+          8   0.9930(61)      0.9961(39)          0.96     0.46
+          9   0.9976(51)      0.9962(36)          0.92     0.50
+         10   1.0031(43)      0.9969(32)          0.94     0.49
+
+    Args:
+        reslist (list): List whose elements are |GVar|\s, arrays of 
+            |GVar|\s, or dictionaries whose values are |GVar|\s or
+            arrays of |GVar|\s. Alternatively ``reslist`` can be 
+            the object returned by a call to a 
+            :class:`vegas.Integrator` object (i.e, an instance of 
+            any of :class:`vegas.RAvg`, :class:`vegas.RAvgArray`, 
+            :class:`vegas.RAvgArray`, :class:`vegas.PDFRAvg`, 
+            :class:`vegas.PDFRAvgArray`, :class:`vegas.PDFRAvgArray`).
+        weighted (bool): Running average is weighted (by the inverse
+            covariance matrix) if ``True`` (default). Otherwise the 
+            average is unweighted, which makes most sense if ``reslist`` 
+            items were generated by :mod:`vegas` with little or no 
+            adaptation (e.g., with ``adapt=False``).
+    """
+    for t in [PDFRAvg, PDFRAvgArray, PDFRAvgDict]:
+        if isinstance(reslist, t):
+            return t(ravg(reslist.itn_results, weighted=weighted))
+    for t in [RAvg, RAvgArray, RAvgDict]:
+        if isinstance(reslist, t):
+            reslist = reslist.itn_results
+    if len(reslist) < 1:
+        raise ValueError('reslist empty')
+    if hasattr(reslist[0], 'keys'):
+        return RAvgDict(itn_results=reslist, weighted=weighted)
+    try:
+        shape = numpy.shape(reslist[0])
+    except:
+        raise ValueError('reslist[i] not GVar, array, or dictionary')
+    if shape == ():
+        return RAvg(itn_results=reslist, weighted=weighted)
+    else:
+        return RAvgArray(itn_results=reslist, weighted=weighted)
 

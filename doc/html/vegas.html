@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>vegas Module &#8212; vegas 5.2 documentation</title>
+    <title>vegas Module &#8212; vegas 5.3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -210,6 +210,29 @@ greater than 1 disables MPI support.
 Set <code class="docutils literal notranslate"><span class="pre">nproc=None</span></code> to use all the processors
 on the machine (equivalent to <code class="docutils literal notranslate"><span class="pre">nproc=os.cpu_count()</span></code>).
 Default value is <code class="docutils literal notranslate"><span class="pre">nproc=1</span></code>.</p>
+</p></li>
+<li><p><strong>save</strong> (<em>str</em><em> or </em><em>file</em><em> or </em><em>None</em>) – <p>Writes <code class="docutils literal notranslate"><span class="pre">results</span></code> into pickle file specified
+by <code class="docutils literal notranslate"><span class="pre">save</span></code> at the end of each iteration. For example, setting
+<code class="docutils literal notranslate"><span class="pre">save='results.pkl'</span></code> means that the results returned by the last
+vegas iteration can be reconstructed later using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;results.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Ignored if <code class="docutils literal notranslate"><span class="pre">save=None</span></code> (default).</p>
+</p></li>
+<li><p><strong>saveall</strong> (<em>str</em><em> or </em><em>file</em><em> or </em><em>None</em>) – <p>Writes <code class="docutils literal notranslate"><span class="pre">(results,</span> <span class="pre">integrator)</span></code> into pickle
+file specified by <code class="docutils literal notranslate"><span class="pre">saveall</span></code> at the end of each iteration. For example,
+setting <code class="docutils literal notranslate"><span class="pre">saveall='allresults.pkl'</span></code> means that the results returned by
+the last vegas iteration, together with a clone of the (adapted) integrator,
+can be reconstructed later using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;allresults.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
+    <span class="n">results</span><span class="p">,</span> <span class="n">integrator</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Ignored if <code class="docutils literal notranslate"><span class="pre">saveall=None</span></code> (default).</p>
 </p></li>
 <li><p><strong>analyzer</strong> – <p>An object with methods</p>
 <blockquote>
@@ -1103,7 +1126,7 @@ integrator; see the <a class="reference internal" href="#module-vegas" title="ve
 <h2>Other Objects and Functions<a class="headerlink" href="#other-objects-and-functions" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.RAvg">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itn_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_neval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Running average of scalar-valued Monte Carlo estimates.</p>
 <p>This class accumulates independent Monte Carlo
 estimates (e.g., of an integral) and combines
@@ -1182,7 +1205,7 @@ Default behavior is determined by <a class="reference internal" href="#module-ve
 
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.RAvgArray">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvgArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">shape</span></em>, <em class="sig-param"><span class="pre">weighted=True</span></em>, <em class="sig-param"><span class="pre">dtype=&lt;class</span> <span class="pre">'object'&gt;</span></em>, <em class="sig-param"><span class="pre">buffer=None</span></em>, <em class="sig-param"><span class="pre">offset=0</span></em>, <em class="sig-param"><span class="pre">strides=None</span></em>, <em class="sig-param"><span class="pre">order=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgArray" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvgArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">shape=None</span></em>, <em class="sig-param"><span class="pre">dtype=&lt;class</span> <span class="pre">'object'&gt;</span></em>, <em class="sig-param"><span class="pre">buffer=None</span></em>, <em class="sig-param"><span class="pre">offset=0</span></em>, <em class="sig-param"><span class="pre">strides=None</span></em>, <em class="sig-param"><span class="pre">order=None</span></em>, <em class="sig-param"><span class="pre">weighted=True</span></em>, <em class="sig-param"><span class="pre">itn_results=None</span></em>, <em class="sig-param"><span class="pre">sum_neval=0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgArray" title="Permalink to this definition">¶</a></dt>
 <dd><p>Running average of array-valued Monte Carlo estimates.</p>
 <p>This class accumulates independent arrays of Monte Carlo
 estimates (e.g., of an integral) and combines
@@ -1253,7 +1276,7 @@ Default behavior is determined by <a class="reference internal" href="#module-ve
 
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.RAvgDict">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvgDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvgDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itn_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_neval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Running average of dictionary-valued Monte Carlo estimates.</p>
 <p>This class accumulates independent dictionaries of Monte Carlo
 estimates (e.g., of an integral) and combines
@@ -1459,7 +1482,7 @@ points. The meaning of <code class="docutils literal notranslate"><span class="p
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>

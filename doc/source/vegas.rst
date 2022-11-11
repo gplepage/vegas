@@ -215,7 +215,7 @@ specialized integrator:
 .. autoclass:: vegas.PDFIntegrator(g, limit=1e15, scale=1., svdcut=1e-15)
 
   Methods:
-    .. automethod:: __call__(f, nopdf=False, **kargs)
+    .. automethod:: __call__(f, f=None, pdf=None, adapt_to_pdf=None, **kargs)
 
 
 Other Objects and Functions
@@ -249,6 +249,8 @@ Other Objects and Functions
 
    .. automethod:: summary(weighted=None)
 
+   .. automethod:: extend(ravg)
+
 .. autoclass:: vegas.RAvgArray
 
   Attributes and methods:
@@ -269,6 +271,8 @@ Other Objects and Functions
    .. automethod:: add(g)
 
    .. automethod:: summary(extended=False, weighted=None)
+
+   .. automethod:: extend(ravg)
 
 .. autoclass:: vegas.RAvgDict
 
@@ -291,6 +295,8 @@ Other Objects and Functions
 
    .. automethod:: summary(extended=False, weighted=None)
 
+   .. automethod:: extend(ravg)
+
 .. autofunction:: vegas.batchintegrand
 
 .. autoclass:: vegas.BatchIntegrand
@@ -302,5 +308,7 @@ Other Objects and Functions
 .. autofunction:: vegas.lbatchintegrand
 
 .. autoclass:: vegas.LBatchIntegrand
+
+.. autofunction:: vegas.ravg
 
 

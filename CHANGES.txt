@@ -1,3 +1,27 @@
+Version 5.3
+==============
+- Adds new keywords save and saveall for Integrators. These allow 
+  the integrator to save results in a file automatically at the end of 
+  each iteration. See "Saving Results Automatically" in the tutorial
+  for more details and examples.
+
+- Pickled integrators now include information about the adaptive 
+  stratified sampling as well as the adaptive importance sampling 
+  (integ.map). This makes for larger files but now captures the 
+  complete state of the integrator. The AdaptiveMap integ.map can 
+  be pickled by itself, in a smaller file, if that is all that is 
+  neeeded.
+
+- Adds new function ravg for manipulating vegas results.
+
+- Added extend method to results returned by vegas Integrators 
+  that allow results from different runs to be merged.
+
+- Bug fixes for pickling of integrators and integration results. 
+  Can nnow use either pickle.dump/load or gvar.dump/load.
+
+- Fixed pickling of Integrator so it handles nstrat properly.
+
 Version 5.2 2022-11-02
 ======================
 - New implementation for using multiple processors to evaluate expensive 

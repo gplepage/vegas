@@ -428,6 +428,101 @@ class TestRAvg(unittest.TestCase):
         self.assertEqual(ravg.dof, 4 * N - 2 + 2 * N - 1)
         self.assertGreater(ravg.Q, 0.5e-3)
 
+    def test_ravg_pickle(self): 
+        @rbatchintegrand
+        def g(p):
+            return p[0] ** 2 * 1.5 / 8
+
+        @rbatchintegrand
+        def ga(p):
+            return [p[0] ** 2 * 1.5, 1+ p[0] ** 2 * 1.5]
+
+        @rbatchintegrand
+        def gd(p):
+            return dict(x2=p[0] ** 2 * 1.5, one=[[1 + p[0] ** 2 * 1.5]])
+        dim = 2
+        itg = Integrator(dim * [[-1,1]], nitn=2, neval=100)
+        for _g in [g, ga, gd]:
+            r = itg(_g)
+            def test_rx(rx):
+                " rx = r ?"
+                self.assertEqual(str(rx), str(r))
+                self.assertEqual(rx.summary(), r.summary())
+                self.assertAlmostEqual(rx.chi2, r.chi2)
+                if _g is not g:
+                    self.assertEqual(str(gv.evalcorr(rx.flat[:])), str(gv.evalcorr(r.flat[:])))
+            r1 = ravg(r.itn_results)
+            test_rx(r1)
+            r2 = ravg(r)
+            test_rx(r2)
+            d3 = pickle.dumps(r)
+            test_rx(r) # r unchanged?
+            r3 = pickle.loads(d3)
+            test_rx(r3)  
+            d4 = gv.dumps(r)
+            test_rx(r)
+            r4 = gv.loads(d4)
+            test_rx(r4)  
+            r5 = ravg(r, weighted=False)
+            self.assertNotEqual(str(r5), str(r))
+
+    def test_save_extend(self):
+        " save and saveall keywords " 
+        global r
+        @rbatchintegrand
+        def g(p):
+            return p[0] ** 2 * 1.5 / 8
+
+        @rbatchintegrand
+        def ga(p):
+            return [p[0] ** 2 * 1.5, 1+ p[0] ** 2 * 1.5]
+
+        @rbatchintegrand
+        def gd(p):
+            return dict(x2=p[0] ** 2 * 1.5, one=[[1 + p[0] ** 2 * 1.5]])
+        dim = 2
+        itg = Integrator(dim * [[-1,1]], nitn=2, neval=100, save='test-save.pkl')
+        for _g in [g, ga, gd]:
+            r = itg(_g)
+            def test_rx(rx):
+                self.assertEqual(str(rx), str(r))
+                self.assertEqual(rx.summary(), r.summary())
+                if _g is not g:
+                    self.assertEqual(str(gv.evalcorr(rx.flat[:])), str(gv.evalcorr(r.flat[:])))
+            with open('test-save.pkl', 'rb') as ifile:
+                r1 = pickle.load(ifile)
+                test_rx(r1)
+        itg.set(save=None)
+        os.remove('test-save.pkl')
+        for _g in [g, ga, gd]:
+            r = itg(_g, saveall='test-save.pkl')
+            def test_rx(rx, itgx):
+                self.assertEqual(str(rx), str(r))
+                self.assertEqual(rx.summary(), r.summary())
+                if _g is not g:
+                    self.assertEqual(str(gv.evalcorr(rx.flat[:])), str(gv.evalcorr(r.flat[:])))
+                self.assertEqual(itgx.settings(), itg.settings())
+                self.assertAlmostEqual(list(itgx.sigf), list(itg.sigf))
+            with open('test-save.pkl', 'rb') as ifile:
+                r1, itg1 = pickle.load(ifile)
+                test_rx(r1, itg1)
+                new_r = itg1(_g)
+                r1.extend(new_r)
+                self.assertEqual(r.nitn + new_r.nitn, r1.nitn)
+                self.assertEqual(r.sum_neval + new_r.sum_neval, r1.sum_neval)
+                if _g is g:
+                    _r  = r
+                    _r1 = r1 
+                    _new_r = new_r
+                else:
+                    _r  = r.flat[0]
+                    _r1 = r1.flat[0] 
+                    _new_r = new_r.flat[0]
+                self.assertGreater(_r.sdev, _r1.sdev)
+                self.assertGreater(_new_r.sdev, _r1.sdev)
+                self.assertAlmostEqual(1/(1/_r.sdev**2 + 1/_new_r.sdev**2)**.5, _r1.sdev, delta=0.001)
+        os.remove('test-save.pkl')
+        
 class TestIntegrator(unittest.TestCase):
     def setUp(self):
         pass
@@ -487,7 +582,7 @@ class TestIntegrator(unittest.TestCase):
             "    number of:  strata/axis = [{nstrat0} {nstrat1}]",
             "                increments/axis = [{ninc0} {ninc1}]",
             "                h-cubes = {nhcube}  evaluations/h-cube = {min_neval_hcube} (min)",
-            "                h-cubes/batch = 10000",
+            "                h-cubes/batch = 10000  processors = 1",
             "    minimize_mem = False",
             "    adapt_to_errors = False",
             "    damping parameters: alpha = {alpha}  beta= {beta}",
@@ -1337,6 +1432,93 @@ class test_PDFIntegrator(unittest.TestCase):
         self.assertTrue(abs(stat.sdev.mean - xsum.sdev) < 5. * stat.sdev.sdev)
         self.assertTrue(abs(stat.skew.mean) < 5. * stat.skew.sdev)
         self.assertTrue(abs(stat.ex_kurt.mean) < 5. * stat.ex_kurt.sdev)
+
+    def test_ravg(self): 
+        @rbatchintegrand
+        def g(p):
+            return p[0] ** 2 * 1.5 / 8
+
+        @rbatchintegrand
+        def ga(p):
+            return [p[0] ** 2 * 1.5, 1+ p[0] ** 2 * 1.5]
+
+        @rbatchintegrand
+        def gd(p):
+            return dict(x2=p[0] ** 2 * 1.5, one=1 + p[0] ** 2 * 1.5)
+        dim = 2
+        gg = gv.gvar(['1(2)', '2(1)'])
+        eval = PDFIntegrator(gg, nitn=2, neval=100)
+        for _g in [g, ga, gd]:
+            r = eval(_g)
+            def test_rx(rx):
+                self.assertEqual(str(rx), str(r))
+                self.assertEqual(rx.summary(), r.summary())
+                self.assertAlmostEqual(rx.chi2, r.chi2)
+                if _g is not g:
+                    self.assertEqual(str(gv.evalcorr(rx.flat[:])), str(gv.evalcorr(r.flat[:])))
+            r1 = ravg(r)
+            test_rx(r1)
+            d3 = pickle.dumps(r)
+            test_rx(r) # unchanged?
+            r3 = pickle.loads(d3)
+            test_rx(r3)  
+            d4 = gv.dumps(r)
+            test_rx(r) # unchanged?
+            r4 = gv.loads(d4)
+            test_rx(r4)  
+            r5 = ravg(r, weighted=False)
+            self.assertNotEqual(str(r5), str(r))
+
+    def test_save_extend(self): 
+        "save, saveall keywords in PDFIntegrator (checks pickle too)"
+        @rbatchintegrand
+        def g(p):
+            return p[0] ** 2 * 1.5 / 8
+
+        @rbatchintegrand
+        def ga(p):
+            return [p[0] ** 2 * 1.5, 1+ p[0] ** 2 * 1.5]
+
+        @rbatchintegrand
+        def gd(p):
+            return dict(x2=p[0] ** 2 * 1.5, one=1 + p[0] ** 2 * 1.5)
+        dim = 2
+        gg = gv.gvar(['1(2)', '2(1)'])
+        eval = PDFIntegrator(gg, nitn=2, neval=100)
+        for _g in [g, ga, gd]:
+            r = eval(_g, save='test-pdfsave.pkl')
+            def test_rx(rx):
+                self.assertEqual(str(rx), str(r))
+                self.assertEqual(rx.summary(), r.summary())
+                self.assertAlmostEqual(rx.chi2, r.chi2)
+                if _g is not g:
+                    self.assertEqual(str(gv.evalcorr(rx.flat[:])), str(gv.evalcorr(r.flat[:])))
+            with open('test-pdfsave.pkl', 'rb') as ifile:
+                r1 = pickle.load(ifile)
+                test_rx(r1)
+        os.remove('test-pdfsave.pkl')
+        eval = PDFIntegrator(gg, nitn=2, neval=100,  saveall='test-pdfsave.pkl')
+        for _g in [g, ga, gd]:
+            r = eval(_g)
+            def test_rx(rx, evalx):
+                self.assertEqual(str(rx), str(r))
+                self.assertEqual(rx.summary(), r.summary())
+                self.assertAlmostEqual(rx.chi2, r.chi2)
+                self.assertEqual(evalx.settings(), eval.settings())
+                self.assertAlmostEqual(list(evalx.sigf), list(eval.sigf))
+                if _g is not g:
+                    self.assertEqual(str(gv.evalcorr(rx.flat[:])), str(gv.evalcorr(r.flat[:])))
+            with open('test-pdfsave.pkl', 'rb') as ifile:
+                (r1, eval1) = pickle.load(ifile)
+                test_rx(r1, eval1)
+                new_r = eval1(_g)
+                r1.extend(new_r)
+                self.assertEqual(r.nitn + new_r.nitn, r1.nitn)
+                self.assertEqual(r.sum_neval + new_r.sum_neval, r1.sum_neval)
+                self.assertGreater(r.pdfnorm.sdev, r1.pdfnorm.sdev)
+                self.assertGreater(new_r.pdfnorm.sdev, r1.pdfnorm.sdev)
+                self.assertAlmostEqual(1/(1/r.pdfnorm.sdev**2 + 1/new_r.pdfnorm.sdev**2)**.5, r1.pdfnorm.sdev, delta=0.001)
+        os.remove('test-pdfsave.pkl')
 
 if __name__ == '__main__':
     unittest.main()
