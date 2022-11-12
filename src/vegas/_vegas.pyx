@@ -965,28 +965,7 @@ cdef class Integrator(object):
             greater than 1 disables MPI support.
             Set ``nproc=None`` to use all the processors 
             on the machine (equivalent to ``nproc=os.cpu_count()``). 
-            Default value is ``nproc=1``.
-        save (str or file or None): Writes ``results`` into pickle file specified
-            by ``save`` at the end of each iteration. For example, setting
-            ``save='results.pkl'`` means that the results returned by the last 
-            vegas iteration can be reconstructed later using::
-
-                import pickle
-                with open('results.pkl', 'rb') as ifile:
-                    results = pickle.load(ifile)
-            
-            Ignored if ``save=None`` (default).
-        saveall (str or file or None): Writes ``(results, integrator)`` into pickle 
-            file specified by ``saveall`` at the end of each iteration. For example, 
-            setting ``saveall='allresults.pkl'`` means that the results returned by 
-            the last vegas iteration, together with a clone of the (adapted) integrator, 
-            can be reconstructed later using::
-
-                import pickle
-                with open('allresults.pkl', 'rb') as ifile:
-                    results, integrator = pickle.load(ifile)
-            
-            Ignored if ``saveall=None`` (default).
+            Default value is ``nproc=1``
         analyzer: An object with methods
 
                 ``analyzer.begin(itn, integrator)``
@@ -1129,8 +1108,6 @@ cdef class Integrator(object):
         mpi=True,
         uses_jac=False,
         nproc=1,
-        save=None,
-        saveall=None,
         )
 
     def __init__(Integrator self not None, map, **kargs):
@@ -1698,7 +1675,7 @@ cdef class Integrator(object):
             seed = comm.bcast(seed, root=0)
             numpy.random.seed(seed)
 
-    def __call__(Integrator self not None, fcn, **kargs):
+    def __call__(Integrator self not None, fcn, save=None, saveall=None, **kargs):
         """ Integrate integrand ``fcn``.
 
         A typical integrand has the form, for example::
@@ -1756,6 +1733,30 @@ cdef class Integrator(object):
 
         Any |vegas| parameter can also be reset: e.g.,
         ``self(fcn, nitn=20, neval=1e6)``.
+
+        Args:
+            fcn (callable): Integrand function.
+            save (str or file or None): Writes ``results`` into pickle file specified
+                by ``save`` at the end of each iteration. For example, setting
+                ``save='results.pkl'`` means that the results returned by the last 
+                vegas iteration can be reconstructed later using::
+
+                    import pickle
+                    with open('results.pkl', 'rb') as ifile:
+                        results = pickle.load(ifile)
+                
+                Ignored if ``save=None`` (default).
+            saveall (str or file or None): Writes ``(results, integrator)`` into pickle 
+                file specified by ``saveall`` at the end of each iteration. For example, 
+                setting ``saveall='allresults.pkl'`` means that the results returned by 
+                the last vegas iteration, together with a clone of the (adapted) integrator, 
+                can be reconstructed later using::
+
+                    import pickle
+                    with open('allresults.pkl', 'rb') as ifile:
+                        results, integrator = pickle.load(ifile)
+                
+                Ignored if ``saveall=None`` (default).            
         """
         cdef numpy.ndarray[numpy.double_t, ndim=2] x
         cdef numpy.ndarray[numpy.double_t, ndim=2] jac
@@ -1912,10 +1913,10 @@ cdef class Integrator(object):
             if self.analyzer is not None:
                 result.update_analyzer(self.analyzer)
 
-            if self.saveall is not None:
-                result.saveall(self, self.saveall)
-            if self.save is not None:
-                result.save(self.save)
+            if save is not None:
+                result.save(save)
+            if saveall is not None:
+                result.saveall(self, saveall)
                 
             if result.converged(self.rtol, self.atol):
                 break

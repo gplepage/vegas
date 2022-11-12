@@ -55,7 +55,7 @@ The central component of the |vegas| package is the integrator class:
     In addition they have the following methods:
 
   Methods:
-    .. automethod:: __call__(fcn, **kargs)
+    .. automethod:: __call__(fcn, save=None, saveall=None, **kargs)
 
     .. automethod:: set(ka={}, **kargs)
 
@@ -215,7 +215,7 @@ specialized integrator:
 .. autoclass:: vegas.PDFIntegrator(g, limit=1e15, scale=1., svdcut=1e-15)
 
   Methods:
-    .. automethod:: __call__(f, f=None, pdf=None, adapt_to_pdf=None, **kargs)
+    .. automethod:: __call__(f, f=None, pdf=None, adapt_to_pdf=None, save=None, saveall=None, **kargs)
 
 
 Other Objects and Functions

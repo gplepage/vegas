@@ -209,30 +209,7 @@ for more information. Note that setting <code class="docutils literal notranslat
 greater than 1 disables MPI support.
 Set <code class="docutils literal notranslate"><span class="pre">nproc=None</span></code> to use all the processors
 on the machine (equivalent to <code class="docutils literal notranslate"><span class="pre">nproc=os.cpu_count()</span></code>).
-Default value is <code class="docutils literal notranslate"><span class="pre">nproc=1</span></code>.</p>
-</p></li>
-<li><p><strong>save</strong> (<em>str</em><em> or </em><em>file</em><em> or </em><em>None</em>) – <p>Writes <code class="docutils literal notranslate"><span class="pre">results</span></code> into pickle file specified
-by <code class="docutils literal notranslate"><span class="pre">save</span></code> at the end of each iteration. For example, setting
-<code class="docutils literal notranslate"><span class="pre">save='results.pkl'</span></code> means that the results returned by the last
-vegas iteration can be reconstructed later using:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;results.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Ignored if <code class="docutils literal notranslate"><span class="pre">save=None</span></code> (default).</p>
-</p></li>
-<li><p><strong>saveall</strong> (<em>str</em><em> or </em><em>file</em><em> or </em><em>None</em>) – <p>Writes <code class="docutils literal notranslate"><span class="pre">(results,</span> <span class="pre">integrator)</span></code> into pickle
-file specified by <code class="docutils literal notranslate"><span class="pre">saveall</span></code> at the end of each iteration. For example,
-setting <code class="docutils literal notranslate"><span class="pre">saveall='allresults.pkl'</span></code> means that the results returned by
-the last vegas iteration, together with a clone of the (adapted) integrator,
-can be reconstructed later using:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;allresults.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
-    <span class="n">results</span><span class="p">,</span> <span class="n">integrator</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Ignored if <code class="docutils literal notranslate"><span class="pre">saveall=None</span></code> (default).</p>
+Default value is <code class="docutils literal notranslate"><span class="pre">nproc=1</span></code></p>
 </p></li>
 <li><p><strong>analyzer</strong> – <p>An object with methods</p>
 <blockquote>
@@ -354,7 +331,7 @@ an issue if <code class="docutils literal notranslate"><span class="pre">beta=0<
 <dl>
 <dt>Methods:</dt><dd><dl class="py method">
 <dt class="sig sig-object py" id="vegas.Integrator.__call__">
-<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fcn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.__call__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fcn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveall</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Integrate integrand <code class="docutils literal notranslate"><span class="pre">fcn</span></code>.</p>
 <p>A typical integrand has the form, for example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -406,6 +383,36 @@ can be coded explicitly, avoiding the need to use
 well suited to the integrand.</p>
 <p>Any <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> parameter can also be reset: e.g.,
 <code class="docutils literal notranslate"><span class="pre">self(fcn,</span> <span class="pre">nitn=20,</span> <span class="pre">neval=1e6)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fcn</strong> (<em>callable</em>) – Integrand function.</p></li>
+<li><p><strong>save</strong> (<em>str</em><em> or </em><em>file</em><em> or </em><em>None</em>) – <p>Writes <code class="docutils literal notranslate"><span class="pre">results</span></code> into pickle file specified
+by <code class="docutils literal notranslate"><span class="pre">save</span></code> at the end of each iteration. For example, setting
+<code class="docutils literal notranslate"><span class="pre">save='results.pkl'</span></code> means that the results returned by the last
+vegas iteration can be reconstructed later using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;results.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Ignored if <code class="docutils literal notranslate"><span class="pre">save=None</span></code> (default).</p>
+</p></li>
+<li><p><strong>saveall</strong> (<em>str</em><em> or </em><em>file</em><em> or </em><em>None</em>) – <p>Writes <code class="docutils literal notranslate"><span class="pre">(results,</span> <span class="pre">integrator)</span></code> into pickle
+file specified by <code class="docutils literal notranslate"><span class="pre">saveall</span></code> at the end of each iteration. For example,
+setting <code class="docutils literal notranslate"><span class="pre">saveall='allresults.pkl'</span></code> means that the results returned by
+the last vegas iteration, together with a clone of the (adapted) integrator,
+can be reconstructed later using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;allresults.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
+    <span class="n">results</span><span class="p">,</span> <span class="n">integrator</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Ignored if <code class="docutils literal notranslate"><span class="pre">saveall=None</span></code> (default).</p>
+</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1084,7 +1091,7 @@ the <code class="docutils literal notranslate"><span class="pre">uses_jac</span>
 <dl>
 <dt>Methods:</dt><dd><dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">PDFIntegrator.__call__(f,</span> <span class="pre">f=None,</span> <span class="pre">pdf=None,</span> <span class="pre">adapt_to_pdf=None,</span> <span class="pre">**kargs)</span></span></dt>
+<span class="sig-name descname"><span class="pre">PDFIntegrator.__call__(f,</span> <span class="pre">f=None,</span> <span class="pre">pdf=None,</span> <span class="pre">adapt_to_pdf=None,</span> <span class="pre">save=None,</span> <span class="pre">saveall=None,</span> <span class="pre">**kargs)</span></span></dt>
 <dd><p>Estimate expectation value of function <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>.</p>
 <p>Uses module <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to estimate the integral of
 <code class="docutils literal notranslate"><span class="pre">f(p)</span></code> multiplied by the probability density function
@@ -1110,6 +1117,29 @@ be normalized.</p></li>
 <li><p><strong>adapt_to_pdf</strong> (<em>bool</em>) – <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adapts to the PDF
 when <code class="docutils literal notranslate"><span class="pre">adapt_to_pdf=True</span></code> (default). <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adapts
 to <code class="docutils literal notranslate"><span class="pre">pdf(p)</span> <span class="pre">*</span> <span class="pre">f(p)</span></code> if <code class="docutils literal notranslate"><span class="pre">adapt_to_pdf=False</span></code>.</p></li>
+<li><p><strong>save</strong> (<em>str</em><em> or </em><em>file</em><em> or </em><em>None</em>) – <p>Writes <code class="docutils literal notranslate"><span class="pre">results</span></code> into pickle file specified
+by <code class="docutils literal notranslate"><span class="pre">save</span></code> at the end of each iteration. For example, setting
+<code class="docutils literal notranslate"><span class="pre">save='results.pkl'</span></code> means that the results returned by the last
+vegas iteration can be reconstructed later using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;results.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Ignored if <code class="docutils literal notranslate"><span class="pre">save=None</span></code> (default).</p>
+</p></li>
+<li><p><strong>saveall</strong> (<em>str</em><em> or </em><em>file</em><em> or </em><em>None</em>) – <p>Writes <code class="docutils literal notranslate"><span class="pre">(results,</span> <span class="pre">integrator)</span></code> into pickle
+file specified by <code class="docutils literal notranslate"><span class="pre">saveall</span></code> at the end of each iteration. For example,
+setting <code class="docutils literal notranslate"><span class="pre">saveall='allresults.pkl'</span></code> means that the results returned by
+the last vegas iteration, together with a clone of the (adapted) integrator,
+can be reconstructed later using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;allresults.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
+    <span class="n">results</span><span class="p">,</span> <span class="n">integrator</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Ignored if <code class="docutils literal notranslate"><span class="pre">saveall=None</span></code> (default).</p>
+</p></li>
 </ul>
 </dd>
 </dl>

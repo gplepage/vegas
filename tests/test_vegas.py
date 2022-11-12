@@ -481,9 +481,9 @@ class TestRAvg(unittest.TestCase):
         def gd(p):
             return dict(x2=p[0] ** 2 * 1.5, one=[[1 + p[0] ** 2 * 1.5]])
         dim = 2
-        itg = Integrator(dim * [[-1,1]], nitn=2, neval=100, save='test-save.pkl')
+        itg = Integrator(dim * [[-1,1]], nitn=2, neval=100)
         for _g in [g, ga, gd]:
-            r = itg(_g)
+            r = itg(_g, save='test-save.pkl')
             def test_rx(rx):
                 self.assertEqual(str(rx), str(r))
                 self.assertEqual(rx.summary(), r.summary())
@@ -492,7 +492,6 @@ class TestRAvg(unittest.TestCase):
             with open('test-save.pkl', 'rb') as ifile:
                 r1 = pickle.load(ifile)
                 test_rx(r1)
-        itg.set(save=None)
         os.remove('test-save.pkl')
         for _g in [g, ga, gd]:
             r = itg(_g, saveall='test-save.pkl')
@@ -1497,9 +1496,9 @@ class test_PDFIntegrator(unittest.TestCase):
                 r1 = pickle.load(ifile)
                 test_rx(r1)
         os.remove('test-pdfsave.pkl')
-        eval = PDFIntegrator(gg, nitn=2, neval=100,  saveall='test-pdfsave.pkl')
+        eval = PDFIntegrator(gg, nitn=2, neval=100)
         for _g in [g, ga, gd]:
-            r = eval(_g)
+            r = eval(_g,  saveall='test-pdfsave.pkl')
             def test_rx(rx, evalx):
                 self.assertEqual(str(rx), str(r))
                 self.assertEqual(rx.summary(), r.summary())

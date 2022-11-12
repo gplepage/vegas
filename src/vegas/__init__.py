@@ -450,7 +450,7 @@ class PDFIntegrator(Integrator):
         else:
             return numpy.ones(numpy.shape(p)[0], float)
 
-    def __call__(self, f=None, pdf=None, adapt_to_pdf=None, **kargs):
+    def __call__(self, f=None, pdf=None, adapt_to_pdf=None, save=None, saveall=None, **kargs):
         """ Estimate expectation value of function ``f(p)``.
 
         Uses module :mod:`vegas` to estimate the integral of
@@ -479,6 +479,29 @@ class PDFIntegrator(Integrator):
                 when ``adapt_to_pdf=True`` (default). :mod:`vegas` adapts 
                 to ``pdf(p) * f(p)`` if ``adapt_to_pdf=False``.
 
+            save (str or file or None): Writes ``results`` into pickle file specified
+                by ``save`` at the end of each iteration. For example, setting
+                ``save='results.pkl'`` means that the results returned by the last 
+                vegas iteration can be reconstructed later using::
+
+                    import pickle
+                    with open('results.pkl', 'rb') as ifile:
+                        results = pickle.load(ifile)
+                
+                Ignored if ``save=None`` (default).
+
+            saveall (str or file or None): Writes ``(results, integrator)`` into pickle 
+                file specified by ``saveall`` at the end of each iteration. For example, 
+                setting ``saveall='allresults.pkl'`` means that the results returned by 
+                the last vegas iteration, together with a clone of the (adapted) integrator, 
+                can be reconstructed later using::
+
+                    import pickle
+                    with open('allresults.pkl', 'rb') as ifile:
+                        results, integrator = pickle.load(ifile)
+                
+                Ignored if ``saveall=None`` (default).
+                
         All other keyword arguments are passed on to a :mod:`vegas`
         integrator; see the :mod:`vegas` documentation for further information.
         """
@@ -489,9 +512,8 @@ class PDFIntegrator(Integrator):
             del kargs['uses_jac']
         if kargs:
             self.set(kargs)
-        save_args = self.set(save=None, saveall=None)
-        if save_args['save'] is not None or save_args['saveall'] is not None:
-            self.set(analyzer=PDFAnalyzer(self, analyzer=self.analyzer, **save_args))
+        if save is not None or saveall is not None:
+            self.set(analyzer=PDFAnalyzer(self, analyzer=self.analyzer, save=save, saveall=saveall))
         if f is None:
             f = PDFIntegrator._fdummy
         if pdf is not None:
@@ -506,7 +528,6 @@ class PDFIntegrator(Integrator):
             ans = PDFRAvgArray(results)
         else:
             ans = PDFRAvgDict(results)
-        self.set(save_args)
         if isinstance(self.analyzer, PDFAnalyzer):
             self.set(analyzer=self.analyzer.analyzer)
         self.ans_type = None

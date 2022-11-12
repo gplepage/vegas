@@ -1319,9 +1319,9 @@ and tabulated under “New Results” in the output:</p>
 <code class="docutils literal notranslate"><span class="pre">result.extend(new_result)</span></code> to obtain the combined results from all
 10 iterations (old plus new).</p>
 <p>Saving integrators is again useful for costly
-integrations that might need to be reanalyzed later since the saved integrator
+integrations that might need to be restarted later since the saved integrator
 remembers the variable transformations made to minimize errors, and
-so need not be readapted to the integrand when used later. The resulting
+so need not be readapted to the integrand when used again. The resulting
 pickle file can be large, however, particularly if <code class="docutils literal notranslate"><span class="pre">neval</span></code> is large.
 The (adapted) <a class="reference internal" href="vegas.html#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.AdaptiveMap</span></code></a> <code class="docutils literal notranslate"><span class="pre">integ.map</span></code> can also
 be pickled by itself and results in a smaller file.</p>

@@ -1201,9 +1201,9 @@ The new results are merged onto the end of the original results using
 10 |~| iterations (old plus new).
 
 Saving integrators is again useful for costly
-integrations that might need to be reanalyzed later since the saved integrator
+integrations that might need to be restarted later since the saved integrator
 remembers the variable transformations made to minimize errors, and
-so need not be readapted to the integrand when used later. The resulting 
+so need not be readapted to the integrand when used again. The resulting 
 pickle file can be large, however, particularly if ``neval`` is large. 
 The (adapted) :class:`vegas.AdaptiveMap` ``integ.map`` can also 
 be pickled by itself and results in a smaller file.
