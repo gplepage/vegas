@@ -2563,7 +2563,7 @@ cdef class VegasResult:
 
     def save(self, outfile):
         " pickle current results in ``outfile`` for later use. "
-        if isinstance(outfile, str):
+        if isinstance(outfile, str) or sys.version_info.major == 2:
             with open(outfile, 'wb') as ofile:
                 pickle.dump(self.result, ofile)
         else:
@@ -2571,7 +2571,7 @@ cdef class VegasResult:
 
     def saveall(self, integrator, outfile):
         " pickle current (results,integrator) in ``outfile`` for later use. "
-        if isinstance(outfile, str):
+        if isinstance(outfile, str)  or sys.version_info.major == 2:
             with open(outfile, 'wb') as ofile:
                 pickle.dump((self.result, integrator), ofile)
         else:
