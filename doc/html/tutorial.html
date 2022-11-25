@@ -1257,6 +1257,61 @@ iteration. This means that a short script like the one above can be used to
 monitor progress before the integration is finished. It also means that results
 up through the most recent iteration are saved even if the integration script is
 terminated early or crashes.</p>
+<p>Another reason to save results is to guard against the possibility of something
+going wrong with the integration after some number of reasonable iterations.
+Consider for example the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> output from an array-valued integrand with three
+elements:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">0.5020</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>      <span class="mf">0.5020</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>          <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.4971</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>      <span class="mf">0.4995</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>          <span class="mf">1.20</span>     <span class="mf">0.31</span>
+  <span class="mi">3</span>   <span class="mf">0.4975</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>      <span class="mf">0.4987</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>          <span class="mf">0.76</span>     <span class="mf">0.60</span>
+  <span class="mi">4</span>   <span class="mf">0.5013</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>      <span class="mf">0.49955</span><span class="p">(</span><span class="mi">83</span><span class="p">)</span>         <span class="mf">0.73</span>     <span class="mf">0.68</span>
+  <span class="mi">5</span>   <span class="mf">0.5009</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>      <span class="mf">0.49997</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span>         <span class="mf">0.62</span>     <span class="mf">0.83</span>
+  <span class="mi">6</span>   <span class="mf">0.5010</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>      <span class="mf">0.50025</span><span class="p">(</span><span class="mi">59</span><span class="p">)</span>         <span class="mf">0.53</span>     <span class="mf">0.92</span>
+  <span class="mi">7</span>   <span class="mf">0.4982</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>      <span class="mf">0.49983</span><span class="p">(</span><span class="mi">53</span><span class="p">)</span>         <span class="mf">0.58</span>     <span class="mf">0.91</span>
+  <span class="mi">8</span>   <span class="mf">0.50077</span><span class="p">(</span><span class="mi">97</span><span class="p">)</span>     <span class="mf">0.50004</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span>         <span class="mf">0.53</span>     <span class="mf">0.96</span>
+  <span class="mi">9</span>   <span class="mf">0.50058</span><span class="p">(</span><span class="mi">84</span><span class="p">)</span>     <span class="mf">1.3580</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="n">nan</span>      <span class="n">nan</span>
+ <span class="mi">10</span>   <span class="mf">0.50046</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span>     <span class="mf">1.35951</span><span class="p">(</span><span class="mi">98</span><span class="p">)</span>          <span class="n">nan</span>      <span class="n">nan</span>
+ <span class="mi">11</span>   <span class="mf">0.50031</span><span class="p">(</span><span class="mi">78</span><span class="p">)</span>     <span class="mf">1.35950</span><span class="p">(</span><span class="mi">89</span><span class="p">)</span>          <span class="n">nan</span>      <span class="n">nan</span>
+ <span class="mi">12</span>   <span class="mf">0.50014</span><span class="p">(</span><span class="mi">72</span><span class="p">)</span>     <span class="mf">1.35936</span><span class="p">(</span><span class="mi">81</span><span class="p">)</span>          <span class="n">nan</span>      <span class="n">nan</span>
+ <span class="mi">13</span>   <span class="mf">0.49917</span><span class="p">(</span><span class="mi">88</span><span class="p">)</span>     <span class="mf">1.35949</span><span class="p">(</span><span class="mi">77</span><span class="p">)</span>          <span class="n">nan</span>      <span class="n">nan</span>
+ <span class="mi">14</span>   <span class="mf">0.49953</span><span class="p">(</span><span class="mi">78</span><span class="p">)</span>     <span class="mf">1.35891</span><span class="p">(</span><span class="mi">72</span><span class="p">)</span>          <span class="n">nan</span>      <span class="n">nan</span>
+ <span class="mi">15</span>   <span class="mf">0.50080</span><span class="p">(</span><span class="mi">51</span><span class="p">)</span>     <span class="mf">0.48270</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>      <span class="mf">3745.39</span>     <span class="mf">0.00</span>
+
+<span class="n">result</span> <span class="p">(</span><span class="mi">15</span> <span class="n">itns</span><span class="p">)</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.48270</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span> <span class="mf">4.8270</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">49</span> <span class="mf">4.8270</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">99</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Clearly something went wrong after the eigth iteration. Assuming the
+results were stored in a file <code class="docutils literal notranslate"><span class="pre">'save.pkl'</span></code>, results from just
+the first eight iterations can be obtained using</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">vegas</span>
+<span class="n">result15</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;save.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span>
+<span class="n">result8</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">ravg</span><span class="p">(</span><span class="n">result15</span><span class="o">.</span><span class="n">itn_results</span><span class="p">[:</span><span class="mi">8</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result (8 itns) =&#39;</span><span class="p">,</span> <span class="n">result8</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which gives the following output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="p">(</span><span class="mi">8</span> <span class="n">itns</span><span class="p">)</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.50004</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span> <span class="mf">5.0004</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">49</span> <span class="mf">5.0004</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">99</span><span class="p">]</span>
+<span class="n">lsqfit</span> <span class="n">result</span> <span class="p">(</span><span class="mi">15</span> <span class="n">itns</span><span class="p">)</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.49998</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span> <span class="mf">4.9998</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">49</span> <span class="mf">4.9998</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">99</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The problem in the original analysis comes from the fact that the
+three integrands are exactly the same aside from an overall
+normalization:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>   <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e50</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e100</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The results are completely correlated, making their correlation matrix
+singular. This can destabilize the weighted averages, expecially when the
+integrands differ dramatically in scale. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> attempts to
+correct for this but here roundoff errors eventually cause a problem. The
+result from averaging the first eight iterations is quite reasonable, however.
+Of course a better solution is not to include multiple copies of the
+same function in a single multi-valued integrand.</p>
 <p>It is also possible to save an adapted integrator using <code class="docutils literal notranslate"><span class="pre">pickle.dump/load</span></code>
 (or <code class="docutils literal notranslate"><span class="pre">gvar.dump/load</span></code>). This can also be done automatically, by
 replacing, for example, <code class="docutils literal notranslate"><span class="pre">save='save.pkl'</span></code> with <code class="docutils literal notranslate"><span class="pre">saveall='saveall.pkl'</span></code>

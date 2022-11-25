@@ -2377,13 +2377,12 @@ class RAvgArray(numpy.ndarray):
 
     def _inv(self, matrix):
         " Invert matrix, with protection against singular matrices. "
-        # old code -- problem is not necessarily pos. def.
-        # ans = numpy.linalg.pinv(matrix, rcond=EPSILON * len(matrix))
+        # old code -- problem is not necessarily pos. def. (eps cut, not svdcut)
+        # ans = numpy.linalg.inv(matrix) # , rcond=EPSILON * len(matrix))
         # return (ans.T + ans) / 2.
         #
-        # rescale = False is important for deg. multi-integrands.
-        # svdcut<0 also important for deg. multi-integrands.
-        s = gvar.SVD(matrix, svdcut=-EPSILON * len(matrix), rescale=False)
+        # svdcut<0 important for deg. multi-integrands.
+        s = gvar.SVD(matrix, svdcut=-EPSILON * len(matrix), rescale=True)
         w = s.decomp(-1)
         return (w.T).dot(w)
 

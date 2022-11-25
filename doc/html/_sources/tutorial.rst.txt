@@ -1163,6 +1163,43 @@ monitor progress before the integration is finished. It also means that results
 up through the most recent iteration are saved even if the integration script is 
 terminated early or crashes.
 
+Another reason to save results is to guard against the possibility of something 
+going wrong with the integration after some number of reasonable iterations. 
+Consider for example the following |vegas| output from an array-valued integrand with three 
+elements:
+
+.. literalinclude:: eg9c.out
+
+Clearly something went wrong after the eigth iteration. Assuming the 
+results were stored in a file ``'save.pkl'``, results from just 
+the first eight iterations can be obtained using ::
+
+    import pickle 
+    import vegas 
+    result15 = pickle.load(open('save.pkl', 'rb'))
+    result8 = vegas.ravg(result15.itn_results[:8])
+    print('result (8 itns) =', result8)
+
+which gives the following output:
+
+.. literalinclude:: eg9d.out
+
+The problem in the original analysis comes from the fact that the 
+three integrands are exactly the same aside from an overall 
+normalization::
+
+    @vegas.rbatchintegrand
+    def f(x):
+        return [x[0],   x[0] * 1e50, x[0] * 1e100]
+
+The results are completely correlated, making their correlation matrix
+singular. This can destabilize the weighted averages, expecially when the 
+integrands differ dramatically in scale. |vegas| attempts to 
+correct for this but here roundoff errors eventually cause a problem. The
+result from averaging the first eight iterations is quite reasonable, however.
+Of course a better solution is not to include multiple copies of the 
+same function in a single multi-valued integrand.
+
 It is also possible to save an adapted integrator using ``pickle.dump/load`` 
 (or ``gvar.dump/load``). This can also be done automatically, by 
 replacing, for example, ``save='save.pkl'`` with ``saveall='saveall.pkl'``

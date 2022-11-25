@@ -46,6 +46,31 @@ print('\nCombined results:')
 result.extend(new_result)
 print(result.summary())
 print('Combined result = %s    Q = %.2f' % (result, result.Q))
+unlog_stdout()
+
+gv.ranseed(124567)
+integrator = vegas.Integrator([[0, 1], [0, 1], [0, 1]])
+@vegas.rbatchintegrand
+def f(x):
+   return [x[0],   x[0] * 1e50, x[0] * 1e100]
+
+# result = integrator(f, nitn=3, neval=10000)
+result = integrator(f, nitn=15, neval=1000, save='save.pkl')
+log_stdout('eg9c.out')
+print(result.summary())
+
+print("result (15 itns) =", result)
+unlog_stdout()
+log_stdout('eg9d.out')
+result15 = pickle.load(open('save.pkl', 'rb'))
+result8 = vegas.ravg(result15.itn_results[:8])
+print("result (8 itns) =", result8)
+unlog_stdout()
+
+# not used even though it works well
+import lsqfit 
+wavg_result15 = lsqfit.wavg(result15.itn_results)
+print('lsqfit result (15 itns) =', wavg_result15)
 
 import os 
 os.remove('save.pkl')

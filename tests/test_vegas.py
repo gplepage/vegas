@@ -521,6 +521,25 @@ class TestRAvg(unittest.TestCase):
                 self.assertGreater(_new_r.sdev, _r1.sdev)
                 self.assertAlmostEqual(1/(1/_r.sdev**2 + 1/_new_r.sdev**2)**.5, _r1.sdev, delta=0.001)
         os.remove('test-save.pkl')
+
+    def test_rescaling(self):
+        " enormous scale differences "
+        # test on degenerate multi-integrand (to stress it)
+        x = gv.gvar(1, 0.001)
+        
+        a = RAvgArray((2, ))
+        for i in range(3):
+            xx = x - x.mean + x()
+            a.add([xx, 1e100 * xx])
+        self.assertEqual(str(a[0] * 1e100), str(a[1]))
+        self.assertEqual(str(gv.evalcorr(a).flat[:]), str(np.ones(4, float)))
+
+        d = RAvgDict(dict(a=1.,b=2.))
+        for i in range(3):
+            xx = x - x.mean + x()
+            d.add(dict(a=xx, b=1e100 * xx))
+        self.assertEqual(str(d['a'] * 1e100), str(d['b']))
+        self.assertEqual(str(gv.evalcorr(d.buf).flat[:]), str(np.ones(4, float)))
         
 class TestIntegrator(unittest.TestCase):
     def setUp(self):
@@ -1476,11 +1495,11 @@ class test_PDFIntegrator(unittest.TestCase):
 
         @rbatchintegrand
         def ga(p):
-            return [p[0] ** 2 * 1.5, 1+ p[0] ** 2 * 1.5]
+            return [p[0] ** 2 * 1.5, 1+ p[1] ** 2 * 1.5]
 
         @rbatchintegrand
         def gd(p):
-            return dict(x2=p[0] ** 2 * 1.5, one=1 + p[0] ** 2 * 1.5)
+            return dict(x2=p[0] ** 2 * 1.5, one=1 + p[1] ** 2 * 1.5)
         dim = 2
         gg = gv.gvar(['1(2)', '2(1)'])
         eval = PDFIntegrator(gg, nitn=2, neval=100)
