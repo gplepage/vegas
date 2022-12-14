@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Tutorial &#8212; vegas 5.3 documentation</title>
+    <title>Tutorial &#8212; vegas 5.3.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -40,7 +40,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.3.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>  
@@ -1206,181 +1206,6 @@ but where Python’s
 <p>Then <code class="docutils literal notranslate"><span class="pre">fparallel</span> <span class="pre">=</span> <span class="pre">parallelintegrand(f,</span> <span class="pre">4)</span></code>, for example, will create a
 new integrand <code class="docutils literal notranslate"><span class="pre">fparallel(x)</span></code> that uses 4 CPU cores.</p>
 </section>
-<section id="saving-results-automatically">
-<h2>Saving Results Automatically<a class="headerlink" href="#saving-results-automatically" title="Permalink to this headline">¶</a></h2>
-<p>Results returned by a <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator can be pickled for later use using <code class="docutils literal notranslate"><span class="pre">pickle.dump/load</span></code> (or
-<code class="docutils literal notranslate"><span class="pre">gvar.dump/load</span></code>) in the usual way. Results can also be saved automatically using the
-<code class="docutils literal notranslate"><span class="pre">save</span></code> keyword to specify a file name for the pickled result: for example, running</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
-<span class="kn">import</span> <span class="nn">math</span>
-
-<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">dx2</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
-        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dx2</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1013.2118364296088</span>
-
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="s1">&#39;save.pkl&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>prints out</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
-<span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">2.6</span><span class="p">(</span><span class="mf">1.4</span><span class="p">)</span>        <span class="mf">2.6</span><span class="p">(</span><span class="mf">1.4</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">1.32</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>        <span class="mf">1.36</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>            <span class="mf">0.75</span>     <span class="mf">0.39</span>
-  <span class="mi">3</span>   <span class="mf">0.909</span><span class="p">(</span><span class="mi">96</span><span class="p">)</span>       <span class="mf">0.968</span><span class="p">(</span><span class="mi">89</span><span class="p">)</span>           <span class="mf">1.79</span>     <span class="mf">0.17</span>
-  <span class="mi">4</span>   <span class="mf">1.039</span><span class="p">(</span><span class="mi">69</span><span class="p">)</span>       <span class="mf">1.012</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span>           <span class="mf">1.32</span>     <span class="mf">0.26</span>
-  <span class="mi">5</span>   <span class="mf">0.929</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>       <span class="mf">0.952</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>           <span class="mf">1.41</span>     <span class="mf">0.23</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="mf">0.952</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.23</span>
-</pre></div>
-</div>
-<p>but also store <code class="docutils literal notranslate"><span class="pre">result</span></code> in file <code class="docutils literal notranslate"><span class="pre">save.pkl</span></code>. The result can be retrieved
-later using, for example,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
-
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;save.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>which gives exactly the same output.</p>
-<p>This feature is most useful for expensive integrations, ones taking minutes or hours
-to complete. This is because the pickled file is updated after every <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
-iteration. This means that a short script like the one above can be used to
-monitor progress before the integration is finished. It also means that results
-up through the most recent iteration are saved even if the integration script is
-terminated early or crashes.</p>
-<p>Another reason to save results is to guard against the possibility of something
-going wrong with the integration after some number of reasonable iterations.
-Consider for example the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> output from an array-valued integrand with three
-elements:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
-<span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">0.5020</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>      <span class="mf">0.5020</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>          <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">0.4971</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>      <span class="mf">0.4995</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>          <span class="mf">1.20</span>     <span class="mf">0.31</span>
-  <span class="mi">3</span>   <span class="mf">0.4975</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>      <span class="mf">0.4987</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>          <span class="mf">0.76</span>     <span class="mf">0.60</span>
-  <span class="mi">4</span>   <span class="mf">0.5013</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>      <span class="mf">0.49955</span><span class="p">(</span><span class="mi">83</span><span class="p">)</span>         <span class="mf">0.73</span>     <span class="mf">0.68</span>
-  <span class="mi">5</span>   <span class="mf">0.5009</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>      <span class="mf">0.49997</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span>         <span class="mf">0.62</span>     <span class="mf">0.83</span>
-  <span class="mi">6</span>   <span class="mf">0.5010</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>      <span class="mf">0.50025</span><span class="p">(</span><span class="mi">59</span><span class="p">)</span>         <span class="mf">0.53</span>     <span class="mf">0.92</span>
-  <span class="mi">7</span>   <span class="mf">0.4982</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>      <span class="mf">0.49983</span><span class="p">(</span><span class="mi">53</span><span class="p">)</span>         <span class="mf">0.58</span>     <span class="mf">0.91</span>
-  <span class="mi">8</span>   <span class="mf">0.50077</span><span class="p">(</span><span class="mi">97</span><span class="p">)</span>     <span class="mf">0.50004</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span>         <span class="mf">0.53</span>     <span class="mf">0.96</span>
-  <span class="mi">9</span>   <span class="mf">0.50058</span><span class="p">(</span><span class="mi">84</span><span class="p">)</span>     <span class="mf">1.3580</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="n">nan</span>      <span class="n">nan</span>
- <span class="mi">10</span>   <span class="mf">0.50046</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span>     <span class="mf">1.35951</span><span class="p">(</span><span class="mi">98</span><span class="p">)</span>          <span class="n">nan</span>      <span class="n">nan</span>
- <span class="mi">11</span>   <span class="mf">0.50031</span><span class="p">(</span><span class="mi">78</span><span class="p">)</span>     <span class="mf">1.35950</span><span class="p">(</span><span class="mi">89</span><span class="p">)</span>          <span class="n">nan</span>      <span class="n">nan</span>
- <span class="mi">12</span>   <span class="mf">0.50014</span><span class="p">(</span><span class="mi">72</span><span class="p">)</span>     <span class="mf">1.35936</span><span class="p">(</span><span class="mi">81</span><span class="p">)</span>          <span class="n">nan</span>      <span class="n">nan</span>
- <span class="mi">13</span>   <span class="mf">0.49917</span><span class="p">(</span><span class="mi">88</span><span class="p">)</span>     <span class="mf">1.35949</span><span class="p">(</span><span class="mi">77</span><span class="p">)</span>          <span class="n">nan</span>      <span class="n">nan</span>
- <span class="mi">14</span>   <span class="mf">0.49953</span><span class="p">(</span><span class="mi">78</span><span class="p">)</span>     <span class="mf">1.35891</span><span class="p">(</span><span class="mi">72</span><span class="p">)</span>          <span class="n">nan</span>      <span class="n">nan</span>
- <span class="mi">15</span>   <span class="mf">0.50080</span><span class="p">(</span><span class="mi">51</span><span class="p">)</span>     <span class="mf">0.48270</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>      <span class="mf">3745.39</span>     <span class="mf">0.00</span>
-
-<span class="n">result</span> <span class="p">(</span><span class="mi">15</span> <span class="n">itns</span><span class="p">)</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.48270</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span> <span class="mf">4.8270</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">49</span> <span class="mf">4.8270</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">99</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>Clearly something went wrong after the eigth iteration. Assuming the
-results were stored in a file <code class="docutils literal notranslate"><span class="pre">'save.pkl'</span></code>, results from just
-the first eight iterations can be obtained using</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
-<span class="kn">import</span> <span class="nn">vegas</span>
-<span class="n">result15</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;save.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span>
-<span class="n">result8</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">ravg</span><span class="p">(</span><span class="n">result15</span><span class="o">.</span><span class="n">itn_results</span><span class="p">[:</span><span class="mi">8</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result (8 itns) =&#39;</span><span class="p">,</span> <span class="n">result8</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>which gives the following output:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="p">(</span><span class="mi">8</span> <span class="n">itns</span><span class="p">)</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.50004</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span> <span class="mf">5.0004</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">49</span> <span class="mf">5.0004</span><span class="p">(</span><span class="mi">46</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">99</span><span class="p">]</span>
-<span class="n">lsqfit</span> <span class="n">result</span> <span class="p">(</span><span class="mi">15</span> <span class="n">itns</span><span class="p">)</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.49998</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span> <span class="mf">4.9998</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">49</span> <span class="mf">4.9998</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span><span class="n">e</span><span class="o">+</span><span class="mi">99</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>The problem in the original analysis comes from the fact that the
-three integrands are exactly the same aside from an overall
-normalization:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
-<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>   <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e50</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e100</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>The results are completely correlated, making their correlation matrix
-singular. This can destabilize the weighted averages, expecially when the
-integrands differ dramatically in scale. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> attempts to
-correct for this but here roundoff errors eventually cause a problem. The
-result from averaging the first eight iterations is quite reasonable, however.
-Of course a better solution is not to include multiple copies of the
-same function in a single multi-valued integrand.</p>
-<p>It is also possible to save an adapted integrator using <code class="docutils literal notranslate"><span class="pre">pickle.dump/load</span></code>
-(or <code class="docutils literal notranslate"><span class="pre">gvar.dump/load</span></code>). This can also be done automatically, by
-replacing, for example, <code class="docutils literal notranslate"><span class="pre">save='save.pkl'</span></code> with <code class="docutils literal notranslate"><span class="pre">saveall='saveall.pkl'</span></code>
-in the script above. The pickled file then returns a tuple containing
-the most recent <code class="docutils literal notranslate"><span class="pre">result</span></code> and <code class="docutils literal notranslate"><span class="pre">integ</span></code>. Having the (adapted) integrator,
-it is possible to further refine a result later: for example, running</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
-
-<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">dx2</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
-        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dx2</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1013.2118364296088</span>
-
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;saveall.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
-    <span class="n">result</span><span class="p">,</span> <span class="n">integ</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
-<span class="n">new_result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">New results:&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">new_result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Combined results:&#39;</span><span class="p">)</span>
-<span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_result</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Combined result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>greatly improves the final result by adding 5 additional iterations
-to what was done  earlier. The new iterations are in <code class="docutils literal notranslate"><span class="pre">new_result</span></code>
-and tabulated under “New Results” in the output:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
-<span class="n">New</span> <span class="n">results</span><span class="p">:</span>
-<span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
-<span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">1.003</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>       <span class="mf">1.003</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">0.994</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>       <span class="mf">0.997</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>           <span class="mf">0.08</span>     <span class="mf">0.77</span>
-  <span class="mi">3</span>   <span class="mf">0.998</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>       <span class="mf">0.997</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>           <span class="mf">0.04</span>     <span class="mf">0.96</span>
-  <span class="mi">4</span>   <span class="mf">1.020</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">1.0072</span><span class="p">(</span><span class="mi">78</span><span class="p">)</span>          <span class="mf">0.70</span>     <span class="mf">0.55</span>
-  <span class="mi">5</span>   <span class="mf">1.011</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">1.0084</span><span class="p">(</span><span class="mi">65</span><span class="p">)</span>          <span class="mf">0.55</span>     <span class="mf">0.70</span>
-
-
-<span class="n">Combined</span> <span class="n">results</span><span class="p">:</span>
-<span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
-<span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">2.6</span><span class="p">(</span><span class="mf">1.4</span><span class="p">)</span>        <span class="mf">2.6</span><span class="p">(</span><span class="mf">1.4</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">1.32</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>        <span class="mf">1.36</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>            <span class="mf">0.75</span>     <span class="mf">0.39</span>
-  <span class="mi">3</span>   <span class="mf">0.909</span><span class="p">(</span><span class="mi">96</span><span class="p">)</span>       <span class="mf">0.968</span><span class="p">(</span><span class="mi">89</span><span class="p">)</span>           <span class="mf">1.79</span>     <span class="mf">0.17</span>
-  <span class="mi">4</span>   <span class="mf">1.039</span><span class="p">(</span><span class="mi">69</span><span class="p">)</span>       <span class="mf">1.012</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span>           <span class="mf">1.32</span>     <span class="mf">0.26</span>
-  <span class="mi">5</span>   <span class="mf">0.929</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>       <span class="mf">0.952</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>           <span class="mf">1.41</span>     <span class="mf">0.23</span>
-  <span class="mi">6</span>   <span class="mf">1.003</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>       <span class="mf">0.980</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>           <span class="mf">1.47</span>     <span class="mf">0.20</span>
-  <span class="mi">7</span>   <span class="mf">0.994</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>       <span class="mf">0.988</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>           <span class="mf">1.27</span>     <span class="mf">0.27</span>
-  <span class="mi">8</span>   <span class="mf">0.998</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>       <span class="mf">0.9922</span><span class="p">(</span><span class="mi">98</span><span class="p">)</span>          <span class="mf">1.13</span>     <span class="mf">0.34</span>
-  <span class="mi">9</span>   <span class="mf">1.020</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">1.0035</span><span class="p">(</span><span class="mi">75</span><span class="p">)</span>          <span class="mf">1.39</span>     <span class="mf">0.20</span>
- <span class="mi">10</span>   <span class="mf">1.011</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>       <span class="mf">1.0057</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>          <span class="mf">1.27</span>     <span class="mf">0.25</span>
-
-<span class="n">Combined</span> <span class="n">result</span> <span class="o">=</span> <span class="mf">1.0057</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.25</span>
-</pre></div>
-</div>
-<p>The new results are merged onto the end of the original results using
-<code class="docutils literal notranslate"><span class="pre">result.extend(new_result)</span></code> to obtain the combined results from all
-10 iterations (old plus new).</p>
-<p>Saving integrators is again useful for costly
-integrations that might need to be restarted later since the saved integrator
-remembers the variable transformations made to minimize errors, and
-so need not be readapted to the integrand when used again. The resulting
-pickle file can be large, however, particularly if <code class="docutils literal notranslate"><span class="pre">neval</span></code> is large.
-The (adapted) <a class="reference internal" href="vegas.html#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.AdaptiveMap</span></code></a> <code class="docutils literal notranslate"><span class="pre">integ.map</span></code> can also
-be pickled by itself and results in a smaller file.</p>
-</section>
 <section id="sums-with-vegas">
 <h2>Sums with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#sums-with-vegas" title="Permalink to this headline">¶</a></h2>
 <p>The code in the previous sections is inefficient in the way it
@@ -1426,6 +1251,166 @@ than the code in the previous section (with <code class="docutils literal notran
 <p>The same trick can be generalized to sums over multiple indices, including sums
 to infinity. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> will provide Monte Carlo estimates of the sums, emphasizing
 the more important terms.</p>
+</section>
+<section id="saving-results-automatically">
+<h2>Saving Results Automatically<a class="headerlink" href="#saving-results-automatically" title="Permalink to this headline">¶</a></h2>
+<p>Results returned by a <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator can be pickled for later use using <code class="docutils literal notranslate"><span class="pre">pickle.dump/load</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">gvar.dump/load</span></code>) in the usual way. Results can also be saved automatically using the
+<code class="docutils literal notranslate"><span class="pre">save</span></code> keyword to specify a file name for the pickled result: for example, running</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dx2</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1013.2118364296088</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="s1">&#39;save.pkl&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>prints out</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">0.00050</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>     <span class="mf">0.00050</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>         <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.115</span><span class="p">(</span><span class="mi">59</span><span class="p">)</span>       <span class="mf">0.00051</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>         <span class="mf">3.77</span>     <span class="mf">0.05</span>
+  <span class="mi">3</span>   <span class="mf">0.66</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>        <span class="mf">0.00051</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>         <span class="mf">6.41</span>     <span class="mf">0.00</span>
+  <span class="mi">4</span>   <span class="mf">0.72</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>        <span class="mf">0.00052</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>        <span class="mf">12.27</span>     <span class="mf">0.00</span>
+  <span class="mi">5</span>   <span class="mf">0.97</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>        <span class="mf">0.00053</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>        <span class="mf">26.17</span>     <span class="mf">0.00</span>
+  <span class="mi">6</span>   <span class="mf">1.045</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>       <span class="mf">0.00059</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>        <span class="mf">79.46</span>     <span class="mf">0.00</span>
+  <span class="mi">7</span>   <span class="mf">1.016</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>       <span class="mf">0.00069</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>       <span class="mf">152.45</span>     <span class="mf">0.00</span>
+  <span class="mi">8</span>   <span class="mf">1.023</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>       <span class="mf">0.00093</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>       <span class="mf">307.32</span>     <span class="mf">0.00</span>
+  <span class="mi">9</span>   <span class="mf">0.999</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>       <span class="mf">0.00141</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>       <span class="mf">573.82</span>     <span class="mf">0.00</span>
+ <span class="mi">10</span>   <span class="mf">1.025</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>       <span class="mf">0.00208</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>       <span class="mf">896.20</span>     <span class="mf">0.00</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="mf">0.00208</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.00</span>
+</pre></div>
+</div>
+<p>but also stores <code class="docutils literal notranslate"><span class="pre">result</span></code> in file <code class="docutils literal notranslate"><span class="pre">save.pkl</span></code>. The result can be retrieved
+later using, for example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;save.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>which gives exactly the same output.</p>
+<p>This feature is most useful for expensive integrations, ones taking minutes or hours
+to complete. This is because the pickled file is updated after every <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
+iteration. This means that a short script like the one above can be used to
+monitor progress before the integration is finished. It also means that results
+up through the most recent iteration are saved even if the integration is
+terminated early or crashes.</p>
+<p>Saved results are also useful because they can be fixed after the code has
+finished running.
+The early iterations in the output above are clearly wrong
+and badly distort the weighted average. The problem is that <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> isn’t well
+adapted to the integrand until around the fifth or sixth iteration. We
+can discard the first five iterations (from the saved result)
+by using function <a class="reference internal" href="vegas.html#vegas.ravg" title="vegas.ravg"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.ravg()</span></code></a>
+to redo the weighted average:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">vegas</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;save.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">ravg</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">itn_results</span><span class="p">[</span><span class="mi">5</span><span class="p">:])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This gives the following output</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">1.045</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>       <span class="mf">1.045</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">1.016</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>       <span class="mf">1.026</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>           <span class="mf">0.14</span>     <span class="mf">0.71</span>
+  <span class="mi">3</span>   <span class="mf">1.023</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>       <span class="mf">1.024</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>           <span class="mf">0.07</span>     <span class="mf">0.93</span>
+  <span class="mi">4</span>   <span class="mf">0.999</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>       <span class="mf">1.010</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>           <span class="mf">0.28</span>     <span class="mf">0.84</span>
+  <span class="mi">5</span>   <span class="mf">1.025</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>       <span class="mf">1.017</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">0.31</span>     <span class="mf">0.87</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="mf">1.017</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.87</span>
+</pre></div>
+</div>
+<p>which is greatly improved over the original.</p>
+<p>It is also possible to save an adapted integrator using <code class="docutils literal notranslate"><span class="pre">pickle.dump/load</span></code>
+(or <code class="docutils literal notranslate"><span class="pre">gvar.dump/load</span></code>). This can also be done automatically, by
+replacing, for example, <code class="docutils literal notranslate"><span class="pre">save='save.pkl'</span></code> with <code class="docutils literal notranslate"><span class="pre">saveall='saveall.pkl'</span></code>
+in the script above. The pickled file then returns a tuple containing
+the most recent <code class="docutils literal notranslate"><span class="pre">result</span></code> and <code class="docutils literal notranslate"><span class="pre">integ</span></code>. Having the (adapted) integrator,
+it is possible to further refine a result later: for example, running</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dx2</span> <span class="o">*</span> <span class="mf">100.</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1013.2118364296088</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;saveall.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ifile</span><span class="p">:</span>
+    <span class="n">result</span><span class="p">,</span> <span class="n">integ</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ifile</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">ravg</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">itn_results</span><span class="p">[</span><span class="mi">5</span><span class="p">:])</span>
+
+<span class="n">new_result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">New results:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">new_result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Combined results:&#39;</span><span class="p">)</span>
+<span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_result</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Combined result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>significantly improves the final result by adding 5 additional
+iterations
+to what was done  earlier. The new iterations are in <code class="docutils literal notranslate"><span class="pre">new_result</span></code>
+and tabulated under “New Results” in the output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="n">New</span> <span class="n">results</span><span class="p">:</span>
+<span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">1.007</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>       <span class="mf">1.007</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">1.006</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>       <span class="mf">1.007</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">0.98</span>
+  <span class="mi">3</span>   <span class="mf">0.997</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>       <span class="mf">1.0029</span><span class="p">(</span><span class="mi">82</span><span class="p">)</span>          <span class="mf">0.16</span>     <span class="mf">0.85</span>
+  <span class="mi">4</span>   <span class="mf">1.015</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>       <span class="mf">1.0044</span><span class="p">(</span><span class="mi">76</span><span class="p">)</span>          <span class="mf">0.20</span>     <span class="mf">0.90</span>
+  <span class="mi">5</span>   <span class="mf">0.990</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>       <span class="mf">1.0007</span><span class="p">(</span><span class="mi">66</span><span class="p">)</span>          <span class="mf">0.39</span>     <span class="mf">0.82</span>
+
+
+<span class="n">Combined</span> <span class="n">results</span><span class="p">:</span>
+<span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">1.045</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>       <span class="mf">1.045</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">1.016</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>       <span class="mf">1.026</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>           <span class="mf">0.14</span>     <span class="mf">0.71</span>
+  <span class="mi">3</span>   <span class="mf">1.023</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>       <span class="mf">1.024</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>           <span class="mf">0.07</span>     <span class="mf">0.93</span>
+  <span class="mi">4</span>   <span class="mf">0.999</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>       <span class="mf">1.010</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>           <span class="mf">0.28</span>     <span class="mf">0.84</span>
+  <span class="mi">5</span>   <span class="mf">1.025</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>       <span class="mf">1.017</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">0.31</span>     <span class="mf">0.87</span>
+  <span class="mi">6</span>   <span class="mf">1.007</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>       <span class="mf">1.0136</span><span class="p">(</span><span class="mi">94</span><span class="p">)</span>          <span class="mf">0.30</span>     <span class="mf">0.91</span>
+  <span class="mi">7</span>   <span class="mf">1.006</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>       <span class="mf">1.0114</span><span class="p">(</span><span class="mi">78</span><span class="p">)</span>          <span class="mf">0.28</span>     <span class="mf">0.95</span>
+  <span class="mi">8</span>   <span class="mf">0.997</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>       <span class="mf">1.0076</span><span class="p">(</span><span class="mi">66</span><span class="p">)</span>          <span class="mf">0.36</span>     <span class="mf">0.92</span>
+  <span class="mi">9</span>   <span class="mf">1.015</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>       <span class="mf">1.0082</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>          <span class="mf">0.33</span>     <span class="mf">0.95</span>
+ <span class="mi">10</span>   <span class="mf">0.990</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>       <span class="mf">1.0047</span><span class="p">(</span><span class="mi">57</span><span class="p">)</span>          <span class="mf">0.48</span>     <span class="mf">0.89</span>
+
+<span class="n">Combined</span> <span class="n">result</span> <span class="o">=</span> <span class="mf">1.0047</span><span class="p">(</span><span class="mi">57</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.89</span>
+</pre></div>
+</div>
+<p>The new results are merged onto the end of the original results using
+<code class="docutils literal notranslate"><span class="pre">result.extend(new_result)</span></code> to obtain the combined results from all
+10 iterations (old plus new).</p>
+<p>Saving integrators is again useful for costly
+integrations that might need to be restarted later since the saved integrator
+remembers the variable transformations made to minimize errors, and
+so need not be readapted to the integrand when used again. The resulting
+pickle file can be large, however, particularly if <code class="docutils literal notranslate"><span class="pre">neval</span></code> is large.
+The (adapted) <a class="reference internal" href="vegas.html#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.AdaptiveMap</span></code></a> <code class="docutils literal notranslate"><span class="pre">integ.map</span></code> can also
+be pickled by itself and results in a smaller file.</p>
 </section>
 <section id="vegas-maps-and-preconditioning-vegas">
 <h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Maps and Preconditioning <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#vegas-maps-and-preconditioning-vegas" title="Permalink to this headline">¶</a></h2>
@@ -1897,8 +1882,8 @@ deviations, and properly correlated with other
 <li><a class="reference internal" href="#bayesian-integrals">Bayesian Integrals</a></li>
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>
 <li><a class="reference internal" href="#multiple-processors">Multiple Processors</a></li>
-<li><a class="reference internal" href="#saving-results-automatically">Saving Results Automatically</a></li>
 <li><a class="reference internal" href="#sums-with-vegas">Sums with <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a></li>
+<li><a class="reference internal" href="#saving-results-automatically">Saving Results Automatically</a></li>
 <li><a class="reference internal" href="#vegas-maps-and-preconditioning-vegas"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Maps and Preconditioning <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a></li>
 <li><a class="reference internal" href="#vegas-stratifications"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Stratifications</a></li>
 <li><a class="reference internal" href="#vegas-jacobian"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Jacobian</a></li>
@@ -1950,7 +1935,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.3.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>

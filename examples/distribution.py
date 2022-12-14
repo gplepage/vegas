@@ -6,10 +6,11 @@ from __future__ import print_function   # makes this work for python2 and 3
 import vegas
 import numpy as np
 
-np.random.seed((1,2,3))   # causes reproducible random numbers
+np.random.seed((1,2,3,4))   # causes reproducible random numbers
 
 RMAX = (2 * 0.5**2) ** 0.5
 
+# non-batch version
 def fcn(x):
     dx2 = 0.0
     for d in range(2):
@@ -20,6 +21,21 @@ def fcn(x):
     dr = RMAX / len(dI)
     j = int(dx2 ** 0.5 / dr)
     dI[j] = I
+    return dict(I=I, dI=dI)
+
+# batch version 
+@vegas.rbatchintegrand
+def fcn(x):
+    dx2 = 0.0
+    for d in range(2):
+        dx2 += (x[d] - 0.5) ** 2
+    I = np.exp(-dx2)
+    # add I to appropriate bin in dI
+    dI = np.zeros((5, x.shape[-1]), dtype=float)
+    dr = RMAX / len(dI)
+    j = np.floor(dx2 ** 0.5 / dr)
+    for i in range(len(dI)):
+        dI[i, j==i] = I[j==i]
     return dict(I=I, dI=dI)
 
 def main():
@@ -35,6 +51,7 @@ def main():
 if __name__ == "__main__":
     main()
 
+# N.B. exact result for dI = [0.0622450, 0.179330, 0.275977, ...]
 
 # Copyright (c) 2020 G. Peter Lepage.
 #

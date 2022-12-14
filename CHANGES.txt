@@ -1,9 +1,10 @@
-Version 5.3.1 2022-11-24
+Version 5.4 2022-11-24
 =============================
 Bug fix for weighted averages of results from different 
 vegas iterations to deal with simultaneous integration
 of integrands that give results that are very different 
-in magnitude.
+in magnitude. Also adds new functionality to 
+vegas.ravg().
 
 Version 5.3
 ==============

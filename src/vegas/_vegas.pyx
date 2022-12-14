@@ -1982,18 +1982,18 @@ class RAvg(gvar.GVar):
     inverse variances if parameter ``weight=True``;
     otherwise straight, unweighted averages are used.
     """
-    def __init__(self, weighted=True, itn_results=None, sum_neval=0):
+    def __init__(self, weighted=True, itn_results=None, sum_neval=0, _rescale=True):
+        # rescale not used here
+        self.rescale = None
         if weighted:
-            self._v_s2 = 0.
-            self._v2_s2 = 0.
-            self._1_s2 = 0.
+            self._wlist = []
             self.weighted = True
         else:
-            self._v = 0.
-            self._v2 = 0.
-            self._s2 = 0.
+            self._msum = 0.
+            self._varsum = 0.
             self._n = 0
             self.weighted = False
+        self._mlist = []
         self.itn_results = []
         if itn_results is None:
             super(RAvg, self).__init__(
@@ -2032,14 +2032,14 @@ class RAvg(gvar.GVar):
         if len(self.itn_results) <= 1:
             return 0.0
         if self.weighted:
-            ans = self._v2_s2 - self._v_s2 ** 2 / self._1_s2
-            if ans < 0 or self._v2_s2 * EPSILON > ans:
-                ans = float('nan')
+            wavg = self.mean
+            ans = 0.0
+            for  m, w in zip(self._mlist, self._wlist):
+                ans += (wavg - m) ** 2 * w
             return ans 
         else:
-            ans = (self._v2 - self.mean ** 2 * self._n) * self._n / self._s2
-            if ans < 0 or self._v2 * EPSILON > ans * self._s2:
-                ans = float('nan')
+            wavg = self.mean
+            ans = numpy.sum([(m - wavg) ** 2 for m in self._mlist]) / (self._varsum / self._n)
             return ans
     chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
 
@@ -2059,7 +2059,7 @@ class RAvg(gvar.GVar):
     def _Q(self):
         return (
             gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
-            if self.dof > 0 and self.chi2 > 0
+            if self.dof > 0 and self.chi2 >= 0
             else float('nan')
             )
     Q = property(
@@ -2081,26 +2081,20 @@ class RAvg(gvar.GVar):
         self.itn_results.append(g)
         if isinstance(g, gvar.GVarRef):
             return
+        self._mlist.append(g.mean)
         if self.weighted:
-            var = g.sdev ** 2 if g.sdev > 0 else TINY
-            if var < TINY:
-                var = TINY
-            self._v_s2 +=   g.mean / var
-            self._v2_s2 +=  g.mean ** 2 / var
-            self._1_s2 +=  1. / var
-            super(RAvg, self).__init__(*gvar.gvar(
-                self._v_s2 / self._1_s2,
-                sqrt(1. / self._1_s2),
-                ).internaldata)
+            self._wlist.append(1 / (g.var if g.var > TINY else TINY))
+            var = 1. / numpy.sum(self._wlist)
+            sdev = numpy.sqrt(var)
+            mean = numpy.sum([w * m for w, m in zip(self._wlist, self._mlist)]) * var
+            super(RAvg, self).__init__(*gvar.gvar(mean, sdev).internaldata)
         else:
-            self._v += g.mean
-            self._v2 += g.mean ** 2
-            self._s2 += g.var if g.var > 0 else TINY
+            self._msum += g.mean
+            self._varsum += g.var if g.var > TINY else TINY
             self._n += 1
-            super(RAvg, self).__init__(*gvar.gvar(
-                self._v / self._n,
-                sqrt(self._s2) / self._n,
-                ).internaldata)
+            mean = self._msum / self._n 
+            var = self._varsum / self._n ** 2
+            super(RAvg, self).__init__(*gvar.gvar(mean, numpy.sqrt(var)).internaldata)
 
     def summary(self, extended=False, weighted=None):
         """ Assemble summary of results, iteration-by-iteration, into a string.
@@ -2156,11 +2150,11 @@ class RAvgDict(gvar.BufferDict):
     inverse covariance matrices if parameter ``weight=True``;
     otherwise straight, unweighted averages are used.
     """
-    def __init__(self, dictionary=None, weighted=True, itn_results=None, sum_neval=0):
+    def __init__(self, dictionary=None, weighted=True, itn_results=None, sum_neval=0, rescale=True):
         if dictionary is None and (itn_results is None or len(itn_results) < 1):
             raise ValueError('must specificy dictionary or itn_results')
         super(RAvgDict, self).__init__(dictionary if dictionary is not None else itn_results[0])
-        self.rarray = RAvgArray(shape=(self.size,), weighted=weighted)
+        self.rarray = RAvgArray(shape=(self.size,), weighted=weighted, rescale=rescale)
         self.buf = numpy.asarray(self.rarray) # turns it into a normal ndarray
         self.itn_results = []
         self.weighted = weighted
@@ -2215,7 +2209,7 @@ class RAvgDict(gvar.BufferDict):
         self.itn_results.append(newg)
         self.rarray.add(newg.buf)
 
-    def summary(self, extended=False, weighted=None):
+    def summary(self, extended=False, weighted=None, rescale=None):
         """ Assemble summary of results, iteration-by-iteration, into a string.
 
         Args:
@@ -2227,7 +2221,9 @@ class RAvgDict(gvar.BufferDict):
         """
         if weighted is None:
             weighted = self.weighted
-        ans = self.rarray.summary(weighted=weighted, extended=False)
+        if rescale is None:
+            rescale = self.rarray.rescale
+        ans = self.rarray.summary(weighted=weighted, extended=False, rescale=rescale)
         if extended and self.itn_results[0].size > 1:
             ans += '\n' + gvar.tabulate(self) + '\n'
         return ans
@@ -2258,6 +2254,9 @@ class RAvgDict(gvar.BufferDict):
         return self.sum_neval / self.nitn if self.nitn > 0 else 0 
     avg_neval = property(_avg_neval, None, None, "Average number of integrand evaluations per iteration.")
 
+    def _rescale(self):
+        return self.rarray.rescale 
+    rescale = property(_rescale, None, None, "Integrals divided by ``rescale`` before doing weighted averages.")
 
 class RAvgArray(numpy.ndarray):
     """ Running average of array-valued Monte Carlo estimates.
@@ -2276,7 +2275,7 @@ class RAvgArray(numpy.ndarray):
     def __new__(
         subtype, shape=None,
         dtype=object, buffer=None, offset=0, strides=None, order=None,
-        weighted=True, itn_results=None, sum_neval=0
+        weighted=True, itn_results=None, sum_neval=0, rescale=True
         ):
         if shape is None and (itn_results is None or len(itn_results) < 1):
             raise ValueError('must specificy shape or itn_results')
@@ -2288,15 +2287,24 @@ class RAvgArray(numpy.ndarray):
         if buffer is None:
             obj.flat = numpy.array(obj.size * [gvar.gvar(0,0)])
         obj.itn_results = [] 
-        if weighted:
-            obj._invcov_v = 0.
-            obj._v_invcov_v = 0.
-            obj._invcov = 0.
-            obj.weighted = True
+        obj._mlist = []
+        if rescale is False or rescale is None or not weighted:
+            obj.rescale = None
+        elif rescale is True:
+            obj.rescale = True
         else:
-            obj._v = 0.
-            obj._v2 = 0.
-            obj._cov = 0.
+            if hasattr(rescale, 'keys'):
+                obj.rescale = gvar.mean(gvar.asbufferdict(rescale).flat[:])
+            else:
+                obj.rescale = gvar.mean(numpy.asarray(rescale).flat[:])
+            if numpy.any(obj.rescale == 0):
+                raise ValueError('rescale contains 0s')
+        if weighted:
+            obj.weighted = True
+            obj._wlist = []
+        else:
+            obj._msum = 0.
+            obj._covsum = 0.
             obj._n = 0
             obj.weighted = False
         obj.sum_neval = sum_neval 
@@ -2318,23 +2326,26 @@ class RAvgArray(numpy.ndarray):
         self.flat[:] = save
         state = superpickled[2] + (
             self.weighted, gvar.dumps(self.itn_results, protocol=protocol),
-            self.sum_neval,
+            (self.sum_neval, self.rescale),
             )
         return (superpickled[0], superpickled[1], state)
 
     def __setstate__(self, state):
         super(RAvgArray, self).__setstate__(state[:-3])
-        self.weighted = state[-3]
-        itn_results = gvar.loads(state[-2])
-        self.sum_neval = state[-1]
-        if self.weighted:
-            self._invcov_v = 0.
-            self._v_invcov_v = 0.
-            self._invcov = 0.
+        if isinstance(state[-1], tuple):
+            self.sum_neval, self.rescale = state[-1]
         else:
-            self._v = 0.
-            self._v2 = 0.
-            self._cov = 0.
+            # included for compatibility with previous versions
+            self.sum_neval = state[-1]
+            self.rescale = True
+        itn_results = gvar.loads(state[-2])
+        self.weighted = state[-3]
+        if self.weighted:
+            self._wlist = []
+            self._mlist = []
+        else:
+            self._msum = 0.
+            self._covsum = 0.
             self._n = 0
         self.itn_results = []
         for r in itn_results:
@@ -2344,22 +2355,21 @@ class RAvgArray(numpy.ndarray):
         if obj is None:
             return
         if obj.weighted:
-            self._invcov_v = getattr(obj, '_invcov_v', 0.0)
-            self._v_invcov_v = getattr(obj, '_v_invcov_v', 0.0)
-            self._invcov = getattr(obj, '_invcov', 0.0)
             self.weighted = getattr(obj, 'weighted', True)
+            self._wlist = getattr(obj, '_wlist', [])
         else:
-            self._v = getattr(obj, '_v', 0.)
-            self._v2 = getattr(obj, '_v2', 0.)
-            self._cov = getattr(obj, '_cov', 0.)
+            self._msum = getattr(obj, '_msum', 0.)
+            self._covsum = getattr(obj, '_cov', 0.)
             self._n = getattr(obj, '_n', 0.)
             self.weighted = getattr(obj, 'weighted', False)
+        self._mlist = getattr(obj, '_mlist', [])
         self.itn_results = getattr(obj, 'itn_results', [])
         self.sum_neval = getattr(obj, 'sum_neval', 0)
+        self.rescale = getattr(obj, 'rescale', True)
     
     def __init__(self, shape=None,
         dtype=object, buffer=None, offset=0, strides=None, order=None,
-        weighted=True, itn_results=None, sum_neval=0):
+        weighted=True, itn_results=None, sum_neval=0, rescale=True):
         # needed because array_finalize can't handle self.add(r)
         self[:] *= 0
         if itn_results is not None:
@@ -2375,16 +2385,14 @@ class RAvgArray(numpy.ndarray):
             self.add(r)
         self.sum_neval += ravg.sum_neval
 
-    def _inv(self, matrix):
-        " Invert matrix, with protection against singular matrices. "
-        # old code -- problem is not necessarily pos. def. (eps cut, not svdcut)
-        # ans = numpy.linalg.inv(matrix) # , rcond=EPSILON * len(matrix))
-        # return (ans.T + ans) / 2.
-        #
-        # svdcut<0 important for deg. multi-integrands.
-        s = gvar.SVD(matrix, svdcut=-EPSILON * len(matrix), rescale=True)
-        w = s.decomp(-1)
-        return (w.T).dot(w)
+    def _w(self, matrix):
+        " Decompose inverse matrix, with protection against singular matrices. "
+        # extra factor of 1e4 is from trial and error with degenerate integrands (need extra buffer);
+        # also negative svdcut and rescale=False are important for degenerate integrands
+        # (alternative svdcut>0 and rescale=True introduces biases; also rescale=True not needed 
+        #  since now have self.rescale)
+        s = gvar.SVD(matrix, svdcut=-EPSILON * len(matrix) * 1e4, rescale=False)
+        return s.decomp(-1)
 
     def converged(self, rtol, atol):
         return numpy.all(
@@ -2395,18 +2403,22 @@ class RAvgArray(numpy.ndarray):
         if len(self.itn_results) <= 1:
             return 0.0
         if self.weighted:
-            cov = self._inv(self._invcov)
-            ans = self._v_invcov_v - self._invcov_v.dot(cov.dot(self._invcov_v))
-            if ans < 0 or self._v_invcov_v * EPSILON > ans:
-                ans = float('nan')
+            ans = 0.0
+            wavg = gvar.mean(self).reshape((-1,))
+            if self.rescale is not None:
+                wavg /= self.rescale
+            for ri, w, m in zip(self.itn_results, self._wlist, self._mlist):
+                for wi in w:
+                    ans += wi.dot(m - wavg) ** 2
             return ans
         else:
-            invcov = self._inv(self._cov / self._n)
-            ans = numpy.trace(   # inefficient -- fix at some point
-                (self._v2 - numpy.outer(self._v, self._v) / self._n).dot(invcov)
-                )
-            if ans < 0 or numpy.trace(self._v2.dot(invcov)) * EPSILON > ans:
-                ans = float('nan')
+            invw = self._w(self._covsum / self._n)
+            wavg = gvar.mean(self).reshape((-1,))
+            ans = 0.0
+            for m in self._mlist:
+                delta = wavg - m 
+                for invwi in invw:
+                    ans += invwi.dot(delta) ** 2
             return ans
     chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
 
@@ -2424,7 +2436,7 @@ class RAvgArray(numpy.ndarray):
     nitn = property(_nitn, None, None, "Number of iterations.")
 
     def _Q(self):
-        if self.dof <= 0 or self.chi2 <= 0:
+        if self.dof <= 0 or self.chi2 < 0:
             return float('nan')
         return gvar.gammaQ(self.dof / 2., self.chi2 / 2.)
     Q = property(
@@ -2444,30 +2456,47 @@ class RAvgArray(numpy.ndarray):
             return 
         g = g.reshape((-1,))
         gmean = gvar.mean(g)
-        gcov = gvar.evalcov(g)
-        idx = (gcov[numpy.diag_indices_from(gcov)] <= 0.0)
-        gcov[numpy.diag_indices_from(gcov)][idx] = TINY
         if self.weighted:
-            invcov = self._inv(gcov)
-            v = gvar.mean(g)
-            u = invcov.dot(v)
-            self._invcov += invcov
-            self._invcov_v += u
-            self._v_invcov_v += v.dot(u)
-            cov = self._inv(self._invcov)
-            mean = cov.dot(self._invcov_v)
-            self[:] = gvar.gvar(mean, cov).reshape(self.shape)
+            if self.rescale is not None:
+                if self.rescale is True:
+                    self.rescale = numpy.fabs(gmean)
+                    gsdev = gvar.sdev(g)
+                    idx = gsdev > self.rescale 
+                    self.rescale[idx] = gsdev[idx]
+                    self.rescale[self.rescale <= 0] = 1.
+                g = g / self.rescale
+                gmean = gvar.mean(g)
+            gcov = gvar.evalcov(g)
+            idx = (gcov[numpy.diag_indices_from(gcov)] <= 0.0)
+            gcov[numpy.diag_indices_from(gcov)][idx] = TINY
+            self._mlist.append(gmean)
+            self._wlist.append(self._w(gcov))
+            invcov = numpy.sum([(w.T).dot(w) for w in self._wlist], axis=0)
+            invw = self._w(invcov)
+            cov = (invw.T).dot(invw)
+            mean = 0.0
+            for m, w in zip(self._mlist, self._wlist):
+                for wj in w:
+                    wj_m = wj.dot(m)
+                    for invwi in invw:
+                        mean += invwi * invwi.dot(wj) * wj_m
+            self[:] = gvar.gvar(mean, cov)
+            if self.rescale is not None:
+                self[:] = self[:] * self.rescale
+            self[:].shape = self.shape
         else:
-            gmean = gvar.mean(g)
-            self._v2 += numpy.outer(gmean, gmean)
-            self._v += gmean
-            self._cov += gcov
+            gcov = gvar.evalcov(g)
+            idx = (gcov[numpy.diag_indices_from(gcov)] <= 0.0)
+            gcov[numpy.diag_indices_from(gcov)][idx] = TINY
+            self._mlist.append(gmean)
+            self._msum += gmean
+            self._covsum += gcov
             self._n += 1
-            mean = self._v / self._n
-            cov = self._cov / (self._n ** 2)
+            mean = self._msum / self._n
+            cov = self._covsum / (self._n ** 2)
             self[:] = gvar.gvar(mean, cov).reshape(self.shape)
 
-    def summary(self, extended=False, weighted=None):
+    def summary(self, extended=False, weighted=None, rescale=None):
         """ Assemble summary of results, iteration-by-iteration, into a string.
 
         Args:
@@ -2479,7 +2508,9 @@ class RAvgArray(numpy.ndarray):
         """
         if weighted is None:
             weighted = self.weighted
-        acc = RAvgArray(self.shape, weighted=weighted)
+        if rescale is None:
+            rescale = self.rescale
+        acc = RAvgArray(self.shape, weighted=weighted, rescale=rescale)
 
         linedata = []
         for i, res in enumerate(self.itn_results):

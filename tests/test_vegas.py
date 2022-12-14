@@ -453,6 +453,10 @@ class TestRAvg(unittest.TestCase):
                     self.assertEqual(str(gv.evalcorr(rx.flat[:])), str(gv.evalcorr(r.flat[:])))
             r1 = ravg(r.itn_results)
             test_rx(r1)
+            r1a = ravg(r.itn_results, rescale=r.itn_results[0])
+            test_rx(r1a)
+            r1b = ravg(r.itn_results, rescale=gv.mean(r.itn_results[0]))
+            test_rx(r1b)
             r2 = ravg(r)
             test_rx(r2)
             d3 = pickle.dumps(r)
@@ -526,19 +530,19 @@ class TestRAvg(unittest.TestCase):
         " enormous scale differences "
         # test on degenerate multi-integrand (to stress it)
         x = gv.gvar(1, 0.001)
-        
+
         a = RAvgArray((2, ))
         for i in range(3):
             xx = x - x.mean + x()
-            a.add([xx, 1e100 * xx])
-        self.assertEqual(str(a[0] * 1e100), str(a[1]))
+            a.add([xx, 1e50 * xx])
+        self.assertEqual(str(a[0] * 1e50), str(a[1]))
         self.assertEqual(str(gv.evalcorr(a).flat[:]), str(np.ones(4, float)))
 
         d = RAvgDict(dict(a=1.,b=2.))
         for i in range(3):
             xx = x - x.mean + x()
-            d.add(dict(a=xx, b=1e100 * xx))
-        self.assertEqual(str(d['a'] * 1e100), str(d['b']))
+            d.add(dict(a=xx, b=1e50 * xx))
+        self.assertEqual(str(d['a'] * 1e50), str(d['b']))
         self.assertEqual(str(gv.evalcorr(d.buf).flat[:]), str(np.ones(4, float)))
         
 class TestIntegrator(unittest.TestCase):
@@ -1020,8 +1024,8 @@ class TestIntegrator(unittest.TestCase):
         rs, r1, r2 = integ(f, neval=1e3, nitn=5)
         diff = rs - r1 - r2 
         r12 = r1 + r2
-        self.assertLess(diff.mean / r12.mean, 1e-9)
-        self.assertLess(diff.sdev / r12.mean, 1e-9)
+        self.assertLess(diff.mean / r12.mean, 1e-7)
+        self.assertLess(diff.sdev / r12.mean, 1e-7)
         
     def test_adaptive(self):
         " adaptive? "
@@ -1102,13 +1106,9 @@ class TestIntegrator(unittest.TestCase):
         integ = Integrator([(0,1)],)
         integ(g, nitn=1, neval=1e2, neval_frac=0.5)
         res = integ(g, nitn=4, neval=1e2)
-        self.assertTrue(np.isnan(res.chi2))
-        self.assertTrue(np.isnan(res.Q))
         self.assertAlmostEqual(res.itn_results[0].sdev / res.sdev, 2.0)
         # test unweighted results
         res = integ(g, nitn=4, neval=1e2, adapt=False)
-        self.assertTrue(np.isnan(res.chi2))
-        self.assertTrue(np.isnan(res.Q))
         self.assertAlmostEqual(res.itn_results[0].sdev / res.sdev, 2.0)
         # zero
         @batchintegrand
@@ -1179,7 +1179,7 @@ class test_PDFIntegrator(unittest.TestCase):
     def test_nobatch(self):
         # g is vector
         g = gv.gvar([1., 2.], [[1, .1], [.1, 4]])
-        gev = PDFIntegrator(g, alpha=0, beta=0)
+        gev = PDFIntegrator(g, adapt=False)
         def f(p):
             return p[0] + p[1]
         gv.ranseed(1)
@@ -1220,7 +1220,7 @@ class test_PDFIntegrator(unittest.TestCase):
     def test_rbatch(self):
         # g is vector
         g = gv.gvar([1., 2.], [[1, .1], [.1, 4]])
-        gev = PDFIntegrator(g, alpha=0, beta=0)
+        gev = PDFIntegrator(g, adapt=False)
         @rbatchintegrand
         def f(p):
             return p[0] + p[1]
@@ -1264,7 +1264,8 @@ class test_PDFIntegrator(unittest.TestCase):
     def test_lbatch(self):
         # g is vector
         g = gv.gvar([1., 2.], [[1, .1], [.1, 4]])
-        gev = PDFIntegrator(g, alpha=0, beta=0)
+        gev = PDFIntegrator(g, adapt=False) 
+        # does not work with alpha=0,beta=0 (weighted avg bad for very highly correlated answers)
         @lbatchintegrand
         def f(p):
             return p[:, 0] + p[:, 1]
@@ -1272,6 +1273,7 @@ class test_PDFIntegrator(unittest.TestCase):
         r = gev(f, nitn=1)
         self.assertTrue(abs(r.mean - sum(g).mean) < 5 * r.sdev)
         ff = str(r)
+        # array
         @lbatchintegrand
         def f(p):
             ff = p[:, 0] + p[:, 1]
@@ -1297,6 +1299,7 @@ class test_PDFIntegrator(unittest.TestCase):
         self.assertTrue(r.shape == (2,3))
         diff3 = r[1,2] - 3 * r[1,0] * r[0,0] + 2 * r[0,0]**3
         self.assertTrue(abs(diff3.mean) < 5. * diff3.sdev)
+        # dict
         @lbatchintegrand
         def f(p):
             ff = p[:, 0] + p[:, 1]
