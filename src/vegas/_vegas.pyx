@@ -764,7 +764,7 @@ cdef class AdaptiveMap:
                 for more information.
                 Set ``nproc=None`` to use all the processors 
                 on the machine (equivalent to ``nproc=os.cpu_count()``). 
-                Default value is ``nproc=1``. 
+                Default value is ``nproc=1``. (Requires Python 3.3 or later.)
         """
         cdef numpy.npy_intp i, tmp_ninc, old_ninc
         x = numpy.ascontiguousarray(x)
@@ -965,7 +965,7 @@ cdef class Integrator(object):
             greater than 1 disables MPI support.
             Set ``nproc=None`` to use all the processors 
             on the machine (equivalent to ``nproc=os.cpu_count()``). 
-            Default value is ``nproc=1``
+            Default value is ``nproc=1``. (Requires Python 3.3 or later.)
         analyzer: An object with methods
 
                 ``analyzer.begin(itn, integrator)``
