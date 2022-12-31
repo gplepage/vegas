@@ -1,4 +1,4 @@
-Version 5.4 2022-11-24
+Version 5.4 2022-12-31
 =============================
 Bug fix for weighted averages of results from different 
 vegas iterations to deal with simultaneous integration

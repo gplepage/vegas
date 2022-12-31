@@ -51,9 +51,9 @@ def main():
 if __name__ == "__main__":
     main()
 
-# N.B. exact result for dI = [0.0622450, 0.179330, 0.275977, ...]
+# N.B. exact result for dI = [0.0622077, 0.179319, 0.275977, ...]
 
-# Copyright (c) 2020 G. Peter Lepage.
+# Copyright (c) 2020-22 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
