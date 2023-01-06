@@ -782,8 +782,10 @@ class PDFAnalyzer(object):
 def ravg(reslist, weighted=None, rescale=None):
     """ Create running average from list of :mod:`vegas` results.
 
-    A typical application is to change parameter ``weighted`` from
-    its default value::
+    This function is used to change how the weighted average of 
+    |vegas| results is calculated. For example, the following code 
+    discards the first five results (where |vegas| is still adapting) 
+    and does an unweighted average of the last five::
 
         import vegas
 
@@ -793,38 +795,32 @@ def ravg(reslist, weighted=None, rescale=None):
         itg = vegas.Integrator(4 * [[0,1]])
         r = itg(fcn)
         print(r.summary())
-        ur = vegas.ravg(r, weighted=False)
+        ur = vegas.ravg(r.itn_results[5:], weighted=False)
         print(ur.summary())
 
-    Here a new version ``ur`` of the :mod:`vegas` results ``r`` 
-    is created where final results are the unweighted average 
-    over results from each iteration. The output is::
+    The unweighted average can be useful because it is unbiased. 
+    The output is::
     
         itn   integral        wgt average     chi2/dof        Q
         -------------------------------------------------------
-          1   0.986(20)       0.986(20)           0.00     1.00
-          2   0.976(13)       0.979(11)           0.16     0.69
-          3   1.011(12)       0.9933(79)          2.08     0.13
-          4   1.001(10)       0.9960(62)          1.49     0.21
-          5   0.9967(83)      0.9963(50)          1.12     0.34
-          6   1.0022(78)      0.9980(42)          0.98     0.43
-          7   1.0036(66)      0.9996(35)          0.90     0.50
-          8   0.9930(61)      0.9979(31)          0.89     0.51
-          9   0.9976(51)      0.9978(26)          0.78     0.62
-         10   1.0031(43)      0.9993(22)          0.82     0.60
+          1   1.013(19)       1.013(19)           0.00     1.00
+          2   0.997(14)       1.002(11)           0.45     0.50
+          3   1.021(12)       1.0112(80)          0.91     0.40
+          4   0.9785(97)      0.9980(62)          2.84     0.04
+          5   1.0067(85)      1.0010(50)          2.30     0.06
+          6   0.9996(75)      1.0006(42)          1.85     0.10
+          7   1.0020(61)      1.0010(34)          1.54     0.16
+          8   1.0051(52)      1.0022(29)          1.39     0.21
+          9   1.0046(47)      1.0029(24)          1.23     0.27
+         10   0.9976(47)      1.0018(22)          1.21     0.28
 
         itn   integral        average         chi2/dof        Q
         -------------------------------------------------------
-          1   0.986(20)       0.986(20)           0.00     1.00
-          2   0.976(13)       0.981(12)           0.16     0.69
-          3   1.011(12)       0.9908(87)          1.39     0.25
-          4   1.001(10)       0.9933(70)          1.19     0.31
-          5   0.9967(83)      0.9940(58)          1.04     0.38
-          6   1.0022(78)      0.9953(50)          1.00     0.41
-          7   1.0036(66)      0.9965(44)          1.00     0.42
-          8   0.9930(61)      0.9961(39)          0.96     0.46
-          9   0.9976(51)      0.9962(36)          0.92     0.50
-         10   1.0031(43)      0.9969(32)          0.94     0.49
+          1   0.9996(75)      0.9996(75)          0.00     1.00
+          2   1.0020(61)      1.0008(48)          0.06     0.81
+          3   1.0051(52)      1.0022(37)          0.19     0.83
+          4   1.0046(47)      1.0028(30)          0.18     0.91
+          5   0.9976(47)      1.0018(26)          0.31     0.87
 
     Args:
         reslist (list): List whose elements are |GVar|\s, arrays of 
@@ -846,22 +842,25 @@ def ravg(reslist, weighted=None, rescale=None):
             before taking the weighted average if 
             ``weighted=True``; otherwise ``rescale`` is ignored. 
             Setting ``rescale=True`` is equivalent to setting
-            ``rescale=reslist[0]``. If ``rescale`` is not
+            ``rescale=reslist[-1]``. If ``rescale`` is not
             specified (or is ``None``), it is set equal to 
             ``getattr(reslist, 'rescale', True)``.
     """
     for t in [PDFRAvg, PDFRAvgArray, PDFRAvgDict]:
         if isinstance(reslist, t):
             return t(ravg(reslist.itn_results, weighted=weighted, rescale=rescale))
-    if weighted is None:
-        weighted = getattr(reslist, 'weighted', True)
-    if rescale is None:
-        rescale = getattr(reslist, 'rescale', True)
     for t in [RAvg, RAvgArray, RAvgDict]:
         if isinstance(reslist, t):
             reslist = reslist.itn_results
-    if len(reslist) < 1:
-        raise ValueError('reslist empty')
+    try:
+        if len(reslist) < 1:
+            raise ValueError('reslist empty')
+    except:
+        raise ValueError('improper type for reslist')
+    if weighted is None:
+        weighted = getattr(reslist, 'weighted', True)
+    if rescale is None:
+        rescale = getattr(reslist, 'rescale', reslist[-1])
     if hasattr(reslist[0], 'keys'):
         return RAvgDict(itn_results=reslist, weighted=weighted, rescale=rescale)
     try:

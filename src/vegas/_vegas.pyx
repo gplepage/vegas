@@ -2254,9 +2254,9 @@ class RAvgDict(gvar.BufferDict):
         return self.sum_neval / self.nitn if self.nitn > 0 else 0 
     avg_neval = property(_avg_neval, None, None, "Average number of integrand evaluations per iteration.")
 
-    def _rescale(self):
+    def _get_rescale(self):
         return self.rarray.rescale 
-    rescale = property(_rescale, None, None, "Integrals divided by ``rescale`` before doing weighted averages.")
+    rescale = property(_get_rescale, None, None, "Integrals divided by ``rescale`` before doing weighted averages.")
 
 class RAvgArray(numpy.ndarray):
     """ Running average of array-valued Monte Carlo estimates.
@@ -2293,12 +2293,11 @@ class RAvgArray(numpy.ndarray):
         elif rescale is True:
             obj.rescale = True
         else:
+            # flatten rescale
             if hasattr(rescale, 'keys'):
-                obj.rescale = gvar.mean(gvar.asbufferdict(rescale).flat[:])
+                obj.rescale = gvar.asbufferdict(rescale)
             else:
-                obj.rescale = gvar.mean(numpy.asarray(rescale).flat[:])
-            if numpy.any(obj.rescale == 0):
-                raise ValueError('rescale contains 0s')
+                obj.rescale = numpy.asarray(rescale)
         if weighted:
             obj.weighted = True
             obj._wlist = []
@@ -2406,7 +2405,7 @@ class RAvgArray(numpy.ndarray):
             ans = 0.0
             wavg = gvar.mean(self).reshape((-1,))
             if self.rescale is not None:
-                wavg /= self.rescale
+                wavg /= self._rescale
             for ri, w, m in zip(self.itn_results, self._wlist, self._mlist):
                 for wi in w:
                     ans += wi.dot(m - wavg) ** 2
@@ -2455,17 +2454,18 @@ class RAvgArray(numpy.ndarray):
         if g.size > 1 and isinstance(g.flat[0], gvar.GVarRef):
             return 
         g = g.reshape((-1,))
-        gmean = gvar.mean(g)
         if self.weighted:
-            if self.rescale is not None:
-                if self.rescale is True:
-                    self.rescale = numpy.fabs(gmean)
+            if not hasattr(self, '_rescale'):
+                if self.rescale is not None:
+                    self._rescale = numpy.fabs(gvar.mean(g if self.rescale is True else self.rescale.flat[:]))
                     gsdev = gvar.sdev(g)
-                    idx = gsdev > self.rescale 
-                    self.rescale[idx] = gsdev[idx]
-                    self.rescale[self.rescale <= 0] = 1.
-                g = g / self.rescale
-                gmean = gvar.mean(g)
+                    idx = gsdev > self._rescale 
+                    self._rescale[idx] = gsdev[idx]
+                    self._rescale[self._rescale <= 0] = 1.
+                else:
+                    self._rescale = 1.
+            g = g / self._rescale
+            gmean = gvar.mean(g)
             gcov = gvar.evalcov(g)
             idx = (gcov[numpy.diag_indices_from(gcov)] <= 0.0)
             gcov[numpy.diag_indices_from(gcov)][idx] = TINY
@@ -2480,11 +2480,10 @@ class RAvgArray(numpy.ndarray):
                     wj_m = wj.dot(m)
                     for invwi in invw:
                         mean += invwi * invwi.dot(wj) * wj_m
-            self[:] = gvar.gvar(mean, cov)
-            if self.rescale is not None:
-                self[:] = self[:] * self.rescale
+            self[:] = gvar.gvar(mean, cov) * self._rescale
             self[:].shape = self.shape
         else:
+            gmean = gvar.mean(g)       
             gcov = gvar.evalcov(g)
             idx = (gcov[numpy.diag_indices_from(gcov)] <= 0.0)
             gcov[numpy.diag_indices_from(gcov)][idx] = TINY
