@@ -30,8 +30,9 @@ To install:
 	pip is used for installing (and uninstalling) vegas. pip usually
 	comes with python.
 
-	The vegas code works for Python 2.7 and 3.3-3.6. It has not been tested
-	for earlier versions.
+	The vegas code works for Python 3.3-3.9. It mostly works for 
+	Python 2.7 as well but that version is no longer officially 
+	supported.
 
 2. (Optional) Run 'make tests' to test your installation of vegas.
 	The tests have been successful if the output ends with "OK".
@@ -61,7 +62,7 @@ Problems:
 
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-18 G. Peter Lepage.
+# Copyright (c) 2013-23 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
