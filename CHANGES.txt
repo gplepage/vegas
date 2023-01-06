@@ -1,5 +1,9 @@
-Version 5.4 2022-12-31
+Version 5.4 2023-01-06
 =============================
+Fixes problem when integrating multiple integrands 
+simultaneously that are very different 
+Fixes problem with weighted averages of vegas results 
+when integrating multiple integrands simultaneously 
 Bug fix for weighted averages of results from different 
 vegas iterations to deal with simultaneous integration
 of integrands that give results that are very different 
