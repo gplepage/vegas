@@ -20,10 +20,10 @@ DOCFILES :=  $(shell ls doc/source/conf.py doc/source/*.{rst,out,png})
 SRCFILES := $(shell ls setup.py src/vegas/*.{py,pyx})
 CYTHONFILES := src/vegas/_vegas.c
 
-install-user : $(CYTHONFILES)
+install-user : 
 	$(PIP) install . --user --no-cache-dir
 
-install install-sys : $(CYTHONFILES)
+install install-sys : 
 	$(PIP) install . --no-cache-dir
 
 uninstall :			# mostly works (may leave some empty directories)
