@@ -1,17 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Tutorial &#8212; vegas 5.4 documentation</title>
+    <title>Tutorial &#8212; vegas 5.4.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -40,7 +41,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>  
@@ -51,9 +52,9 @@
           <div class="body" role="main">
             
   <section id="tutorial">
-<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this heading">¶</a></h1>
 <section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading">¶</a></h2>
 <p>Class <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a> gives Monte Carlo estimates of arbitrary
 multidimensional integrals using the <em>vegas</em> algorithm
 (G. P. Lepage, J. Comput. Phys. 27 (1978) 192 and J. Comput. Phys. 439 (2021) 110386).
@@ -109,7 +110,7 @@ using Python 2, or add</p>
 <p>at the start of your file.</p>
 </section>
 <section id="basic-integrals">
-<span id="id1"></span><h2>Basic Integrals<a class="headerlink" href="#basic-integrals" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Basic Integrals<a class="headerlink" href="#basic-integrals" title="Permalink to this heading">¶</a></h2>
 <p>Here we illustrate the use of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> by estimating the integral</p>
 <div class="math">
 <p><img src="_images/math/10f15d585cec02bd9848ecd8a7a12b7ce6a0c0b5.svg" alt="C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
@@ -588,7 +589,7 @@ is set.</p>
 </div></blockquote>
 </section>
 <section id="multiple-integrands-simultaneously">
-<h2>Multiple Integrands Simultaneously<a class="headerlink" href="#multiple-integrands-simultaneously" title="Permalink to this headline">¶</a></h2>
+<h2>Multiple Integrands Simultaneously<a class="headerlink" href="#multiple-integrands-simultaneously" title="Permalink to this heading">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> can be used to integrate multiple integrands simultaneously, using
 the same integration points for each of the integrands. This is useful
 in situations where the integrands have similar structure, with peaks in
@@ -729,7 +730,7 @@ dictionary are all numbers; in general, values can be  either numbers or
 arrays (of any shape).</p>
 </section>
 <section id="calculating-distributions">
-<h2>Calculating Distributions<a class="headerlink" href="#calculating-distributions" title="Permalink to this headline">¶</a></h2>
+<h2>Calculating Distributions<a class="headerlink" href="#calculating-distributions" title="Permalink to this heading">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is often used to calculate distributions. The following
 code, for example, evaluates both an integral <code class="docutils literal notranslate"><span class="pre">I</span></code> and the contributions
 <code class="docutils literal notranslate"><span class="pre">dI</span></code> to the integral coming from each of five different intervals <code class="docutils literal notranslate"><span class="pre">dr</span></code>
@@ -793,7 +794,7 @@ be exactly zero absent roundoff errors.) Typically one has
 more than five bins.</p>
 </section>
 <section id="bayesian-integrals">
-<h2>Bayesian Integrals<a class="headerlink" href="#bayesian-integrals" title="Permalink to this headline">¶</a></h2>
+<h2>Bayesian Integrals<a class="headerlink" href="#bayesian-integrals" title="Permalink to this heading">¶</a></h2>
 <p>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> module has a special-purpose integrator for
 evaluating averages over probability distributions. Given a
 multi-dimensional Gaussian probability distribution
@@ -896,7 +897,7 @@ examples, one with 4 parameters
 and the other with 22 parameters.</p>
 </section>
 <section id="faster-integrands">
-<h2>Faster Integrands<a class="headerlink" href="#faster-integrands" title="Permalink to this headline">¶</a></h2>
+<h2>Faster Integrands<a class="headerlink" href="#faster-integrands" title="Permalink to this heading">¶</a></h2>
 <p>The computational cost of a realistic multidimensional integral
 comes mostly from
 the cost of evaluating the integrand at the Monte Carlo sample
@@ -1100,7 +1101,7 @@ and <code class="docutils literal notranslate"><span class="pre">&#64;vegas.lbat
 and <code class="docutils literal notranslate"><span class="pre">vegas.LBatchIntegrand</span></code>.)</p>
 </section>
 <section id="multiple-processors">
-<h2>Multiple Processors<a class="headerlink" href="#multiple-processors" title="Permalink to this headline">¶</a></h2>
+<h2>Multiple Processors<a class="headerlink" href="#multiple-processors" title="Permalink to this heading">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> supports parallel evaluation of integrands
 on multiple processors. This
 can shorten execution time substantially when the integrand is
@@ -1207,7 +1208,7 @@ but where Python’s
 new integrand <code class="docutils literal notranslate"><span class="pre">fparallel(x)</span></code> that uses 4 CPU cores.</p>
 </section>
 <section id="sums-with-vegas">
-<h2>Sums with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#sums-with-vegas" title="Permalink to this headline">¶</a></h2>
+<h2>Sums with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#sums-with-vegas" title="Permalink to this heading">¶</a></h2>
 <p>The code in the previous sections is inefficient in the way it
 handles the sum over 10,000 Gaussians. It is not necessary to include every
 term in the sum for every integration point. Rather we can sample the sum,
@@ -1253,7 +1254,7 @@ to infinity. <a class="reference internal" href="vegas.html#module-vegas" title=
 the more important terms.</p>
 </section>
 <section id="saving-results-automatically">
-<h2>Saving Results Automatically<a class="headerlink" href="#saving-results-automatically" title="Permalink to this headline">¶</a></h2>
+<h2>Saving Results Automatically<a class="headerlink" href="#saving-results-automatically" title="Permalink to this heading">¶</a></h2>
 <p>Results returned by a <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator can be pickled for later use using <code class="docutils literal notranslate"><span class="pre">pickle.dump/load</span></code> (or
 <code class="docutils literal notranslate"><span class="pre">gvar.dump/load</span></code>) in the usual way. Results can also be saved automatically using the
 <code class="docutils literal notranslate"><span class="pre">save</span></code> keyword to specify a file name for the pickled result: for example, running</p>
@@ -1413,7 +1414,7 @@ The (adapted) <a class="reference internal" href="vegas.html#vegas.AdaptiveMap" 
 be pickled by itself and results in a smaller file.</p>
 </section>
 <section id="vegas-maps-and-preconditioning-vegas">
-<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Maps and Preconditioning <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#vegas-maps-and-preconditioning-vegas" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Maps and Preconditioning <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#vegas-maps-and-preconditioning-vegas" title="Permalink to this heading">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adapts by remapping the integration variables (see <a class="reference internal" href="background.html#importance-sampling"><span class="std std-ref">Importance Sampling</span></a>). It
 is possible to precondition this map, before creating a <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>.
 Preconditioned maps can improve <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> results when
@@ -1545,7 +1546,7 @@ integrand by running several iterations of <a class="reference internal" href="v
 the integrand and using the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator’s map: <code class="docutils literal notranslate"><span class="pre">integ.map</span></code>.</p>
 </section>
 <section id="vegas-stratifications">
-<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Stratifications<a class="headerlink" href="#vegas-stratifications" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Stratifications<a class="headerlink" href="#vegas-stratifications" title="Permalink to this heading">¶</a></h2>
 <p>Having mapped the integration variables <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> to new variables <code class="docutils literal notranslate"><span class="pre">y[d]</span></code>,
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> evaluates the integral in <code class="docutils literal notranslate"><span class="pre">y</span></code>-space using stratified Monte
 Carlo sampling (see <a class="reference internal" href="background.html#adaptive-stratified-sampling"><span class="std std-ref">Adaptive Stratified Sampling</span></a>). This is
@@ -1651,7 +1652,7 @@ integrand evaluations (about 800,000 per iteration):</p>
 </div>
 </section>
 <section id="vegas-jacobian">
-<span id="id2"></span><h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Jacobian<a class="headerlink" href="#vegas-jacobian" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Jacobian<a class="headerlink" href="#vegas-jacobian" title="Permalink to this heading">¶</a></h2>
 <p>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Jacobian is useful when integrating multiple integrands simultaneously when some of the integrands depend only on a subset of the integration variables.</p>
 <p>Consider, for example, the integral</p>
 <div class="math">
@@ -1735,7 +1736,7 @@ For example,</p>
 \int^{\pi/2}_0 \frac{dx_0}{dx_0/dy_0}
 \int^{\pi/2}_0 dx_1
 \, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}."/></p>
-</div><p>This turns the <img class="math" src="_images/math/cedacf3e2b5e3647040e2088bd52ca1f59dc7829.svg" alt="x_0"/> integral into an integral over <img class="math" src="_images/math/97fc710c1932de96de6c04b323701bf30b7538ab.svg" alt="0\le y_0 \le 1"/>
+</div><p>This turns the <img class="math" src="_images/math/cedacf3e2b5e3647040e2088bd52ca1f59dc7829.svg" alt="x_0"/> integral into an integral over <img class="math" src="_images/math/d90be46e29b6ed78394732e5a28423444e6c3522.svg" alt="0\le y_0 \le 1`"/>
 with an integrand equal to 1. The Monte Carlo integral over <img class="math" src="_images/math/b543363ec2b79d432aba848d80a0ad4a5eba2445.svg" alt="y_0"/>
 in <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is then exact; it is unaffected by the map for that direction.
 This is easily implemented for both one-dimensional integrals by setting
@@ -1777,7 +1778,7 @@ quite accurate. Note that the error on the difference is smaller than either of
 the separate errors, because of correlations between the two results.</p>
 </section>
 <section id="vegas-as-a-random-number-generator">
-<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> as a Random Number Generator<a class="headerlink" href="#vegas-as-a-random-number-generator" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> as a Random Number Generator<a class="headerlink" href="#vegas-as-a-random-number-generator" title="Permalink to this heading">¶</a></h2>
 <p>A <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator generates random points in its integration volume from a
 distribution that is optimized for integrals of whatever function it
 was trained on. The integrator
@@ -1848,7 +1849,7 @@ easily modified to provide information about the <a class="reference internal" h
 </div>
 </section>
 <section id="implementation-notes">
-<h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h2>
+<h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this heading">¶</a></h2>
 <p>This implementation relies upon Cython for its speed and
 numpy for array processing. It also uses <code class="xref py py-mod docutils literal notranslate"><span class="pre">matplotlib</span></code>
 for graphics and <code class="xref py py-mod docutils literal notranslate"><span class="pre">mpi4py</span></code> for MPI support, but graphics
@@ -1872,8 +1873,9 @@ deviations, and properly correlated with other
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">Tutorial</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#basic-integrals">Basic Integrals</a></li>
@@ -1893,12 +1895,17 @@ deviations, and properly correlated with other
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">vegas Documentation</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="c_fortran.html"
-                        title="next chapter">Integrands in C or Fortran</a></p>
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">vegas Documentation</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="c_fortran.html"
+                          title="next chapter">Integrands in C or Fortran</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -1915,7 +1922,7 @@ deviations, and properly correlated with other
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1935,13 +1942,13 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-18, G.P. Lepage.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
     </div>
   </body>
 </html>

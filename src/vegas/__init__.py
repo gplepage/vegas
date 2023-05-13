@@ -64,7 +64,17 @@ from ._vegas import rbatchintegrand, RBatchIntegrand
 from ._vegas import lbatchintegrand, LBatchIntegrand
 from ._vegas import MPIintegrand
 
-from ._version import __version__
+try:
+    import sys
+
+    if sys.version_info >= (3, 8):
+        from importlib import metadata
+    else:
+        import importlib_metadata as metadata
+    __version__ = metadata.version('vegas')
+except:
+    # less precise default if fail
+    __version__ = '>=5.4.1'
 
 # legacy names:
 from ._vegas import vecintegrand, VecIntegrand
@@ -73,110 +83,6 @@ import gvar as _gvar
 import functools
 import numpy
 import pickle 
-
-# import multiprocessing
-# import os
-
-# class parallelintegrand:
-#     """ Convert (batch) integrand into multiprocessor integrand.
-
-#     ``fmp = parallelintegrand(f, np)`` creates a multiprocessor version `fmp` of 
-#     :mod:`vegas` batch integrand ``f``. Call ``fmp(x)`` distributes the evaluation 
-#     of integration points ``x`` across ``np`` processes/processors using 
-#     Python's :mod:`multiprocessing` module, potentially speeding up the integration
-#     (by a factor of as much as ``np``). The associated overhead is substantial,
-#     however. Thus multiprocessing is only useful for integrands that are costly 
-#     to evaluate.
-
-#     The default behavior for the :mod:`multiprocessing` module on MacOS and 
-#     Windows machines involves spawning multiple copies of the Python interpreter,
-#     each of which imports the main module. It is important that the main 
-#     module can be imported safely, without launching new processes. 
-#     This requires some version of the ``if __name__ == '__main__'`` 
-#     construct: eg, ::
-
-#         if __name__ == '__main__':
-#             main()
-    
-#     at the end of the module, where ``main()`` is the main function. This 
-#     is unnecessary on other Unix machines (or with MacOS when the 
-#     mod:`multiprocessing` start method is changed to ``fork`` -- see the 
-#     documentation for :mod:`multiprocessing`).
-
-#     Args:
-#         fcn (callable): :mod:`vegas` batch integrand. Integrands should return a 
-#             :mod:`numpy` array.
-#         nproc (int): Number of processes/processors used for evaluating the integrand.
-#             Set ``nproc=None`` (default) to use all the processors on the machine
-#             (equivalent to ``nproc=os.cpu_count()``).
-#     """
-#     def __init__(self, fcn, nproc=None):
-#         " Save integrand; create pool of nproc processes. "
-#         self.fcn = fcn
-#         if hasattr(fcn, 'fcntype'):
-#             self.fcntype = fcn.fcntype
-#         else:
-#             raise NotImplementedError('parallelintegrand only works with batch (lbatch or rbatch) integrands')
-#         if nproc is None:
-#             nproc = os.cpu_count()
-#             if nproc is None:
-#                 raise ValueError("need to specify nproc (nproc=None does't work on this machine)")
-#         self.nproc = int(nproc)
-#         self.pool = multiprocessing.Pool(processes=nproc)
-
-#     def __del__(self):
-#         " Standard cleanup. "
-#         if hasattr(self, 'pool'):
-#             self.pool.close()
-#             self.pool.join()
-
-#     def __call__(self, x, jac=None):
-#         " Divide x into self.nproc chunks, feeding one to each process. "
-#         if self.nproc == 1:
-#             if jac is None:
-#                 return self.fcn(x)
-#             else:
-#                 return self.fcn(x, jac=jac)
-#         nx = x.shape[0 if self.fcntype == 'lbatch' else -1] // self.nproc + 1
-#         # launch evaluation of self.fcn for each chunk, in parallel
-#         if jac is None:
-#             if self.fcntype == 'lbatch':
-#                 results = self.pool.map(
-#                     self.fcn,
-#                     [x[i*nx : (i+1)*nx] for i in range(self.nproc)],
-#                     1,
-#                     )
-#             else:
-#                 results = self.pool.map(
-#                     self.fcn,
-#                     [x[:, i*nx : (i+1)*nx] for i in range(self.nproc)],
-#                     1,
-#                     )
-#         else:
-#             if self.fcntype == 'lbatch':
-#                 results = self.pool.starmap(
-#                     self.fcn,
-#                     [(x[i*nx : (i+1)*nx], jac[i*nx : (i+1)*nx]) for i in range(self.nproc)],
-#                     1,
-#                     )
-#             else:
-#                 results = self.pool.starmap(
-#                     self.fcn,
-#                     [(x[:, i*nx : (i+1)*nx], jac[:, i*nx : (i+1)*nx]) for i in range(self.nproc)],
-#                     1,
-#                     )
-                    
-#         # convert list of results into a single numpy array
-#         if hasattr(results[0], 'keys'):
-#             ans = {}
-#             for k in results[0]:
-#                 ans[k] = numpy.concatenate(
-#                     [ri[k] for ri in results], 
-#                     axis=0 if self.fcntype == 'lbatch' else -1
-#                     )
-#             return ans
-#         else:
-#             return numpy.concatenate(results, axis=0 if self.fcntype == 'lbatch' else -1)
 
 #########################################
 # PDFRAvg, etc are wrappers for RAvg, etc
@@ -773,11 +679,6 @@ class PDFAnalyzer(object):
         elif self.saveall is not None:
             pickle.dump((ans,self.pdfinteg), self.saveall)
             
-            
-
-
-    
-    
 
 def ravg(reslist, weighted=None, rescale=None):
     """ Create running average from list of :mod:`vegas` results.

@@ -1,17 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>How vegas Works &#8212; vegas 5.4 documentation</title>
+    <title>How vegas Works &#8212; vegas 5.4.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -40,7 +41,7 @@
         <li class="right" >
           <a href="c_fortran.html" title="Integrands in C or Fortran"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">How <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Works</a></li> 
       </ul>
     </div>  
@@ -51,12 +52,12 @@
           <div class="body" role="main">
             
   <section id="how-vegas-works">
-<h1>How <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Works<a class="headerlink" href="#how-vegas-works" title="Permalink to this headline">¶</a></h1>
+<h1>How <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Works<a class="headerlink" href="#how-vegas-works" title="Permalink to this heading">¶</a></h1>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> uses two adaptive strategies: importance sampling, and
 adaptive stratified sampling. Here we discuss the ideas behind each,
 in turn.</p>
 <section id="importance-sampling">
-<span id="id1"></span><h2>Importance Sampling<a class="headerlink" href="#importance-sampling" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Importance Sampling<a class="headerlink" href="#importance-sampling" title="Permalink to this heading">¶</a></h2>
 <p>The most important adaptive strategy <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> uses is
 its remapping of the integration variables in each
 direction, before it makes Monte Carlo estimates of the integral.
@@ -128,7 +129,7 @@ which need not be the case
 if <img class="math" src="_images/math/fb62ba1e89ca6200f224a445c3f4a567fc451fe1.svg" alt="f(x)"/> has (integrable) singularities.</p>
 </section>
 <section id="the-vegas-map">
-<h2>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Map<a class="headerlink" href="#the-vegas-map" title="Permalink to this headline">¶</a></h2>
+<h2>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Map<a class="headerlink" href="#the-vegas-map" title="Permalink to this heading">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> implements the transformation of an integration variable
 <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/> into a new variable <img class="math" src="_images/math/ef71232ef8abcbad0c1e24f4d7ac340655616ae9.svg" alt="y"/> using a grid in <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/> space:</p>
 <blockquote>
@@ -214,7 +215,7 @@ the grid in each direction. (The grid uses 99 nodes in all
 on each axis, but that is too many to display at low resolution.)</p>
 </section>
 <section id="adaptive-stratified-sampling">
-<span id="id2"></span><h2>Adaptive Stratified Sampling<a class="headerlink" href="#adaptive-stratified-sampling" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2>Adaptive Stratified Sampling<a class="headerlink" href="#adaptive-stratified-sampling" title="Permalink to this heading">¶</a></h2>
 <p>A limitation of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s remapping strategy becomes obvious if we look
 at the grid for the following integral, which has two Gaussians
 arranged along the diagonal of the hypercube:</p>
@@ -320,8 +321,9 @@ integrals.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">How <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Works</a><ul>
 <li><a class="reference internal" href="#importance-sampling">Importance Sampling</a></li>
 <li><a class="reference internal" href="#the-vegas-map">The <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Map</a></li>
@@ -330,12 +332,17 @@ integrals.</p>
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="c_fortran.html"
-                        title="previous chapter">Integrands in C or Fortran</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="outliers.html"
-                        title="next chapter">Case Study: Bayesian Curve Fitting</a></p>
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="c_fortran.html"
+                          title="previous chapter">Integrands in C or Fortran</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="outliers.html"
+                          title="next chapter">Case Study: Bayesian Curve Fitting</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -352,7 +359,7 @@ integrals.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -372,13 +379,13 @@ integrals.</p>
         <li class="right" >
           <a href="c_fortran.html" title="Integrands in C or Fortran"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">How <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Works</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2013-18, G.P. Lepage.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
     </div>
   </body>
 </html>

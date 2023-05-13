@@ -1,6 +1,6 @@
-include makefile README.rst INSTALLATION.txt COPYING MANIFEST.in CHANGES.txt
-include setup.py src/vegas.pxd src/vegas/*.pxd src/vegas/*.pyx src/vegas/_version.py
-include src/vegas/*.c
+include README.rst INSTALLATION.txt LICENSE.txt MANIFEST.in CHANGES.txt
+include setup.py setup.cfg pyproject.toml makefile 
+inxlusw src/vegas.pxd src/vegas/*.pxd src/vegas/*.pyx 
 
 graft doc/html
 graft examples

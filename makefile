@@ -21,10 +21,10 @@ SRCFILES := $(shell ls setup.py src/vegas/*.{py,pyx})
 CYTHONFILES := src/vegas/_vegas.c
 
 install-user : $(CYTHONFILES)
-	$(PIP) install . --user
+	$(PIP) install . --user --no-cache-dir
 
 install install-sys : $(CYTHONFILES)
-	$(PIP) install .
+	$(PIP) install . --no-cache-dir
 
 uninstall :			# mostly works (may leave some empty directories)
 	- $(PIP) uninstall vegas
@@ -39,26 +39,16 @@ rebuild:
 src/vegas/_vegas.c : src/vegas/_vegas.pyx src/vegas/_vegas.pxd
 	cd src/vegas; cython _vegas.pyx
 
-try:
-	$(PYTHON) setup.py install --user --record files-vegas.$(PYTHONVERSION)
+.PHONY : doc 
 
-untry:
-	- cat files-vegas.$(PYTHONVERSION) | xargs rm -rf
-
-
-doc-html:
+doc-html doc :
 	make doc/html/index.html
 
-doc/html/index.html : $(SRCFILES) $(DOCFILES)
-	rm -rf doc/html; sphinx-build -b html doc/source doc/html
+doc/html/index.html : $(SRCFILES) $(DOCFILES) setup.cfg
+	sphinx-build -b html doc/source doc/html
 
-# doc-pdf:
-# 	make doc/vegas.pdf
-
-# doc/vegas.pdf : $(SRCFILES) $(DOCFILES)
-# 	rm -rf doc/vegas.pdf
-# 	sphinx-build -b latex doc/source doc/latex
-# 	cd doc/latex; make vegas.pdf; mv vegas.pdf ..
+clear-doc:
+	rm -rf doc/html; 
 
 doc-zip doc.zip:
 	cd doc/html; zip -r doc *; mv doc.zip ../..
@@ -66,7 +56,7 @@ doc-zip doc.zip:
 doc-all: doc-html # doc-pdf
 
 sdist:	$(CYTHONFILES)	# source distribution
-	$(PYTHON) setup.py sdist
+	$(PYTHON) -m build --sdist
 
 .PHONY: tests
 
@@ -86,14 +76,10 @@ test-linking:
 time:
 	time $(MAKE) -C examples PYTHON=$(PYTHON) PLOT=False run
 
-# upload-pypi: src/vegas/_vegas.c
-# 	# python setup.py register   # used first time only
-# 	python setup.py sdist upload
-
-upload-twine:  $(CYTHONFILES)
+upload-twine: 
 	twine upload dist/vegas-$(VERSION).tar.gz
 
-upload-git:  $(CYTHONFILES)
+upload-git: 
 	echo  "version $(VERSION)"
 	make doc-html
 	git diff --exit-code

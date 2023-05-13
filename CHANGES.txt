@@ -1,3 +1,9 @@
+Version 5.4.1 2023-05-13
+==========================
+* Integrator(itg) makes a more complete clone of Integrator itg than previously.
+
+* Simpler and more modern installation setup with pyproject.toml, setup.cfg, ...
+
 Version 5.4 2023-01-06
 =============================
 Fixes problem when integrating multiple integrands 

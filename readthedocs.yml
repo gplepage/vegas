@@ -1,8 +1,0 @@
-formats:
-    - htmlzip
-    - epub
-    - pdf
-
-python:
-  version: 3
-  pip_install: true

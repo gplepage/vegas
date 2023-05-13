@@ -1113,8 +1113,6 @@ cdef class Integrator(object):
     def __init__(Integrator self not None, map, **kargs):
         # N.B. All attributes initialized automatically by cython.
         #      This is why self.set() works here.
-        self.sigf = numpy.array([], numpy.float_) # reset sigf (dummy)
-        self.sum_sigf = HUGE
         self.neval_hcube_range = None
         self.last_neval = 0
         self.pool = None
@@ -1125,7 +1123,13 @@ cdef class Integrator(object):
                     self.map = AdaptiveMap(map.map)
                 else:
                     args[k] = getattr(map, k)
+            # following not in Integrator.defaults
+            self.sigf = numpy.array(map.sigf)
+            self.sum_sigf = numpy.sum(self.sigf)
+            self.nstrat = numpy.array(map.nstrat)
         else:
+            self.sigf = numpy.array([], numpy.float_) # reset sigf (dummy)
+            self.sum_sigf = HUGE
             args = dict(Integrator.defaults)
             if 'map' in args:
                 del args['map']
@@ -1290,6 +1294,8 @@ cdef class Integrator(object):
             if 'sigf' not in old_val:
                 # need to recalculate stratification distribution for beta>0
                 # unless a new sigf was set
+                old_val['sigf'] = self.sigf
+                self.sigf = numpy.array([], numpy.float_) # reset sigf (dummy)
                 self.sum_sigf = HUGE
             self.nstrat = nstrat
 
