@@ -822,10 +822,10 @@ can introduce large errors in the weighted averages.</p>
 <p>This problem can be addressed by increasing the number of integrand
 evaluations per iteration <code class="docutils literal notranslate"><span class="pre">neval</span></code>, which increases the accuracy
 of the Monte Carlo estimate of the covariance matrix. A more efficient
-solution, however, is to break the integration into two parts: one
+solution in this case, however, is to break the integration into two parts: one
 where the integrator is adapted to the integrand, but the results
 are discarded; and a second step where adaptation is turned off
-with <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code> to obtain the final result. As discussed above,
+with   <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code> to  obtain the final result. As discussed above,
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> does not use a weighted average when <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code> and
 so the inversion of the covariance matrices is unnecessary.</p>
 <p>To implement this strategy in the code above, replace the line</p>

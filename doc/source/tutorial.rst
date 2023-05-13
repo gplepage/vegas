@@ -721,7 +721,7 @@ of the Monte Carlo estimate of the covariance matrix. A more efficient
 solution in this case, however, is to break the integration into two parts: one 
 where the integrator is adapted to the integrand, but the results 
 are discarded; and a second step where adaptation is turned off 
-with ``adapt=False`` to obtain the final result. As discussed above,
+with |~| ``adapt=False`` to  obtain the final result. As discussed above,
 |vegas| does not use a weighted average when ``adapt=False`` and 
 so the inversion of the covariance matrices is unnecessary. 
 
