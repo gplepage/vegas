@@ -12,6 +12,7 @@ Tutorial
 .. |x| replace:: x
 .. |y| replace:: y
 .. |~| unicode:: U+00A0
+.. |times| unicode:: U+00D7
    :trim:
 
 Introduction
@@ -698,8 +699,47 @@ accurate results for the distribution ``dI`` (though not quite as
 accurate). Note that ``sum(dI/I)`` is much more accurate than
 any individual ``dI/I``, because of correlations between
 the different ``dI/I`` values. (The uncertainty on ``sum(dI/I)`` would
-be exactly zero absent roundoff errors.) Typically one has
-more than five bins.
+be exactly zero absent roundoff errors.) 
+
+Often one has more than five bins in a distribution. Increasing the 
+number to 100 in the example above reveals a problem:
+
+.. literalinclude:: eg4a.out 
+
+Something is going wrong with the weighted averages of the results 
+from different iterations, as is clear by the third iteration. The 
+weights used in the weighted average are obtained from the inverse 
+of the covariance matrix for the different components of the 
+integral --- here a 101 |times| 101 matrix. This matrix is quite 
+singular and therefore susceptible to even small errors in the 
+covariance matrix. These errors, particularly in early iterations, 
+can introduce large errors in the weighted averages. 
+
+This problem can be addressed by increasing the number of integrand 
+evaluations per iteration ``neval``, which increases the accuracy 
+of the Monte Carlo estimate of the covariance matrix. A more efficient
+solution, however, is to break the integration into two parts: one 
+where the integrator is adapted to the integrand, but the results 
+are discarded; and a second step where adaptation is turned off 
+with ``adapt=False`` to obtain the final result. As discussed above,
+|vegas| does not use a weighted average when ``adapt=False`` and 
+so the inversion of the covariance matrices is unnecessary. 
+
+To implement this strategy in the code above, replace the line ::
+
+        result = integ(fcn)
+
+with ::
+
+        discard = integ(fcn)                # adapt to grid
+        result = integ(fcn, adapt=False)    # no further adaptation
+
+This gives the following output:
+
+    .. literalinclude:: eg4b.out 
+
+The correct result for ``I`` is |~| 0.85112. Results are most accurate 
+if ``neval`` is the same in both steps.
 
 Bayesian Integrals
 ---------------------
