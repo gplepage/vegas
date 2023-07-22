@@ -1,3 +1,7 @@
+Version 5.4.2 2023-07-22
+=========================
+Bug fixes to make code compatible with Cython v3.0 and numpy v1.25.
+
 Version 5.4.1 2023-05-13
 ==========================
 * Integrator(itg) makes a more complete clone of Integrator itg than previously.

@@ -1,7 +1,8 @@
+#
 # -*- coding: utf-8 -*-
 #
-# vegas documentation build configuration file, created by
-# sphinx-quickstart on Sat Dec  7 11:14:42 2013.
+# gvar documentation build configuration file, created by
+# sphinx-quickstart on Sat Dec 26 13:11:17 2009.
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -11,30 +12,39 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+# import sys, os
 import vegas
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+#sys.path.append(os.path.abspath('.'))
 
 # -- General configuration -----------------------------------------------------
 
-# If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.0'
-
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-# GPL: 1st is the best production choice; 2nd is fast for use in development
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.imgmath']
-# extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.mathjax']  # much faster
-imgmath_image_format = "svg" # "png"
+# extensions = ['sphinx.ext.autodoc','sphinx.ext.jsmath']
+# jsmath_path = '/usr/local/share/jsmath/easy/load.js'
+# extensions = ['sphinx.ext.autodoc','sphinx.ext.mathjax']
+extensions = ['sphinx.ext.autodoc','sphinx.ext.napoleon', 'sphinx.ext.imgmath'] # ,'rst2pdf.pdfbuilder']
+imgmath_image_format = 'svg'
 imgmath_use_preview = True
 imgmath_latex_preamble = r"\usepackage{arev}"
-# imgmath_dvipng_args = ['-gamma', '0.5', '-D', '110', '-bg', 'Transparent']  #35
-# imgmath_dvisvgm_args = ['-TT 0cm,0.1cm']
-# imgmath_font_size = 12
+#imgmath_dvipng_args = ['-gamma', '0.35', '-D', '110', '-bg', 'Transparent']
+# imgmath_dvisvgm_args = ['-TT 10cm,0.1cm']
+imgmath_font_size = 12
+
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -43,14 +53,14 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 
 # The encoding of source files.
-#source_encoding = 'utf-8-sig'
+#source_encoding = 'utf-8'
 
 # The master toctree document.
 master_doc = 'index'
 
 # General information about the project.
 project = u'vegas'
-copyright = u'2013-18, G.P. Lepage'
+copyright = u'2013-2023, G. P. Lepage'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -71,9 +81,13 @@ release = vegas.__version__
 # Else, today_fmt is used as the format for a strftime call.
 #today_fmt = '%B %d, %Y'
 
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-exclude_patterns = []
+# List of documents that shouldn't be included in the build.
+#unused_docs = []
+
+# List of directories, relative to source directory, that shouldn't be searched
+# for source files.
+exclude_trees = ['_build']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -90,7 +104,7 @@ exclude_patterns = []
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+# pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
@@ -98,11 +112,11 @@ pygments_style = 'sphinx'
 
 # -- Options for HTML output ---------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-# html_theme = 'default'
+# The theme to use for HTML and HTML Help pages.  Major themes that come with
+# Sphinx are currently 'default' and 'sphinxdoc'.
+html_theme = 'sphinxdoc'
+html_theme = 'nature'
 html_theme = 'pyramid'
-# html_theme = 'agogo'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -149,7 +163,7 @@ html_static_path = ['_static']
 #html_additional_pages = {}
 
 # If false, no module index is generated.
-#html_domain_indices = True
+#html_use_modindex = True
 
 # If false, no index is generated.
 #html_use_index = True
@@ -160,94 +174,15 @@ html_static_path = ['_static']
 # If true, links to the reST sources are added to the pages.
 #html_show_sourcelink = True
 
-# If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
-#html_show_sphinx = True
-
-# If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
-#html_show_copyright = True
-
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
 # base URL from which the finished HTML is served.
 #html_use_opensearch = ''
 
-# This is the file name suffix for HTML files (e.g. ".xhtml").
-#html_file_suffix = None
+# If nonempty, this is the file name suffix for HTML files (e.g. ".xhtml").
+#html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'vegasdoc'
+# htmlhelp_basename = 'gvardoc'
 
 
-# -- Options for LaTeX output --------------------------------------------------
-
-latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
-
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
-
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
-}
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [
-  ('index', 'vegas.tex', u'vegas Documentation',
-   u'G.P. Lepage', 'manual'),
-]
-
-# The name of an image file (relative to this directory) to place at the top of
-# the title page.
-#latex_logo = None
-
-# For "manual" documents, if this is true, then toplevel headings are parts,
-# not chapters.
-#latex_use_parts = False
-
-# If true, show page references after internal links.
-#latex_show_pagerefs = False
-
-# If true, show URL addresses after external links.
-#latex_show_urls = False
-
-# Documents to append as an appendix to all manuals.
-#latex_appendices = []
-
-# If false, no module index is generated.
-#latex_domain_indices = True
-
-
-# -- Options for manual page output --------------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [
-    ('index', 'vegas', u'vegas Documentation',
-     [u'G.P. Lepage'], 1)
-]
-
-# If true, show URL addresses after external links.
-#man_show_urls = False
-
-
-# -- Options for Texinfo output ------------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-  ('index', 'vegas', u'vegas Documentation',
-   u'G.P. Lepage', 'vegas', 'One line description of project.',
-   'Miscellaneous'),
-]
-
-# Documents to append as an appendix to all manuals.
-#texinfo_appendices = []
-
-# If false, no module index is generated.
-#texinfo_domain_indices = True
-
-# How to display URL addresses: 'footnote', 'no', or 'inline'.
-#texinfo_show_urls = 'footnote'

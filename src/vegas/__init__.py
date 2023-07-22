@@ -570,7 +570,7 @@ class PDFIntegrator(Integrator):
     def _f_rbatch(self, theta, f):
         tan_theta = numpy.tan(theta)
         x = self.scale * tan_theta
-        jac = self.scale * numpy.product((tan_theta ** 2 + 1.), axis=0) 
+        jac = self.scale * numpy.prod((tan_theta ** 2 + 1.), axis=0) 
         dp = self.g_pdf.x2dpflat(x.T).T
         p = self.g_pdf.meanflat[:, None] + dp
         if self.g_pdf.shape is None:
@@ -582,9 +582,9 @@ class PDFIntegrator(Integrator):
             parg = p.reshape(self.g_pdf.shape + p.shape[-1:])
         fparg = f(parg) 
         if self.pdf is None:
-            pdf = numpy.product(numpy.exp(-(x ** 2) / 2.) / numpy.sqrt(2 * numpy.pi), axis=0)
+            pdf = numpy.prod(numpy.exp(-(x ** 2) / 2.) / numpy.sqrt(2 * numpy.pi), axis=0)
         else:
-            pdf = self.pdf_rbatch(parg) * numpy.product(self.g_pdf.pjac)
+            pdf = self.pdf_rbatch(parg) * numpy.prod(self.g_pdf.pjac)
         ans = _gvar.BufferDict()
         if hasattr(fparg, 'keys'):
             self.ans_type = 'dict'
@@ -608,7 +608,7 @@ class PDFIntegrator(Integrator):
     def _f_lbatch(self, theta, f):
         tan_theta = numpy.tan(theta)
         x = self.scale * tan_theta
-        jac = self.scale * numpy.product((tan_theta ** 2 + 1.), axis=1) 
+        jac = self.scale * numpy.prod((tan_theta ** 2 + 1.), axis=1) 
         dp = self.g_pdf.x2dpflat(x)
         p = self.g_pdf.meanflat[None, :] + dp
         if self.g_pdf.shape is None:
@@ -620,9 +620,9 @@ class PDFIntegrator(Integrator):
             parg = p.reshape(p.shape[:1] + self.g_pdf.shape)
         fparg = f(parg) 
         if self.pdf is None:
-            pdf = numpy.product(numpy.exp(-(x ** 2) / 2.) / numpy.sqrt(2 * numpy.pi), axis=1)
+            pdf = numpy.prod(numpy.exp(-(x ** 2) / 2.) / numpy.sqrt(2 * numpy.pi), axis=1)
         else:
-            pdf = self.pdf_lbatch(parg) * numpy.product(self.g_pdf.pjac)
+            pdf = self.pdf_lbatch(parg) * numpy.prod(self.g_pdf.pjac)
         ans = _gvar.BufferDict()
         if hasattr(fparg, 'keys'):
             self.ans_type = 'dict'

@@ -1,5 +1,5 @@
 # cython: language_level=3, binding=True
-# cython: profile=True
+# c#ython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
 # Copyright (c) 2013-23 G. Peter Lepage.
@@ -782,7 +782,7 @@ cdef class AdaptiveMap:
         if fx.shape[0] != x.shape[0]:
             raise ValueError('shape of x and f(x) mismatch: {} vs {}'.format(x.shape, fx.shape))
         old_ninc = max(max(self.ninc), Integrator.defaults['maxinc_axis'])
-        tmp_ninc = min(old_ninc, x.shape[0] / 10.) 
+        tmp_ninc = type(tmp_ninc)(min(old_ninc, x.shape[0] / 10.))
         if tmp_ninc < 2:
             raise ValueError('not enough samples: {}'.format(x.shape[0]))
         y = numpy.empty(x.shape, float)
@@ -1220,7 +1220,10 @@ cdef class Integrator(object):
                 # if kargs[k] is None:
                 #     continue
                 old_val[k] = getattr(self, k)
-                setattr(self, k, kargs[k])
+                try:
+                    setattr(self, k, kargs[k])
+                except:
+                    setattr(self, k, type(old_val[k])(kargs[k]))
             else:
                 raise AttributeError('no attribute named "%s"' % str(k))
         
@@ -1243,15 +1246,15 @@ cdef class Integrator(object):
             # nstrat specified explicitly
             if len(nstrat) != self.dim or min(nstrat) < 1:
                 raise ValueError('bad nstrat = %s' % str(numpy.asarray(nstrat)))
-            nhcube = numpy.product(nstrat)
+            nhcube = numpy.prod(nstrat)
             if 'neval' not in old_val:
                 old_val['neval'] = self.neval
-                self.neval = 2. * nhcube / (1. - neval_frac)
+                self.neval = type(self.neval)(2. * nhcube / (1. - neval_frac))
             elif self.neval < 2. * nhcube / (1. - neval_frac):
                 raise ValueError('neval too small: {} < {}'.format(self.neval, 2. * nhcube / (1. - neval_frac)))
         elif 'neval' in old_val or 'neval_frac' in old_val or 'max_nhcube' in old_val:
             # determine stratification from neval,neval_frac if either was specified
-            ns = int(((1 - neval_frac) * self.neval / 2.) ** (1. / self.dim)) # stratifications / axis
+            ns = int(abs((1 - neval_frac) * self.neval / 2.) ** (1. / self.dim)) # stratifications / axis
             if ns < 1:
                 ns = 1
             d = int(
@@ -1259,7 +1262,7 @@ cdef class Integrator(object):
                 / numpy.log(1 + 1. / ns)
                 )
             if ((ns + 1)**d * ns**(self.dim-d)) > self.max_nhcube and not self.minimize_mem:
-                ns = int(self.max_nhcube ** (1. / self.dim))
+                ns = int(abs(self.max_nhcube) ** abs(1. / self.dim))
                 d = int(
                     (numpy.log(self.max_nhcube) - self.dim * numpy.log(ns))
                     / numpy.log(1 + 1. / ns)
@@ -1302,7 +1305,7 @@ cdef class Integrator(object):
         # 5) set min_neval_hcube 
         # chosen so that actual neval is close to but not larger than self.neval
         # (unless self.minimize_mem is True in which case it could be larger)
-        self.nhcube = numpy.product(self.nstrat) 
+        self.nhcube = numpy.prod(self.nstrat, dtype=type(self.nhcube)) 
         avg_neval_hcube = int(self.neval / self.nhcube)
         if self.nhcube == 1:
             self.min_neval_hcube = int(self.neval)
@@ -1346,7 +1349,7 @@ cdef class Integrator(object):
             String containing the settings.
         """
         cdef numpy.npy_intp d
-        nhcube = numpy.product(self.nstrat)
+        nhcube = numpy.prod(self.nstrat)
         neval = nhcube * self.min_neval_hcube if self.beta <= 0 else self.neval
         ans = ""
         ans = "Integrator Settings:\n"
@@ -1426,7 +1429,7 @@ cdef class Integrator(object):
         cdef numpy.npy_intp neval_hcube = self.min_neval_hcube
         cdef numpy.npy_intp neval_batch = nhcube_batch * neval_hcube
         cdef double[:, ::1] yran = self.ran_array_generator((neval_batch, self.dim))
-        cdef double dv_y = 1. / numpy.product(self.nstrat)
+        cdef double dv_y = 1. / numpy.prod(self.nstrat)
         cdef double sum_fdv, sum_fdv2, sigf2, fdv
         cdef numpy.ndarray[numpy.double_t, ndim=1] fx
         cdef double[:, ::1] y = self.y[:neval_batch, :]
@@ -1506,7 +1509,7 @@ cdef class Integrator(object):
         corresponds to a single iteration. The number in a batch
         is controlled by parameter ``nhcube_batch``.
         """
-        cdef numpy.npy_intp nhcube = numpy.product(self.nstrat)
+        cdef numpy.npy_intp nhcube = numpy.prod(self.nstrat)
         cdef double dv_y = 1. / nhcube
         cdef numpy.npy_intp nhcube_batch = min(self.nhcube_batch, nhcube)
         cdef numpy.npy_intp neval_batch
@@ -2719,7 +2722,7 @@ cdef class VegasIntegrand:
                 _eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict, rbatch=True)
             else:
                 self.shape = numpy.shape(fx)[:-1]
-                self.size = numpy.product(self.shape)
+                self.size = numpy.prod(self.shape, dtype=type(self.size))
                 _eval = _BatchIntegrand_from_Batch(fcn, rbatch=True)
         else:
             x0.shape = (1,) + x0.shape
@@ -2738,7 +2741,7 @@ cdef class VegasIntegrand:
             else:
                 fx = numpy.asarray(fx)
                 self.shape = fx.shape[1:]
-                self.size = numpy.product(self.shape)
+                self.size = numpy.prod(self.shape, dtype=type(self.size))
                 _eval = _BatchIntegrand_from_Batch(fcn, rbatch=False) 
         if self.nproc > 1:
             # MPI multiprocessor mode
