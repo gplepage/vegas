@@ -1,4 +1,4 @@
-# cython: language_level=3, binding=True
+# cython: language_level=3str, binding=True
 # c#ython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
@@ -1351,7 +1351,6 @@ cdef class Integrator(object):
         cdef numpy.npy_intp d
         nhcube = numpy.prod(self.nstrat)
         neval = nhcube * self.min_neval_hcube if self.beta <= 0 else self.neval
-        ans = ""
         ans = "Integrator Settings:\n"
         if self.beta > 0 and not self.adapt_to_errors:
             ans = ans + (
@@ -1412,7 +1411,7 @@ cdef class Integrator(object):
         ans = ans + ("    accuracy: relative = %g" % self.rtol)
         ans = ans + ("  absolute accuracy = %g\n\n" % self.atol)
         for d in range(self.dim):
-            ans = ans +(
+            ans = ans + (
                 "    axis %d covers %s\n" % (d, str(self.map.region(d)))
                 )
         if ngrid > 0:

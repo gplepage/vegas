@@ -137,7 +137,7 @@ class TestAdaptiveMap(unittest.TestCase):
 
     def test_training_data_adapt(self):
         "add_training_data(...)  adapt(...) "
-
+ 
         # change ninc; no adaptation -- already adapted
         m = AdaptiveMap([[0, 2], [-1, 1]], ninc=2)
         y = np.array([[0.25, 0.25], [0.75, 0.75]])
@@ -201,7 +201,7 @@ class TestAdaptiveMap(unittest.TestCase):
             m.grid,
             [[0, 2. * 2.**(-0.5), 2.], [0, 4. * 2**(-1./3.), 4.]]
             )
-
+       
 class TestRAvg(unittest.TestCase):
     def setUp(self):
         pass
