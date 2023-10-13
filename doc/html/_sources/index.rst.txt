@@ -6,8 +6,8 @@
 vegas Documentation
 =================================
 
-.. image:: https://zenodo.org/badge/15354897.svg
-   :target: https://zenodo.org/badge/latestdoi/15354897
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.592154.svg
+  :target: https://doi.org/10.5281/zenodo.592154
 
 Contents:
 

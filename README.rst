@@ -32,5 +32,5 @@ number signals bug fixes.
 | Created by G. Peter Lepage (Cornell University) 2013
 | Copyright (c) 2013-2023 G. Peter Lepage
 
-.. image:: https://zenodo.org/badge/15354897.svg
-   :target: https://zenodo.org/badge/latestdoi/15354897
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.592154.svg
+  :target: https://doi.org/10.5281/zenodo.592154
