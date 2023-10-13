@@ -13,6 +13,7 @@
 # GNU General Public License for more details.
 
 cimport numpy
+numpy.import_array()
 # index type for numpy is numpy.npy_intp (signed)
 # -- same as numpy.intp_t and Py_ssize_t (usually) in Cython
 

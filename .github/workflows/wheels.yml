@@ -1,0 +1,40 @@
+name: Build wheels
+
+on: [workflow_dispatch]
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # matrix:
+      #   os:  [ubuntu-20.04]
+      matrix:
+        os: [ubuntu-22.04, windows-2022, macos-12]
+        # see https://github.com/actions/runner-images
+    steps:
+      - uses: actions/checkout@v4
+
+      # Used to host cibuildwheel
+      - uses: actions/setup-python@v3
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.16.2
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        # to supply options, put them in 'env', like:
+        env:
+          CIBW_SKIP: pp* cp36-* cp37-* cp38-*
+          # CIBW_SKIP: pp* cp36-* cp37-* cp38-* cp39-musllinux*
+          CIBW_ARCHS_MACOS: x86_64 arm64
+          CIBW_ARCHS_WINDOWS: auto64
+          CIBW_ARCHS_LINUX: auto64
+          # CIBW_ARCHS_LINUX: x86_64 aarch64
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: "pytest {project}/tests"    
+          CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
