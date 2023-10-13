@@ -1,4 +1,5 @@
 from setuptools import setup, Extension
+from Cython.Build import cythonize
 import numpy
 
 ext_args = dict(
@@ -12,4 +13,4 @@ ext_modules = [
     Extension('vegas._vegas', ['src/vegas/_vegas.pyx'], **ext_args),
     ]
 
-setup(ext_modules=ext_modules)
+setup(ext_modules=cythonize(ext_modules))

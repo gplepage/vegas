@@ -78,14 +78,14 @@ time:
 	time $(MAKE) -C examples PYTHON=$(PYTHON) PLOT=False run
 
 upload-twine: 
-	twine upload dist/vegas-$(VERSION).tar.gz
+	twine upload dist/vegas-$(VERSION)*
 
 upload-git: 
 	echo  "version $(VERSION)"
 	make doc-html
 	git diff --exit-code
 	git diff --cached --exit-code
-	git push origin master
+	git push origin main
 
 tag-git:
 	echo  "version $(VERSION)"
