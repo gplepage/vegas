@@ -40,6 +40,7 @@ cdef class Integrator:
     cdef public numpy.npy_intp neval
     cdef public numpy.npy_intp[::1] neval_hcube_range
     cdef public numpy.npy_intp nhcube_batch
+    # cdef public numpy.npy_intp neval_batch
     cdef public numpy.npy_intp maxinc_axis
     cdef public numpy.npy_intp max_nhcube
     cdef public numpy.npy_intp max_neval_hcube
@@ -77,5 +78,7 @@ cdef class Integrator:
     cdef double[::1] jac
     cdef double[::1] fdv2
     cdef numpy.npy_intp[::1] neval_hcube
-    cdef readonly double[::1] sigf
+    # the following depend upon whether minimize_mem is False or True
+    cdef readonly object sigf       # numpy array or h5py Dataset
+    cdef readonly object sigf_h5    # None or h5py file
 

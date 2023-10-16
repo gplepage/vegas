@@ -21,9 +21,11 @@ SRCFILES := $(shell ls setup.py src/vegas/*.{py,pyx})
 CYTHONFILES := src/vegas/_vegas.c
 
 install-user : 
+	rm -rf $(CYTHONFILES)
 	$(PIP) install . --user --no-cache-dir
 
 install install-sys : 
+	rm -rf $(CYTHONFILES)
 	$(PIP) install . --no-cache-dir
 
 uninstall :			# mostly works (may leave some empty directories)
@@ -31,13 +33,6 @@ uninstall :			# mostly works (may leave some empty directories)
 
 update :
 	make uninstall install
-
-rebuild:
-	rm -rf $(CYTHONFILES)
-	make uninstall install 
-
-src/vegas/_vegas.c : src/vegas/_vegas.pyx src/vegas/_vegas.pxd
-	cd src/vegas; cython _vegas.pyx
 
 .PHONY : doc 
 
@@ -55,7 +50,7 @@ doc-zip doc.zip:
 
 doc-all: doc-html # doc-pdf
 
-sdist:	$(CYTHONFILES)	# source distribution
+sdist:	# source distribution
 	$(PYTHON) setup.py sdist
 	# $(PYTHON) -m build --sdist
 

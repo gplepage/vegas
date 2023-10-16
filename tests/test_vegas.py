@@ -17,6 +17,10 @@ import os
 import pickle
 import unittest
 import warnings
+try:
+    import h5py 
+except ImportError:
+    h5py = None
 
 import gvar as gv
 import numpy as np
@@ -568,14 +572,6 @@ class TestIntegrator(unittest.TestCase):
         self.assertEqual(list(I.nstrat), [5, 5])
         self.assertEqual(I.neval, 234)
     
-        I = Integrator([[0.,1.],[-1.,1.]], neval=1300, max_nhcube=1, neval_frac=0.75, minimize_mem=True)
-        self.assertEqual(list(I.map.ninc), [130, 120])
-        self.assertEqual(list(I.nstrat), [13, 12])
-        self.assertEqual(I.neval, 1300)
-        self.assertEqual(I.min_neval_hcube, 2)
-        np.testing.assert_allclose([I.map.grid[0,0], I.map.grid[0, I.map.ninc[0]]], [0., 1.])
-        np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, I.map.ninc[1]]], [-1., 1.])
-
         I = Integrator([[0.,1.],[-1.,1.]], max_nhcube=1)
         self.assertEqual(list(I.map.ninc), [100, 100])
         self.assertEqual(list(I.nstrat), [1, 1])
@@ -870,8 +866,19 @@ class TestIntegrator(unittest.TestCase):
                 self.assertEqual(numpy.shape(fans['b']), (1,1))
 
 
-    def test_min_sigf(self):
+    @unittest.skipIf(h5py is None,"missing h5py => minimize_mem=True not available")
+    def test_minimize_mem(self):
         " test minimize_mem=True mode "
+        # test 1
+        I = Integrator([[0.,1.],[-1.,1.]], neval=1300, max_nhcube=1, neval_frac=0.75, minimize_mem=True)
+        self.assertEqual(list(I.map.ninc), [130, 120])
+        self.assertEqual(list(I.nstrat), [13, 12])
+        self.assertEqual(I.neval, 1300)
+        self.assertEqual(I.min_neval_hcube, 2)
+        np.testing.assert_allclose([I.map.grid[0,0], I.map.grid[0, I.map.ninc[0]]], [0., 1.])
+        np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, I.map.ninc[1]]], [-1., 1.])
+        # test 2
+        gv.ranseed(1)
         @batchintegrand
         class f_batch:
             def __call__(self, x):
@@ -890,6 +897,14 @@ class TestIntegrator(unittest.TestCase):
         self.assertTrue(abs(r.mean - 1.) < 5 * r.sdev)
         self.assertTrue(r.Q > 1e-3)
         self.assertTrue(r.sdev < 1e-3)
+        gv.ranseed(1)
+        I2 = Integrator(
+            [[0, math.pi],
+            [-math.pi/2., math.pi/2.]],
+            minimize_mem=False,
+            )
+        r2 = I2(f_batch(), neval=10000)
+        self.assertEqual(r2.summary(), r.summary())
 
     def test_scalar_exception(self):
         " integrate scalar fcn "

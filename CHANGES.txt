@@ -1,3 +1,11 @@
+Version 5.5 2023-10-15
+========================
+New implementation for vegas.Integrator parameter minimize_mem, which parameter
+can be useful if neval is very large (eg, billions). Setting minimize_mem=True
+moves the largest internal work array out of RAM and onto disk (in a 
+temporary file). This somewhat slower but can significantly reduce the 
+amount of RAM in use. This feature requires the h5py module.
+
 Version 5.4.3 2023-10-13
 =========================
 Improved build/installation code to handle systems with old versions of numpy 

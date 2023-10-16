@@ -26,6 +26,7 @@ import multiprocessing
 import pickle
 import os
 import sys
+import tempfile
 import time
 import warnings
 
@@ -1067,20 +1068,14 @@ cdef class Integrator(object):
             is installed. This flag is ignored when ``mpi`` is not 
             being used (and so has no impact on performance).
         minimize_mem (bool): When ``True``, |vegas| minimizes
-            internal workspace at the cost of extra evaluations of
-            the integrand. This can increase execution time by
-            50--100% but might be desirable when the number of
-            evaluations is very large (e.g., ``neval=1e9``). Normally
-            |vegas| uses internal work space that grows in
-            proportion to ``neval``. If that work space exceeds
-            the size of the RAM available to the processor,
-            |vegas| runs much more slowly. Setting ``minimize_mem=True``
-            greatly reduces the internal storage used by |vegas|; in
-            particular memory becomes independent of ``neval``. The default
-            setting (``minimize_mem=False``), however, is much superior
-            unless memory becomes a problem. (The large memory is needed
+            internal workspace by moving some of its data to 
+            a disk file. This increases execution time (slightly)
+            and results in temporary files, but might be desirable 
+            when the number of evaluations is very large (e.g., 
+            ``neval=1e9``).  (The large memory is needed
             for adaptive stratified sampling, so memory is not
-            an issue if ``beta=0``.)
+            an issue if ``beta=0``.) ``minimize_mem=True`` 
+            requires the ``h5py`` Python module.
     """
 
     # Settings accessible via the constructor and Integrator.set
@@ -1089,6 +1084,7 @@ cdef class Integrator(object):
         neval=1000,         # number of evaluations per iteration
         maxinc_axis=1000,   # number of adaptive-map increments per axis
         nhcube_batch=10000, # number of h-cubes per batch
+        # neval_batch=20000,  # (approx) number of evaluations per batch
         max_nhcube=1e9,     # max number of h-cubes
         max_neval_hcube=1e6,# max number of evaluations per h-cube
         neval_frac=0.75,    # fraction of evaluations used for adaptive stratified sampling
@@ -1116,6 +1112,7 @@ cdef class Integrator(object):
         self.neval_hcube_range = None
         self.last_neval = 0
         self.pool = None
+        self.sigf_h5 = None
         if isinstance(map, Integrator):
             args = {}
             for k in Integrator.defaults:
@@ -1143,10 +1140,20 @@ cdef class Integrator(object):
         self.set(args)
 
     def __del__(self):
+        self._clear_sigf_h5()
         if self.pool is not None:
             self.pool.close()
             self.pool.join()
             self.pool = None
+
+    def _clear_sigf_h5(self):
+        if self.sigf_h5 is not None:
+            fname = self.sigf_h5.filename
+            self.sigf_h5.close()
+            os.unlink(fname)
+            self.sigf_h5 = None
+            self.sigf = numpy.array([], numpy.float_) # reset sigf (dummy)
+            self.sum_sigf = HUGE
 
     def __reduce__(Integrator self not None):
         """ Capture state for pickling. """
@@ -1320,17 +1327,22 @@ cdef class Integrator(object):
         # that goes on
 
         neval_batch = self.nhcube_batch * avg_neval_hcube
-        nsigf = (
-            self.nhcube_batch if self.minimize_mem else
-            self.nhcube
-            )
+        nsigf = self.nhcube
         if self.beta > 0 and self.nhcube > 1 and not self.adapt_to_errors and len(self.sigf) != nsigf:
-            if self.minimize_mem:
-                self.sigf = numpy.empty(nsigf, numpy.float_)
-            else:
+            # set up sigf
+            self._clear_sigf_h5()
+            if not self.minimize_mem:
                 self.sigf = numpy.ones(nsigf, numpy.float_)
-                self.sum_sigf = nsigf 
-        self.neval_hcube = numpy.empty(self.nhcube_batch, dtype=numpy.intp)
+            else:
+                try: 
+                    import h5py
+                except ImportError:
+                    raise ValueError("Install the h5py Python module in order to use minimize_mem=True")
+                self.sigf_h5 = h5py.File(tempfile.mkstemp(dir='.')[1], 'a')
+                self.sigf_h5.create_dataset('sigf', shape=(nsigf,), dtype=float, chunks=True, fillvalue=1.)
+                self.sigf = self.sigf_h5['sigf']
+            self.sum_sigf = nsigf 
+        self.neval_hcube = numpy.empty(neval_batch // 2 + 1, dtype=numpy.intp)
         self.neval_hcube[:] = avg_neval_hcube
         self.y = numpy.empty((neval_batch, self.dim), numpy.float_)
         self.x = numpy.empty((neval_batch, self.dim), numpy.float_)
@@ -1418,55 +1430,6 @@ cdef class Integrator(object):
             ans += '\n' + self.map.settings(ngrid=ngrid)
         return ans
 
-    def _fill_sigf(
-        Integrator self not None, fcn,  numpy.npy_intp hcube_base, numpy.npy_intp nhcube_batch
-        ):
-        cdef numpy.npy_intp i_start
-        cdef numpy.npy_intp ihcube, hcube, tmp_hcube
-        cdef numpy.npy_intp[::1] y0 = numpy.empty(self.dim, numpy.intp)
-        cdef numpy.npy_intp i, d
-        cdef numpy.npy_intp neval_hcube = self.min_neval_hcube
-        cdef numpy.npy_intp neval_batch = nhcube_batch * neval_hcube
-        cdef double[:, ::1] yran = self.ran_array_generator((neval_batch, self.dim))
-        cdef double dv_y = 1. / numpy.prod(self.nstrat)
-        cdef double sum_fdv, sum_fdv2, sigf2, fdv
-        cdef numpy.ndarray[numpy.double_t, ndim=1] fx
-        cdef double[:, ::1] y = self.y[:neval_batch, :]
-        cdef double[:, ::1] x = self.x[:neval_batch, :]
-        cdef double[::1] jac = self.jac[:neval_batch]
-        cdef double[::1] sigf = self.sigf
-        # generate random points
-        i_start = 0
-        for ihcube in range(nhcube_batch):
-            hcube = hcube_base + ihcube
-            tmp_hcube = hcube
-            for d in range(self.dim):
-                y0[d] = tmp_hcube % self.nstrat[d]
-                tmp_hcube = (tmp_hcube - y0[d]) // self.nstrat[d]
-            for d in range(self.dim):
-                for i in range(i_start, i_start + neval_hcube):
-                    y[i, d] = (y0[d] + yran[i, d]) / self.nstrat[d]
-            i_start += neval_hcube
-        self.map.map(y, x, jac, neval_batch)
-        if self.uses_jac:
-            fx = fcn.training(numpy.asarray(x), jac=self.map.jac1d(y))
-        else:
-            fx = fcn.training(numpy.asarray(x), jac=None) 
-
-        # accumulate sigf for each h-cube
-        i_start = 0
-        for ihcube in range(nhcube_batch):
-            sum_fdv = 0.0
-            sum_fdv2 = 0.0
-            for i in range(i_start, i_start + neval_hcube):
-                fdv = fx[i] * jac[i] * dv_y
-                sum_fdv += fdv
-                sum_fdv2 += fdv ** 2
-            mean = sum_fdv / neval_hcube
-            sigf2 = abs(sum_fdv2 / neval_hcube - mean * mean)
-            sigf[ihcube] = sigf2 ** (self.beta / 2.)
-            i_start += neval_hcube
-
     def _get_mpi_rank(self):
         try:
             import mpi4py.MPI 
@@ -1520,7 +1483,9 @@ cdef class Integrator(object):
             if self.beta > 0 and self.sum_sigf > 0 and not self.adapt_to_errors
             else 0.0    # use min_neval_hcube
             )
-        cdef numpy.npy_intp avg_neval_hcube = int(self.neval / self.nhcube) ####
+        cdef numpy.npy_intp avg_neval_hcube = int(self.neval / self.nhcube) 
+        cdef numpy.npy_intp min_neval_batch = nhcube_batch * avg_neval_hcube   ####
+        cdef numpy.npy_intp max_nhcube_batch = min_neval_batch // 2 + 1 ####
         cdef numpy.npy_intp[::1] neval_hcube = self.neval_hcube
         cdef numpy.npy_intp[::1] y0 = numpy.empty(self.dim, numpy.intp)
         cdef numpy.npy_intp max_neval_hcube = max(
@@ -1539,56 +1504,56 @@ cdef class Integrator(object):
         if adaptive_strat and self.minimize_mem and not self.adapt:
             # can't minimize_mem without also adapting, so force beta=0
             neval_sigf = 0.0
-        for hcube_base in range(0, nhcube, nhcube_batch):
-            if (hcube_base + nhcube_batch) > nhcube:
-                nhcube_batch = nhcube - hcube_base
-
-            # determine number of evaluations per h-cube
+        # for hcube_base in range(0, nhcube, nhcube_batch):
+        #     if (hcube_base + nhcube_batch) > nhcube:
+        #         nhcube_batch = nhcube - hcube_base
+        neval_batch = 0
+        hcube_base = 0
+        sigf = self.sigf[hcube_base:hcube_base + max_nhcube_batch]
+        for hcube in range(nhcube):
+            ihcube = hcube - hcube_base
+            # determine number of evaluations for h-cube
             if adaptive_strat:
-                if self.minimize_mem:
-                    if self.adapt:
-                        self._fill_sigf(
-                            fcn=fcn, hcube_base=hcube_base, nhcube_batch=nhcube_batch,
-                            )
-                    sigf = self.sigf
-                else:
-                    sigf = self.sigf[hcube_base:]
-                neval_batch = 0
-                for ihcube in range(nhcube_batch):
-                    neval_hcube[ihcube] = <int> (sigf[ihcube] * neval_sigf) + self.min_neval_hcube
-                    if neval_hcube[ihcube] > max_neval_hcube:
-                        neval_hcube[ihcube] = max_neval_hcube
-                    if neval_hcube[ihcube] < self.neval_hcube_range[0]:
-                        self.neval_hcube_range[0] = neval_hcube[ihcube]
-                    elif neval_hcube[ihcube] > self.neval_hcube_range[1]:
-                        self.neval_hcube_range[1] = neval_hcube[ihcube]
-                    neval_batch += neval_hcube[ihcube]
+                neval_hcube[ihcube] = <int> (sigf[ihcube] * neval_sigf) + self.min_neval_hcube
+                if neval_hcube[ihcube] > max_neval_hcube:
+                    neval_hcube[ihcube] = max_neval_hcube
+                if neval_hcube[ihcube] < self.neval_hcube_range[0]:
+                    self.neval_hcube_range[0] = neval_hcube[ihcube]
+                elif neval_hcube[ihcube] > self.neval_hcube_range[1]:
+                    self.neval_hcube_range[1] = neval_hcube[ihcube]
+                neval_batch += neval_hcube[ihcube]
             else:
-                neval_hcube[:] = avg_neval_hcube
-                neval_batch = nhcube_batch * avg_neval_hcube
+                neval_hcube[ihcube] = avg_neval_hcube
+                neval_batch += avg_neval_hcube
+            
+            if neval_batch < min_neval_batch and hcube < nhcube - 1:
+                # don't have enough points yet
+                continue
+            
+            ############################## have enough points => build yields
             self.last_neval += neval_batch
-
-            if (3*self.dim + 3) * neval_batch > self.max_mem:
+            nhcube_batch = hcube - hcube_base + 1
+            if (3*self.dim + 3) * neval_batch * 2 > self.max_mem:
                 raise MemoryError('work arrays too large; reduce max_neval_hcube or nhcube_batch (or increase max_mem)')
 
-            # resize work arrays if needed
+            # 1) resize work arrays if needed (to double what is needed)
             if neval_batch > self.y.shape[0]:
-                self.y = numpy.empty((neval_batch, self.dim), numpy.float_)
-                self.x = numpy.empty((neval_batch, self.dim), numpy.float_)
-                self.jac = numpy.empty(neval_batch, numpy.float_)
-                self.fdv2 = numpy.empty(neval_batch, numpy.float_)
+                # print('***** neval_batch =', neval_batch) ##########################################
+                self.y = numpy.empty((2 * neval_batch, self.dim), numpy.float_)
+                self.x = numpy.empty((2 * neval_batch, self.dim), numpy.float_)
+                self.jac = numpy.empty(2 * neval_batch, numpy.float_)
+                self.fdv2 = numpy.empty(2 * neval_batch, numpy.float_)
             y = self.y
             x = self.x
             jac = self.jac
             if yield_hcube and neval_batch > hcube_array.shape[0]:
-                hcube_array = numpy.empty(neval_batch, numpy.intp)
+                hcube_array = numpy.empty(2 * neval_batch, numpy.intp)
 
-            # generate random points
+            # 2) generate random points
             yran = self.ran_array_generator((neval_batch, self.dim))
             i_start = 0
             for ihcube in range(nhcube_batch):
-                hcube = hcube_base + ihcube
-                tmp_hcube = hcube
+                tmp_hcube = hcube_base + ihcube
                 for d in range(self.dim):
                     y0[d] = tmp_hcube % self.nstrat[d]
                     tmp_hcube = (tmp_hcube - y0[d]) // self.nstrat[d]
@@ -1598,7 +1563,7 @@ cdef class Integrator(object):
                 i_start += neval_hcube[ihcube]
             self.map.map(y, x, jac, neval_batch)
 
-            # compute weights and yield answers
+            # 3) compute weights and yield answers
             i_start = 0
             for ihcube in range(nhcube_batch):
                 for i in range(i_start, i_start + neval_hcube[ihcube]):
@@ -1613,6 +1578,12 @@ cdef class Integrator(object):
             if yield_hcube:
                 answer += (numpy.asarray(hcube_array[:neval_batch]),)
             yield answer
+
+            # reset parameters for main loop
+            if hcube < nhcube - 1:
+                neval_batch = 0
+                hcube_base = hcube + 1
+                sigf = self.sigf[hcube_base:hcube_base + max_nhcube_batch]
 
     # old name --- for legacy code
     random_vec = random_batch
@@ -1819,10 +1790,7 @@ cdef class Integrator(object):
         var[:, :] = 0.0
         result = VegasResult(fcn, weighted=self.adapt)
 
-        sigf = self.sigf
         for itn in range(self.nitn):
-            # if self.minimize_mem:
-            #     self.set()
             if self.analyzer is not None:
                 self.analyzer.begin(itn, self)
 
@@ -1864,6 +1832,7 @@ cdef class Integrator(object):
                 # compute integral and variance for each h-cube
                 # j is index of point within batch, i is hcube index
                 j = 0
+                sigf = self.sigf[hcube[0]:hcube[-1] + 1]
                 for i in range(hcube[0], hcube[-1] + 1):
                     # iterate over h-cubes
                     sum_wf[:] = 0.0
@@ -1875,7 +1844,7 @@ cdef class Integrator(object):
                             sum_wf[s] += wf[s]
                             for t in range(s + 1):
                                 sum_wf2[s, t] += wf[s] * wf[t]
-                        fdv2[j] = (wf[0] * self.neval_hcube[i - hcube[0]]) ** 2
+                        fdv2[j] = (wf[0] * self.neval_hcube[i - hcube[0]]) ** 2 # neval_hcube -> bad style!
                         j += 1
                         neval += 1
                     for s in range(fcn.size):
@@ -1892,11 +1861,8 @@ cdef class Integrator(object):
                                 var[s, t] += dvar[t]
                     sigf2 = abs(sum_wf2[0, 0] * neval - sum_wf[0] * sum_wf[0])
                     if adaptive_strat:
-                        if not self.minimize_mem:
-                            sigf[i] = sigf2 ** (self.beta / 2.)
-                            sum_sigf += sigf[i]
-                        else:
-                            sum_sigf += sigf2 ** (self.beta / 2.)
+                        sigf[i - hcube[0]] = sigf2 ** (self.beta / 2.)
+                        sum_sigf += sigf[i - hcube[0]]
                     if self.adapt_to_errors and self.adapt:
                         # replace fdv2 with variance
                         # only one piece of data (from current hcube)
@@ -1904,6 +1870,8 @@ cdef class Integrator(object):
                         self.map.add_training_data(
                             y[j - 1:, :], fdv2[j - 1:], 1
                             )
+                if self.minimize_mem:
+                    self.sigf[hcube[0]:hcube[-1] + 1] = sigf[:]
                 if (not self.adapt_to_errors) and self.adapt and self.alpha > 0:
                     self.map.add_training_data(y, fdv2, y.shape[0])
 
