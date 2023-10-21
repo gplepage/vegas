@@ -594,18 +594,18 @@ class TestIntegrator(unittest.TestCase):
 
     def test_settings(self):
         I = Integrator([[0.,1.],[-1.,1.]], neval=254, nitn=123, neval_frac=0.75)
+        print('\n',I.settings(),'\n')
         outstr = [
             "Integrator Settings:",
             "    {neval} (approx) integrand evaluations in each of 123 iterations",
-            "    number of:  strata/axis = [{nstrat0} {nstrat1}]",
-            "                increments/axis = [{ninc0} {ninc1}]",
-            "                h-cubes = {nhcube}  evaluations/h-cube (min) = {min_neval_hcube}",
-            "                evaluations/batch (min) = 50000  processors = 1",
-            "    minimize_mem = False",
-            "    adapt_to_errors = False",
-            "    damping parameters: alpha = {alpha}  beta= {beta}",
-            "    limits: evaluations/h-cube < 1e+06",
-            "    accuracy: relative = 0  absolute accuracy = 0",
+            "    number of: strata/axis = [{nstrat0} {nstrat1}]",
+            "               increments/axis = [{ninc0} {ninc1}]",
+            "               h-cubes = {nhcube}  processors = 1",
+            "               evaluations/batch >= {min_neval_batch}",
+            "               {min_neval_hcube} <= evaluations/h-cube <= {max_neval_hcube:.2g}",
+            "    minimize_mem = False  adapt_to_errors = False  adapt = True",
+            "    accuracy: relative = 0  absolute = 0",
+            "    damping: alpha = {alpha}  beta= {beta}",
             "",
             "    axis 0 covers (0.0, 1.0)",
             "    axis 1 covers (-1.0, 1.0)\n",
@@ -613,8 +613,11 @@ class TestIntegrator(unittest.TestCase):
         outstr = ('\n'.join(outstr)).format(
             neval=I.neval, nstrat0=I.nstrat[0], nstrat1=I.nstrat[1],
             ninc0=I.map.ninc[0], ninc1=I.map.ninc[1], nhcube=I.nhcube,
-            min_neval_hcube=I.min_neval_hcube, alpha=I.alpha, beta=I.beta
+            min_neval_hcube=I.min_neval_hcube, alpha=I.alpha, beta=I.beta,
+            min_neval_batch=I.min_neval_batch, max_neval_hcube=float(I.max_neval_hcube),
             )
+        print(I.min_neval_batch)
+        print(outstr)
         self.assertEqual(outstr, I.settings())
 
     def test_pickle(self):

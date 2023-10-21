@@ -995,7 +995,8 @@ cdef class Integrator(object):
             points to be passed together to the integrand when using
             |vegas| in batch mode. The default value is 50,000. Larger 
             values may be lead to faster evaluations, but at the cost of
-            more memory for internal work arrays.
+            more memory for internal work arrays. The last batch is 
+            usually smaller than this limit, as it is limited by ``neval``.
         max_neval_hcube (positive int): Maximum number of integrand
             evaluations per hypercube in the stratification. The default
             value is 50,000. Larger values might allow for more adaptation
@@ -1376,7 +1377,7 @@ cdef class Integrator(object):
         max_neval_hcube = max(self.max_neval_hcube, self.min_neval_hcube)
         ans = ans + (
             "               evaluations/batch >= %.2g\n"
-            % (min(float(self.min_neval_batch), float(self.neval)))
+            % (float(self.min_neval_batch),)
             )
         ans = ans + (
             "               %d <= evaluations/h-cube <= %.2g\n"
