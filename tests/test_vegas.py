@@ -594,14 +594,13 @@ class TestIntegrator(unittest.TestCase):
 
     def test_settings(self):
         I = Integrator([[0.,1.],[-1.,1.]], neval=254, nitn=123, neval_frac=0.75)
-        print('\n',I.settings(),'\n')
         outstr = [
             "Integrator Settings:",
             "    {neval} (approx) integrand evaluations in each of 123 iterations",
             "    number of: strata/axis = [{nstrat0} {nstrat1}]",
             "               increments/axis = [{ninc0} {ninc1}]",
             "               h-cubes = {nhcube}  processors = 1",
-            "               evaluations/batch >= {min_neval_batch}",
+            "               evaluations/batch >= {min_neval_batch:.2g}",
             "               {min_neval_hcube} <= evaluations/h-cube <= {max_neval_hcube:.2g}",
             "    minimize_mem = False  adapt_to_errors = False  adapt = True",
             "    accuracy: relative = 0  absolute = 0",
@@ -616,8 +615,6 @@ class TestIntegrator(unittest.TestCase):
             min_neval_hcube=I.min_neval_hcube, alpha=I.alpha, beta=I.beta,
             min_neval_batch=I.min_neval_batch, max_neval_hcube=float(I.max_neval_hcube),
             )
-        print(I.min_neval_batch)
-        print(outstr)
         self.assertEqual(outstr, I.settings())
 
     def test_pickle(self):
