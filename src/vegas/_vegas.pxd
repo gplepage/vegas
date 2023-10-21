@@ -39,10 +39,8 @@ cdef class Integrator:
     # inputs
     cdef public numpy.npy_intp neval
     cdef public numpy.npy_intp[::1] neval_hcube_range
-    cdef public numpy.npy_intp nhcube_batch
-    # cdef public numpy.npy_intp neval_batch
+    cdef public numpy.npy_intp min_neval_batch
     cdef public numpy.npy_intp maxinc_axis
-    cdef public numpy.npy_intp max_nhcube
     cdef public numpy.npy_intp max_neval_hcube
     cdef public double neval_frac
     cdef public double max_mem

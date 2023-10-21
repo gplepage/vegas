@@ -36,17 +36,30 @@ run:
 	- diff -w distribution.out distribution.tmp
 	$(PYTHON) path-integral.py $(PLOT) > path-integral.tmp 
 	- diff -w path-integral.out path-integral.tmp
-	- $(PYTHON) parallel-pools.py > parallel-pools.tmp
+	$(PYTHON) parallel-pools.py > parallel-pools.tmp
 	- diff -w parallel-pools.out parallel-pools.tmp
 	$(PYTHON) ridge.py 8 > ridge.tmp
 	- diff -w ridge.out ridge.tmp
 	# mpi test
 	- mpirun -np 2 -outfile-pattern=ridge.tmp.%r $(PYTHON)  ridge.py
+	- mpirun -np 2 $(PYTHON)  ridge.py
 	- diff -w ridge.out ridge.tmp.0
 	- diff -w ridge.out ridge.tmp.1
 
+_time:
+	$(PYTHON) simple.py $(PLOT) > simple.tmp
+	$(PYTHON) slow.py > slow.tmp
+	$(PYTHON) faster.py > faster.tmp
+	$(PYTHON) fastest.py > fastest.tmp
+	$(PYTHON) bayes.py > bayes.tmp
+	$(PYTHON) distribution.py > distribution.tmp
+	$(PYTHON) path-integral.py $(PLOT) > path-integral.tmp 
+	$(PYTHON) parallel-pools.py > parallel-pools.tmp
+	$(PYTHON) ridge.py 8 > ridge.tmp
+	# skip mpi test because highly variable
+
 time:
-	time $(MAKE) PYTHON=$(PYTHON) PLOT=False run
+	time make _time PLOT=False
 
 test-linking:
 	# ----------------------------------------

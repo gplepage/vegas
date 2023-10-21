@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Tutorial &#8212; vegas 5.4.3 documentation</title>
+    <title>Tutorial &#8212; vegas 5.5 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>  
@@ -1015,9 +1015,9 @@ by using <a class="reference internal" href="vegas.html#module-vegas" title="veg
 </pre></div>
 </div>
 <p>reduces the cost of the integral by an order of magnitude. Internally <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
-processes integration points in batches. (<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> parameter <code class="docutils literal notranslate"><span class="pre">nhcube_batch</span></code>
+processes integration points in batches. (<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> parameter <code class="docutils literal notranslate"><span class="pre">min_neval_batch</span></code>
 determines the number of integration
-points per batch (typically 1000s).) In batch mode,
+points per batch (typically 10,000s).) In batch mode,
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> presents integration points to the integrand in batches
 rather than offering them one at a
 time. Here, for example, function <code class="docutils literal notranslate"><span class="pre">f_batch(x)</span></code> accepts  an array of integration
@@ -1283,7 +1283,7 @@ term in the sum for every integration point. Rather we can sample the sum,
 using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to do the sampling. The trick is to replace the sum with
 an equivalent integral:</p>
 <div class="math">
-<p><img src="_images/math/9a5394e0df1f463c51e712d0115022a007e92b9e.svg" alt="\sum_{i=0}^{N-1} f(i) = N \int_0^1 dx \; f(\mathrm{floor}(x N))"/></p>
+<p><img src="_images/math/e65ce044b5b0ca6f70b35493e4a0da05e5aea432.svg" alt="\frac{1}{N}\sum_{i=0}^{N-1} f(i) = \int_0^1 dx \; f(\mathrm{floor}(x N))"/></p>
 </div><p>where <img class="math" src="_images/math/114017b7ca9787a241a654b2e85845ef4db6908c.svg" alt="\mathrm{floor}(x)"/> is the largest
 integer smaller than <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/>. The
 resulting integral can then be handed to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>. Using this trick,
@@ -1516,7 +1516,7 @@ that emphasizes the regions around them:</p>
     <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">3</span><span class="o">/</span><span class="mi">50</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">dim</span><span class="p">)),</span>
     <span class="p">])</span>
 <span class="nb">map</span><span class="o">.</span><span class="n">adapt_to_samples</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>       <span class="c1"># precondition map</span>
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="nb">map</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="nb">map</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
@@ -1531,15 +1531,17 @@ points <code class="docutils literal notranslate"><span class="pre">x</span></co
 integrand already in its first iteration:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">0.984</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>       <span class="mf">0.984</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">1.008</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">1.004</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>           <span class="mf">0.64</span>     <span class="mf">0.42</span>
-  <span class="mi">3</span>   <span class="mf">1.002</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">1.0029</span><span class="p">(</span><span class="mi">75</span><span class="p">)</span>          <span class="mf">0.33</span>     <span class="mf">0.72</span>
-  <span class="mi">4</span>   <span class="mf">0.999</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">1.0018</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>          <span class="mf">0.24</span>     <span class="mf">0.87</span>
-  <span class="mi">5</span>   <span class="mf">0.9874</span><span class="p">(</span><span class="mi">96</span><span class="p">)</span>      <span class="mf">0.9975</span><span class="p">(</span><span class="mi">52</span><span class="p">)</span>          <span class="mf">0.58</span>     <span class="mf">0.68</span>
+  <span class="mi">1</span>   <span class="mf">0.981</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>       <span class="mf">0.981</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.983</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">0.9825</span><span class="p">(</span><span class="mi">98</span><span class="p">)</span>          <span class="mf">0.00</span>     <span class="mf">0.96</span>
+  <span class="mi">3</span>   <span class="mf">1.001</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>       <span class="mf">0.9915</span><span class="p">(</span><span class="mi">71</span><span class="p">)</span>          <span class="mf">0.85</span>     <span class="mf">0.43</span>
+  <span class="mi">4</span>   <span class="mf">1.000</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>       <span class="mf">0.9933</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>          <span class="mf">0.67</span>     <span class="mf">0.57</span>
+  <span class="mi">5</span>   <span class="mf">0.993</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">0.9931</span><span class="p">(</span><span class="mi">54</span><span class="p">)</span>          <span class="mf">0.50</span>     <span class="mf">0.74</span>
 
 </pre></div>
 </div>
-<p>This can be contrasted with what happens without preconditioning, where
+<p>We set <code class="docutils literal notranslate"><span class="pre">alpha=0</span></code> in the integrator to prevent
+further changes to the pre-adapted map.</p>
+<p>These results can be contrasted with what happens without preconditioning, where
 the integrator is still far from converged by the fifth iteration:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
@@ -1600,7 +1602,7 @@ integrand in <code class="docutils literal notranslate"><span class="pre">y</spa
 The mapping is done by <code class="docutils literal notranslate"><span class="pre">map.map(y,</span> <span class="pre">x,</span> <span class="pre">jac)</span></code> which fills the arrays
 <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">jac</span></code> with the <code class="docutils literal notranslate"><span class="pre">x</span></code> values and Jacobian corresponding
 to integration points <code class="docutils literal notranslate"><span class="pre">y</span></code>. The result is</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">SMC</span> <span class="o">+</span> <span class="nb">map</span><span class="p">:</span> <span class="mf">1.022</span> <span class="o">+-</span> <span class="mf">0.021</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">SMC</span> <span class="o">+</span> <span class="nb">map</span><span class="p">:</span> <span class="mf">1.013</span> <span class="o">+-</span> <span class="mf">0.020</span>
 <span class="n">SMC</span> <span class="p">(</span><span class="n">no</span> <span class="nb">map</span><span class="p">):</span> <span class="mf">1.703</span> <span class="o">+-</span> <span class="mf">0.535</span>
 </pre></div>
 </div>
@@ -1920,8 +1922,8 @@ easily modified to provide information about the <a class="reference internal" h
 <h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this heading">¶</a></h2>
 <p>This implementation relies upon Cython for its speed and
 numpy for array processing. It also uses <code class="xref py py-mod docutils literal notranslate"><span class="pre">matplotlib</span></code>
-for graphics and <code class="xref py py-mod docutils literal notranslate"><span class="pre">mpi4py</span></code> for MPI support, but graphics
-and MPI are optional.</p>
+for graphics, <code class="xref py py-mod docutils literal notranslate"><span class="pre">h5py</span></code> when <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>, and
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">mpi4py</span></code> for MPI support, but these are all optional.</p>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> also uses the <code class="xref py py-mod docutils literal notranslate"><span class="pre">gvar</span></code> module (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gvar</span></code>).
 Integration results are returned as objects of type
 <code class="xref py py-class docutils literal notranslate"><span class="pre">gvar.GVar</span></code>, which is a class representing Gaussian
@@ -2010,7 +2012,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>

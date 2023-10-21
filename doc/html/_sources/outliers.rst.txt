@@ -50,7 +50,7 @@ over all data points, where the fit function :math:`f(x)`
 is :math:`c_0 + c_1 x`. The second is the same but 
 with the :math:`\sigma_y \to b \sigma_y` for some |~| :math:`b>1`. 
 The relative weights assigned to 
-these two terms are :math:`1-w`` and :math:`w`, respectively.
+these two terms are :math:`1-w` and :math:`w`, respectively.
 
 The following code does a Bayesian fit with this modified PDF::
 

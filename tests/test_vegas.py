@@ -572,7 +572,7 @@ class TestIntegrator(unittest.TestCase):
         self.assertEqual(list(I.nstrat), [5, 5])
         self.assertEqual(I.neval, 234)
     
-        I = Integrator([[0.,1.],[-1.,1.]], max_nhcube=1)
+        I = Integrator([[0.,1.],[-1.,1.]], nstrat=[1,1], neval=1000)
         self.assertEqual(list(I.map.ninc), [100, 100])
         self.assertEqual(list(I.nstrat), [1, 1])
         self.assertEqual(I.neval, 1000)
@@ -599,12 +599,12 @@ class TestIntegrator(unittest.TestCase):
             "    {neval} (approx) integrand evaluations in each of 123 iterations",
             "    number of:  strata/axis = [{nstrat0} {nstrat1}]",
             "                increments/axis = [{ninc0} {ninc1}]",
-            "                h-cubes = {nhcube}  evaluations/h-cube = {min_neval_hcube} (min)",
-            "                h-cubes/batch = 10000  processors = 1",
+            "                h-cubes = {nhcube}  evaluations/h-cube (min) = {min_neval_hcube}",
+            "                evaluations/batch (min) = 50000  processors = 1",
             "    minimize_mem = False",
             "    adapt_to_errors = False",
             "    damping parameters: alpha = {alpha}  beta= {beta}",
-            "    limits: h-cubes < 1e+09  evaluations/h-cube < 1e+06",
+            "    limits: evaluations/h-cube < 1e+06",
             "    accuracy: relative = 0  absolute accuracy = 0",
             "",
             "    axis 0 covers (0.0, 1.0)",
@@ -651,8 +651,7 @@ class TestIntegrator(unittest.TestCase):
             map=AdaptiveMap([[1,2],[0,1]]),
             neval=100,          # number of evaluations per iteration
             maxinc_axis=100,    # number of adaptive-map increments per axis
-            nhcube_batch=10,    # number of h-cubes per batch
-            max_nhcube=5e2,     # max number of h-cubes
+            min_neval_batch=10,    # number of h-cubes per batch
             max_neval_hcube=1e1, # max number of evaluations per h-cube
             max_mem=100,        # memory limit
             nitn=100,           # number of iterations
@@ -696,7 +695,7 @@ class TestIntegrator(unittest.TestCase):
         self.assertEqual(I.min_neval_hcube, 2)
         with self.assertRaises(ValueError):
             I.set(nstrat=[2,3,5])
-        I.set(neval=3500, max_nhcube=500) 
+        I.set(neval=3500) 
         self.assertEqual(list(I.nstrat), [21, 20])
         self.assertEqual(I.min_neval_hcube, 2)
         with self.assertRaises(ValueError):
@@ -705,11 +704,11 @@ class TestIntegrator(unittest.TestCase):
         self.assertEqual(I.neval, 120*8)
         self.assertEqual(I.min_neval_hcube, 2)
         # check alignment of the two grids
-        I.set(neval=3.5e8, max_nhcube=1e9)
+        I.set(neval=3.5e8)
         nstrat = np.array(I.nstrat)
         ninc = np.array(I.map.ninc)
         self.assertTrue(np.all(np.round(nstrat / ninc) * ninc == nstrat))
-        I.set(neval=300, max_nhcube=1e9)
+        I.set(neval=300)
         nstrat = np.array(I.nstrat)
         ninc = np.array(I.map.ninc)
         self.assertTrue(np.all(np.round(ninc / nstrat) * nstrat == ninc))
@@ -870,7 +869,7 @@ class TestIntegrator(unittest.TestCase):
     def test_minimize_mem(self):
         " test minimize_mem=True mode "
         # test 1
-        I = Integrator([[0.,1.],[-1.,1.]], neval=1300, max_nhcube=1, neval_frac=0.75, minimize_mem=True)
+        I = Integrator([[0.,1.],[-1.,1.]], neval=1300, neval_frac=0.75, minimize_mem=True)
         self.assertEqual(list(I.map.ninc), [130, 120])
         self.assertEqual(list(I.nstrat), [13, 12])
         self.assertEqual(I.neval, 1300)
@@ -1183,10 +1182,13 @@ class TestIntegrator(unittest.TestCase):
             return dict(a=1. / np.prod(jac, axis=-1))
         test(f, 'dict')
 
+    @unittest.skipIf(h5py is None,"missing h5py => minimize_mem=True not available")
     def test_mem(self):
         " max_mem "
         def f(x): return np.prod(x)
-        I = Integrator(3 * [(0,1)], max_mem=10)
+        with self.assertRaises(MemoryError):
+            I = Integrator(3 * [(0,1)], max_mem=10)
+        I = Integrator(3 * [(0,1)], max_mem=10, minimize_mem=True)
         with self.assertRaises(MemoryError):
             I(f, neval=1e4)
 

@@ -129,7 +129,7 @@ def plot_results(E0, x0, corr, T):
         plt.plot(x, y, 'r:', label='sho exact')
         plt.legend(frameon=False)
         plt.xlabel('$x$')
-        plt.ylabel('$|\psi(x)|^2$')
+        plt.ylabel(r'$|\psi(x)|^2$')
         plt.text(1.4, 0.475, '$E_0 =$ %s' % E0)
         plt.title("Harmonic Oscillator Wavefunction ** 2 (type 'q' to continue)")
         plt.draw()

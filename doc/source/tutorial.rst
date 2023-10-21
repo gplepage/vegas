@@ -890,9 +890,9 @@ by ::
     print('result = %s   Q = %.2f' % (result, result.Q))
 
 reduces the cost of the integral by an order of magnitude. Internally |vegas|
-processes integration points in batches. (|vegas| parameter ``nhcube_batch``
+processes integration points in batches. (|vegas| parameter ``min_neval_batch``
 determines the number of integration
-points per batch (typically 1000s).) In batch mode,
+points per batch (typically 10,000s).) In batch mode,
 |vegas| presents integration points to the integrand in batches
 rather than offering them one at a
 time. Here, for example, function ``f_batch(x)`` accepts  an array of integration
@@ -1168,7 +1168,7 @@ an equivalent integral:
 
 .. math::
 
-    \sum_{i=0}^{N-1} f(i) = N \int_0^1 dx \; f(\mathrm{floor}(x N))
+    \frac{1}{N}\sum_{i=0}^{N-1} f(i) = \int_0^1 dx \; f(\mathrm{floor}(x N))
 
 where :math:`\mathrm{floor}(x)` is the largest
 integer smaller than :math:`x`. The
@@ -1369,7 +1369,7 @@ that emphasizes the regions around them::
         np.random.normal(loc=0.7, scale=3/50, size=(1000, dim)),
         ])
     map.adapt_to_samples(x, f(x), nitn=5)       # precondition map
-    integ = vegas.Integrator(map, alpha=0.1)
+    integ = vegas.Integrator(map, alpha=0.)
     r = integ(f, neval=1e4, nitn=5)
     print(r.summary())
 
@@ -1384,7 +1384,10 @@ integrand already in its first iteration:
 
 .. literalinclude:: eg5b.out
 
-This can be contrasted with what happens without preconditioning, where 
+We set ``alpha=0`` in the integrator to prevent 
+further changes to the pre-adapted map.
+
+These results can be contrasted with what happens without preconditioning, where 
 the integrator is still far from converged by the fifth iteration:
 
 .. literalinclude:: eg5a.out
@@ -1746,8 +1749,8 @@ Implementation Notes
 ---------------------
 This implementation relies upon Cython for its speed and
 numpy for array processing. It also uses :mod:`matplotlib`
-for graphics and :mod:`mpi4py` for MPI support, but graphics
-and MPI are optional.
+for graphics, :mod:`h5py` when ``minimize_mem=True``, and
+:mod:`mpi4py` for MPI support, but these are all optional.
 
 |vegas| also uses the :mod:`gvar` module (``pip install gvar``).
 Integration results are returned as objects of type

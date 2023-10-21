@@ -70,7 +70,7 @@ test-linking:
 	$(MAKE) -C examples PYTHON=$(PYTHON) test-linking
 
 time:
-	time $(MAKE) -C examples PYTHON=$(PYTHON) PLOT=False run
+	$(MAKE) -C examples time
 
 upload-twine: 
 	twine upload dist/vegas-$(VERSION)*

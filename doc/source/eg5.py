@@ -28,7 +28,7 @@ def main():
         np.random.normal(loc=0.7, scale=3 / 50, size=(1000, dim)),
         ])
     map.adapt_to_samples(x, f, nitn=5)
-    itg = vegas.Integrator(map, alpha=0.1)
+    itg = vegas.Integrator(map, alpha=0.)
     r = itg(f, neval=1e4, nitn=5)
     print(r.summary())
     unlog_stdout()

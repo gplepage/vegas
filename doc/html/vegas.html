@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>vegas Module &#8212; vegas 5.4.3 documentation</title>
+    <title>vegas Module &#8212; vegas 5.5 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -236,38 +236,35 @@ The second argument is the Jacobian <code class="docutils literal notranslate"><
 of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map. The integral over <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> of <code class="docutils literal notranslate"><span class="pre">1/jac[d]</span></code>
 equals 1 (exactly). The default setting
 is <code class="docutils literal notranslate"><span class="pre">uses_jac=False</span></code>.</p></li>
-<li><p><strong>nhcube_batch</strong> (<em>positive int</em>) – The number of hypercubes (in y space)
-whose integration points are combined into a single
-batch to be passed to the integrand, together,
-when using <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> in batch mode.
-The default value is 10,000. Larger values may be
-lead to faster evaluations, but at the cost of
+<li><p><strong>min_neval_batch</strong> (<em>positive int</em>) – The minimum number of integration
+points to be passed together to the integrand when using
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> in batch mode. The default value is 50,000. Larger
+values may be lead to faster evaluations, but at the cost of
 more memory for internal work arrays.</p></li>
+<li><p><strong>max_neval_hcube</strong> (<em>positive int</em>) – Maximum number of integrand
+evaluations per hypercube in the stratification. The default
+value is 50,000. Larger values might allow for more adaptation
+(when <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>), but also allow for more over-shoot when
+adapting to sharp peaks. Larger values also can result in
+large internal work arrasy.</p></li>
+<li><p><strong>minimize_mem</strong> (<em>bool</em>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> minimizes
+internal workspace by moving some of its data to
+a disk file. This increases execution time (slightly)
+and results in temporary files, but might be desirable
+when the number of evaluations is very large (e.g.,
+<code class="docutils literal notranslate"><span class="pre">neval=1e9</span></code>).  <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>
+requires the <code class="docutils literal notranslate"><span class="pre">h5py</span></code> Python module.</p></li>
+<li><p><strong>max_mem</strong> (<em>positive float</em>) – Maximum number of floats allowed in
+internal work arrays (approx.). A <code class="docutils literal notranslate"><span class="pre">MemoryError</span></code> is
+raised if the work arrays are too large, in which case
+one might want to reduce <code class="docutils literal notranslate"><span class="pre">min_neval_batch</span></code> or
+<code class="docutils literal notranslate"><span class="pre">max_neval_hcube</span></code>, or set <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>
+(or increase <code class="docutils literal notranslate"><span class="pre">max_mem</span></code> if there is enough RAM).
+Default value is 1e9.</p></li>
 <li><p><strong>maxinc_axis</strong> (<em>positive int</em>) – The maximum number of increments
 per axis allowed for the x-space grid. The default
 value is 1000; there is probably little need to use
 other values.</p></li>
-<li><p><strong>max_nhcube</strong> (<em>positive int</em>) – Maximum number of y-space hypercubes
-used for stratified sampling. Setting <code class="docutils literal notranslate"><span class="pre">max_nhcube=1</span></code>
-turns stratified sampling off, which is probably never
-a good idea. The default setting (1e9) was chosen to
-correspond to the point where internal work arrays
-become comparable in size to the typical amount of RAM
-available to a processor (in a laptop in 2014).
-Internal memory usage is large only when <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>
-and <code class="docutils literal notranslate"><span class="pre">minimize_mem=False</span></code>; therefore <code class="docutils literal notranslate"><span class="pre">max_nhcube</span></code> is
-ignored if <code class="docutils literal notranslate"><span class="pre">beta=0</span></code> or <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>.</p></li>
-<li><p><strong>max_neval_hcube</strong> (<em>positive int</em>) – Maximum number of integrand
-evaluations per hypercube in the stratification. The default
-value is 1e6. Larger values might allow for more adaptation
-(when <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>), but also can result in large internal
-work arrays.</p></li>
-<li><p><strong>max_mem</strong> (<em>positive float</em>) – Maximum number of floats allowed in
-internal work arrays (approx.). A <code class="docutils literal notranslate"><span class="pre">MemoryError</span></code> is
-raised if the work arrays are too large, in which case
-one might want to reduce <code class="docutils literal notranslate"><span class="pre">max_neval_hcube</span></code> or
-<code class="docutils literal notranslate"><span class="pre">max_nhcube</span></code> (or increase <code class="docutils literal notranslate"><span class="pre">max_mem</span></code> if there is
-enough RAM). Default value is 1e9.</p></li>
 <li><p><strong>rtol</strong> (<em>float</em>) – Relative error in the integral estimate
 at which point the integrator can stop. The default
 value is 0.0 which turns off this stopping condition.
@@ -290,7 +287,7 @@ is <code class="docutils literal notranslate"><span class="pre">numpy.random.ran
 number generator is synchronized across all processors when
 using MPI. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> does no synchronization
 (but the random numbers should synchronized some other
-way).</p></li>
+way). Ignored if not using MPI.</p></li>
 <li><p><strong>adapt_to_errors</strong> (<em>bool</em>) – <p><code class="docutils literal notranslate"><span class="pre">adapt_to_errors=False</span></code> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to remap the
 integration variables to emphasize regions where <code class="docutils literal notranslate"><span class="pre">|f(x)|</span></code>
 is largest. This is the default mode.</p>
@@ -306,26 +303,11 @@ useful only in one or two dimensions.</p>
 the algorithm maximizes the number of stratifications while
 requiring <code class="docutils literal notranslate"><span class="pre">|nstrat[d1]</span> <span class="pre">-</span> <span class="pre">nstrat[d2]|</span> <span class="pre">&lt;=</span> <span class="pre">1</span></code>. This parameter
 is ignored if <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> is specified explicitly.</p></li>
-<li><p><strong>mpi</strong> (<em>bool</em>) – Setting <code class="docutils literal notranslate"><span class="pre">mpi=False</span></code> disables <code class="docutils literal notranslate"><span class="pre">mpi</span></code> support in
+<li><p><strong>mpi</strong> – Setting <code class="docutils literal notranslate"><span class="pre">mpi=False</span></code> disables <code class="docutils literal notranslate"><span class="pre">mpi</span></code> support in
 <code class="docutils literal notranslate"><span class="pre">vegas</span></code> even if <code class="docutils literal notranslate"><span class="pre">mpi</span></code> is available; setting <code class="docutils literal notranslate"><span class="pre">mpi=True</span></code>
 (default) allows use of <code class="docutils literal notranslate"><span class="pre">mpi</span></code> provided module <code class="xref py py-mod docutils literal notranslate"><span class="pre">mpi4py</span></code>
 is installed. This flag is ignored when <code class="docutils literal notranslate"><span class="pre">mpi</span></code> is not
 being used (and so has no impact on performance).</p></li>
-<li><p><strong>minimize_mem</strong> – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> minimizes
-internal workspace at the cost of extra evaluations of
-the integrand. This can increase execution time by
-50–100% but might be desirable when the number of
-evaluations is very large (e.g., <code class="docutils literal notranslate"><span class="pre">neval=1e9</span></code>). Normally
-<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> uses internal work space that grows in
-proportion to <code class="docutils literal notranslate"><span class="pre">neval</span></code>. If that work space exceeds
-the size of the RAM available to the processor,
-<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> runs much more slowly. Setting <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>
-greatly reduces the internal storage used by <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>; in
-particular memory becomes independent of <code class="docutils literal notranslate"><span class="pre">neval</span></code>. The default
-setting (<code class="docutils literal notranslate"><span class="pre">minimize_mem=False</span></code>), however, is much superior
-unless memory becomes a problem. (The large memory is needed
-for adaptive stratified sampling, so memory is not
-an issue if <code class="docutils literal notranslate"><span class="pre">beta=0</span></code>.)</p></li>
 </ul>
 </dd>
 </dl>
@@ -372,7 +354,7 @@ be, for example:</p>
 points in batches. The array <code class="docutils literal notranslate"><span class="pre">x[i,</span> <span class="pre">d]</span></code>
 represents a collection of different integration
 points labeled by <code class="docutils literal notranslate"><span class="pre">i=0...</span></code>. (The number of points is controlled
-<a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a> parameter <code class="docutils literal notranslate"><span class="pre">nhcube_batch</span></code>.) The batch index
+<a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a> parameter <code class="docutils literal notranslate"><span class="pre">min_neval_batch</span></code>.) The batch index
 is always first.</p>
 <p>Batch integrands can also be constructed from classes
 derived from <a class="reference internal" href="#vegas.BatchIntegrand" title="vegas.BatchIntegrand"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.BatchIntegrand</span></code></a>.</p>
@@ -1609,7 +1591,7 @@ specified (or is <code class="docutils literal notranslate"><span class="pre">No
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.4.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>

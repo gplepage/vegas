@@ -642,14 +642,14 @@ cdef class AdaptiveMap:
                 if dy is not None and (dy < 0 or dy >= dim):
                     raise ValueError('bad directions: %s' % str((dx, dy)))
         fig = plt.figure()
-        def plotdata(idx, grid=numpy.asarray(self.grid)):
+        def plotdata(idx, grid=numpy.asarray(self.grid), ninc=numpy.asarray(self.ninc), axes=axes):
             dx, dy = axes[idx[0]]
             if dx is not None:
-                nskip = int(self.ninc[dx] // ngrid)
+                nskip = int(ninc[dx] // ngrid)
                 if nskip < 1:
                     nskip = 1
                 start = nskip // 2
-                xrange = [self.grid[dx, 0], self.grid[dx, self.ninc[dx]]]
+                xrange = [grid[dx, 0], grid[dx, ninc[dx]]]
                 xgrid = grid[dx, start::nskip]
                 xlabel = 'x[%d]' % dx
             else:
@@ -657,11 +657,11 @@ cdef class AdaptiveMap:
                 xgrid = None
                 xlabel = ''
             if dy is not None:
-                nskip = int(self.ninc[dy] // ngrid)
+                nskip = int(ninc[dy] // ngrid)
                 if nskip < 1:
                     nskip = 1
                 start = nskip // 2
-                yrange = [self.grid[dy, 0], self.grid[dy, self.ninc[dy]]]
+                yrange = [grid[dy, 0], grid[dy, ninc[dy]]]
                 ygrid = grid[dy, start::nskip]
                 ylabel = 'x[%d]' % dy
             else:
@@ -783,7 +783,7 @@ cdef class AdaptiveMap:
         if fx.shape[0] != x.shape[0]:
             raise ValueError('shape of x and f(x) mismatch: {} vs {}'.format(x.shape, fx.shape))
         old_ninc = max(max(self.ninc), Integrator.defaults['maxinc_axis'])
-        tmp_ninc = type(tmp_ninc)(min(old_ninc, x.shape[0] / 10.))
+        tmp_ninc = type(old_ninc)(min(old_ninc, x.shape[0] / 10.))
         if tmp_ninc < 2:
             raise ValueError('not enough samples: {}'.format(x.shape[0]))
         y = numpy.empty(x.shape, float)
@@ -991,38 +991,35 @@ cdef class Integrator(object):
             of the |vegas| map. The integral over ``x[d]`` of ``1/jac[d]``
             equals 1 (exactly). The default setting 
             is ``uses_jac=False``.
-        nhcube_batch (positive int): The number of hypercubes (in |y| space)
-            whose integration points are combined into a single
-            batch to be passed to the integrand, together,
-            when using |vegas| in batch mode.
-            The default value is 10,000. Larger values may be
-            lead to faster evaluations, but at the cost of
+        min_neval_batch (positive int): The minimum number of integration 
+            points to be passed together to the integrand when using
+            |vegas| in batch mode. The default value is 50,000. Larger 
+            values may be lead to faster evaluations, but at the cost of
             more memory for internal work arrays.
+        max_neval_hcube (positive int): Maximum number of integrand
+            evaluations per hypercube in the stratification. The default
+            value is 50,000. Larger values might allow for more adaptation
+            (when ``beta>0``), but also allow for more over-shoot when 
+            adapting to sharp peaks. Larger values also can result in 
+            large internal work arrasy.
+        minimize_mem (bool): When ``True``, |vegas| minimizes
+            internal workspace by moving some of its data to 
+            a disk file. This increases execution time (slightly)
+            and results in temporary files, but might be desirable 
+            when the number of evaluations is very large (e.g., 
+            ``neval=1e9``).  ``minimize_mem=True`` 
+            requires the ``h5py`` Python module.
+        max_mem (positive float): Maximum number of floats allowed in 
+            internal work arrays (approx.). A ``MemoryError`` is 
+            raised if the work arrays are too large, in which case
+            one might want to reduce ``min_neval_batch`` or
+            ``max_neval_hcube``, or set ``minimize_mem=True`` 
+            (or increase ``max_mem`` if there is enough RAM).
+            Default value is 1e9.
         maxinc_axis (positive int): The maximum number of increments
             per axis allowed for the |x|-space grid. The default
             value is 1000; there is probably little need to use
             other values.
-        max_nhcube (positive int): Maximum number of |y|-space hypercubes
-            used for stratified sampling. Setting ``max_nhcube=1``
-            turns stratified sampling off, which is probably never
-            a good idea. The default setting (1e9) was chosen to
-            correspond to the point where internal work arrays
-            become comparable in size to the typical amount of RAM
-            available to a processor (in a laptop in 2014).
-            Internal memory usage is large only when ``beta>0``
-            and ``minimize_mem=False``; therefore ``max_nhcube`` is
-            ignored if ``beta=0`` or ``minimize_mem=True``.
-        max_neval_hcube (positive int): Maximum number of integrand
-            evaluations per hypercube in the stratification. The default
-            value is 1e6. Larger values might allow for more adaptation
-            (when ``beta>0``), but also can result in large internal
-            work arrays.
-        max_mem (positive float): Maximum number of floats allowed in 
-            internal work arrays (approx.). A ``MemoryError`` is 
-            raised if the work arrays are too large, in which case
-            one might want to reduce ``max_neval_hcube`` or 
-            ``max_nhcube`` (or increase ``max_mem`` if there is 
-            enough RAM). Default value is 1e9.
         rtol (float): Relative error in the integral estimate
             at which point the integrator can stop. The default
             value is 0.0 which turns off this stopping condition.
@@ -1045,7 +1042,7 @@ cdef class Integrator(object):
             number generator is synchronized across all processors when
             using MPI. If ``False``, |vegas| does no synchronization
             (but the random numbers should synchronized some other
-            way). 
+            way). Ignored if not using MPI.
         adapt_to_errors (bool): 
             ``adapt_to_errors=False`` causes |vegas| to remap the 
             integration variables to emphasize regions where ``|f(x)|`` 
@@ -1067,43 +1064,32 @@ cdef class Integrator(object):
             (default) allows use of ``mpi`` provided module :mod:`mpi4py`
             is installed. This flag is ignored when ``mpi`` is not 
             being used (and so has no impact on performance).
-        minimize_mem (bool): When ``True``, |vegas| minimizes
-            internal workspace by moving some of its data to 
-            a disk file. This increases execution time (slightly)
-            and results in temporary files, but might be desirable 
-            when the number of evaluations is very large (e.g., 
-            ``neval=1e9``).  (The large memory is needed
-            for adaptive stratified sampling, so memory is not
-            an issue if ``beta=0``.) ``minimize_mem=True`` 
-            requires the ``h5py`` Python module.
     """
 
     # Settings accessible via the constructor and Integrator.set
     defaults = dict(
-        map=None,
-        neval=1000,         # number of evaluations per iteration
-        maxinc_axis=1000,   # number of adaptive-map increments per axis
-        nhcube_batch=10000, # number of h-cubes per batch
-        # neval_batch=20000,  # (approx) number of evaluations per batch
-        max_nhcube=1e9,     # max number of h-cubes
-        max_neval_hcube=1e6,# max number of evaluations per h-cube
-        neval_frac=0.75,    # fraction of evaluations used for adaptive stratified sampling
-        max_mem=1e9,        # memory cutoff (# of floats)
-        nitn=10,            # number of iterations
-        alpha=0.5,
-        beta=0.75,
-        adapt=True,
-        minimize_mem=False,
-        adapt_to_errors=False,
-        uniform_nstrat=False,
-        rtol=0,
-        atol=0,
-        analyzer=None,
-        ran_array_generator=numpy.random.random,
-        sync_ran=True,
-        mpi=True,
-        uses_jac=False,
-        nproc=1,
+        map=None,               # integration region, AdaptiveMap, or Integrator
+        neval=1000,             # number of evaluations per iteration
+        maxinc_axis=1000,       # number of adaptive-map increments per axis
+        min_neval_batch=50000,  # min. number of evaluations per batch
+        max_neval_hcube=50000,  # max number of evaluations per h-cube
+        neval_frac=0.75,        # fraction of evaluations used for adaptive stratified sampling
+        max_mem=1e9,            # memory cutoff (# of floats)
+        nitn=10,                # number of iterations
+        alpha=0.5,              # damping parameter for importance sampling
+        beta=0.75,              # damping parameter for stratified sampliing
+        adapt=True,             # flag to turn adaptation on or off
+        minimize_mem=False,     # minimize work memory (when neval very large)?
+        adapt_to_errors=False,  # alternative approach to stratified sampling (low dim)?
+        uniform_nstrat=False,   # require same nstrat[d] for all directions d? 
+        rtol=0,                 # relative error tolerance
+        atol=0,                 # absolute error tolerance
+        analyzer=None,          # analyzes results from each iteration
+        ran_array_generator=numpy.random.random, # random number generator
+        sync_ran=True,          # synchronize random generators across MPI processes?
+        mpi=True,               # allow MPI?
+        uses_jac=False,         # return Jacobian to integrand?
+        nproc=1,                # number of processors to use
         )
 
     def __init__(Integrator self not None, map, **kargs):
@@ -1231,8 +1217,9 @@ cdef class Integrator(object):
                     setattr(self, k, kargs[k])
                 except:
                     setattr(self, k, type(old_val[k])(kargs[k]))
-            else:
-                raise AttributeError('no attribute named "%s"' % str(k))
+            elif k not in ['nhcube_batch', 'max_nhcube']:
+                # ignore legacy parameters, but raise error for others
+                raise AttributeError('no parameter named "%s"' % str(k))
         
         # 2) sanity checks
         if nstrat is not None:
@@ -1259,7 +1246,7 @@ cdef class Integrator(object):
                 self.neval = type(self.neval)(2. * nhcube / (1. - neval_frac))
             elif self.neval < 2. * nhcube / (1. - neval_frac):
                 raise ValueError('neval too small: {} < {}'.format(self.neval, 2. * nhcube / (1. - neval_frac)))
-        elif 'neval' in old_val or 'neval_frac' in old_val or 'max_nhcube' in old_val:
+        elif 'neval' in old_val or 'neval_frac' in old_val:                               ##### or 'max_nhcube' in old_val:
             # determine stratification from neval,neval_frac if either was specified
             ns = int(abs((1 - neval_frac) * self.neval / 2.) ** (1. / self.dim)) # stratifications / axis
             if ns < 1:
@@ -1268,12 +1255,13 @@ cdef class Integrator(object):
                 (numpy.log((1 - neval_frac) * self.neval / 2.) - self.dim * numpy.log(ns))
                 / numpy.log(1 + 1. / ns)
                 )
-            if ((ns + 1)**d * ns**(self.dim-d)) > self.max_nhcube and not self.minimize_mem:
-                ns = int(abs(self.max_nhcube) ** abs(1. / self.dim))
-                d = int(
-                    (numpy.log(self.max_nhcube) - self.dim * numpy.log(ns))
-                    / numpy.log(1 + 1. / ns)
-                    )
+            if ((ns + 1)**d * ns**(self.dim-d)) > self.max_mem and not self.minimize_mem:
+                raise MemoryError("work arrays larger than max_mem; set minimize_mem=True (and install h5py module) or increase max_mem")
+                # ns = int(abs(self.max_nhcube) ** abs(1. / self.dim))
+                # d = int(
+                #     (numpy.log(self.max_nhcube) - self.dim * numpy.log(ns))
+                #     / numpy.log(1 + 1. / ns)
+                #     )
             if self.uniform_nstrat:
                 d = 0
             nstrat = numpy.empty(self.dim, numpy.intp)    
@@ -1326,7 +1314,7 @@ cdef class Integrator(object):
         # iterations, thereby minimizing the amount of allocating
         # that goes on
 
-        neval_batch = self.nhcube_batch * avg_neval_hcube
+        # neval_batch = self.nhcube_batch * avg_neval_hcube
         nsigf = self.nhcube
         if self.beta > 0 and self.nhcube > 1 and not self.adapt_to_errors and len(self.sigf) != nsigf:
             # set up sigf
@@ -1338,16 +1326,16 @@ cdef class Integrator(object):
                     import h5py
                 except ImportError:
                     raise ValueError("Install the h5py Python module in order to use minimize_mem=True")
-                self.sigf_h5 = h5py.File(tempfile.mkstemp(dir='.')[1], 'a')
+                self.sigf_h5 = h5py.File(tempfile.mkstemp(dir='.', prefix='vegastmp_')[1], 'a')
                 self.sigf_h5.create_dataset('sigf', shape=(nsigf,), dtype=float, chunks=True, fillvalue=1.)
                 self.sigf = self.sigf_h5['sigf']
             self.sum_sigf = nsigf 
-        self.neval_hcube = numpy.empty(neval_batch // 2 + 1, dtype=numpy.intp)
+        self.neval_hcube = numpy.empty(self.min_neval_batch // 2 + 1, dtype=numpy.intp) 
         self.neval_hcube[:] = avg_neval_hcube
-        self.y = numpy.empty((neval_batch, self.dim), numpy.float_)
-        self.x = numpy.empty((neval_batch, self.dim), numpy.float_)
-        self.jac = numpy.empty(neval_batch, numpy.float_)
-        self.fdv2 = numpy.empty(neval_batch, numpy.float_)
+        self.y = numpy.empty((self.min_neval_batch, self.dim), numpy.float_)
+        self.x = numpy.empty((self.min_neval_batch, self.dim), numpy.float_)
+        self.jac = numpy.empty(self.min_neval_batch, numpy.float_)
+        self.fdv2 = numpy.empty(self.min_neval_batch, numpy.float_)
         return old_val
 
     def settings(Integrator self not None, ngrid=0):
@@ -1375,53 +1363,45 @@ cdef class Integrator(object):
                 % (neval, self.nitn)
                 )
         ans = ans + (
-            "    number of:  strata/axis = %s\n" % str(numpy.array(self.nstrat))
+            "    number of: strata/axis = %s\n" % str(numpy.array(self.nstrat))
             )
         ans = ans + (
-            "                increments/axis = %s\n" 
+            "               increments/axis = %s\n" 
             % str(numpy.asarray(self.map.ninc))
             )
-        if self.beta > 0 and not self.adapt_to_errors:
-            ans = ans + (
-                "                h-cubes = %.6g  evaluations/h-cube = %d (min)\n"
-                % (nhcube, self.min_neval_hcube)
-                )
-        else:
-            ans = ans + (
-                    "                h-cubes = %.6g evaluations/h-cube = %d\n"
-                    % (nhcube, self.min_neval_hcube)
-                    )
-        ans += "                h-cubes/batch = %d  processors = %d\n" % (self.nhcube_batch, self.nproc)
         ans = ans + (
-            "    minimize_mem = %s\n"
-            % ('True' if self.minimize_mem else 'False')
+            "               h-cubes = %.6g  processors = %d\n"
+            % (nhcube, self.nproc)
+            )
+        max_neval_hcube = max(self.max_neval_hcube, self.min_neval_hcube)
+        ans = ans + (
+            "               evaluations/batch >= %.2g\n"
+            % (min(float(self.min_neval_batch), float(self.neval)))
             )
         ans = ans + (
-            "    adapt_to_errors = %s\n"
-            % ('True' if self.adapt_to_errors else 'False')
+            "               %d <= evaluations/h-cube <= %.2g\n"
+            % (int(self.min_neval_hcube), float(max_neval_hcube))
             )
+        ans = ans + (
+            "    minimize_mem = %s  adapt_to_errors = %s  adapt = %s\n"
+            % (str(self.minimize_mem), str(self.adapt_to_errors), str(self.adapt))
+            )
+        ans = ans + ("    accuracy: relative = %g  absolute = %g\n" % (self.rtol, self.atol))
         if not self.adapt:
             ans = ans + (
-                "    damping parameters: alpha = %g  beta= %g\n"
+                "    damping: alpha = %g  beta= %g\n\n"
                 % (0., 0.)
                 )
         elif self.adapt_to_errors:
             ans = ans + (
-                "    damping parameters: alpha = %g  beta= %g\n"
+                "    damping: alpha = %g  beta= %g\n\n"
                 % (self.alpha, 0.) 
                 )
         else:
             ans = ans + (
-                "    damping parameters: alpha = %g  beta= %g\n"
+                "    damping: alpha = %g  beta= %g\n\n"
                 % (self.alpha, self.beta)
                 )
-        max_neval_hcube = max(self.max_neval_hcube, self.min_neval_hcube)
-        ans += (
-            "    limits: h-cubes < %.2g  evaluations/h-cube < %.2g\n"
-            % (float(self.max_nhcube), float(max_neval_hcube))
-            )
-        ans = ans + ("    accuracy: relative = %g" % self.rtol)
-        ans = ans + ("  absolute accuracy = %g\n\n" % self.atol)
         for d in range(self.dim):
             ans = ans + (
                 "    axis %d covers %s\n" % (d, str(self.map.region(d)))
@@ -1473,8 +1453,8 @@ cdef class Integrator(object):
         """
         cdef numpy.npy_intp nhcube = numpy.prod(self.nstrat)
         cdef double dv_y = 1. / nhcube
-        cdef numpy.npy_intp nhcube_batch = min(self.nhcube_batch, nhcube)
-        cdef numpy.npy_intp neval_batch
+        # cdef numpy.npy_intp min_neval_batch                         #= min(self.min_neval_batch, nhcube)
+        cdef numpy.npy_intp neval_batch                          # self.neval_batch
         cdef numpy.npy_intp hcube_base
         cdef numpy.npy_intp i_start, ihcube, i, d, tmp_hcube, hcube
         cdef numpy.npy_intp[::1] hcube_array
@@ -1484,8 +1464,8 @@ cdef class Integrator(object):
             else 0.0    # use min_neval_hcube
             )
         cdef numpy.npy_intp avg_neval_hcube = int(self.neval / self.nhcube) 
-        cdef numpy.npy_intp min_neval_batch = nhcube_batch * avg_neval_hcube   ####
-        cdef numpy.npy_intp max_nhcube_batch = min_neval_batch // 2 + 1 ####
+        cdef numpy.npy_intp min_neval_batch = self.min_neval_batch                # min_neval_batch * avg_neval_hcube   ####
+        cdef numpy.npy_intp max_nhcube_batch = min_neval_batch // 2 + 1       ####
         cdef numpy.npy_intp[::1] neval_hcube = self.neval_hcube
         cdef numpy.npy_intp[::1] y0 = numpy.empty(self.dim, numpy.intp)
         cdef numpy.npy_intp max_neval_hcube = max(
@@ -1504,9 +1484,9 @@ cdef class Integrator(object):
         if adaptive_strat and self.minimize_mem and not self.adapt:
             # can't minimize_mem without also adapting, so force beta=0
             neval_sigf = 0.0
-        # for hcube_base in range(0, nhcube, nhcube_batch):
-        #     if (hcube_base + nhcube_batch) > nhcube:
-        #         nhcube_batch = nhcube - hcube_base
+        # for hcube_base in range(0, nhcube, min_neval_batch):
+        #     if (hcube_base + min_neval_batch) > nhcube:
+        #         min_neval_batch = nhcube - hcube_base
         neval_batch = 0
         hcube_base = 0
         sigf = self.sigf[hcube_base:hcube_base + max_nhcube_batch]
@@ -1534,7 +1514,7 @@ cdef class Integrator(object):
             self.last_neval += neval_batch
             nhcube_batch = hcube - hcube_base + 1
             if (3*self.dim + 3) * neval_batch * 2 > self.max_mem:
-                raise MemoryError('work arrays too large; reduce max_neval_hcube or nhcube_batch (or increase max_mem)')
+                raise MemoryError('work arrays larger than max_mem; reduce min_neval_batch or max_neval_hcube (or increase max_mem)')
 
             # 1) resize work arrays if needed (to double what is needed)
             if neval_batch > self.y.shape[0]:
@@ -1697,7 +1677,7 @@ cdef class Integrator(object):
         points in batches. The array ``x[i, d]``
         represents a collection of different integration
         points labeled by ``i=0...``. (The number of points is controlled
-        |Integrator| parameter ``nhcube_batch``.) The batch index
+        |Integrator| parameter ``min_neval_batch``.) The batch index
         is always first.
 
         Batch integrands can also be constructed from classes
@@ -1759,7 +1739,7 @@ cdef class Integrator(object):
         if kargs:
             self.set(kargs)
         if self.nproc > 1:
-            old_defaults = self.set(mpi=False, nhcube_batch=self.nproc * self.nhcube_batch)
+            old_defaults = self.set(mpi=False, min_neval_batch=self.nproc * self.min_neval_batch)
         elif self.mpi:
             pass
 
@@ -1812,13 +1792,13 @@ cdef class Integrator(object):
                         jac = self.map.jac1d(y)
                         results = self.pool.starmap(
                             fcn.eval,
-                            [(x[i*nx : (i+1)*nx], jac[i*nx : (i+1)*nx]) for i in range(self.nproc)],
+                            [(x[i*nx : (i+1)*nx], jac[i*nx : (i+1)*nx]) for i in range(self.nproc) if i*nx < x.shape[0]],
                             1,
                             )
                     else:
                         results = self.pool.starmap(
                             fcn.eval,
-                            [(x[i*nx : (i+1)*nx], None) for i in range(self.nproc)],
+                            [(x[i*nx : (i+1)*nx], None) for i in range(self.nproc) if i*nx < x.shape[0]],
                             1,
                             )
                     fx = numpy.concatenate(results, axis=0)
