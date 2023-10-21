@@ -31,7 +31,7 @@ from vegas import *
 
 class TestAdaptiveMap(unittest.TestCase):
     def setUp(self):
-        pass
+        gv.ranseed(123)
 
     def tearDown(self):
         pass
@@ -208,7 +208,7 @@ class TestAdaptiveMap(unittest.TestCase):
        
 class TestRAvg(unittest.TestCase):
     def setUp(self):
-        pass
+        gv.ranseed(123)
 
     def tearDown(self):
         pass
@@ -551,7 +551,7 @@ class TestRAvg(unittest.TestCase):
         
 class TestIntegrator(unittest.TestCase):
     def setUp(self):
-        pass
+        gv.ranseed(123)
 
     def tearDown(self):
         pass
