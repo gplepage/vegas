@@ -1,4 +1,4 @@
-Version 5.5 2023-10-15
+Version 5.5 2023-10-21
 ========================
 Significantly improves handling of memory for internal work arrays. These 
 allocations are controlled by three parameters: min_neval_batch (new),
