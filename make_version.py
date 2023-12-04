@@ -13,7 +13,7 @@ with open('setup.cfg', 'r') as ifile:
     for line in ifile.readlines():
         m = pattern.match(line[:-1])
         if m is not None:
-            version = f'{m.group(1)}'
+            version = str(m.group(1))
             break
     else:
         print('failed to find version number')
@@ -21,6 +21,6 @@ with open('setup.cfg', 'r') as ifile:
 
 # create version file
 with open(outputfile, 'w') as ofile:
-    ofile.write(f"__version__ = '{version}'\n")
-    print(f'created {outputfile} with __version__ = {version}')
+    ofile.write("__version__ = '{}'\n".format(version))
+    print('created {} with __version__ = {}'.format(outputfile, version))
     

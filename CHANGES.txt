@@ -1,6 +1,6 @@
-Version 5.5.1 2023-12-??
+Version 5.5.1 2023-12-04
 =========================
-- New setup for the default random number generator, to deal with
+- New default random number generator, to deal with
   changes in numpy version >=1.17. Now tied explicitly to gvar's 
   random number generator (which is from numpy).
 
