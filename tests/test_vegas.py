@@ -1432,7 +1432,7 @@ class test_PDFIntegrator(unittest.TestCase):
             return p[0] + p[1]
         gv.ranseed(1)
         r = gev(f, nitn=2)
-        self.assertTrue(abs(r.mean - sum(g).mean) < 5 * r.sdev)
+        self.assertLess(abs(r.mean - sum(g).mean), 5 * r.sdev)
 
     def test_limit_scale(self):
         " integrator(...,limit=..,scale=..) "
@@ -1440,20 +1440,20 @@ class test_PDFIntegrator(unittest.TestCase):
         for scale in [1., 2.]:
             integ = PDFIntegrator(g, limit=1., scale=scale)
             norm = integ(neval=1000, nitn=5).pdfnorm
-            self.assertTrue(
-                abs(norm.mean - 0.682689492137) < 5 * norm.sdev
+            self.assertLess(
+                abs(norm.mean - 0.682689492137), 5 * norm.sdev
                 )
             integ = PDFIntegrator(g, limit=2., scale=scale)
             norm = integ(neval=1000, nitn=5).pdfnorm
-            self.assertTrue(
-                abs(norm.mean - 0.954499736104) < 5 * norm.sdev
+            self.assertLess(
+                abs(norm.mean - 0.954499736104), 5 * norm.sdev
                 )
 
     def test_no_f(self):
         for g in [gv.gvar(1,1), gv.gvar([2*['1(1)']]), gv.gvar(dict(a='1(1)', b=[2*['2(2)']]))]:
             gev = PDFIntegrator(g)
             norm = gev(nitn=1).pdfnorm 
-            self.assertTrue(abs(norm.mean-1) < 5 * norm.sdev)
+            self.assertLess(abs(norm.mean-1), 5 * norm.sdev)
 
     def test_histogram(self):
         x = gv.gvar([5., 3.], [[4., 0.2], [0.2, 1.]])
@@ -1465,11 +1465,11 @@ class test_PDFIntegrator(unittest.TestCase):
             return hist.count(x[0] + x[1])
         r = integ(fhist, neval=1000, nitn=5, adapt=False)
         bins, prob, stat, norm = hist.analyze(r)
-        self.assertTrue(abs(gv.mean(np.sum(prob)) - 1.) < 5. * gv.sdev(np.sum(prob)))
-        self.assertTrue(abs(stat.mean.mean - xsum.mean) < 5. * stat.mean.sdev)
-        self.assertTrue(abs(stat.sdev.mean - xsum.sdev) < 5. * stat.sdev.sdev)
-        self.assertTrue(abs(stat.skew.mean) < 5. * stat.skew.sdev)
-        self.assertTrue(abs(stat.ex_kurt.mean) < 5. * stat.ex_kurt.sdev)
+        self.assertLess(abs(gv.mean(np.sum(prob)) - 1.), 5. * gv.sdev(np.sum(prob)))
+        self.assertLess(abs(stat.mean.mean - xsum.mean), 5. * stat.mean.sdev)
+        self.assertLess(abs(stat.sdev.mean - xsum.sdev), 5. * stat.sdev.sdev)
+        self.assertLess(abs(stat.skew.mean), 5. * stat.skew.sdev)
+        self.assertLess(abs(stat.ex_kurt.mean), 5. * stat.ex_kurt.sdev)
 
     def test_ravg(self): 
         @rbatchintegrand
