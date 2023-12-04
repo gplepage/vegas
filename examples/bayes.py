@@ -4,6 +4,12 @@ import numpy as np
 import gvar as gv
 import lsqfit
 import vegas
+import sys
+
+if sys.argv[1:]:
+    NPROC = eval(sys.argv[1])   # number of processors
+else:
+    NPROC = 8
 
 numpy = np
 
@@ -15,9 +21,9 @@ USE_FIT = False
 W_SHAPE = 19
 W_SHAPE = ()
 
-gv.ranseed(1)
 
 def main():
+    print('NPROC =', NPROC)
     x = np.array([
         0.2, 0.4, 0.6, 0.8, 1.,
         1.2, 1.4, 1.6, 1.8, 2.,
@@ -39,9 +45,9 @@ def main():
     # nproc=8 makes things go only a little bit faster
     if USE_FIT:
         fit = lsqfit.nonlinear_fit(data=(x,y), prior=prior, fcn=fitfcn)
-        expval = vegas.PDFIntegrator(fit.p, pdf=mod_pdf, nproc=8)
+        expval = vegas.PDFIntegrator(fit.p, pdf=mod_pdf, nproc=NPROC)
     else:
-        expval = vegas.PDFIntegrator(prior, pdf=mod_pdf, nproc=8)
+        expval = vegas.PDFIntegrator(prior, pdf=mod_pdf, nproc=NPROC)
 
     # adapt integrator to pdf
     nitn = 10
@@ -184,4 +190,5 @@ def make_plot(data, prior, c):
     plt.show()
 
 if __name__ == '__main__':
+    gv.ranseed(1)
     main()

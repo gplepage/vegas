@@ -7,7 +7,8 @@ if sys.argv[1:]:
 else:
     NPROC = 1
 
-np.random.seed((1,3))   # causes reproducible random numbers
+import gvar as gv 
+gv.ranseed((1, 2, 4))
 
 def ridge(x):
     N = 1000
@@ -28,6 +29,7 @@ def main():
     # print from only one process if using MPI
     if integ.mpi_rank == 0:
         print('result =', result, '    Q = {:.2f}'.format(result.Q))
+        print(result.summary())
 
 if __name__ == '__main__':
     main()

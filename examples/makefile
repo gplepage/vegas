@@ -41,10 +41,9 @@ run:
 	$(PYTHON) ridge.py 8 > ridge.tmp
 	- diff -w ridge.out ridge.tmp
 	# mpi test
-	- mpirun -np 2 -outfile-pattern=ridge.tmp.%r $(PYTHON)  ridge.py
-	- mpirun -np 2 $(PYTHON)  ridge.py
-	- diff -w ridge.out ridge.tmp.0
-	- diff -w ridge.out ridge.tmp.1
+	# - mpirun -np 2 -outfile-pattern=mpi-ridge.tmp.%r $(PYTHON)  ridge.py
+	- mpirun -np 8 $(PYTHON)  ridge.py > mpi-ridge.tmp
+	- diff -w ridge.out mpi-ridge.tmp
 
 _time:
 	$(PYTHON) simple.py $(PLOT) > simple.tmp

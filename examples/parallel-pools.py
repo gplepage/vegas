@@ -5,6 +5,7 @@ N.B. nproc>1 slows things down here because integrand not sufficiently costly.
 """
 import numpy as np
 import vegas
+import gvar as gv 
 numpy = np
 
 DIM = 3
@@ -112,10 +113,12 @@ def fr_jac(x, jac):
 
 def main():
     # seed the random number generator so results reproducible
-    np.random.seed((1, 2))
+
+    gv.ranseed((1, 2, 3))   # causes reproducible random numbers
+    np.random.seed(1)
 
     # adapt integrator using adapt_to_samples
-    integ = vegas.Integrator(DIM * [[0, 1]], nhcube_batch=10000, nproc=NPROC)
+    integ = vegas.Integrator(DIM * [[0, 1]], nhcube_batch=10000, sync_ran=False, nproc=NPROC)
     xs = fl_samples()
     integ.map.adapt_to_samples(xs, fl(xs), nitn=5, nproc=NPROC)
     # integ.map.show_grid(30)

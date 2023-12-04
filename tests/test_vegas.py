@@ -1399,7 +1399,7 @@ class test_PDFIntegrator(unittest.TestCase):
         self.assertTrue(abs(r.mean - sum(g['b']).mean) < 5 * r.sdev)
 
     def test_change_pdf(self):
-        gv.ranseed(123)
+        gv.ranseed(1234)
         g = gv.gvar(1, 2)
         gev = PDFIntegrator(g, alpha=0, beta=0)
         # shift peak
@@ -1411,7 +1411,7 @@ class test_PDFIntegrator(unittest.TestCase):
         r = gev(f, pdf=pdf, nitn=2, adapt=True)
         self.assertTrue(abs(r[0].mean - g.mean - 0.5 * g.sdev) < 5 * r[0].sdev)
 
-        gv.ranseed(123)
+        gv.ranseed(1234)
         g = gv.gvar(1, 2)
         gev = PDFIntegrator(g, alpha=0, beta=0)
         # shift peak

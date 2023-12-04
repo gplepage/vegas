@@ -10,8 +10,9 @@ from __future__ import print_function   # makes this work for python2 and 3
 import vegas
 import math
 import numpy as np
+import gvar as gv 
 
-np.random.seed((1,2, 3))   # causes reproducible random numbers
+gv.ranseed((1, 2, 3))   # causes reproducible random numbers
 
 DIM = 6
 NORM_AC = 1. / 0.17720931990702889842 ** DIM

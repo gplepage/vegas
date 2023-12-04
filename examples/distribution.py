@@ -5,8 +5,9 @@ from __future__ import print_function   # makes this work for python2 and 3
 
 import vegas
 import numpy as np
+import gvar as gv 
 
-np.random.seed((1,2,3,4))   # causes reproducible random numbers
+gv.ranseed((1, 2, 3))   # causes reproducible random numbers
 
 RMAX = (2 * 0.5**2) ** 0.5
 

@@ -18,5 +18,6 @@ def main():
 
 if __name__ == '__main__':
     import numpy as np
-    np.random.seed(12)
+    import gvar as gv
+    gv.ranseed(12)
     main()

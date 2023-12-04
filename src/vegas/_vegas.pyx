@@ -197,11 +197,11 @@ cdef class AdaptiveMap:
         return '\n'.join(ans) + '\n'
 
     def random(self, n=None):
-        " Create ``n`` random points in |x| space. "
+        " Create ``n`` random points in |y| space. "
         if n is None:
-            y = numpy.random.random(self.dim)
+            y = gvar.RNG.random(self.dim)
         else:
-            y = numpy.random.random((n, self.dim))
+            y = gvar.RNG.random((n, self.dim))
         return self(y)
 
     def make_uniform(self, ninc=None):
@@ -242,7 +242,7 @@ cdef class AdaptiveMap:
         self.inc = new_inc 
         self.clear()
 
-    def __call__(self, y=None):
+    def __call__(self, y):
         """ Return ``x`` values corresponding to ``y``.
 
         ``y`` can be a single ``dim``-dimensional point, or it
@@ -251,8 +251,9 @@ cdef class AdaptiveMap:
         If ``y=None`` (default), ``y`` is set equal to a (uniform) random point
         in the volume.
         """
+        
         if y is None:
-            y = numpy.random.uniform(size=self.dim)
+            y = gvar.RNG.random(size=self.dim)
         else:
             y = numpy.asarray(y, numpy.float_)
         y_shape = y.shape
@@ -1033,13 +1034,13 @@ cdef class Integrator(object):
             This stopping condition can be quite unreliable
             in early iterations, before |vegas| has converged.
             Use with caution, if at all.
-        ran_array_generator: Function that generates
-            :mod:`numpy` arrays of random numbers distributed uniformly
-            between 0 and 1. ``ran_array_generator(shape)`` should
-            create an array whose dimensions are specified by the
-            integer-valued tuple ``shape``. The default generator
-            is ``numpy.random.random``.
-        sync_ran (bool): If ``True`` (default), the default random
+        ran_array_generator: Replacement function for the default
+            random number generator. ``ran_array_generator(size)`` 
+            should create random numbers uniformly distributed 
+            between 0 and 1 in an array whose dimensions are specified by the
+            integer-valued tuple ``size``. Setting ``ran_array_generator``
+            to ``None`` restores the default generator (from :mod:`gvar`).
+        sync_ran (bool): If ``True`` (default), the *default* random
             number generator is synchronized across all processors when
             using MPI. If ``False``, |vegas| does no synchronization
             (but the random numbers should synchronized some other
@@ -1086,7 +1087,7 @@ cdef class Integrator(object):
         rtol=0,                 # relative error tolerance
         atol=0,                 # absolute error tolerance
         analyzer=None,          # analyzes results from each iteration
-        ran_array_generator=numpy.random.random, # random number generator
+        ran_array_generator=None, # alternative random number generator
         sync_ran=True,          # synchronize random generators across MPI processes?
         mpi=True,               # allow MPI?
         uses_jac=False,         # return Jacobian to integrand?
@@ -1478,6 +1479,11 @@ cdef class Integrator(object):
         cdef double[:, ::1] x
         cdef double[::1] jac
         cdef bint adaptive_strat = (self.beta > 0 and nhcube > 1 and not self.adapt_to_errors)
+        ran_array_generator = (
+            gvar.RNG.random 
+            if self.ran_array_generator is None else
+            self.ran_array_generator
+            )
         self.last_neval = 0
         self.neval_hcube_range = numpy.zeros(2, numpy.intp) + self.min_neval_hcube
         if yield_hcube:
@@ -1531,7 +1537,7 @@ cdef class Integrator(object):
                 hcube_array = numpy.empty(2 * neval_batch, numpy.intp)
 
             # 2) generate random points
-            yran = self.ran_array_generator((neval_batch, self.dim))
+            yran = ran_array_generator((neval_batch, self.dim))
             i_start = 0
             for ihcube in range(nhcube_batch):
                 tmp_hcube = hcube_base + ihcube
@@ -1627,13 +1633,14 @@ cdef class Integrator(object):
         if nproc > 1:
             # synchronize random numbers
             if rank == 0:
-                seed = tuple(
-                    numpy.random.randint(1, min(2**30, sys.maxsize), size=5)
-                    )
+                seed = gvar.ranseed(defaultsize=10)
+                # seed = tuple(
+                #     gvar.randint(1, min(2**30, sys.maxsize), size=5)
+                #     )
             else:
                 seed = None
             seed = comm.bcast(seed, root=0)
-            numpy.random.seed(seed)
+            gvar.ranseed(seed)
 
     def __call__(Integrator self not None, fcn, save=None, saveall=None, **kargs):
         """ Integrate integrand ``fcn``.

@@ -63,18 +63,7 @@ from ._vegas import reporter, batchintegrand
 from ._vegas import rbatchintegrand, RBatchIntegrand
 from ._vegas import lbatchintegrand, LBatchIntegrand
 from ._vegas import MPIintegrand
-
-try:
-    import sys
-
-    if sys.version_info >= (3, 8):
-        from importlib import metadata
-    else:
-        import importlib_metadata as metadata
-    __version__ = metadata.version('vegas')
-except:
-    # less precise default if fail
-    __version__ = '>=5.4.1'
+from ._version import __version__
 
 # legacy names:
 from ._vegas import vecintegrand, VecIntegrand
@@ -98,6 +87,8 @@ class PDFRAvg(_gvar.GVar):
         self.results.extend(pdfravg.results)
 
     def __getattr__(self, k):
+        if k in ['keys']:
+            raise AttributeError('no keys method')
         if k == 'pdfnorm':
             return self.results['pdf']
         return getattr(self.results, k)
@@ -127,6 +118,8 @@ class PDFRAvgArray(numpy.ndarray):
         self.results.extend(pdfravg.results)
 
     def __getattr__(self, k):
+        if k in ['keys']:
+            raise AttributeError('no keys method')
         if k == 'pdfnorm':
             return self.results['pdf']
         return getattr(self.results, k)
@@ -333,7 +326,7 @@ class PDFIntegrator(Integrator):
     def _make_map(self, limit):
         """ Make vegas grid that is adapted to the pdf. """
         ny = 2000
-        y = numpy.random.uniform(0., 1., (ny,1))
+        y = _gvar.RNG.random((ny,1))
         limit = numpy.arctan(limit)
         m = AdaptiveMap([[-limit, limit]], ninc=100)
         theta = numpy.empty(y.shape, float)

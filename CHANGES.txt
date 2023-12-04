@@ -1,3 +1,12 @@
+Version 5.5.1 2023-12-??
+=========================
+- New setup for the default random number generator, to deal with
+  changes in numpy version >=1.17. Now tied explicitly to gvar's 
+  random number generator (which is from numpy).
+
+- Simpler and more robust implementation for vegas.__version__ 
+  (doesn't use importlib.metadata, which is buggy).
+
 Version 5.5 2023-10-21
 ========================
 Significantly improves handling of memory for internal work arrays. These 

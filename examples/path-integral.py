@@ -29,6 +29,7 @@ from __future__ import print_function   # makes this work for python2 and 3
 
 import vegas
 import numpy as np
+import gvar as gv
 import sys
 
 # compiles path_integrand.pyx, if needed
@@ -48,7 +49,7 @@ else:
 
 def main():
     # seed random numbers so reproducible
-    np.random.seed((1,))
+    gv.ranseed((1,))
 
     # Harmonic oscillator: V = x ** 2 / 2
     print('Harmonic Oscillator')
