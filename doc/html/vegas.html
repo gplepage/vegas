@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>vegas Module &#8212; vegas 5.5 documentation</title>
+    <title>vegas Module &#8212; vegas 5.5.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -278,13 +278,13 @@ value is 0.0 which turns off this stopping condition.
 This stopping condition can be quite unreliable
 in early iterations, before <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> has converged.
 Use with caution, if at all.</p></li>
-<li><p><strong>ran_array_generator</strong> – Function that generates
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> arrays of random numbers distributed uniformly
-between 0 and 1. <code class="docutils literal notranslate"><span class="pre">ran_array_generator(shape)</span></code> should
-create an array whose dimensions are specified by the
-integer-valued tuple <code class="docutils literal notranslate"><span class="pre">shape</span></code>. The default generator
-is <code class="docutils literal notranslate"><span class="pre">numpy.random.random</span></code>.</p></li>
-<li><p><strong>sync_ran</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), the default random
+<li><p><strong>ran_array_generator</strong> – Replacement function for the default
+random number generator. <code class="docutils literal notranslate"><span class="pre">ran_array_generator(size)</span></code>
+should create random numbers uniformly distributed
+between 0 and 1 in an array whose dimensions are specified by the
+integer-valued tuple <code class="docutils literal notranslate"><span class="pre">size</span></code>. Setting <code class="docutils literal notranslate"><span class="pre">ran_array_generator</span></code>
+to <code class="docutils literal notranslate"><span class="pre">None</span></code> restores the default generator (from <code class="xref py py-mod docutils literal notranslate"><span class="pre">gvar</span></code>).</p></li>
+<li><p><strong>sync_ran</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), the <em>default</em> random
 number generator is synchronized across all processors when
 using MPI. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> does no synchronization
 (but the random numbers should synchronized some other
@@ -1592,7 +1592,7 @@ specified (or is <code class="docutils literal notranslate"><span class="pre">No
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>
