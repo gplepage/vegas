@@ -24,7 +24,7 @@ from outputsplitter import log_stdout, unlog_stdout
 #     f = math.exp(-200 * dx2)
 #     return [f, f * x[0], f * x[0] ** 2]
 
-class f(vegas.VecIntegrand):
+class f(vegas.BatchIntegrand):
     def __call__(self, x):
         x = np.asarray(x)
         f = np.empty((x.shape[0], 3), float)
@@ -36,7 +36,7 @@ class f(vegas.VecIntegrand):
         f[:, 2] = f[:, 0] * x[:, 0] ** 2
         return f
 
-class fdict(vegas.VecIntegrand):
+class fdict(vegas.BatchIntegrand):
     def __call__(self, x):
         x = np.asarray(x)
         f = np.empty((x.shape[0], 3), float)

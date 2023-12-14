@@ -1,0 +1,20 @@
+Integrator Settings:
+    1000 (approx) integrand evaluations in each of 10 iterations
+    number of: strata/axis = [3 3 3 2 2]
+               increments/axis = [ 99  99  99 100 100]
+               h-cubes = 108  processors = 1
+               evaluations/batch >= 5e+04
+               2 <= evaluations/h-cube <= 5e+04
+    minimize_mem = False  adapt_to_errors = False  adapt = True
+    accuracy: relative = 0  absolute = 0
+    damping: alpha = 0.5  beta= 0.75
+
+    key/index    axis          integration limits
+    ---------------------------------------------
+            r       0                  (0.0, 1.0)
+        phi 0       1    (0.0, 3.141592653589793)
+            1       2    (0.0, 3.141592653589793)
+            2       3    (0.0, 3.141592653589793)
+            3       4    (0.0, 6.283185307179586) 
+
+volume(dim=5) = 5.254(12)

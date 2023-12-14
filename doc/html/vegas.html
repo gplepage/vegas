@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>vegas Module &#8212; vegas 5.5.2 documentation</title>
+    <title>vegas Module &#8212; vegas 5.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.6 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -127,14 +127,52 @@ monitor progress as it is being made (or not).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>map</strong> (array, <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.AdaptiveMap</span></code></a> or <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>) – <p>The integration region  as specified by an array <code class="docutils literal notranslate"><span class="pre">map[d,</span> <span class="pre">i]</span></code>
+<li><p><strong>map</strong> (array, dictionary, <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.AdaptiveMap</span></code></a> or <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>) – <p>The integration region  is specified by an array <code class="docutils literal notranslate"><span class="pre">map[d,</span> <span class="pre">i]</span></code>
 where <code class="docutils literal notranslate"><span class="pre">d</span></code> is the direction and <code class="docutils literal notranslate"><span class="pre">i=0,1</span></code> specify the lower
 and upper limits of integration in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">map</span></code> could also be the integration map from
+<p>Alternatively, the integration region can be specified by a
+dictionary when integration variables are packaged in
+a dictionary rather than an array (see <code class="docutils literal notranslate"><span class="pre">xdict</span></code> below).
+Then each value <code class="docutils literal notranslate"><span class="pre">map[key]</span></code> is either a 2-tuple or an
+array of 2-tuples specifying the lower and upper integration
+limits for the corresponding variables: e.g.,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">phi</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>indicates a three-dimensional integral over variables <code class="docutils literal notranslate"><span class="pre">r</span></code>
+(from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>), <code class="docutils literal notranslate"><span class="pre">phi[0]</span></code> (from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">np.pi</span></code>),
+and <code class="docutils literal notranslate"><span class="pre">phi[1]</span></code> (from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">np.pi</span></code>). In this case
+integrands <code class="docutils literal notranslate"><span class="pre">f(xd)</span></code> have dictionary arguments <code class="docutils literal notranslate"><span class="pre">xd</span></code> where
+<code class="docutils literal notranslate"><span class="pre">xd['r']</span></code>, <code class="docutils literal notranslate"><span class="pre">xd['phi'][0]</span></code>, and <code class="docutils literal notranslate"><span class="pre">xd['phi'][1]</span></code>
+correspond to the integration variables.</p>
+<p>Finally <code class="docutils literal notranslate"><span class="pre">map</span></code> could be the integration map from
 another <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>, or that <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>
 itself. In this case the grid is copied from the
 existing integrator.</p>
 </p></li>
+<li><p><strong>xdict</strong> (<em>None</em><em> or </em><em>dictionary</em>) – <p><code class="docutils literal notranslate"><span class="pre">xdict=None</span></code> (default) implies that
+integrands <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> take arrays <code class="docutils literal notranslate"><span class="pre">x</span></code> of integration values
+as array values where <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> is the value in
+direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">xdict</span></code> is a dictionary, integrands <code class="docutils literal notranslate"><span class="pre">f(xd)</span></code> are
+assumed to take a dictionary argument <code class="docutils literal notranslate"><span class="pre">xd</span></code> where each
+<code class="docutils literal notranslate"><span class="pre">xd[key]</span></code> corresponds to an integration variable or
+an array of integration variables. <code class="docutils literal notranslate"><span class="pre">xdict</span></code> provides a
+template for the arguments. For example, setting</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xdict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">phi</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>implies that integration points <code class="docutils literal notranslate"><span class="pre">xd</span></code> represent
+three integration variables: <code class="docutils literal notranslate"><span class="pre">xd['r']</span></code>,
+<code class="docutils literal notranslate"><span class="pre">xd['phi'][0]</span></code>, and <code class="docutils literal notranslate"><span class="pre">xd['phi'][1]</span></code>.</p>
+<p>Keyword <code class="docutils literal notranslate"><span class="pre">xdict</span></code> is ignored if <code class="docutils literal notranslate"><span class="pre">map</span></code> is a dictionary.</p>
+</p></li>
+<li><p><strong>uses_jac</strong> (<em>bool</em>) – Setting <code class="docutils literal notranslate"><span class="pre">uses_jac=True</span></code> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to
+call the integrand with two arguments: <code class="docutils literal notranslate"><span class="pre">fcn(x,</span> <span class="pre">jac=jac)</span></code>.
+The second argument is the Jacobian <code class="docutils literal notranslate"><span class="pre">jac[d]</span> <span class="pre">=</span> <span class="pre">dx[d]/dy[d]</span></code>
+of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map. The integral over <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> of <code class="docutils literal notranslate"><span class="pre">1/jac[d]</span></code>
+equals 1 (exactly). The default setting
+is <code class="docutils literal notranslate"><span class="pre">uses_jac=False</span></code>.</p></li>
 <li><p><strong>nitn</strong> (<em>positive int</em>) – The maximum number of iterations used to
 adapt to the integrand and estimate its value. The
 default value is 10; typical values range from 10
@@ -230,12 +268,6 @@ example, causes vegas to print out a running report
 of its results as they are produced. The default
 is <code class="docutils literal notranslate"><span class="pre">analyzer=None</span></code>.</p>
 </p></li>
-<li><p><strong>uses_jac</strong> (<em>bool</em>) – Setting <code class="docutils literal notranslate"><span class="pre">uses_jac=True</span></code> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to
-call the integrand with two arguments: <code class="docutils literal notranslate"><span class="pre">fcn(x,</span> <span class="pre">jac=jac)</span></code>.
-The second argument is the Jacobian <code class="docutils literal notranslate"><span class="pre">jac[d]</span> <span class="pre">=</span> <span class="pre">dx[d]/dy[d]</span></code>
-of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map. The integral over <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> of <code class="docutils literal notranslate"><span class="pre">1/jac[d]</span></code>
-equals 1 (exactly). The default setting
-is <code class="docutils literal notranslate"><span class="pre">uses_jac=False</span></code>.</p></li>
 <li><p><strong>min_neval_batch</strong> (<em>positive int</em>) – The minimum number of integration
 points to be passed together to the integrand when using
 <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> in batch mode. The default value is 50,000. Larger
@@ -1401,7 +1433,9 @@ points. The meaning of <code class="docutils literal notranslate"><span class="p
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>for the two-dimensional integrand <img class="math" src="_images/math/84b2eb1fcb99afba0bb57bf5e59fd86a51e913f8.svg" alt="\exp(-x_0 - x_1)"/>.</p>
+<p>for the two-dimensional integrand <img class="math" src="_images/math/84b2eb1fcb99afba0bb57bf5e59fd86a51e913f8.svg" alt="\exp(-x_0 - x_1)"/>.
+When integrands have dictionary arguments <code class="docutils literal notranslate"><span class="pre">xd</span></code>, each element of the
+dictionary has an extra index (on the left): <code class="docutils literal notranslate"><span class="pre">xd[key][:,</span> <span class="pre">...]</span></code>.</p>
 <p><a class="reference internal" href="#vegas.lbatchintegrand" title="vegas.lbatchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.lbatchintegrand()</span></code></a> is the same as <a class="reference internal" href="#vegas.batchintegrand" title="vegas.batchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.batchintegrand()</span></code></a>.</p>
 </dd></dl>
 
@@ -1446,7 +1480,9 @@ points. The meaning of <code class="docutils literal notranslate"><span class="p
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>for the two-dimensional integrand <img class="math" src="_images/math/84b2eb1fcb99afba0bb57bf5e59fd86a51e913f8.svg" alt="\exp(-x_0 - x_1)"/>.</p>
+<p>for the two-dimensional integrand <img class="math" src="_images/math/84b2eb1fcb99afba0bb57bf5e59fd86a51e913f8.svg" alt="\exp(-x_0 - x_1)"/>.
+When integrands have dictionary arguments <code class="docutils literal notranslate"><span class="pre">xd</span></code>, each element of the
+dictionary has an extra index (on the left): <code class="docutils literal notranslate"><span class="pre">xd[key][:,</span> <span class="pre">...]</span></code>.</p>
 <p><a class="reference internal" href="#vegas.lbatchintegrand" title="vegas.lbatchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.lbatchintegrand()</span></code></a> is the same as <a class="reference internal" href="#vegas.batchintegrand" title="vegas.batchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.batchintegrand()</span></code></a>.</p>
 </dd></dl>
 
@@ -1592,7 +1628,7 @@ specified (or is <code class="docutils literal notranslate"><span class="pre">No
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.6 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>

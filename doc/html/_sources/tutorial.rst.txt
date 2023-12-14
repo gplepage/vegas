@@ -613,7 +613,10 @@ arithmetical expressions. (Documentation for :mod:`gvar` can be found
 at https://gvar.readthedocs.io or with the source code
 at https://github.com/gplepage/gvar.git.)
 
-Integrands can return dictionaries instead of arrays. The example above,
+Dictionaries
+--------------
+Integrands can return dictionaries instead of arrays. The example 
+in the previous section,
 for example, can be rewritten as ::
 
     import vegas
@@ -652,6 +655,60 @@ keys, instead of an array, can often make code more intelligible, and,
 therefore, easier to write  and maintain. Here the values in the integrand's
 dictionary are all numbers; in general, values can be  either numbers or
 arrays (of any shape).
+
+Dictionaries can also be used for the integration variables. 
+For example, the following code calculates the volume of a 
+unit sphere using spherical coordinates::
+
+    import numpy as np 
+    import vegas 
+
+    def f(xd):
+        r = xd['r']
+        theta = xd['theta']
+        phi = xd['phi']
+        return r ** 2 * np.sin(theta) 
+
+    def main():
+        integ = vegas.Integrator(dict(r=(0,1), theta=(0, np.pi), phi=(0, 2 * np.pi)))
+        volume = integ(f, neval=10000, nitn=10)
+        print(volume)
+
+Running this code gives a result of 4.1880(13) which agrees well (0.03%) with the correct
+result ``4/3 * np.pi``. This can be generalized to ``DIM`` dimensions, 
+where now ``xd['phi']`` is an array of variables: e.g., ::
+
+    import numpy as np 
+    import vegas 
+
+    DIM = 5
+
+    def f(xd):
+        r = xd['r']
+        phi = xd['phi']
+        # construct Euclidean coordinates, Jacobian
+        x = np.zeros(DIM, float)
+        x[:] = r
+        x[1:] *= np.cumprod(np.sin(phi), axis=0)
+        jac = np.prod(x[1:-1], axis=0) * r
+        x[:-1] *= np.cos(phi)
+        # calculate contribution to sphere's volume
+        return jac
+
+    def main():
+        integ = vegas.Integrator(dict(
+            r=(0,1), 
+            phi=(DIM - 2) * [(0, np.pi)] + [(0, 2 * np.pi)]
+            ))
+        warmup = integ(f, neval=1000, nitn=10)
+        volume = integ(f, neval=1000, nitn=10)
+        print(integ.settings(), '\n')
+        print(f'volume(dim={DIM}) = {volume}')
+
+This code generates the following output:
+
+.. literalinclude:: eg10.out
+
 
 Calculating Distributions
 ----------------------------

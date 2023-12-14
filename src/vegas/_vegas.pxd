@@ -62,6 +62,7 @@ cdef class Integrator:
     cdef public str save 
     cdef public str saveall
     cdef readonly numpy.npy_intp[::1] nstrat
+    cdef readonly object xdict
     # generated
     cdef readonly AdaptiveMap map
     cdef readonly object pool

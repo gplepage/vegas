@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Tutorial &#8212; vegas 5.5.2 documentation</title>
+    <title>Tutorial &#8212; vegas 5.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.6 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>  
@@ -685,7 +685,11 @@ Such correlations are handled automatically by <code class="xref py py-mod docut
 arithmetical expressions. (Documentation for <code class="xref py py-mod docutils literal notranslate"><span class="pre">gvar</span></code> can be found
 at <a class="reference external" href="https://gvar.readthedocs.io">https://gvar.readthedocs.io</a> or with the source code
 at <a class="reference external" href="https://github.com/gplepage/gvar.git">https://github.com/gplepage/gvar.git</a>.)</p>
-<p>Integrands can return dictionaries instead of arrays. The example above,
+</section>
+<section id="dictionaries">
+<h2>Dictionaries<a class="headerlink" href="#dictionaries" title="Permalink to this heading">¶</a></h2>
+<p>Integrands can return dictionaries instead of arrays. The example
+in the previous section,
 for example, can be rewritten as</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -728,6 +732,78 @@ keys, instead of an array, can often make code more intelligible, and,
 therefore, easier to write  and maintain. Here the values in the integrand’s
 dictionary are all numbers; in general, values can be  either numbers or
 arrays (of any shape).</p>
+<p>Dictionaries can also be used for the integration variables.
+For example, the following code calculates the volume of a
+unit sphere using spherical coordinates:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">vegas</span>
+
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">xd</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">xd</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">xd</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">xd</span><span class="p">[</span><span class="s1">&#39;phi&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">r</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span> <span class="n">phi</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span>
+    <span class="n">volume</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">volume</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Running this code gives a result of 4.1880(13) which agrees well (0.03%) with the correct
+result <code class="docutils literal notranslate"><span class="pre">4/3</span> <span class="pre">*</span> <span class="pre">np.pi</span></code>. This can be generalized to <code class="docutils literal notranslate"><span class="pre">DIM</span></code> dimensions,
+where now <code class="docutils literal notranslate"><span class="pre">xd['phi']</span></code> is an array of variables: e.g.,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">vegas</span>
+
+<span class="n">DIM</span> <span class="o">=</span> <span class="mi">5</span>
+
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">xd</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">xd</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">xd</span><span class="p">[</span><span class="s1">&#39;phi&#39;</span><span class="p">]</span>
+    <span class="c1"># construct Euclidean coordinates, Jacobian</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">DIM</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">r</span>
+    <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumprod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">r</span>
+    <span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+    <span class="c1"># calculate contribution to sphere&#39;s volume</span>
+    <span class="k">return</span> <span class="n">jac</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">phi</span><span class="o">=</span><span class="p">(</span><span class="n">DIM</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)]</span>
+        <span class="p">))</span>
+    <span class="n">warmup</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">volume</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">settings</span><span class="p">(),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;volume(dim=</span><span class="si">{</span><span class="n">DIM</span><span class="si">}</span><span class="s1">) = </span><span class="si">{</span><span class="n">volume</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This code generates the following output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Integrator</span> <span class="n">Settings</span><span class="p">:</span>
+    <span class="mi">1000</span> <span class="p">(</span><span class="n">approx</span><span class="p">)</span> <span class="n">integrand</span> <span class="n">evaluations</span> <span class="ow">in</span> <span class="n">each</span> <span class="n">of</span> <span class="mi">10</span> <span class="n">iterations</span>
+    <span class="n">number</span> <span class="n">of</span><span class="p">:</span> <span class="n">strata</span><span class="o">/</span><span class="n">axis</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span> <span class="mi">3</span> <span class="mi">3</span> <span class="mi">2</span> <span class="mi">2</span><span class="p">]</span>
+               <span class="n">increments</span><span class="o">/</span><span class="n">axis</span> <span class="o">=</span> <span class="p">[</span> <span class="mi">99</span>  <span class="mi">99</span>  <span class="mi">99</span> <span class="mi">100</span> <span class="mi">100</span><span class="p">]</span>
+               <span class="n">h</span><span class="o">-</span><span class="n">cubes</span> <span class="o">=</span> <span class="mi">108</span>  <span class="n">processors</span> <span class="o">=</span> <span class="mi">1</span>
+               <span class="n">evaluations</span><span class="o">/</span><span class="n">batch</span> <span class="o">&gt;=</span> <span class="mf">5e+04</span>
+               <span class="mi">2</span> <span class="o">&lt;=</span> <span class="n">evaluations</span><span class="o">/</span><span class="n">h</span><span class="o">-</span><span class="n">cube</span> <span class="o">&lt;=</span> <span class="mf">5e+04</span>
+    <span class="n">minimize_mem</span> <span class="o">=</span> <span class="kc">False</span>  <span class="n">adapt_to_errors</span> <span class="o">=</span> <span class="kc">False</span>  <span class="n">adapt</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">accuracy</span><span class="p">:</span> <span class="n">relative</span> <span class="o">=</span> <span class="mi">0</span>  <span class="n">absolute</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">damping</span><span class="p">:</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="n">beta</span><span class="o">=</span> <span class="mf">0.75</span>
+
+    <span class="n">key</span><span class="o">/</span><span class="n">index</span>    <span class="n">axis</span>          <span class="n">integration</span> <span class="n">limits</span>
+    <span class="o">---------------------------------------------</span>
+            <span class="n">r</span>       <span class="mi">0</span>                  <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">phi</span> <span class="mi">0</span>       <span class="mi">1</span>    <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.141592653589793</span><span class="p">)</span>
+            <span class="mi">1</span>       <span class="mi">2</span>    <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.141592653589793</span><span class="p">)</span>
+            <span class="mi">2</span>       <span class="mi">3</span>    <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.141592653589793</span><span class="p">)</span>
+            <span class="mi">3</span>       <span class="mi">4</span>    <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">6.283185307179586</span><span class="p">)</span> 
+
+<span class="n">volume</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> <span class="o">=</span> <span class="mf">5.254</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="calculating-distributions">
 <h2>Calculating Distributions<a class="headerlink" href="#calculating-distributions" title="Permalink to this heading">¶</a></h2>
@@ -1950,6 +2026,7 @@ deviations, and properly correlated with other
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
 <li><a class="reference internal" href="#basic-integrals">Basic Integrals</a></li>
 <li><a class="reference internal" href="#multiple-integrands-simultaneously">Multiple Integrands Simultaneously</a></li>
+<li><a class="reference internal" href="#dictionaries">Dictionaries</a></li>
 <li><a class="reference internal" href="#calculating-distributions">Calculating Distributions</a></li>
 <li><a class="reference internal" href="#bayesian-integrals">Bayesian Integrals</a></li>
 <li><a class="reference internal" href="#faster-integrands">Faster Integrands</a></li>
@@ -2012,7 +2089,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 5.6 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>

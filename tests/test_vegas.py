@@ -606,8 +606,35 @@ class TestIntegrator(unittest.TestCase):
             "    accuracy: relative = 0  absolute = 0",
             "    damping: alpha = {alpha}  beta= {beta}",
             "",
-            "    axis 0 covers (0.0, 1.0)",
-            "    axis 1 covers (-1.0, 1.0)\n",
+            "    axis    integration limits",
+            "    --------------------------",
+            "       0            (0.0, 1.0)",
+            "       1           (-1.0, 1.0)",
+            ]
+        outstr = ('\n'.join(outstr)).format(
+            neval=I.neval, nstrat0=I.nstrat[0], nstrat1=I.nstrat[1],
+            ninc0=I.map.ninc[0], ninc1=I.map.ninc[1], nhcube=I.nhcube,
+            min_neval_hcube=I.min_neval_hcube, alpha=I.alpha, beta=I.beta,
+            min_neval_batch=I.min_neval_batch, max_neval_hcube=float(I.max_neval_hcube),
+            )
+        self.assertEqual(outstr, I.settings())
+        I.set(xdict=dict(x=[0.], y=0.))
+        outstr = [
+            "Integrator Settings:",
+            "    {neval} (approx) integrand evaluations in each of 123 iterations",
+            "    number of: strata/axis = [{nstrat0} {nstrat1}]",
+            "               increments/axis = [{ninc0} {ninc1}]",
+            "               h-cubes = {nhcube}  processors = 1",
+            "               evaluations/batch >= {min_neval_batch:.2g}",
+            "               {min_neval_hcube} <= evaluations/h-cube <= {max_neval_hcube:.2g}",
+            "    minimize_mem = False  adapt_to_errors = False  adapt = True",
+            "    accuracy: relative = 0  absolute = 0",
+            "    damping: alpha = {alpha}  beta= {beta}",
+            "",
+            "    key/index    axis    integration limits",
+            "    ---------------------------------------",
+            "          x 0       0            (0.0, 1.0)",
+            "            y       1           (-1.0, 1.0)",
             ]
         outstr = ('\n'.join(outstr)).format(
             neval=I.neval, nstrat0=I.nstrat[0], nstrat1=I.nstrat[1],
@@ -821,8 +848,7 @@ class TestIntegrator(unittest.TestCase):
         ans = numpy.sum(x, axis=1).reshape((5,1))
         map = AdaptiveMap(3 * [(0,1)])
         for f in [f0, f1, f2, f3, f4, f5, f6, f7]:
-            fcn = VegasIntegrand(f, map, uses_jac=False, mpi=False)
-            self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
+            fcn = VegasIntegrand(f, map, uses_jac=False, xdict=None, mpi=False)
             self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
             fans = fcn.format_result(x[0,:1], x[:1,:1]**2)
             if f in [f0, f1, f2]:
@@ -853,8 +879,7 @@ class TestIntegrator(unittest.TestCase):
         ans[:, 1] = numpy.sum(x, axis=1)
         map = AdaptiveMap(3 * [(0,1)])
         for f in [f8, f9, f10, f11, f12, f13]:
-            fcn = VegasIntegrand(f, map, uses_jac=False, mpi=False)
-            self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
+            fcn = VegasIntegrand(f, map, uses_jac=False, xdict=None, mpi=False)
             self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
             fans = fcn.format_result(x[0,:2], x[:2,:2].dot(x[:2, :2].T))
             if f in [f8, f9, f10]:
@@ -863,8 +888,25 @@ class TestIntegrator(unittest.TestCase):
                 self.assertEqual(list(fans.keys()), ['a', 'b'])
                 self.assertEqual(numpy.shape(fans['a']), ())
                 self.assertEqual(numpy.shape(fans['b']), (1,1))
+        
+        # test xdict 
+        xdict = gv.BufferDict(a=[0., 0.], b=0.)
+        x = np.random.uniform(size=(5,3))
+        ans = (x[:, 0] * x[:, 1] * x[:, 2]).reshape(5, 1)
+        @lbatchintegrand
+        def f14(xd):
+            return xd['a'][:, 0] * xd['a'][:, 1] * xd['b']
+        def f15(xd):        
+            return xd['a'][0] * xd['a'][1] * xd['b']
+        @rbatchintegrand
+        def f16(xd):        
+            return xd['a'][0] * xd['a'][1] * xd['b']
+        map = AdaptiveMap(3 * [(0,1)])
+        for f in [f14, f15, f16]:
+            fcn = VegasIntegrand(f, map, uses_jac=False, xdict=xdict, mpi=False)
+            self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
 
-
+        
     @unittest.skipIf(h5py is None,"missing h5py => minimize_mem=True not available")
     def test_minimize_mem(self):
         " test minimize_mem=True mode "

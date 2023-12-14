@@ -1,3 +1,11 @@
+Version 5.6 2023-12-15???
+=========================
+Integrators can be configured to package integration points 
+as dictionaries rather than arrays. This is to facilitate 
+integrations over a heterogeneous collection of integration 
+variables. See the tutorial section on Dictionaries.
+
+
 Version 5.5.2 2023-12-04
 =========================
 - New default random number generator, to deal with

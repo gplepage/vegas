@@ -883,15 +883,55 @@ cdef class Integrator(object):
     monitor progress as it is being made (or not).
 
     Args:
-        map (array, :class:`vegas.AdaptiveMap` or :class:`vegas.Integrator`):
-            The integration region  as specified by an array ``map[d, i]``
+        map (array, dictionary, :class:`vegas.AdaptiveMap` or :class:`vegas.Integrator`):
+            The integration region  is specified by an array ``map[d, i]``
             where ``d`` is the direction and ``i=0,1`` specify the lower
             and upper limits of integration in direction ``d``.
 
-            ``map`` could also be the integration map from
+            Alternatively, the integration region can be specified by a 
+            dictionary when integration variables are packaged in 
+            a dictionary rather than an array (see ``xdict`` below). 
+            Then each value ``map[key]`` is either a 2-tuple or an 
+            array of 2-tuples specifying the lower and upper integration 
+            limits for the corresponding variables: e.g., ::
+
+                map = dict(r=(0, 1), phi=[(0, np.pi), (0, 2 * np.pi)])
+
+            indicates a three-dimensional integral over variables ``r``
+            (from ``0`` to ``1``), ``phi[0]`` (from ``0`` to ``np.pi``), 
+            and ``phi[1]`` (from ``0`` to ``2 * np.pi``). In this case 
+            integrands ``f(xd)`` have dictionary arguments ``xd`` where 
+            ``xd['r']``, ``xd['phi'][0]``, and ``xd['phi'][1]`` 
+            correspond to the integration variables.
+
+            Finally ``map`` could be the integration map from
             another |Integrator|, or that |Integrator|
             itself. In this case the grid is copied from the
             existing integrator.
+        xdict (None or dictionary): ``xdict=None`` (default) implies that
+            integrands ``f(x)`` take arrays ``x`` of integration values 
+            as array values where ``x[d]`` is the value in 
+            direction ``d``.
+
+            When ``xdict`` is a dictionary, integrands ``f(xd)`` are 
+            assumed to take a dictionary argument ``xd`` where each
+            ``xd[key]`` corresponds to an integration variable or 
+            an array of integration variables. ``xdict`` provides a 
+            template for the arguments. For example, setting ::
+
+                xdict = dict(r=0, phi=[0, 0])
+
+            implies that integration points ``xd`` represent
+            three integration variables: ``xd['r']``, 
+            ``xd['phi'][0]``, and ``xd['phi'][1]``.
+
+            Keyword ``xdict`` is ignored if ``map`` is a dictionary.
+        uses_jac (bool): Setting ``uses_jac=True`` causes |vegas| to 
+            call the integrand with two arguments: ``fcn(x, jac=jac)``.
+            The second argument is the Jacobian ``jac[d] = dx[d]/dy[d]`` 
+            of the |vegas| map. The integral over ``x[d]`` of ``1/jac[d]``
+            equals 1 (exactly). The default setting 
+            is ``uses_jac=False``.
         nitn (positive int): The maximum number of iterations used to
             adapt to the integrand and estimate its value. The
             default value is 10; typical values range from 10
@@ -986,12 +1026,6 @@ cdef class Integrator(object):
             example, causes vegas to print out a running report
             of its results as they are produced. The default
             is ``analyzer=None``.
-        uses_jac (bool): Setting ``uses_jac=True`` causes |vegas| to 
-            call the integrand with two arguments: ``fcn(x, jac=jac)``.
-            The second argument is the Jacobian ``jac[d] = dx[d]/dy[d]`` 
-            of the |vegas| map. The integral over ``x[d]`` of ``1/jac[d]``
-            equals 1 (exactly). The default setting 
-            is ``uses_jac=False``.
         min_neval_batch (positive int): The minimum number of integration 
             points to be passed together to the integrand when using
             |vegas| in batch mode. The default value is 50,000. Larger 
@@ -1092,6 +1126,7 @@ cdef class Integrator(object):
         mpi=True,               # allow MPI?
         uses_jac=False,         # return Jacobian to integrand?
         nproc=1,                # number of processors to use
+        xdict=None,             # dictionary template for function arguments
         )
 
     def __init__(Integrator self not None, map, **kargs):
@@ -1101,6 +1136,19 @@ cdef class Integrator(object):
         self.last_neval = 0
         self.pool = None
         self.sigf_h5 = None
+        if hasattr(map, 'keys'):
+            map = gvar.asbufferdict(map)
+            xdict = gvar.BufferDict()
+            limits = []
+            for k in map:
+                if map[k].shape[:-1] == ():
+                    xdict[k] = 0.0
+                    limits.append(map[k])
+                else:
+                    xdict[k] = numpy.zeros(map[k].shape[:-1], dtype=float)
+                    limits += numpy.array(map[k]).reshape(-1,2).tolist()
+            map = limits 
+            kargs['xdict'] = xdict 
         if isinstance(map, Integrator):
             args = {}
             for k in Integrator.defaults:
@@ -1193,6 +1241,14 @@ cdef class Integrator(object):
                 old_val['sigf'] = self.sigf 
                 self.sigf = numpy.fabs(kargs['sigf'])
                 self.sum_sigf = numpy.sum(self.sigf)
+            elif k == 'xdict':
+                if kargs['xdict'] is not None:
+                    if hasattr(kargs['xdict'], 'keys'):
+                        kargs['xdict'] = gvar.asbufferdict(kargs['xdict'])
+                    else:
+                        raise ValueError('xdict must be a dictionary or None')
+                old_val['xdict'] = self.xdict 
+                self.xdict = kargs['xdict']
             elif k == 'nproc':
                 old_val['nproc'] = self.nproc 
                 self.nproc = kargs['nproc'] if kargs['nproc'] is not None else os.cpu_count()
@@ -1224,6 +1280,8 @@ cdef class Integrator(object):
                 raise AttributeError('no parameter named "%s"' % str(k))
         
         # 2) sanity checks
+        if self.xdict is not None and self.xdict.size != self.map.dim:
+            raise ValueError('xdict has wrong size')
         if nstrat is not None:
             if len(nstrat) != self.map.dim:
                 raise ValueError('nstrat[d] has wrong length: %d not %d' % (len(nstrat), self.map.dim))
@@ -1404,10 +1462,68 @@ cdef class Integrator(object):
                 "    damping: alpha = %g  beta= %g\n\n"
                 % (self.alpha, self.beta)
                 )
-        for d in range(self.dim):
-            ans = ans + (
-                "    axis %d covers %s\n" % (d, str(self.map.region(d)))
-                )
+        
+        # add integration limits
+        offset = 4 * ' '
+        entries = []
+        axis = 0
+        # self.limits = self.limits.buf.reshape(-1,2)
+        limits = self.map.region()
+        if self.xdict is not None:
+            for k in self.xdict:
+                if self.xdict[k].shape == ():
+                    entries.append((str(k), str(axis), str(limits[axis])))
+                    axis += 1
+                else:
+                    prefix = str(k) + ' '
+                    for idx in numpy.ndindex(self.xdict[k].shape):
+                        str_idx = str(idx)[1:-1]
+                        str_idx = ''.join(str_idx.split(' '))
+                        if str_idx[-1] == ',':
+                            str_idx = str_idx[:-1]
+                        entries.append((prefix + str_idx, str(axis), str(limits[axis])))
+                        if prefix != '':
+                            prefix = ''    # (len(str(k)) + 1) * ' '
+                        axis += 1
+            linefmt = '{e0:>{w0}}    {e1:>{w1}}    {e2:>{w2}}'
+            headers = ('key/index', 'axis', 'integration limits')
+            w0 = max(len(ei[0]) for ei in entries)
+        else:
+            for axis,limits_axis in enumerate(limits):
+                entries.append((None, str(axis), str(limits_axis)))
+            linefmt = '{e1:>{w1}}    {e2:>{w2}}'
+            headers = (None, 'axis', 'integration limits')
+            w0 = None
+        w1 = max(len(ei[1]) for ei in entries)
+        w2 = max(len(ei[2]) for ei in entries)
+        ncol = 1 if self.map.dim <= 20 else 2
+        table = ncol * [[]]
+        nl = len(entries) // ncol
+        if nl * ncol < len(entries):
+            nl += 1
+        ns = len(entries) - (ncol - 1) * nl
+        ne = (ncol -1) * [nl] + [ns]
+        iter_entries = iter(entries)
+        for col in range(ncol):
+            e0, e1, e2 = headers
+            w0 = None if e0 is None else max(len(e0), w0)
+            w1 = max(len(e1), w1)
+            w2 = max(len(e2), w2)
+            table[col] = [linefmt.format(e0=e0, w0=w0, e1=e1, w1=w1, e2=e2, w2=w2)]
+            table[col].append(len(table[col][0]) * '-')
+            for ii in range(ne[col]):
+                e0, e1, e2 = next(iter_entries)
+                table[col].append(linefmt.format(e0=e0, w0=w0, e1=e1, w1=w1, e2=e2, w2=w2))
+        mtable = []
+        ns += 2 
+        nl += 2
+        for i in range(ns):
+            mtable.append('  '.join([tabcol[i] for tabcol in table]))
+        for i in range(ns, nl):
+            mtable.append('  '.join([tabcol[i] for tabcol in table[:-1]]))
+        ans += offset + ('\n' + offset).join(mtable)
+
+        # add grid data
         if ngrid > 0:
             ans += '\n' + self.map.settings(ngrid=ngrid)
         return ans
@@ -1762,7 +1878,7 @@ cdef class Integrator(object):
 
         # Put integrand into standard form
         fcn = VegasIntegrand(
-            fcn, map=self.map, uses_jac=self.uses_jac, 
+            fcn, map=self.map, uses_jac=self.uses_jac, xdict=self.xdict,
             mpi=False if self.nproc > 1 else self.mpi
             )
 
@@ -2608,6 +2724,9 @@ cdef class VegasIntegrand:
 
     Args:
         fcn: Integrand function.
+        map: Integrator's :class:`AdaptiveMap`.
+        uses_jac: Determines whether or not function call receives the Jacobian.
+        xdict: Dictionary template for function argument or ``None`` if argument is an array.
         mpi: ``True`` (default) if mpi might be used; ``False`` otherwise.
 
     Attributes:
@@ -2617,7 +2736,7 @@ cdef class VegasIntegrand:
         nproc: Number of MPI processors (=1 if no MPI)
         rank: MPI rank of processors (=0 if no MPI)
     """
-    def __init__(self, fcn, map, uses_jac, mpi):
+    def __init__(self, fcn, map, uses_jac, xdict, mpi):
         if isinstance(fcn, type(BatchIntegrand)) or isinstance(fcn, type(RBatchIntegrand)):
             raise ValueError(
                 'integrand given is a class, not an object -- need to initialize?'
@@ -2633,6 +2752,23 @@ cdef class VegasIntegrand:
         else:
             self.nproc = 1
 
+        self.fcntype = getattr(fcn, 'fcntype', 'scalar')
+        if xdict is not None:
+            # function arguments are dictionaries
+            if self.fcntype == 'rbatch':
+                @rbatchintegrand
+                def _fcn(x, *args, **kargs):
+                    return fcn(gvar.BufferDict(xdict, rbatch_buf=x), *args, **kargs)
+            elif self.fcntype == 'scalar':
+                def _fcn(x, *args, **kargs):
+                    return fcn(gvar.BufferDict(xdict, x), *args, **kargs)
+            else:
+                @lbatchintegrand
+                def _fcn(x, *args, **kargs):
+                    return fcn(gvar.BufferDict(xdict, lbatch_buf=x), *args, **kargs)
+        else:
+            _fcn = fcn
+
         # configure using sample evaluation fcn(x) to
         # determine integrand shape
 
@@ -2646,26 +2782,25 @@ cdef class VegasIntegrand:
             jac0 = None
 
         # configure self.eval
-        self.fcntype = getattr(fcn, 'fcntype', 'scalar')
         if self.fcntype == 'scalar':
-            fx = fcn(x0) if jac0 is None else fcn(x0, jac=jac0)
+            fx = _fcn(x0) if jac0 is None else _fcn(x0, jac=jac0)
             if hasattr(fx, 'keys'):
                 if not isinstance(fx, gvar.BufferDict):
                     fx = gvar.BufferDict(fx)
                 self.size = fx.size
                 self.shape = None
                 self.bdict = fx
-                _eval = _BatchIntegrand_from_NonBatchDict(fcn, self.size)
+                _eval = _BatchIntegrand_from_NonBatchDict(_fcn, self.size)
             else:
                 fx = numpy.asarray(fx)
                 self.shape = fx.shape
                 self.size = fx.size
-                _eval = _BatchIntegrand_from_NonBatch(fcn, self.size, self.shape)
+                _eval = _BatchIntegrand_from_NonBatch(_fcn, self.size, self.shape)
         elif self.fcntype == 'rbatch':
             x0.shape = x0.shape + (1,)
             if jac0 is not None:
                 jac0.shape = jac0.shape + (1,)
-            fx = fcn(x0) if jac0 is None else fcn(x0, jac=jac0)
+            fx = _fcn(x0) if jac0 is None else _fcn(x0, jac=jac0)
             if hasattr(fx, 'keys'):
                 # build dictionary for non-batch version of function
                 fxs = gvar.BufferDict()
@@ -2674,16 +2809,16 @@ cdef class VegasIntegrand:
                 self.shape = None
                 self.bdict = fxs
                 self.size = self.bdict.size
-                _eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict, rbatch=True)
+                _eval = _BatchIntegrand_from_BatchDict(_fcn, self.bdict, rbatch=True)
             else:
                 self.shape = numpy.shape(fx)[:-1]
                 self.size = numpy.prod(self.shape, dtype=type(self.size))
-                _eval = _BatchIntegrand_from_Batch(fcn, rbatch=True)
+                _eval = _BatchIntegrand_from_Batch(_fcn, rbatch=True)
         else:
             x0.shape = (1,) + x0.shape
             if jac0 is not None:
                 jac0.shape = (1,) + jac0.shape
-            fx = fcn(x0) if jac0 is None else fcn(x0, jac=jac0)
+            fx = _fcn(x0) if jac0 is None else _fcn(x0, jac=jac0)
             if hasattr(fx, 'keys'):
                 # build dictionary for non-batch version of function
                 fxs = gvar.BufferDict()
@@ -2692,12 +2827,12 @@ cdef class VegasIntegrand:
                 self.shape = None
                 self.bdict = fxs
                 self.size = self.bdict.size
-                _eval = _BatchIntegrand_from_BatchDict(fcn, self.bdict, rbatch=False)
+                _eval = _BatchIntegrand_from_BatchDict(_fcn, self.bdict, rbatch=False)
             else:
                 fx = numpy.asarray(fx)
                 self.shape = fx.shape[1:]
                 self.size = numpy.prod(self.shape, dtype=type(self.size))
-                _eval = _BatchIntegrand_from_Batch(fcn, rbatch=False) 
+                _eval = _BatchIntegrand_from_Batch(_fcn, rbatch=False) 
         if self.nproc > 1:
             # MPI multiprocessor mode
             def _mpi_eval(x, jac, self=self, _eval=_eval):
@@ -2893,6 +3028,8 @@ def batchintegrand(f):
             return np.exp(-x[:, 0] - x[:, 1])
 
     for the two-dimensional integrand :math:`\exp(-x_0 - x_1)`.
+    When integrands have dictionary arguments ``xd``, each element of the 
+    dictionary has an extra index (on the left): ``xd[key][:, ...]``.
 
     :func:`vegas.lbatchintegrand` is the same as :func:`vegas.batchintegrand`.
     """
