@@ -886,20 +886,23 @@ cdef class Integrator(object):
         map (array, dictionary, :class:`vegas.AdaptiveMap` or :class:`vegas.Integrator`):
             The integration region  is specified by an array ``map[d, i]``
             where ``d`` is the direction and ``i=0,1`` specify the lower
-            and upper limits of integration in direction ``d``.
+            and upper limits of integration in direction ``d``. Integration 
+            points ``x`` are packaged as arrays ``x[d]`` when 
+            passed to the integrand ``f(x)``.
 
             Alternatively, the integration region can be specified by a 
-            dictionary when integration variables are packaged in 
-            a dictionary rather than an array (see ``xdict`` below). 
-            Then each value ``map[key]`` is either a 2-tuple or an 
-            array of 2-tuples specifying the lower and upper integration 
-            limits for the corresponding variables: e.g., ::
+            dictionary whose values ``map[key]`` are either 2-tuples or
+            arrays of 2-tuples corresponding to the lower and upper 
+            integration limits for the corresponding variables. Then 
+            integration points ``xd`` are packaged as dictionaries 
+            having the same structure as ``map`` but with the integration
+            limits replace by the values of the variables: e.g., ::
 
                 map = dict(r=(0, 1), phi=[(0, np.pi), (0, 2 * np.pi)])
 
             indicates a three-dimensional integral over variables ``r``
             (from ``0`` to ``1``), ``phi[0]`` (from ``0`` to ``np.pi``), 
-            and ``phi[1]`` (from ``0`` to ``2 * np.pi``). In this case 
+            and ``phi[1]`` (from ``0`` to ``2*np.pi``). In this case 
             integrands ``f(xd)`` have dictionary arguments ``xd`` where 
             ``xd['r']``, ``xd['phi'][0]``, and ``xd['phi'][1]`` 
             correspond to the integration variables.
@@ -908,24 +911,19 @@ cdef class Integrator(object):
             another |Integrator|, or that |Integrator|
             itself. In this case the grid is copied from the
             existing integrator.
-        xdict (None or dictionary): ``xdict=None`` (default) implies that
-            integrands ``f(x)`` take arrays ``x`` of integration values 
-            as array values where ``x[d]`` is the value in 
-            direction ``d``.
-
-            When ``xdict`` is a dictionary, integrands ``f(xd)`` are 
-            assumed to take a dictionary argument ``xd`` where each
-            ``xd[key]`` corresponds to an integration variable or 
-            an array of integration variables. ``xdict`` provides a 
-            template for the arguments. For example, setting ::
+        xdict (None or dictionary): Setting ``xdict`` 
+            equal to a dictionary causes integration 
+            variables ``xd`` to be packaged as a 
+            dictionary, with the same structure as ``xdict``,
+            when passed to the integrand ``f(xd)``. 
+            For example, setting ::
 
                 xdict = dict(r=0, phi=[0, 0])
 
-            implies that integration points ``xd`` represent
-            three integration variables: ``xd['r']``, 
-            ``xd['phi'][0]``, and ``xd['phi'][1]``.
-
-            Keyword ``xdict`` is ignored if ``map`` is a dictionary.
+            indicates that each integration point ``xd`` 
+            represents three integration variables:
+            ``xd['r']``, ``xd['phi'][0]``, and ``xd['phi'][1]``.
+            ``xdict`` is ignored if set equal to ``None`` (default).
         uses_jac (bool): Setting ``uses_jac=True`` causes |vegas| to 
             call the integrand with two arguments: ``fcn(x, jac=jac)``.
             The second argument is the Jacobian ``jac[d] = dx[d]/dy[d]`` 

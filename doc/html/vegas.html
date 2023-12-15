@@ -129,19 +129,22 @@ monitor progress as it is being made (or not).</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>map</strong> (array, dictionary, <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.AdaptiveMap</span></code></a> or <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>) – <p>The integration region  is specified by an array <code class="docutils literal notranslate"><span class="pre">map[d,</span> <span class="pre">i]</span></code>
 where <code class="docutils literal notranslate"><span class="pre">d</span></code> is the direction and <code class="docutils literal notranslate"><span class="pre">i=0,1</span></code> specify the lower
-and upper limits of integration in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p>
+and upper limits of integration in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. Integration
+points <code class="docutils literal notranslate"><span class="pre">x</span></code> are packaged as arrays <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> when
+passed to the integrand <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>.</p>
 <p>Alternatively, the integration region can be specified by a
-dictionary when integration variables are packaged in
-a dictionary rather than an array (see <code class="docutils literal notranslate"><span class="pre">xdict</span></code> below).
-Then each value <code class="docutils literal notranslate"><span class="pre">map[key]</span></code> is either a 2-tuple or an
-array of 2-tuples specifying the lower and upper integration
-limits for the corresponding variables: e.g.,</p>
+dictionary whose values <code class="docutils literal notranslate"><span class="pre">map[key]</span></code> are either 2-tuples or
+arrays of 2-tuples corresponding to the lower and upper
+integration limits for the corresponding variables. Then
+integration points <code class="docutils literal notranslate"><span class="pre">xd</span></code> are packaged as dictionaries
+having the same structure as <code class="docutils literal notranslate"><span class="pre">map</span></code> but with the integration
+limits replace by the values of the variables: e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">phi</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)])</span>
 </pre></div>
 </div>
 <p>indicates a three-dimensional integral over variables <code class="docutils literal notranslate"><span class="pre">r</span></code>
 (from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>), <code class="docutils literal notranslate"><span class="pre">phi[0]</span></code> (from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">np.pi</span></code>),
-and <code class="docutils literal notranslate"><span class="pre">phi[1]</span></code> (from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">np.pi</span></code>). In this case
+and <code class="docutils literal notranslate"><span class="pre">phi[1]</span></code> (from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">2*np.pi</span></code>). In this case
 integrands <code class="docutils literal notranslate"><span class="pre">f(xd)</span></code> have dictionary arguments <code class="docutils literal notranslate"><span class="pre">xd</span></code> where
 <code class="docutils literal notranslate"><span class="pre">xd['r']</span></code>, <code class="docutils literal notranslate"><span class="pre">xd['phi'][0]</span></code>, and <code class="docutils literal notranslate"><span class="pre">xd['phi'][1]</span></code>
 correspond to the integration variables.</p>
@@ -150,22 +153,19 @@ another <a class="reference internal" href="#vegas.Integrator" title="vegas.Inte
 itself. In this case the grid is copied from the
 existing integrator.</p>
 </p></li>
-<li><p><strong>xdict</strong> (<em>None</em><em> or </em><em>dictionary</em>) – <p><code class="docutils literal notranslate"><span class="pre">xdict=None</span></code> (default) implies that
-integrands <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> take arrays <code class="docutils literal notranslate"><span class="pre">x</span></code> of integration values
-as array values where <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> is the value in
-direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p>
-<p>When <code class="docutils literal notranslate"><span class="pre">xdict</span></code> is a dictionary, integrands <code class="docutils literal notranslate"><span class="pre">f(xd)</span></code> are
-assumed to take a dictionary argument <code class="docutils literal notranslate"><span class="pre">xd</span></code> where each
-<code class="docutils literal notranslate"><span class="pre">xd[key]</span></code> corresponds to an integration variable or
-an array of integration variables. <code class="docutils literal notranslate"><span class="pre">xdict</span></code> provides a
-template for the arguments. For example, setting</p>
+<li><p><strong>xdict</strong> (<em>None</em><em> or </em><em>dictionary</em>) – <p>Setting <code class="docutils literal notranslate"><span class="pre">xdict</span></code>
+equal to a dictionary causes integration
+variables <code class="docutils literal notranslate"><span class="pre">xd</span></code> to be packaged as a
+dictionary, with the same structure as <code class="docutils literal notranslate"><span class="pre">xdict</span></code>,
+when passed to the integrand <code class="docutils literal notranslate"><span class="pre">f(xd)</span></code>.
+For example, setting</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xdict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">phi</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>implies that integration points <code class="docutils literal notranslate"><span class="pre">xd</span></code> represent
-three integration variables: <code class="docutils literal notranslate"><span class="pre">xd['r']</span></code>,
-<code class="docutils literal notranslate"><span class="pre">xd['phi'][0]</span></code>, and <code class="docutils literal notranslate"><span class="pre">xd['phi'][1]</span></code>.</p>
-<p>Keyword <code class="docutils literal notranslate"><span class="pre">xdict</span></code> is ignored if <code class="docutils literal notranslate"><span class="pre">map</span></code> is a dictionary.</p>
+<p>indicates that each integration point <code class="docutils literal notranslate"><span class="pre">xd</span></code>
+represents three integration variables:
+<code class="docutils literal notranslate"><span class="pre">xd['r']</span></code>, <code class="docutils literal notranslate"><span class="pre">xd['phi'][0]</span></code>, and <code class="docutils literal notranslate"><span class="pre">xd['phi'][1]</span></code>.
+<code class="docutils literal notranslate"><span class="pre">xdict</span></code> is ignored if set equal to <code class="docutils literal notranslate"><span class="pre">None</span></code> (default).</p>
 </p></li>
 <li><p><strong>uses_jac</strong> (<em>bool</em>) – Setting <code class="docutils literal notranslate"><span class="pre">uses_jac=True</span></code> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to
 call the integrand with two arguments: <code class="docutils literal notranslate"><span class="pre">fcn(x,</span> <span class="pre">jac=jac)</span></code>.
