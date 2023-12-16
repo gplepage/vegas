@@ -669,13 +669,12 @@ unit sphere using spherical coordinates::
         phi = xd['phi']
         return r ** 2 * np.sin(theta) 
 
-    def main():
-        integ = vegas.Integrator(dict(r=(0,1), theta=(0, np.pi), phi=(0, 2 * np.pi)))
-        volume = integ(f, neval=10000, nitn=10)
-        print(volume)
+    integ = vegas.Integrator(dict(r=(0,1), theta=(0, np.pi), phi=(0, 2 * np.pi)))
+    volume = integ(f, neval=1000, nitn=10)
+    print(volume)
 
-Running this code gives a result of 4.1880(13) which agrees well (0.03%) with the correct
-result ``4/3 * np.pi``. This can be generalized to ``DIM`` dimensions, 
+Running this code gives a result of 4.1852(44) which agrees well (0.1%) with the correct
+result :math:`4\pi/3`. This can be generalized to ``DIM`` dimensions, 
 where now ``xd['phi']`` is an array of variables: e.g., ::
 
     import numpy as np 
@@ -695,15 +694,14 @@ where now ``xd['phi']`` is an array of variables: e.g., ::
         # calculate contribution to sphere's volume
         return jac
 
-    def main():
-        integ = vegas.Integrator(dict(
-            r=(0,1), 
-            phi=(DIM - 2) * [(0, np.pi)] + [(0, 2 * np.pi)]
-            ))
-        warmup = integ(f, neval=1000, nitn=10)
-        volume = integ(f, neval=1000, nitn=10)
-        print(integ.settings(), '\n')
-        print(f'volume(dim={DIM}) = {volume}')
+    integ = vegas.Integrator(dict(
+        r=(0,1), 
+        phi=(DIM - 2) * [(0, np.pi)] + [(0, 2 * np.pi)]
+        ))
+    warmup = integ(f, neval=1000, nitn=10)
+    volume = integ(f, neval=1000, nitn=10)
+    print(integ.settings(), '\n')
+    print(f'volume(dim={DIM}) = {volume}')
 
 This code generates the following output:
 
@@ -795,8 +793,7 @@ This gives the following output:
 
     .. literalinclude:: eg4b.out 
 
-The correct result for ``I`` is |~| 0.85112. Results are most accurate 
-if ``neval`` is the same in both steps.
+The correct result for ``I`` is |~| 0.85112. 
 
 Bayesian Integrals
 ---------------------
@@ -821,7 +818,7 @@ its mean value. This greatly facilitates integration over these
 variables using |vegas|, making integrals over
 many parameters feasible, even when the parameters are highly
 correlated. |PDFIntegrator| also pre-adapts the integrator 
-to ``g``'s PDF so it is usually unnecessary to discard early iterations.
+to ``g``'s PDF so it is often unnecessary to discard early iterations.
 
 The PDF corresponding to ``g`` can be replaced by an arbitrary
 PDF function ``pdf(p)``. The integration variables are still
@@ -840,7 +837,7 @@ code::
     import vegas
     import gvar as gv
 
-    # multi-dimensional Gaussian distribution
+    # multi-dimensional distribution
     g = gv.BufferDict()
     g['a'] = gv.gvar([0., 1.], [[1., 0.99], [0.99, 1.]])
     g['fb(b)'] = gv.BufferDict.uniform('fb', 0.0, 2.0)
@@ -1771,9 +1768,12 @@ integration volume in the transformed variables into a large number of
 hypercubes, and doing a Monte Carlo integral in each hypercube separately
 (see previous section).
 The final result is the sum of the results from all the hypercubes.
+
 To mimic a full |vegas| integral estimate using the iterators above, we need
 to know which points belong to which hypercubes. The following code
 shows how this is done::
+
+    import gvar as gv 
 
     integral = 0.0
     variance = 0.0
@@ -1790,7 +1790,7 @@ shows how this is done::
             integral += sum_wf
             variance += (sum_wf2 * nwf - sum_wf ** 2) / (nwf - 1.)
     # answer = integral;   standard deviation = variance ** 0.5
-    result = gvar.gvar(integral, variance ** 0.5)
+    result = gv.gvar(integral, variance ** 0.5)
 
 Here ``hcube[i]`` identifies the hypercube containing ``x[i, d]``. This example is 
 easily modified to provide information about the |vegas| Jacobian to the integrand, if needed 
@@ -1801,6 +1801,20 @@ easily modified to provide information about the |vegas| Jacobian to the integra
     for x, y, wgt, hcube in integ.random_batch(yield_hcube=True, yield_y=True):
         wgt_fx = wgt * batch_f(x, jac=integ.map.jac1d(y))
         ...
+
+The example is also easily modified for integrands ``batch_f(xd)`` where ``xd`` 
+is a dictionary::
+
+    integral = 0.0
+    variance = 0.0
+    for x, wgt, hcube in integ.random_batch(yield_hcube=True):
+        xd = gv.BufferDict(integ.xdict, lbatch_buf=x)
+        wgt_fx = wgt * batch_f(xd)
+        ...
+
+Here ``integ.xdict`` provides the template dictionary 
+used to construct the 
+dictionary ``xd``.
 
 Implementation Notes
 ---------------------

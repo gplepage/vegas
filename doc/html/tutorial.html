@@ -744,14 +744,13 @@ unit sphere using spherical coordinates:</p>
     <span class="n">phi</span> <span class="o">=</span> <span class="n">xd</span><span class="p">[</span><span class="s1">&#39;phi&#39;</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">r</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span> <span class="n">phi</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span>
-    <span class="n">volume</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">volume</span><span class="p">)</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span> <span class="n">phi</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span>
+<span class="n">volume</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">volume</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Running this code gives a result of 4.1880(13) which agrees well (0.03%) with the correct
-result <code class="docutils literal notranslate"><span class="pre">4/3</span> <span class="pre">*</span> <span class="pre">np.pi</span></code>. This can be generalized to <code class="docutils literal notranslate"><span class="pre">DIM</span></code> dimensions,
+<p>Running this code gives a result of 4.1852(44) which agrees well (0.1%) with the correct
+result <img class="math" src="_images/math/02712a7422fc88f7ebdf7dbc24f54681cd02a849.svg" alt="4\pi/3"/>. This can be generalized to <code class="docutils literal notranslate"><span class="pre">DIM</span></code> dimensions,
 where now <code class="docutils literal notranslate"><span class="pre">xd['phi']</span></code> is an array of variables: e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">vegas</span>
@@ -770,15 +769,14 @@ where now <code class="docutils literal notranslate"><span class="pre">xd['phi']
     <span class="c1"># calculate contribution to sphere&#39;s volume</span>
     <span class="k">return</span> <span class="n">jac</span>
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
-        <span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
-        <span class="n">phi</span><span class="o">=</span><span class="p">(</span><span class="n">DIM</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)]</span>
-        <span class="p">))</span>
-    <span class="n">warmup</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-    <span class="n">volume</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">settings</span><span class="p">(),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;volume(dim=</span><span class="si">{</span><span class="n">DIM</span><span class="si">}</span><span class="s1">) = </span><span class="si">{</span><span class="n">volume</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+    <span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">phi</span><span class="o">=</span><span class="p">(</span><span class="n">DIM</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)]</span>
+    <span class="p">))</span>
+<span class="n">warmup</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">volume</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">settings</span><span class="p">(),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;volume(dim=</span><span class="si">{</span><span class="n">DIM</span><span class="si">}</span><span class="s1">) = </span><span class="si">{</span><span class="n">volume</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This code generates the following output:</p>
@@ -799,7 +797,8 @@ where now <code class="docutils literal notranslate"><span class="pre">xd['phi']
         <span class="n">phi</span> <span class="mi">0</span>       <span class="mi">1</span>    <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.141592653589793</span><span class="p">)</span>
             <span class="mi">1</span>       <span class="mi">2</span>    <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.141592653589793</span><span class="p">)</span>
             <span class="mi">2</span>       <span class="mi">3</span>    <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.141592653589793</span><span class="p">)</span>
-            <span class="mi">3</span>       <span class="mi">4</span>    <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">6.283185307179586</span><span class="p">)</span> 
+            <span class="mi">3</span>       <span class="mi">4</span>    <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">6.283185307179586</span><span class="p">)</span>
+ 
 
 <span class="n">volume</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> <span class="o">=</span> <span class="mf">5.254</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
 </pre></div>
@@ -934,8 +933,7 @@ so the inversion of the covariance matrices is unnecessary.</p>
 </pre></div>
 </div>
 </div></blockquote>
-<p>The correct result for <code class="docutils literal notranslate"><span class="pre">I</span></code> is   0.85112. Results are most accurate
-if <code class="docutils literal notranslate"><span class="pre">neval</span></code> is the same in both steps.</p>
+<p>The correct result for <code class="docutils literal notranslate"><span class="pre">I</span></code> is   0.85112.</p>
 </section>
 <section id="bayesian-integrals">
 <h2>Bayesian Integrals<a class="headerlink" href="#bayesian-integrals" title="Permalink to this heading">¶</a></h2>
@@ -959,7 +957,7 @@ its mean value. This greatly facilitates integration over these
 variables using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>, making integrals over
 many parameters feasible, even when the parameters are highly
 correlated. <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> also pre-adapts the integrator
-to <code class="docutils literal notranslate"><span class="pre">g</span></code>’s PDF so it is usually unnecessary to discard early iterations.</p>
+to <code class="docutils literal notranslate"><span class="pre">g</span></code>’s PDF so it is often unnecessary to discard early iterations.</p>
 <p>The PDF corresponding to <code class="docutils literal notranslate"><span class="pre">g</span></code> can be replaced by an arbitrary
 PDF function <code class="docutils literal notranslate"><span class="pre">pdf(p)</span></code>. The integration variables are still
 specified by and optimized for <code class="docutils literal notranslate"><span class="pre">g</span></code>, but the PDF used in the
@@ -975,7 +973,7 @@ code:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">gvar</span> <span class="k">as</span> <span class="nn">gv</span>
 
-<span class="c1"># multi-dimensional Gaussian distribution</span>
+<span class="c1"># multi-dimensional distribution</span>
 <span class="n">g</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="p">()</span>
 <span class="n">g</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.99</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
 <span class="n">g</span><span class="p">[</span><span class="s1">&#39;fb(b)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="s1">&#39;fb&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
@@ -1961,11 +1959,13 @@ estimates. It further improves those estimates by subdividing the
 integration volume in the transformed variables into a large number of
 hypercubes, and doing a Monte Carlo integral in each hypercube separately
 (see previous section).
-The final result is the sum of the results from all the hypercubes.
-To mimic a full <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integral estimate using the iterators above, we need
+The final result is the sum of the results from all the hypercubes.</p>
+<p>To mimic a full <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integral estimate using the iterators above, we need
 to know which points belong to which hypercubes. The following code
 shows how this is done:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gvar</span> <span class="k">as</span> <span class="nn">gv</span>
+
+<span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
 <span class="n">variance</span> <span class="o">=</span> <span class="mf">0.0</span>
 <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_batch</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="n">wgt_fx</span> <span class="o">=</span> <span class="n">wgt</span> <span class="o">*</span> <span class="n">batch_f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -1980,7 +1980,7 @@ shows how this is done:</p>
         <span class="n">integral</span> <span class="o">+=</span> <span class="n">sum_wf</span>
         <span class="n">variance</span> <span class="o">+=</span> <span class="p">(</span><span class="n">sum_wf2</span> <span class="o">*</span> <span class="n">nwf</span> <span class="o">-</span> <span class="n">sum_wf</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">nwf</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span>
 <span class="c1"># answer = integral;   standard deviation = variance ** 0.5</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">gvar</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="n">integral</span><span class="p">,</span> <span class="n">variance</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="n">integral</span><span class="p">,</span> <span class="n">variance</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Here <code class="docutils literal notranslate"><span class="pre">hcube[i]</span></code> identifies the hypercube containing <code class="docutils literal notranslate"><span class="pre">x[i,</span> <span class="pre">d]</span></code>. This example is
@@ -1993,6 +1993,19 @@ easily modified to provide information about the <a class="reference internal" h
     <span class="o">...</span>
 </pre></div>
 </div>
+<p>The example is also easily modified for integrands <code class="docutils literal notranslate"><span class="pre">batch_f(xd)</span></code> where <code class="docutils literal notranslate"><span class="pre">xd</span></code>
+is a dictionary:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">variance</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_batch</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">xd</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">xdict</span><span class="p">,</span> <span class="n">lbatch_buf</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">wgt_fx</span> <span class="o">=</span> <span class="n">wgt</span> <span class="o">*</span> <span class="n">batch_f</span><span class="p">(</span><span class="n">xd</span><span class="p">)</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">integ.xdict</span></code> provides the template dictionary
+used to construct the
+dictionary <code class="docutils literal notranslate"><span class="pre">xd</span></code>.</p>
 </section>
 <section id="implementation-notes">
 <h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this heading">¶</a></h2>

@@ -896,7 +896,8 @@ cdef class Integrator(object):
             integration limits for the corresponding variables. Then 
             integration points ``xd`` are packaged as dictionaries 
             having the same structure as ``map`` but with the integration
-            limits replace by the values of the variables: e.g., ::
+            limits replaced by the values of the variables: 
+            for example, ::
 
                 map = dict(r=(0, 1), phi=[(0, np.pi), (0, 2 * np.pi)])
 
@@ -913,8 +914,8 @@ cdef class Integrator(object):
             existing integrator.
         xdict (None or dictionary): Setting ``xdict`` 
             equal to a dictionary causes integration 
-            variables ``xd`` to be packaged as a 
-            dictionary, with the same structure as ``xdict``,
+            variables ``xd`` to be packaged as 
+            dictionaries, with the same structure as ``xdict``,
             when passed to the integrand ``f(xd)``. 
             For example, setting ::
 
@@ -1519,8 +1520,7 @@ cdef class Integrator(object):
             mtable.append('  '.join([tabcol[i] for tabcol in table]))
         for i in range(ns, nl):
             mtable.append('  '.join([tabcol[i] for tabcol in table[:-1]]))
-        ans += offset + ('\n' + offset).join(mtable)
-
+        ans += offset + ('\n' + offset).join(mtable) + '\n'
         # add grid data
         if ngrid > 0:
             ans += '\n' + self.map.settings(ngrid=ngrid)
@@ -1784,6 +1784,19 @@ cdef class Integrator(object):
         are useful for multiple integrands that are closely related,
         and can lead to substantial reductions in the errors for
         ratios or differences of the results.
+
+        Integrand's take dictionaries as arguments when
+        :class:`Integrator` keyword ``map`` (or ``xdict``) is 
+        set equal to a dictionary. For example, with ::
+
+            map = dict(r=(0,1), theta=(0, np.pi), phi=(0, 2*np.pi))
+
+        the volume of a unit sphere is obtained by integrating ::
+
+            def f(xd):
+                r = xd['r']
+                theta = xd['theta']
+                return r ** 2 * np.sin(theta)  
 
         It is usually much faster to use |vegas| in batch
         mode, where integration points are presented to the

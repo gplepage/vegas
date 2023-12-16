@@ -138,7 +138,8 @@ arrays of 2-tuples corresponding to the lower and upper
 integration limits for the corresponding variables. Then
 integration points <code class="docutils literal notranslate"><span class="pre">xd</span></code> are packaged as dictionaries
 having the same structure as <code class="docutils literal notranslate"><span class="pre">map</span></code> but with the integration
-limits replace by the values of the variables: e.g.,</p>
+limits replaced by the values of the variables:
+for example,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">phi</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)])</span>
 </pre></div>
 </div>
@@ -155,8 +156,8 @@ existing integrator.</p>
 </p></li>
 <li><p><strong>xdict</strong> (<em>None</em><em> or </em><em>dictionary</em>) – <p>Setting <code class="docutils literal notranslate"><span class="pre">xdict</span></code>
 equal to a dictionary causes integration
-variables <code class="docutils literal notranslate"><span class="pre">xd</span></code> to be packaged as a
-dictionary, with the same structure as <code class="docutils literal notranslate"><span class="pre">xdict</span></code>,
+variables <code class="docutils literal notranslate"><span class="pre">xd</span></code> to be packaged as
+dictionaries, with the same structure as <code class="docutils literal notranslate"><span class="pre">xdict</span></code>,
 when passed to the integrand <code class="docutils literal notranslate"><span class="pre">f(xd)</span></code>.
 For example, setting</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xdict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">phi</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
@@ -373,6 +374,19 @@ integrands are also supported: e.g.,</p>
 are useful for multiple integrands that are closely related,
 and can lead to substantial reductions in the errors for
 ratios or differences of the results.</p>
+<p>Integrand’s take dictionaries as arguments when
+<a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Integrator</span></code></a> keyword <code class="docutils literal notranslate"><span class="pre">map</span></code> (or <code class="docutils literal notranslate"><span class="pre">xdict</span></code>) is
+set equal to a dictionary. For example, with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span> <span class="n">phi</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>the volume of a unit sphere is obtained by integrating</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">xd</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">xd</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">xd</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">r</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>It is usually much faster to use <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> in batch
 mode, where integration points are presented to the
 integrand in batches. A simple batch integrand might
