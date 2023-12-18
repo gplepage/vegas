@@ -890,8 +890,9 @@ number to 100 in the example above reveals a problem:</p>
 from different iterations, as is clear by the third iteration. The
 weights used in the weighted average are obtained from the inverse
 of the covariance matrix for the different components of the
-integral — here a 101×101 matrix. This matrix is quite
-singular and therefore susceptible to even small errors in the
+integral — here a 101×101 matrix. This matrix becomes quite
+singular as it grows, and therefore is quite sensitive to even small
+errors in the
 covariance matrix. These errors, particularly in early iterations,
 can introduce large errors in the weighted averages.</p>
 <p>This problem can be addressed by increasing the number of integrand
@@ -900,7 +901,7 @@ of the Monte Carlo estimate of the covariance matrix. A more efficient
 solution in this case, however, is to break the integration into two parts: one
 where the integrator is adapted to the integrand, but the results
 are discarded; and a second step where adaptation is turned off
-with   <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code> to  obtain the final result. As discussed above,
+with <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code> to  obtain the final result. As discussed above,
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> does not use a weighted average when <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code> and
 so the inversion of the covariance matrices is unnecessary.</p>
 <p>To implement this strategy in the code above, replace the line</p>

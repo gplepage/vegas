@@ -1,9 +1,10 @@
-Version 5.6 2023-12-15???
+Version 5.6 2023-12-18
 =========================
-Integrators can be configured to package integration points 
-as dictionaries rather than arrays. This is to facilitate 
-integrations over a heterogeneous collection of integration 
-variables. See the tutorial section on Dictionaries.
+vegas 5.6 adds one feature: vegas.Integrators now can be (optionally) 
+configured to package integration points as dictionaries rather than arrays. 
+This is to facilitate integration over (large) heterogeneous 
+collections of integration variables. See the tutorial section 
+on Dictionaries.
 
 
 Version 5.5.2 2023-12-04

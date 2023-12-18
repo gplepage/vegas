@@ -765,8 +765,9 @@ Something is going wrong with the weighted averages of the results
 from different iterations, as is clear by the third iteration. The 
 weights used in the weighted average are obtained from the inverse 
 of the covariance matrix for the different components of the 
-integral --- here a 101 |times| 101 matrix. This matrix is quite 
-singular and therefore susceptible to even small errors in the 
+integral --- here a 101 |times| 101 matrix. This matrix becomes quite 
+singular as it grows, and therefore is quite sensitive to even small 
+errors in the 
 covariance matrix. These errors, particularly in early iterations, 
 can introduce large errors in the weighted averages. 
 
@@ -776,7 +777,7 @@ of the Monte Carlo estimate of the covariance matrix. A more efficient
 solution in this case, however, is to break the integration into two parts: one 
 where the integrator is adapted to the integrand, but the results 
 are discarded; and a second step where adaptation is turned off 
-with |~| ``adapt=False`` to  obtain the final result. As discussed above,
+with ``adapt=False`` to  obtain the final result. As discussed above,
 |vegas| does not use a weighted average when ``adapt=False`` and 
 so the inversion of the covariance matrices is unnecessary. 
 
