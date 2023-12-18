@@ -609,7 +609,7 @@ class TestIntegrator(unittest.TestCase):
             "    axis    integration limits",
             "    --------------------------",
             "       0            (0.0, 1.0)",
-            "       1           (-1.0, 1.0)",
+            "       1           (-1.0, 1.0)\n",
             ]
         outstr = ('\n'.join(outstr)).format(
             neval=I.neval, nstrat0=I.nstrat[0], nstrat1=I.nstrat[1],
@@ -634,7 +634,7 @@ class TestIntegrator(unittest.TestCase):
             "    key/index    axis    integration limits",
             "    ---------------------------------------",
             "          x 0       0            (0.0, 1.0)",
-            "            y       1           (-1.0, 1.0)",
+            "            y       1           (-1.0, 1.0)\n",
             ]
         outstr = ('\n'.join(outstr)).format(
             neval=I.neval, nstrat0=I.nstrat[0], nstrat1=I.nstrat[1],
