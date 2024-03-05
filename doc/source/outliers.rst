@@ -75,7 +75,7 @@ The following code does a Bayesian fit with this modified PDF::
 
         # 2) create prior and modified PDF
         prior = make_prior()
-        mod_pdf = ModifiedPDF(data=(x, y), fcn=fitfcn, prior=prior)
+        mod_pdf = ModifiedPDF(data=(x, y), fitfcn=fitfcn, prior=prior)
 
         # 3) create integrator and adapt it to the modified PDF
         expval = vegas.PDFIntegrator(prior, pdf=mod_pdf)
