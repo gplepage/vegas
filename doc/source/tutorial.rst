@@ -860,7 +860,7 @@ and the PDF used for expectation values::
     g_ev = vegas.PDFIntegrator(g)
 
     # adapt integrator to the PDF 
-    g_ev(neval=10_000, nit=5)
+    g_ev(neval=10_000, nitn=5)
 
     # want expectation value of [fp, fp**2]
     def f_f2(p):
@@ -916,6 +916,7 @@ than ``f_f2(p)`` above)::
 
     r = g_ev.stats(f)
     print('results =', r)
+    print ("f(g) =", f(g)['fp'])
     print('\ncorrelation matrix:')
     print(gv.evalcorr([r['a'][0], r['a'][1], r['b'], r['fp']]))
 
