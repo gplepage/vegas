@@ -995,7 +995,7 @@ and the PDF used for expectation values:</p>
 <span class="n">g_ev</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">PDFIntegrator</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
 
 <span class="c1"># adapt integrator to the PDF</span>
-<span class="n">g_ev</span><span class="p">(</span><span class="n">neval</span><span class="o">=</span><span class="mi">10_000</span><span class="p">,</span> <span class="n">nit</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">g_ev</span><span class="p">(</span><span class="n">neval</span><span class="o">=</span><span class="mi">10_000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
 <span class="c1"># want expectation value of [fp, fp**2]</span>
 <span class="k">def</span> <span class="nf">f_f2</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
@@ -1063,7 +1063,7 @@ than <code class="docutils literal notranslate"><span class="pre">f_f2(p)</span>
 
 <span class="n">r</span> <span class="o">=</span> <span class="n">g_ev</span><span class="o">.</span><span class="n">stats</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;results =&#39;</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
-<span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;f(g) =&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">g</span><span class="p">)[</span><span class="s1">&#39;fp&#39;</span><span class="p">],</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;f(g) =&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">g</span><span class="p">)[</span><span class="s1">&#39;fp&#39;</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">correlation matrix:&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">gv</span><span class="o">.</span><span class="n">evalcorr</span><span class="p">([</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;fp&#39;</span><span class="p">]]))</span>
 </pre></div>
