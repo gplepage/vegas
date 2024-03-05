@@ -13,16 +13,16 @@ numpy = np
 # options (default is 2nd in each case)
 USE_FIT = True
 USE_FIT = False
-B_PARAM = False
-B_PARAM = True
+FIT_KEYS = ['c', 'w']
+FIT_KEYS = ['c', 'b', 'w']
 W_SHAPE = 19
 W_SHAPE = ()
-gv.ranseed(1)
+gv.ranseed(123)
 
 def main():
-    if not USE_FIT and B_PARAM and W_SHAPE == ():
+    if not USE_FIT and  W_SHAPE == ():
         log_stdout('outliers1.out')
-    elif not USE_FIT and B_PARAM and W_SHAPE != ():
+    elif not USE_FIT and W_SHAPE != ():
         log_stdout('outliers2.out')
     x = np.array([
         0.2, 0.4, 0.6, 0.8, 1.,
@@ -44,14 +44,7 @@ def main():
     # evaluate expectation value of g(p)[k] for k='w','c'
     @vegas.rbatchintegrand
     def g(p):
-        w = p['w']
-        c = p['c']
-        c_outer = c[:, None] * c[None,:]
-        if B_PARAM:
-            b = p['b']
-            return dict(w=[w, w**2] , c_mean=c, c_outer=c_outer, b=[b, b**2])
-        else:
-            return dict(w=[w, w**2] , c_mean=c, c_outer=c_outer)
+        return {k:p[k] for k in FIT_KEYS}
 
     # integrator for expectation values with modified PDF
     if USE_FIT:
@@ -62,45 +55,29 @@ def main():
 
     # adapt integrator to pdf
     nitn = 10
-    neval = 1_000
-    warmup = expval(g, neval=neval, nitn=nitn)
+    neval = 2_000
+    warmup = expval(neval=neval, nitn=2 * nitn)
 
     # calculate expectation values
-    results = expval(g, neval=neval, nitn=nitn, adapt=False)
+    results = expval.stats(g, neval=neval, nitn=nitn)
     print(results.summary())
 
-    # parameters c[i]
-    c_mean = results['c_mean']
-    cov = results['c_outer'] - np.outer(c_mean, c_mean)
-    cov = (cov + cov.T) / 2
-    # combine Monte Carlo vegas error with covariance
-    c = c_mean + gv.gvar(np.zeros(c_mean.shape), gv.mean(cov))
-    print('c =', c)
-    print(
-        'corr(c) =',
-        np.array2string(gv.evalcorr(c), prefix=10 * ' '),
-        '\n',
-        )
-
-    # parameter w
-    wmean, w2mean = results['w']
-    wsdev = gv.mean(w2mean - wmean ** 2) ** 0.5
-    w = wmean + gv.gvar(np.zeros(np.shape(wmean)), wsdev)
-    print('w =', w, '\n')
-
-    if B_PARAM:
-        # parameter b
-        bmean, b2mean = results['b']
-        bsdev = gv.mean(b2mean - bmean ** 2) ** 0.5
-        b = bmean + gv.gvar(np.zeros(np.shape(bmean)), bsdev)
-        print('b =', b, '\n')
-
+    # print out results
+    print('Bayesian fit results:')
+    for k in results:
+        print(f'      {k} = {results[k]}')
+        if k == 'c':
+            # correlation matrix for c
+            print(
+                ' corr_c =',
+                np.array2string(gv.evalcorr(results['c']), prefix=10 * ' ', precision=3),
+                )
 
     # Bayes Factor
-    print('logBF =', np.log(results.pdfnorm))
+    print('\n  logBF =', np.log(results.pdfnorm))
 
-    ### 3) Plot results
-    make_plot(x, y, prior, c)
+    # Plot results
+    make_plot(x, y, prior, results['c'])
 
 @vegas.rbatchintegrand
 class ModifiedPDF:
@@ -121,7 +98,7 @@ class ModifiedPDF:
         self.prior['gb(b)'] = prior['gb(b)']
 
     def __call__(self, p):
-        if B_PARAM:
+        if 'b' in FIT_KEYS:
             bwide = p['b']
         else:
             bwide = 10.
@@ -133,7 +110,7 @@ class ModifiedPDF:
             prior_pdf *= self.gaussian_pdf(p['gw(w)'] - self.prior['gw(w)'])
         else:
             prior_pdf *= np.prod(self.gaussian_pdf(p['gw(w)'] - self.prior['gw(w)']), axis=0)
-        if B_PARAM:
+        if 'b' in FIT_KEYS:
             prior_pdf *= self.gaussian_pdf(p['gb(b)'] - self.prior['gb(b)'])
         w = p['w']
         return np.prod((1. - w) * data_pdf1 + w * data_pdf2, axis=0) * prior_pdf

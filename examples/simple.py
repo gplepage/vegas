@@ -24,7 +24,7 @@ def f(x):
 
 def main():
     # seed the random number generator so results reproducible
-    gv.ranseed((1, 2, 3))
+    gv.ranseed((1, 2, 33))
 
     # assign integration volume to integrator
     integ = vegas.Integrator([[-1., 1.], [0., 1.], [0., 1.], [0., 1.]])

@@ -45,7 +45,7 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 """
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-23 G. Peter Lepage.
+# Copyright (c) 2013-24 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 
 from ._vegas import RAvg, RAvgArray, RAvgDict
 from ._vegas import AdaptiveMap, Integrator, BatchIntegrand
-from ._vegas import reporter, batchintegrand
+from ._vegas import reporter, VegasIntegrand, batchintegrand
 from ._vegas import rbatchintegrand, RBatchIntegrand
 from ._vegas import lbatchintegrand, LBatchIntegrand
 from ._vegas import MPIintegrand
@@ -73,18 +73,79 @@ import functools
 import numpy
 import pickle 
 
-#########################################
-# PDFRAvg, etc are wrappers for RAvg, etc
+###############################################
+# PDFEV, etc PDFIntegrator expectation values
 
-class PDFRAvg(_gvar.GVar):
-    def __init__(self, results):
+
+class PDFEV(_gvar.GVar):
+    """ Expectation value from |PDFIntegrator|.
+    
+    Expectation values are returned by 
+    :meth:`vegas.PDFIntegrator.__call__` and 
+    :class:`vegas.PDFIntegrator.stats`::
+
+        >>> g = gvar.gvar(['1(1)', '10(10)'])
+        >>> g_ev = vegas.PDFIntegrator(g)
+        >>> def f(p):
+        ...     return p[0] * p[1]
+        >>> print(g_ev(f))
+        10.051(57)
+        >>> print(g_ev.stats(f))
+        10(17)
+
+    In the first case, the quoted error is the uncertainty 
+    in the :mod:`vegas` estimate of the mean of ``f(p)``. 
+    In the second case, the quoted uncertainty is the 
+    standard deviation evaluated with respect to the 
+    Gaussian distribution associated with ``g`` (added
+    in quadrature to the :mod:`vegas` error, which 
+    is negligible here). 
+          
+    :class:`vegas.PDFEV`\s have the following attributes:
+
+    Attributes:
+
+        pdfnorm: Divide PDF by ``pdfnorm`` to normalize it.
+
+        results (:class:`vegas.RAvgDict`): Results from 
+            the underlying integrals.
+
+    In addition, they have all the attributes of the :class:`vegas.RAvgDict`
+    (``results``) corresponding to the underlying integrals.
+    
+    A :class:`vegas.PDFEV` returned by 
+    ``vegas.PDFIntegrator.stats(self, f...)`` has three further attributes:
+
+    Attributes:
+
+        stats: An instance of :class:`gvar.PDFStatistics`
+            containing statistical information about 
+            the distribution of ``f(p)``.
+
+        vegas_mean: |vegas| estimate for the mean value of 
+            ``f(p)``. The uncertainties in ``vegas_mean`` 
+            are the integration errors from |vegas|.
+
+        vegas_cov: |vegas| estimate for the covariance matrix 
+            of ``f(p)``. The uncertainties in ``vegas_cov`` 
+            are the integration errors from |vegas|.
+    """
+    def __init__(self, results, analyzer=None):
         self.results = pickle.loads(results) if isinstance(results, bytes) else results
-        ans = self.results['f(p)*pdf'] / self.results['pdf']
-        super(PDFRAvg, self).__init__(*ans.internaldata)
+        if analyzer is None:
+            ans = self.results['f(p)*pdf'] / self.results['pdf']
+            super(PDFEV, self).__init__(*ans.internaldata)
+            self.analyzer = None
+        else:
+            ans, extras = analyzer(self.results)
+            super(PDFEV, self).__init__(*ans.internaldata)
+            for k in extras:
+                setattr(self, k, extras[k])
+            self.analyzer = analyzer
 
-    def extend(self, pdfravg):
-        """ Merge results from :class:`PDFRAvg` object ``pdfravg`` after results currently in ``self``. """
-        self.results.extend(pdfravg.results)
+    def extend(self, pdfev):
+        """ Merge results from :class:`PDFEV` object ``pdfev`` after results currently in ``self``. """
+        self.results.extend(pdfev.results)
 
     def __getattr__(self, k):
         if k in ['keys']:
@@ -94,28 +155,91 @@ class PDFRAvg(_gvar.GVar):
         return getattr(self.results, k)
 
     def _remove_gvars(self, gvlist):
-        tmp = PDFRAvg(results=self.results)
+        tmp = PDFEV(results=self.results, analyzer=self.analyzer)
         tmp.results = _gvar.remove_gvars(tmp.results, gvlist)
         tgvar = _gvar.gvar_factory() # small cov matrix
-        super(PDFRAvg, tmp).__init__(*tgvar(0,0).internaldata)
+        super(PDFEV, tmp).__init__(*tgvar(0,0).internaldata)
         return tmp 
 
     def _distribute_gvars(self, gvlist):
-        return PDFRAvg(results = _gvar.distribute_gvars(self.results, gvlist))
+        return PDFEV(
+            results = _gvar.distribute_gvars(self.results, gvlist),
+            analyzer=self.analyzer
+            )
 
     def __reduce_ex__(self, protocol):
-        return (PDFRAvg, (pickle.dumps(self.results), ))
+        return (PDFEV, (pickle.dumps(self.results), self.analyzer))
 
-class PDFRAvgArray(numpy.ndarray):
-    def __new__(cls, results):
+class PDFEVArray(numpy.ndarray):
+    """ Array of expectation values from |PDFIntegrator|.
+    
+    Expectation values are returned by 
+    :meth:`vegas.PDFIntegrator.__call__` and 
+    :class:`vegas.PDFIntegrator.stats`::
+
+        >>> g = gvar.gvar(['1(1)', '10(10)'])
+        >>> g_ev = vegas.PDFIntegrator(g)
+        >>> def f(p):
+        ...     return [p[0], p[1], p[0] * p[1]]
+        >>> print(g_ev(f))
+        [0.9992(31) 10.024(29) 10.051(57)]
+        >>> print(g_ev.stats(f))
+        [1.0(1.0) 10(10) 10(17)]
+
+    In the first case, the quoted errors are the uncertainties 
+    in the :mod:`vegas` estimates of the means. In the second 
+    case, the quoted uncertainties are the standard deviations 
+    evaluated with respect to the Gaussian distribution 
+    associated with ``g`` (added in quadrature to the 
+    :mod:`vegas` errors, which are negligible here).
+          
+    :class:`vegas.PDFEVArray`\s have the following attributes:
+    
+    Attributes:
+
+        pdfnorm: Divide PDF by ``pdfnorm`` to normalize it.
+
+        results (:class:`vegas.RAvgDict`): Results from 
+            the underlying integrals.
+
+    In addition, they have all the attributes of the :class:`vegas.RAvgDict`
+    (``results``) corresponding to the underlying integrals.
+
+    A :class:`vegas.PDFEVArray` ``s`` returned by 
+    ``vegas.PDFIntegrator.stats(self, f...)`` has three further 
+    attributes:
+
+    Attributes:
+
+        stats: ``s.stats[i]`` is a :class:`gvar.PDFStatistics`
+            object containing statistical information about 
+            the distribution of ``f(p)[i]``.
+
+        vegas_mean: |vegas| estimates for the mean values
+            of ``f(p)``. The uncertainties in ``vegas_mean`` 
+            are the integration errors from |vegas|.
+
+        vegas_cov: |vegas| estimate for the covariance matrix
+            of ``f(p)``. The uncertainties in ``vegas_cov`` 
+            are the integration errors from |vegas|.
+    """
+    def __new__(cls, results, analyzer=None):
         results = pickle.loads(results) if isinstance(results, bytes) else results
-        self = numpy.array(results['f(p)*pdf'] / results['pdf']).view(cls)
+        if analyzer is None:
+            self = numpy.asarray(results['f(p)*pdf'] / results['pdf']).view(cls)
+            self.analyzer = None
+        else:
+            ans, extras = analyzer(results)
+            self = numpy.asarray(ans).view(cls)
+            for k in extras:
+                setattr(self, k, extras[k])
+            self.analyzer = analyzer 
         self.results = results
         return self 
 
-    def extend(self, pdfravg):
-        """ Merge results from :class:`PDFRAvgArray` object ``pdfravg`` after results currently in ``self``. """
-        self.results.extend(pdfravg.results)
+    def extend(self, pdfev):
+        """ Merge results from :class:`PDFEVArray` object ``pdfev`` after results currently in ``self``. """
+        self.results.extend(pdfev.results)
 
     def __getattr__(self, k):
         if k in ['keys']:
@@ -125,40 +249,104 @@ class PDFRAvgArray(numpy.ndarray):
         return getattr(self.results, k)
 
     def _remove_gvars(self, gvlist):
-        tmp = PDFRAvgArray(results=self.results)
+        tmp = PDFEVArray(results=self.results, analyzer=self.analyzer)
         tmp.results = _gvar.remove_gvars(tmp.results, gvlist)
         tmp.flat[:] = _gvar.remove_gvars(numpy.array(tmp), gvlist)
         return tmp 
 
     def _distribute_gvars(self, gvlist):
-        return PDFRAvgArray(results=_gvar.distribute_gvars(self.results, gvlist))
+        return PDFEVArray(
+            results=_gvar.distribute_gvars(self.results, gvlist), analyzer=self.analyzer
+            )
 
     def __reduce_ex__(self, protocol):
-        return (PDFRAvgArray, (pickle.dumps(self.results), ))
+        return (PDFEVArray, (pickle.dumps(self.results), self.analyzer))
 
-class PDFRAvgDict(_gvar.BufferDict):
-    def __init__(self, results):
-        super(PDFRAvgDict, self).__init__()
+class PDFEVDict(_gvar.BufferDict):
+    """ Dictionary of expectation values from |PDFIntegrator|.
+    
+    Expectation values are returned by 
+    :meth:`vegas.PDFIntegrator.__call__` and 
+    :class:`vegas.PDFIntegrator.stats`::
+
+        >>> g = gvar.gvar(['1(1)', '10(10)'])
+        >>> g_ev = vegas.PDFIntegrator(g)
+        >>> def f(p):
+        ...     return dict(p=p, prod=p[0] * p[1])
+        >>> print(g_ev(f))
+        {'p': array([0.9992(31), 10.024(29)], dtype=object), 'prod': 10.051(57)}
+        >>> print(g_ev.stats(f))
+        {'p': array([1.0(1.0), 10(10)], dtype=object), 'prod': 10(17)}
+
+    In the first case, the quoted errors are the uncertainties 
+    in the :mod:`vegas` estimates of the means. In the second 
+    case, the quoted uncertainties are the standard deviations 
+    evaluated with respect to the Gaussian distribution 
+    associated with ``g`` (added in quadrature to the 
+    :mod:`vegas` errors, which are negligible here).
+    
+    :class:`vegas.PDFEVDict` objects have the following attributes:
+
+    Attributes:
+
+        pdfnorm: Divide PDF by ``pdfnorm`` to normalize it.
+
+        results (:class:`vegas.RAvgDict`): Results from 
+            the underlying integrals.
+
+    In addition, they have all the attributes of the :class:`vegas.RAvgDict`
+    (``results``) corresponding to the underlying integrals.
+
+    A :class:`vegas.PDFEVDict` object ``s`` returned by 
+    :meth:`vegas.PDFIntegrator.stats` has three further attributes:
+
+    Attributes:
+
+        stats: ``s.stats[k]`` is a :class:`gvar.PDFStatistics`
+            object containing statistical information about 
+            the distribution of ``f(p)[k]``.
+
+        vegas_mean: |vegas| estimates for the mean values
+             of ``f(p)``. The uncertainties in ``vegas_mean`` 
+             are the integration errors from |vegas|.
+
+        vegas_cov: |vegas| estimate for the covariance matrix
+            of ``f(p)``. The uncertainties in ``vegas_cov`` 
+            are the integration errors from |vegas|.
+    """
+    def __init__(self, results, analyzer=None):
+        super(PDFEVDict, self).__init__()
         self.results = pickle.loads(results) if isinstance(results, bytes) else results
-        for k in self.results:
-            if k == 'pdf':
-                continue 
-            self[k[1]] = self.results[k]
-        self.buf[:] /= self.results['pdf']
+        if analyzer is None:
+            for k in self.results:
+                if k == 'pdf':
+                    continue 
+                self[k[1]] = self.results[k]
+            self.buf[:] /= self.results['pdf']
+            self.analyzer = None
+        else:
+            ans, extras = analyzer(self.results)
+            for k in extras:
+                setattr(self, k, extras[k])
+            for k in ans:
+                self[k] = ans[k]
+            self.analyzer = analyzer
 
-    def extend(self, pdfravg):
-        """ Merge results from :class:`PDFRAvgDict` object ``pdfravg`` after results currently in ``self``. """
-        self.results.extend(pdfravg.results)
+    def extend(self, pdfev):
+        """ Merge results from :class:`PDFEVDict` object ``pdfev`` after results currently in ``self``. """
+        self.results.extend(pdfev.results)
 
     def _remove_gvars(self, gvlist):
-        tmp = PDFRAvgDict(results=self.results)
+        tmp = PDFEVDict(results=self.results, analyzer=self.analyzer)
         tmp.results = _gvar.remove_gvars(tmp.results, gvlist)
         tmp._buf = _gvar.remove_gvars(tmp.buf, gvlist)
         return tmp 
 
     def _distribute_gvars(self, gvlist):
-        return PDFRAvgDict(results=_gvar.distribute_gvars(self.results, gvlist))
-
+        return PDFEVDict(
+            results=_gvar.distribute_gvars(self.results, gvlist),
+            analyzer=self.analyzer
+            )
 
     def __getattr__(self, k):
         if k == 'pdfnorm':
@@ -167,16 +355,40 @@ class PDFRAvgDict(_gvar.BufferDict):
 
     def __reduce_ex__(self, protocol):
         pickle.dumps(self.results)
-        return (PDFRAvgDict, (pickle.dumps(self.results), ))
+        return (PDFEVDict, (pickle.dumps(self.results), self.analyzer))
 
 class PDFIntegrator(Integrator):
     """ :mod:`vegas` integrator for PDF expectation values.
 
-    Given a multi-dimensional Gaussian distribtuion ``g`` (a collection
-    of :class:`gvar.GVar`\s), ``PDFIntegrator`` creates a |vegas| 
-    integrator that evaluates expectation values of arbitrary 
-    functions ``f(p)`` where ``p`` is a point in the parameter 
-    space of the distribution. Typical usage is illustrated by::
+    ``PDFIntegrator(param, pdf)`` creates a |vegas| integrator that 
+    evaluates expectation values of arbitrary functions ``f(p)`` with 
+    respect to the probability density function  ``pdf(p)``, where 
+    ``p`` is a point in the parameter space defined by ``param``. 
+    
+    ``param`` is a collection of :class:`gvar.GVar`\s (Gaussian random
+    variables) that together define a multi-dimensional Gaussian 
+    distribution with the same parameter space as the distribution 
+    described by ``pdf(p)``. ``PDFIntegrator`` internally 
+    re-expresses the integrals over these parameters in terms 
+    of new variables that emphasize the region defined by
+    ``param`` (i.e., the region where the PDF associated with 
+    the ``param``'s Gaussian distribution is large).
+    The new variables are also aligned with the principal axes 
+    of ``param``'s correlation matrix, to facilitate integration.
+    
+    ``param``'s means and covariances are chosen to emphasize the 
+    important regions of the ``pdf``'s  distribution (e.g., ``param`` 
+    might be set equal to the prior in a Bayesian analysis). 
+    ``param`` is used to define and optimize the integration variables; 
+    it does not affect the values of the integrals but can have a big 
+    effect on the accuracy.
+    
+    The Gaussian PDF associated with ``param`` is used if 
+    ``pdf`` is unspecified (i.e., ``pdf=None``, which is the default).
+    
+    Typical usage is illustrated by the following code, where
+    dictionary ``g`` specifies both the parameterization (``param``) 
+    and the PDF::
 
         import vegas
         import gvar as gv
@@ -184,82 +396,72 @@ class PDFIntegrator(Integrator):
 
         g = gv.BufferDict()
         g['a'] = gv.gvar([10., 2.], [[1, 1.4], [1.4, 2]])
-        g['b'] = gv.BufferDict.uniform('fb', 2.9, 3.1)
+        g['fb(b)'] = gv.BufferDict.uniform('fb', 2.9, 3.1)
 
-        expval = vegas.PDFIntegrator(g)
+        g_ev = vegas.PDFIntegrator(g)
 
         def f(p):
             a = p['a']
             b = p['b']
             return a[0] + np.fabs(a[1]) ** b
 
-        result = expval(f, neval=1000, nitn=5)
+        result = g_ev(f, neval=10_000, nitn=5)
         print('<f(p)> =', result)
 
-    Here dictionary ``g`` specifies a three-dimensional distribution
+    Here ``g`` indicates a three-dimensional distribution
     where the first two variables ``g['a'][0]`` and ``g['a'][1]`` 
     are Gaussian with means 10 and 2, respectively, and covariance 
     matrix [[1, 1.4], [1.4, 2.]]. The last variable ``g['b']`` is 
     uniformly distributed on interval [2.9, 3.1]. The result
-    is: ``<f(p)> = 30.233(14)``.
+    is: ``<f(p)> = 30.145(83)``.
 
     ``PDFIntegrator`` evaluates integrals of both ``f(p) * pdf(p)`` 
-    and ``pdf(p)``, where ``pdf(p)`` is the probability density 
-    function (PDF) associated with distribution ``g``. The expectation 
-    value of ``f(p)`` is the ratio of these two integrals (so 
-    ``pdf(p)`` need not be normalized). Integration variables 
-    are chosen to optimize the integral, and the integrator is 
-    pre-adapted to ``pdf(p)`` (so it is often unnecessary to discard 
-    early iterations). The result of a ``PDFIntegrator`` integration
+    and ``pdf(p)``. The expectation value of ``f(p)`` is the ratio 
+    of these two integrals (so ``pdf(p)`` need not be normalized). 
+    The result of a ``PDFIntegrator`` integration
     has an extra attribute, ``result.pdfnorm``, which is the 
     |vegas| estimate of the integral over the PDF. 
 
-    The default (Gaussian) PDF associated with ``g`` can be 
-    replaced by an arbitrary PDF function ``pdf(p)``, allowing 
-    PDFIntegrator to be used for non-Gaussian distributions. 
-    In such cases, Gaussian distribution ``g`` does not affect
-    the values of the integrals; it is used only 
-    to optimize the integration variables, and pre-adapt the 
-    integrator (and so affects the accuracy of the results).
-    Ideally ``g`` is an approximation to the real 
-    distribution --- for example, it could be the prior 
-    in a Bayesian analysis, or the result of a least-squares 
-    (or other peak-finding) analysis.
-
     Args:
-        g : |GVar|, array of |GVar|\s, or dictionary whose values
-            are |GVar|\s or arrays of |GVar|\s that specifies the
-            multi-dimensional Gaussian distribution used to construct
-            the probability density function. The integration 
-            variables are optimized for this function.
+        param : A |GVar|, array of |GVar|\s, or dictionary, whose values
+            are |GVar|\s or arrays of |GVar|\s, that specifies the 
+            integration parameters. When parameter ``pdf=None``, the 
+            PDF is set equal to the Gaussian distribution corresponding 
+            to ``param``. 
 
-        pdf: If specified, ``pdf(p)`` is used as the probability 
-            density function rather than the Gaussian PDF 
-            associated with ``g``. The Gaussian PDF is used if 
-            ``pdf=None`` (default). Note that PDFs need not
-            be normalized.
+        pdf: The probability density function ``pdf(p)``. 
+            The PDF's parameters ``p`` have the same layout 
+            as ``param`` (arrays or dictionary), with the same
+            keys and/or shapes. The Gaussian PDF associated with
+            ``param`` is used when ``pdf=None`` (default).
+            Note that PDFs need not be normalized.
 
         adapt_to_pdf (bool): :mod:`vegas` adapts to the PDF 
             when ``adapt_to_pdf=True`` (default). :mod:`vegas` adapts 
             to ``pdf(p) * f(p)`` when calculating the expectation 
             value of ``f(p)`` if ``adapt_to_pdf=False``.
 
-        limit (positive float): Limits the integrations to a finite
-            region of size ``limit`` times the standard deviation on
-            either side of the mean. This can be useful if the
+        limit (positive float): Integration variables are determined from 
+            ``param``. ``limit`` limits the range of each variable to 
+            a region of size ``limit`` times the standard deviation on 
+            either side of the mean, where means and standard deviations
+            are specified by ``param``. This can be useful if the
             functions being integrated misbehave for large parameter
             values (e.g., ``numpy.exp`` overflows for a large range of
-            arguments). Default is ``limit=100``.
+            arguments). Default is ``limit=100``; results should become 
+            independent of ``limit`` as it is increased.
 
         scale (positive float): The integration variables are
             rescaled to emphasize parameter values of order
-            ``scale`` times the standard deviation. The rescaling
+            ``scale`` times the standard deviation measured from 
+            the mean, where means and standard deviations are 
+            specified by ``param``. The rescaling
             does not change the value of the integral but it
             can reduce uncertainties in the :mod:`vegas` estimate.
             Default is ``scale=1.0``.
 
         svdcut (non-negative float or None): If not ``None``, replace
-            correlation matrix of ``g`` with a new matrix whose
+            correlation matrix of ``param`` with a new matrix whose
             small eigenvalues are modified: eigenvalues smaller than
             ``svdcut`` times the maximum eigenvalue ``eig_max`` are
             replaced by ``svdcut*eig_max``. This can ameliorate
@@ -267,32 +469,41 @@ class PDFIntegrator(Integrator):
             covariance matrix. It increases the uncertainty associated
             with the modified eigenvalues and so is conservative.
             Setting ``svdcut=None`` or ``svdcut=0`` leaves the
-            covariance matrix unchanged. Default is ``svdcut=1e-15``.
+            covariance matrix unchanged. Default is ``svdcut=1e-12``.
 
-    All other keyword parameters are passed on to the the underlying :class:`vegas.Integrator`; 
-    the ``uses_jac`` keyword is ignored.
+    All other keyword parameters are passed on to the the underlying 
+    :class:`vegas.Integrator`; the ``uses_jac`` keyword is ignored.
     """
-    def __init__(self, g, pdf=None, adapt_to_pdf=True, limit=100., scale=1., svdcut=1e-15, **kargs):
-        if isinstance(g, _gvar.PDF):
-            self.g_pdf = g
-        elif isinstance(g, bytes):
-            self.g_pdf = _gvar.loads(g)
+    def __init__(self, param, pdf=None, adapt_to_pdf=True, limit=100., scale=1., svdcut=1e-15, **kargs):
+        if 'g' in kargs and param is None:
+            # for legacy code
+            param = kargs['g']
+            del kargs['g']
+        if param is None:
+            raise ValueError('param must be specified')
+        if isinstance(param, PDFIntegrator):
+            super(PDFIntegrator, self).__init__(param)
+            for k in ['param_pdf', 'param_sample', 'pdf', 'adapt_to_pdf', 'limit', 'scale']:
+                setattr(self, k, getattr(param, k))
+            return
+        elif isinstance(param, _gvar.PDF):
+            self.param_pdf = param
         else:
-            self.g_pdf = _gvar.PDF(g, svdcut=svdcut)
+            self.param_pdf = _gvar.PDF(param, svdcut=svdcut)
+        self.param_sample = self.param_pdf.sample(mode=None)
         self.limit = abs(limit)
-        self.scale = scale
-        self.adapt_to_pdf = adapt_to_pdf
-        self._make_pdf(pdf)
+        self.scale = abs(scale)
+        self.set(adapt_to_pdf=adapt_to_pdf, pdf=pdf)
         integ_map = self._make_map(self.limit / self.scale)
         if kargs and 'uses_jac' in kargs:
             kargs = dict(kargs)
             del kargs['uses_jac']
         super(PDFIntegrator, self).__init__(
-            self.g_pdf.size * [integ_map], **kargs
+            AdaptiveMap(self.param_pdf.size * [integ_map]), **kargs
             )
-        if getattr(self, 'sync_ran'):
+        if getattr(self, 'mpi') and getattr(self, 'sync_ran'):
             # needed because of the Monte Carlo in _make_map()
-            Integrator.synchronize_random()   # for mpi
+            Integrator.synchronize_random()   # for mpi only
 
     def __reduce__(self):
         kargs = dict()
@@ -302,26 +513,52 @@ class PDFIntegrator(Integrator):
         kargs['sigf'] = numpy.array(self.sigf)
         return (
             PDFIntegrator, 
-            (_gvar.dumps(self.g_pdf), self.pdf, self.adapt_to_pdf, self.limit, self.scale),
+            (self.param_pdf, self.pdf, self.adapt_to_pdf, self.limit, self.scale),
             kargs,
             )
 
     def __setstate__(self, kargs):
         self.set(**kargs)
 
-    def _make_pdf(self, pdf):
-        self.pdf = pdf 
-        if pdf is not None:
-            pdftype = getattr(pdf, 'fcntype', 'scalar')
-            if pdftype == 'scalar':
-                self.pdf_lbatch = functools.partial(PDFIntegrator.scalar2lbatch, f=pdf)
-                self.pdf_rbatch = functools.partial(PDFIntegrator.scalar2rbatch, f=pdf)
-            elif pdftype == 'rbatch':
-                self.pdf_lbatch = functools.partial(PDFIntegrator.rbatch2lbatch, f=pdf)
-                self.pdf_rbatch = pdf 
-            else:
-                self.pdf_rbatch = functools.partial(PDFIntegrator.lbatch2rbatch, f=pdf)
-                self.pdf_lbatch = pdf 
+    def set(self, ka={}, **kargs):
+        """ Reset default parameters in integrator.
+
+        Usage is analogous to the constructor
+        for :class:`PDFIntegrator`: for example, ::
+
+            old_defaults = pdf_itg.set(neval=1e6, nitn=20)
+
+        resets the default values for ``neval`` and ``nitn``
+        in :class:`PDFIntegrator` ``pdf_itg``. A dictionary,
+        here ``old_defaults``, is returned. It can be used
+        to restore the old defaults using, for example::
+
+            pdf_itg.set(old_defaults)
+        """
+        if kargs:
+            kargs.update(ka)
+        else:
+            kargs = ka
+        old_defaults = {}
+        if 'param' in kargs:
+            raise ValueError("Can't reset param.")
+        if 'pdf' in kargs:
+            if hasattr(self, 'pdf'):
+                old_defaults['pdf'] = self.pdf
+            pdf = kargs['pdf']
+            self.pdf = (
+                pdf if pdf is None else 
+                self._make_std_integrand(pdf, xsample=self.param_sample)
+                )
+            del kargs['pdf']
+        if 'adapt_to_pdf' in kargs:
+            if hasattr(self, 'adapt_to_pdf'):
+                old_defaults['adapt_to_pdf'] = self.adapt_to_pdf
+            self.adapt_to_pdf = kargs['adapt_to_pdf']
+            del kargs['adapt_to_pdf']
+        if kargs:
+            old_defaults.update(super(PDFIntegrator, self).set(kargs))
+        return old_defaults
 
     def _make_map(self, limit):
         """ Make vegas grid that is adapted to the pdf. """
@@ -341,15 +578,46 @@ class PDFIntegrator(Integrator):
         return numpy.array(m.grid[0])
 
     @staticmethod
-    @lbatchintegrand 
-    def _fdummy(p):
-        if hasattr(p, 'keys'):
-            for k in p:
-                return numpy.ones(numpy.shape(p[k])[0], float)
+    def _f_lbatch(theta, f, param_pdf, pdf, scale, adapt_to_pdf):
+        """ Integrand for PDFIntegrator.
+        
+        N.B. Static method is more efficient because less to carry around
+        (eg, when nproc>1).
+        N.B. ``f`` has been converted to a ``VegasIntegrand`` object (as has
+        ``self.pdf`` if it is defined externally.
+        """
+        tan_theta = numpy.tan(theta)
+        x = scale * tan_theta
+        # jac = dp_dtheta
+        jac = scale * numpy.prod((tan_theta ** 2 + 1.), axis=1) * param_pdf.dp_dchiv
+        p = param_pdf.pflat(x, mode='lbatch')
+        if pdf is None:
+            # normalized in x space so don't want param_pdf.dpdx in jac
+            pdf = numpy.prod(numpy.exp(-(x ** 2) / 2.) / numpy.sqrt(2 * numpy.pi), axis=1) / param_pdf.dp_dchiv
         else:
-            return numpy.ones(numpy.shape(p)[0], float)
+            pdf = numpy.prod(pdf.eval(p, jac=None), axis=1)
+        if f is None:
+            ans = _gvar.BufferDict(pdf=jac * pdf)
+            return ans
+        fp = jac * pdf if f is None else f.format_evalx(f.eval(p))
+        ans = _gvar.BufferDict()
+        if hasattr(fp, 'keys'):
+            ans['pdf'] = jac * pdf
+            for k in fp:
+                shape = numpy.shape(fp[k])
+                ans[('f(p)*pdf', k)] = fp[k] * ans['pdf'].reshape(shape[:1] + len(shape[1:]) * (1,))
+        else:
+            fp = numpy.asarray(fp)
+            ans['pdf'] = jac * pdf
+            shape = fp.shape
+            fp *= ans['pdf'].reshape(shape[:1] + len(shape[1:]) * (1,))
+            ans['f(p)*pdf'] = fp
+        if not adapt_to_pdf:
+            ans_pdf = ans.pop('pdf')
+            ans['pdf'] = ans_pdf
+        return ans
 
-    def __call__(self, f=None, pdf=None, adapt_to_pdf=None, save=None, saveall=None, **kargs):
+    def __call__(self, f=None, save=None, saveall=None, **kargs):
         """ Estimate expectation value of function ``f(p)``.
 
         Uses module :mod:`vegas` to estimate the integral of
@@ -378,10 +646,11 @@ class PDFIntegrator(Integrator):
                 when ``adapt_to_pdf=True`` (default). :mod:`vegas` adapts 
                 to ``pdf(p) * f(p)`` if ``adapt_to_pdf=False``.
 
-            save (str or file or None): Writes ``results`` into pickle file specified
-                by ``save`` at the end of each iteration. For example, setting
-                ``save='results.pkl'`` means that the results returned by the last 
-                vegas iteration can be reconstructed later using::
+            save (str or file or None): Writes ``results`` into pickle 
+                file specified by ``save`` at the end of each iteration. 
+                For example, setting ``save='results.pkl'`` means that 
+                the results returned by the last vegas iteration can be 
+                reconstructed later using::
 
                     import pickle
                     with open('results.pkl', 'rb') as ifile:
@@ -389,11 +658,12 @@ class PDFIntegrator(Integrator):
                 
                 Ignored if ``save=None`` (default).
 
-            saveall (str or file or None): Writes ``(results, integrator)`` into pickle 
-                file specified by ``saveall`` at the end of each iteration. For example, 
-                setting ``saveall='allresults.pkl'`` means that the results returned by 
-                the last vegas iteration, together with a clone of the (adapted) integrator, 
-                can be reconstructed later using::
+            saveall (str or file or None): Writes ``(results, integrator)`` 
+                into pickle file specified by ``saveall`` at the end of 
+                each iteration. For example, setting ``saveall='allresults.pkl'`` 
+                means that the results returned by the last vegas iteration, 
+                together with a clone of the (adapted) integrator, can be 
+                reconstructed later using::
 
                     import pickle
                     with open('allresults.pkl', 'rb') as ifile:
@@ -403,9 +673,12 @@ class PDFIntegrator(Integrator):
                 
         All other keyword arguments are passed on to a :mod:`vegas`
         integrator; see the :mod:`vegas` documentation for further information.
+
+        Returns:
+            Expectation value(s) of ``f(p)`` as object of type
+            :class:`vegas.PDFEV`, :class:`vegas.PDFEVArray`, or 
+            :class:`vegas.PDFEVDict`.
         """
-        # if self.adapt_to_pdf and set(['adapt', 'alpha', 'beta']).isdisjoint(kargs):
-        #     kargs['adapt'] = False
         if kargs and 'uses_jac' in kargs:
             kargs = dict(kargs)
             del kargs['uses_jac']
@@ -413,230 +686,350 @@ class PDFIntegrator(Integrator):
             self.set(kargs)
         if save is not None or saveall is not None:
             self.set(analyzer=PDFAnalyzer(self, analyzer=self.analyzer, save=save, saveall=saveall))
+        if f is not None:
+            f = self._make_std_integrand(f, self.param_sample)
+        integrand = lbatchintegrand(functools.partial(
+            PDFIntegrator._f_lbatch, f=f, param_pdf=self.param_pdf, 
+            pdf=self.pdf, scale=self.scale, adapt_to_pdf=self.adapt_to_pdf,
+            )) 
+        results = super(PDFIntegrator, self).__call__(integrand)
+        if results['pdf'] == 0:
+            raise RuntimeError('Integral of PDF vanishes; increase neval?')
         if f is None:
-            f = PDFIntegrator._fdummy
-        if pdf is not None:
-            self._make_pdf(pdf)
-        if adapt_to_pdf is not None:
-            self.adapt_to_pdf = adapt_to_pdf
-        integrand = self._expval(f) 
-        results = super(PDFIntegrator, self).__call__(integrand) #*, **kargs)
-        if self.ans_type == 'scalar':
-            ans = PDFRAvg(results)
-        elif self.ans_type == 'array':
-            ans = PDFRAvgArray(results)
+            ans = results
+            ans.pdfnorm = results['pdf']
         else:
-            ans = PDFRAvgDict(results)
+            ans = PDFIntegrator._make_ans(results)
         if isinstance(self.analyzer, PDFAnalyzer):
             self.set(analyzer=self.analyzer.analyzer)
-        self.ans_type = None
         return ans
 
-    def _expval(self, f):
-        """ Return integrand using the tan mapping. """
-        fcntype = getattr(f, 'fcntype', 'scalar')
-        if fcntype == 'scalar':
-            # convert to lbatch
-            f = functools.partial(PDFIntegrator.scalar2lbatch, f=f)
-            fcntype = 'lbatch'
-        if fcntype == 'rbatch':
-            return rbatchintegrand(
-                functools.partial(self._f_rbatch, f=f)
-                )
+    @staticmethod
+    def _make_ans(results):
+        if 'f(p)*pdf' not in results:
+            ans = PDFEVDict(results)
+        elif numpy.ndim(results['f(p)*pdf']) == 0:
+            ans = PDFEV(results)
         else:
-            return lbatchintegrand(
-                functools.partial(self._f_lbatch, f=f)
-                )
+            ans = PDFEVArray(results)
+        return ans
+
+    def stats(self, f=None, moments=False, histograms=False, **kargs):
+        """ Statistical analysis of function ``f(p)``.
+
+        Uses the :mod:`vegas` integrator to evaluate the expectation
+        values and (co)variances of ``f(p)`` with 
+        respect to the probability density function associated 
+        with the :class:`PDFIntegrator`. Typical usage
+        is illustrated by::
+
+            >>> import gvar as gv
+            >>> import vegas
+            >>> g = gv.gvar(dict(a='1.0(5)', b='2(1)')) * gv.gvar('1.0(5)')
+            >>> g_ev = vegas.PDFIntegrator(g)
+            >>> g_ev(neval=10_000)    # adapt the integrator to the PDF
+            >>> @vegas.rbatchintegrand
+            ... def f(p):
+            ...     fp = dict(a=p['a'], b=p['b'])
+            ...     fp['a**2 * b'] = p['a']**2 * p['b']
+            ...     return fp
+            >>> r = g_ev.stats(f)
+            >>> print(r)
+            {'a': 1.00(71), 'b': 2.0(1.4), 'a**2 * b': 4.0(6.1)}
+            >>> print(r.vegas_mean['a**2 * b'])
+            3.9972(30)
+            >>> print(r.vegas_cov['a**2 * b', 'a**2 * b'] ** 0.5)            
+            6.073(13)
+
+        ``g_ev.stats(f)`` returns a dictionary of |GVar|\s whose 
+        means and (co)variances are calculated from integrals of 
+        ``f(p) * pdf(p)`` and ``f(p)**2 * pdf(p)``, where ``pdf(p)`` 
+        is the probability density function associated with ``g``.
+        The means and standard deviations for each component of ``f(p)``
+        are displayed by ``print(r)``. The values for the means 
+        and standard deviations have uncertainties coming from the 
+        integrations (|vegas| errors) but these are negligible compared 
+        to the standard deviations. (The last two 
+        print statements show the |vegas| results for the 
+        mean and standard deviation in ``r['a**2 * b']``: 3.9972(30)
+        and 6.073(13), respectively.)
+
+        Th Gaussian approximation for the expectation value of 
+        ``f(p)`` is given by ::
+
+            >>> print(f(g))
+            {'a': 1.00(71), 'b': 2.0(1.4), 'a**2 * b': 2.0(3.7)}
+        
+        Results for ``a`` and ``b`` agree with the results from 
+        ``g_ev.stats(f)``, as expected since the distributions 
+        for these quantities are (obviously) Gaussian. Results 
+        for ``a**2 * b``, however, are quite different, indicating 
+        a distribution that is not Gaussian.
+             
+        Additional statistical data are collected by setting keywords
+        ``moments=True`` and/or ``histogram=True``::
+
+            >>> r = g_ev.stats(f, moments=True, histogram=True)
+            >>> for k in r:
+            ...     print(10 * '-', k)
+            ...     print(r.stats[k])
+            ---------- a
+               mean = 0.99972(23)   sdev = 0.70707(29)   skew = -0.0036(20)   ex_kurt = -0.0079(49)
+               split-normal: 1.0013(14) +/- 0.70862(97)/0.71091(98)
+                     median: 0.99927(62) +/- 0.7077(10)/0.7063(10)
+            ---------- b
+               mean = 1.99954(47)   sdev = 1.41424(72)   skew = -0.0041(28)   ex_kurt = -0.0074(65)
+               split-normal: 2.0042(33) +/- 1.4162(23)/1.4224(24)
+                     median: 1.9977(11) +/- 1.4162(18)/1.4115(19)
+            ---------- a**2 * b
+               mean = 3.9957(29)   sdev = 6.054(12)   skew = 3.048(22)   ex_kurt = 14.52(35)
+               split-normal: -0.4891(25) +/- 6.9578(88)/0.519(10)
+                     median: 1.7447(24) +/- 6.284(12)/2.0693(26)
+            
+        where the uncertainties are all |vegas| errors. Here the 
+        integrator was used to calculate the first four moments 
+        of the distributions for each component of ``f(p)``, from 
+        which the mean, standard deviation, skewness, and excess 
+        kurtosis of those distributions are calculated. As expected 
+        the first two distribuitons here are clearly Gaussian, 
+        but the distribution for ``a**2 * b`` is not. 
+        
+        The integrator also calculates histograms
+        for each of the distributions and fits them to two 
+        different two-sided Gaussians: one is a continuous split-normal
+        distribution, and the other is centered on the median of the 
+        distribution and is discontinuous there. (For more information
+        see the documentation for :class:`gvar.PDFStatistics`.)
+        Both models suggest large asymmetries in the distribution 
+        for ``a**2 * b``. The histogram for this distribution can 
+        be displayed using::
+        
+            >>> r.stats['a**2 * b'].make_plot(show=True)
+
+        Note that |vegas| adaptation is turned off (``adapt=False``)
+        by default in :meth:`PDFIntegrator.stats`. This setting 
+        can be overridden by setting the ``adapt`` parameter 
+        explicitly, but this is not recommended. 
+
+        Args:
+            f (callable): Statistics are calculated for the 
+                components of the output from function ``f(p)``,
+                where ``p`` is a point drawn from the distribution 
+                specified by the ``param`` or ``pdf`` associated with the 
+                :class:`PDFIntegrator`. Parameters ``p`` have
+                the same structure as ``param`` (i.e., array or 
+                dictionary). If ``f=None``, it is replaced by
+                ``f=lbatchintegrand(lambda p:p)``.
+
+            moments (bool): If ``True``, moments are calculated so 
+                that the skewness and excess kurtosis can be determined.
+
+            histograms (bool or dict): Setting ``histograms=True`` 
+                causes histograms to be calculated for the 
+                distributions associated with each component of 
+                the output from ``f(p)``. Alternatively, ``histograms``
+                can be set equal to a dictionary to specify the 
+                the width ``binwidth`` of each histogram bin, the total 
+                number ``nbin`` of bins, and/or the location ``loc``
+                of each histogram: for example, ::
+
+                    histograms=dict(
+                        binwidth=0.3, nbin=30, 
+                        loc=gv.gvar({
+                            'a': '1.0(5)', 'b': '2(1)', 
+                            'a**2 * b': '2.5(2.7)'
+                            }), 
+                        )
+
+                where ``loc`` specifies the location of the center of the histogram 
+                for each output quantity (e.g., ``loc['a'].mean``) and the width of 
+                the bins (e.g., ``binwidth * loc['a'].sdev``). If ``loc`` is not 
+                specified explicitly, it is determined from a simulation using
+                values drawn from the Gaussian distribution for ``self.g``
+                (or from the distribution described by ``self.pdf`` if it is specified).
+
+            kargs (dict): Additional keywords passed on to the 
+                integrator.
+        
+        Returns:
+            Expectation value(s) of ``f(p)`` as an object of type
+            :class:`vegas.PDFEV`, :class:`vegas.PDFEVArray`, 
+            or :class:`vegas.PDFEVDict`.
+        """
+        oldsettings = {}
+        if 'adapt' not in kargs:
+            oldsettings['adapt'] = self.adapt
+            kargs['adapt'] = False 
+        
+        if f is None:
+            if self.param_sample.shape is None and not hasattr(self, 'extrakeys'):
+                self.extrakeys = []
+                for k in self.param_sample.all_keys():
+                    if k not in self.param_sample:
+                        self.extrakeys.append(k)
+            else:
+                self.extrakeys = None
+            f = lbatchintegrand(functools.partial(
+                PDFIntegrator.default_stats_f, jac=None, extrakeys=self.extrakeys
+                ))
+        f = self._make_std_integrand(f, xsample=self.param_sample)
+        fpsample = f(self.param_sample)
+
+        if histograms is not False:
+            if histograms is True:
+                histograms = {}
+            nbin = histograms.get('nbin', 30)
+            binwidth = histograms.get('binwidth', 0.3)
+            histograms['nbin'] = nbin 
+            histograms['binwidth'] = binwidth
+            loc = histograms.get('loc', None)
+            # bins = histograms.get('bins', None)
+            if loc is not None:
+                if hasattr(loc, 'keys'):
+                    loc = _gvar.asbufferdict(loc).flat[:]
+                else:
+                    loc = numpy.asarray(loc).flat[:]
+                mean = _gvar.mean(loc)
+                sdev = _gvar.sdev(loc)
+            else: 
+                @lbatchintegrand
+                def ff2(p):
+                    if hasattr(p, 'keys'):
+                        p = p.lbatch_buf 
+                    else:
+                        p = p.reshape(p.shape[0], -1)
+                    fp = f.eval(p)
+                    return dict(f=fp, f2=fp ** 2)
+                oldnitn = self.nitn
+                r = self(ff2, nitn=1)
+                self.set(nitn=oldnitn)
+                mean = _gvar.mean(r['f'])
+                sdev = numpy.fabs(_gvar.mean(r['f2']) - mean * mean) **  0.5
+            bins = []
+            halfwidth = nbin / 2 * binwidth
+            for i in range(mean.shape[0]):
+                bins.append(
+                    mean[i] + numpy.linspace(-halfwidth * sdev[i], halfwidth * sdev[i], nbin+1)
+                    )
+            histograms['bins'] = numpy.array(bins) 
+        integrand = lbatchintegrand(functools.partial(
+            PDFIntegrator._stats_integrand, f=f, moments=moments, histograms=histograms
+            ))
+        integrand = self._make_std_integrand(integrand, xsample=self.param_sample.flat[:])
+        results = self(integrand, **kargs)
+        analyzer = functools.partial(
+            PDFIntegrator._stats_analyzer, 
+            fpsample=fpsample, moments=moments, histograms=histograms
+            )
+        if fpsample.shape is None:
+            ans = PDFEVDict(results.results, analyzer)
+        elif fpsample.shape == ():
+            ans = PDFEV(results.results, analyzer)
+        else:
+            ans = PDFEVArray(results.results, analyzer)
+        if oldsettings:
+            self.set(**oldsettings)
+        return ans
 
     @staticmethod
-    def rbatch2lbatch(pl, f):
-        "rbatch version of lbatch function f"
-        if hasattr(pl, 'keys'):
-            pr = _gvar.BufferDict()
-            for k in pl:
-                pr[k] = pl[k] if numpy.shape(pl[k]) == () else numpy.moveaxis(pl[k], 0, -1)
-        elif numpy.shape(pl) == ():
-            pr = pl 
+    def _stats_analyzer(results, fpsample, moments, histograms):
+        """ Create final stats results from Integrator results """
+        # convert from Integrator to PDFIntegrator results
+        tmp = _gvar.BufferDict()
+        for k in results:
+            if k == 'pdf':
+                continue 
+            tmp[k[1]] = results[k]
+        results = tmp / results['pdf']
+
+        # 1) mean/cov
+        fp = results['fp']
+        meanfp = _gvar.mean(fp)
+        covfpfp = numpy.zeros(2 * meanfp.shape, dtype=object)
+        fp2 = numpy.array(len(meanfp) * [None])
+        fpfp = iter(results['fpfp'])
+        for i in range(meanfp.shape[0]):
+            for j in range(i + 1):
+                if i == j:
+                    fp2[i] = next(fpfp)
+                    covfpfp[i, i] = fp2[i] - fp[i] ** 2
+                else:
+                    covfpfp[i, j] = covfpfp[j, i] = next(fpfp) - fp[i] * fp[j]
+        # add vegas errors to cov and create final result
+        covfpfp += _gvar.evalcov(fp)
+        ans = _gvar.gvar(meanfp, _gvar.mean(covfpfp))
+        if fpsample.shape is None:
+            ans = _gvar.BufferDict(fpsample, buf=ans)
+            mean = _gvar.BufferDict(fpsample, buf=fp)
+            tcov = _gvar.evalcov(mean)
+            cov = _gvar.BufferDict()
+            for k in mean:
+                ksl = mean.slice(k)
+                for l in mean:
+                    lsl = mean.slice(l)
+                    if tcov[k,l].shape == (1, 1) or tcov[k,l].shape == ():
+                        cov[k, l] = covfpfp[ksl, lsl]
+                    else:
+                        cov[k, l] = covfpfp[ksl,lsl].reshape(tcov[k,l].shape)            
+        elif fpsample.shape == ():
+            ans = ans.flat[0]
+            mean = fp.flat[0]
+            cov = covfpfp
         else:
-            pr = numpy.moveaxis(pl, 0, -1)
-        fpr = f(pr)
-        if hasattr(fpr, 'keys'):
-            fpl = _gvar.BufferDict()
-            for k in fpr:
-                fpl[k] = fpr[k] if numpy.shape(fpr[k]) == () else numpy.moveaxis(fpr[k], -1, 0)
-        elif numpy.shape(fpr) == ():
-            fpl = fpr 
+            ans = ans.reshape(fpsample.shape)
+            mean = fp.reshape(fpsample.shape)
+            tcov = _gvar.evalcov(mean)
+            cov = covfpfp.reshape(tcov.shape)
+        # 2) moments and histogram
+        stats = numpy.array(fpsample.size * [None])
+        for i in range(len(stats)):
+            if moments:
+                mom = [fp[i], fp2[i], results['fp**3'][i], results['fp**4'][i]]
+            else:
+                mom = [fp[i], fp2[i]] 
+            if histograms:
+                hist = histograms['bins'][i], results['count'][i]
+            else:
+                hist = None
+            stats[i] = _gvar.PDFStatistics(moments=mom, histogram=hist)
+        if fpsample.shape is None:
+            stats = _gvar.BufferDict(ans, buf=stats)
+        elif fpsample.shape == ():
+            stats = stats.flat[0]
         else:
-            fpl = numpy.moveaxis(fpr, -1, 0)
-        return fpl
+            stats = stats.reshape(ans.shape)
+        return ans, dict(stats=stats, vegas_mean=mean, vegas_cov=cov)
+
+    @staticmethod
+    def _stats_integrand(p, f, moments=False, histograms=False):
+        fp = f.eval(p) 
+        nfp = fp.shape[1]
+        nbatch = fp.shape[0]
+        fpfp = []
+        for i in range(fp.shape[1]):
+            for j in range(i + 1):
+                fpfp.append(fp[:, i] * fp[:, j])
+        fpfp = numpy.array(fpfp).T
+        ans = _gvar.BufferDict(fp=fp, fpfp=fpfp)
+        if moments:
+            ans['fp**3'] = fp ** 3
+            ans['fp**4'] = fp ** 4
+        if histograms:
+            count = numpy.zeros((nbatch, nfp, histograms['nbin'] + 2), dtype=float)
+            idx = numpy.arange(nbatch)
+            for j in range(nfp):
+                jdx = numpy.searchsorted(histograms['bins'][j], fp[:, j], side='right')
+                count[idx, j, jdx] = 1
+            ans['count'] = count
+        return ans
     
     @staticmethod
-    def lbatch2rbatch(pl, f):
-        "lbatch version of rbatch function f"
-        if hasattr(pl, 'keys'):
-            pr = _gvar.BufferDict()
-            for k in pl:
-                pr[k] = pl[k] if numpy.shape(pl[k]) == () else numpy.moveaxis(pl[k], -1, 0)
-        elif numpy.shape(pl) == ():
-            pr = pl 
-        else:
-            pr = numpy.moveaxis(pl, -1, 0)
-        fpr = f(pr)
-        if hasattr(fpr, 'keys'):
-            fpl = _gvar.BufferDict()
-            for k in fpr:
-                fpl[k] = fpr[k] if numpy.shape(fpr[k]) == () else numpy.moveaxis(fpr[k], 0, -1)
-        elif numpy.shape(fpr) == ():
-            fpl = fpr 
-        else:
-            fpl = numpy.moveaxis(fpr, 0, -1)
-        return fpl
+    def default_stats_f(p, jac=None, extrakeys=None):
+        if extrakeys is not None and extrakeys:
+            for k in extrakeys:
+                p[k] = p[k]
+        return p
 
-    @staticmethod
-    def scalar2lbatch(p, f):
-        " an lbatch version of fcn f "
-        p_is_dict = hasattr(p, 'keys')
-        if p_is_dict:
-            for k in p:
-                nbatch = numpy.shape(p[k])[0]
-                break
-            pj = _gvar.BufferDict()
-        else:
-            nbatch = p.shape[0]
-        for j in range(nbatch):
-            if p_is_dict:
-                for k in p:
-                    pj[k] = p[k][j]
-            else:
-                pj = p[j]
-            fpj = f(pj)
-            if j == 0:
-                if hasattr(fpj, 'keys'):
-                    ans_is_dict = True
-                    ans = _gvar.BufferDict()
-                    for k in fpj:
-                        ans[k] = numpy.zeros((nbatch,) + numpy.shape(fpj[k]), float)
-                else:
-                    ans_is_dict = False
-                    ans = numpy.zeros((nbatch,) + numpy.shape(fpj))
-            if ans_is_dict:
-                for k in fpj:
-                    ans[k][j] = fpj[k] 
-            else:
-                ans[j] = fpj
-        return ans
-
-    @staticmethod
-    def scalar2rbatch(p, f):
-        " an rbatch version of fcn f "
-        p_is_dict = hasattr(p, 'keys')
-        if p_is_dict:
-            for k in p:
-                nbatch = numpy.shape(p[k])[-1]
-                break
-            pj = _gvar.BufferDict()
-        else:
-            nbatch = p.shape[-1]
-        for j in range(nbatch):
-            if p_is_dict:
-                for k in p:
-                    pj[k] = p[k][..., j]
-            else:
-                pj = p[..., j]
-            fpj = f(pj)
-            if j == 0:
-                if hasattr(fpj, 'keys'):
-                    ans_is_dict = True
-                    ans = _gvar.BufferDict()
-                    for k in fpj:
-                        ans[k] = numpy.zeros(numpy.shape(fpj[k]) + (nbatch,), float)
-                else:
-                    ans_is_dict = False
-                    ans = numpy.zeros(numpy.shape(fpj) + (nbatch,))
-            if ans_is_dict:
-                for k in fpj:
-                    ans[k][..., j] = fpj[k] 
-            else:
-                ans[..., j] = fpj
-        return ans
-
-    def _f_rbatch(self, theta, f):
-        tan_theta = numpy.tan(theta)
-        x = self.scale * tan_theta
-        jac = self.scale * numpy.prod((tan_theta ** 2 + 1.), axis=0) 
-        dp = self.g_pdf.x2dpflat(x.T).T
-        p = self.g_pdf.meanflat[:, None] + dp
-        if self.g_pdf.shape is None:
-            parg = _gvar.BufferDict()
-            for k in self.g_pdf.g:
-                sl,sh = self.g_pdf.g.slice_shape(k)
-                parg[k] = p[sl, :].reshape(sh + p.shape[-1:])
-        else:
-            parg = p.reshape(self.g_pdf.shape + p.shape[-1:])
-        fparg = f(parg) 
-        if self.pdf is None:
-            pdf = numpy.prod(numpy.exp(-(x ** 2) / 2.) / numpy.sqrt(2 * numpy.pi), axis=0)
-        else:
-            pdf = self.pdf_rbatch(parg) * numpy.prod(self.g_pdf.pjac)
-        ans = _gvar.BufferDict()
-        if hasattr(fparg, 'keys'):
-            self.ans_type = 'dict'
-            ans['pdf'] = jac * pdf 
-            for k in fparg:
-                ans[('f(p)*pdf', k)] = fparg[k] * ans['pdf']
-        else:
-            fparg = numpy.asarray(fparg)
-            if numpy.ndim(fparg) == 1:
-                self.ans_type = 'scalar'
-            else:
-                self.ans_type = 'array'
-            ans['pdf'] = jac * pdf
-            fparg *= ans['pdf']
-            ans['f(p)*pdf'] = fparg
-        if not self.adapt_to_pdf:
-            pdf = ans.pop('pdf')
-            ans['pdf'] = pdf
-        return ans
-
-    def _f_lbatch(self, theta, f):
-        tan_theta = numpy.tan(theta)
-        x = self.scale * tan_theta
-        jac = self.scale * numpy.prod((tan_theta ** 2 + 1.), axis=1) 
-        dp = self.g_pdf.x2dpflat(x)
-        p = self.g_pdf.meanflat[None, :] + dp
-        if self.g_pdf.shape is None:
-            parg = _gvar.BufferDict()
-            for k in self.g_pdf.g:
-                sl,sh = self.g_pdf.g.slice_shape(k)
-                parg[k] = p[:, sl].reshape(p.shape[:1] + sh)
-        else:
-            parg = p.reshape(p.shape[:1] + self.g_pdf.shape)
-        fparg = f(parg) 
-        if self.pdf is None:
-            pdf = numpy.prod(numpy.exp(-(x ** 2) / 2.) / numpy.sqrt(2 * numpy.pi), axis=1)
-        else:
-            pdf = self.pdf_lbatch(parg) * numpy.prod(self.g_pdf.pjac)
-        ans = _gvar.BufferDict()
-        if hasattr(fparg, 'keys'):
-            self.ans_type = 'dict'
-            ans['pdf'] = jac * pdf
-            for k in fparg:
-                shape = numpy.shape(fparg[k])
-                ans[('f(p)*pdf', k)] = fparg[k] * ans['pdf'].reshape(shape[:1] + len(shape[1:]) * (1,))
-        else:
-            fparg = numpy.asarray(fparg)
-            if numpy.ndim(fparg) == 1:
-                self.ans_type = 'scalar'
-            else:
-                self.ans_type = 'array'
-            ans['pdf'] = jac * pdf
-            shape = fparg.shape
-            fparg *= ans['pdf'].reshape(shape[:1] + len(shape[1:]) * (1,))
-            ans['f(p)*pdf'] = fparg
-        if not self.adapt_to_pdf:
-            ans_pdf = ans.pop('pdf')
-            ans['pdf'] = ans_pdf
-        return ans
 
 class PDFAnalyzer(object):
     """ |vegas| analyzer for implementing ``save``, ``saveall`` keywords for :class:`PDFIntegrator` """
@@ -655,12 +1048,7 @@ class PDFAnalyzer(object):
             self.analyzer.end(itn_result, results)
         if self.save is None and self.saveall is None:
             return
-        if self.pdfinteg.ans_type == 'scalar':
-            ans = PDFRAvg(results)
-        elif self.pdfinteg.ans_type == 'array':
-            ans = PDFRAvgArray(results)
-        else:
-            ans = PDFRAvgDict(results)
+        ans = PDFIntegrator._make_ans(results)
         if isinstance(self.save, str):
             with open(self.save, 'wb') as ofile:
                 pickle.dump(ans, ofile)
@@ -723,8 +1111,8 @@ def ravg(reslist, weighted=None, rescale=None):
             the object returned by a call to a 
             :class:`vegas.Integrator` object (i.e, an instance of 
             any of :class:`vegas.RAvg`, :class:`vegas.RAvgArray`, 
-            :class:`vegas.RAvgArray`, :class:`vegas.PDFRAvg`, 
-            :class:`vegas.PDFRAvgArray`, :class:`vegas.PDFRAvgArray`).
+            :class:`vegas.RAvgArray`, :class:`vegas.PDFEV`, 
+            :class:`vegas.PDFEVArray`, :class:`vegas.PDFEVArray`).
         weighted (bool): Running average is weighted (by the inverse
             covariance matrix) if ``True``. Otherwise the 
             average is unweighted, which makes most sense if ``reslist`` 
@@ -740,7 +1128,7 @@ def ravg(reslist, weighted=None, rescale=None):
             specified (or is ``None``), it is set equal to 
             ``getattr(reslist, 'rescale', True)``.
     """
-    for t in [PDFRAvg, PDFRAvgArray, PDFRAvgDict]:
+    for t in [PDFEV, PDFEVArray, PDFEVDict]:
         if isinstance(reslist, t):
             return t(ravg(reslist.itn_results, weighted=weighted, rescale=rescale))
     for t in [RAvg, RAvgArray, RAvgDict]:

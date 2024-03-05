@@ -38,7 +38,7 @@ def main():
     integ = vegas.Integrator(DIM * [[0, 1]], nproc=8)  # 8 processors
 
     # adapt the grid; discard these results
-    integ(f, neval=25000, nitn=10)
+    integ(f, neval=25000, nitn=10, alpha=0.05)
 
     # final result; slow down adaptation because
     # already adapted, so increases stability

@@ -2,6 +2,7 @@
 ==================================================================
 
 .. |Integrator| replace:: :class:`vegas.Integrator`
+.. |PDFIntegrator| replace:: :class:`vegas.PDFIntegrator`
 .. |AdaptiveMap| replace:: :class:`vegas.AdaptiveMap`
 .. |vegas| replace:: :mod:`vegas`
 .. |RAvg| replace:: :class:`vegas.RAvg`
@@ -17,7 +18,7 @@
 
 Introduction
 ----------------
-The key Python objects supported by the |vegas| module are:
+The key Python objects and functions supported by the |vegas| module are:
 
    * |Integrator| --- an object describing a multidimensional integration
      operator. Such objects contain information about the integration volume,
@@ -39,8 +40,23 @@ The key Python objects supported by the |vegas| module are:
    * :class:`vegas.RAvgDict` --- a dictionary version of |RAvg| used when
      the integrand is dictionary-valued.
 
+   * :func:`vegas.lbatchintegrand` --- a decorator that labels a function as 
+     an lbatch integrand. 
+
+   * :func:`vegas.rbatchintegrand` --- a decorator that labels a function as 
+     an rbatch integrand.
+
    * :class:`vegas.PDFIntegrator` --- a specialized integrator for evaluating
-     Gaussian expectation values.
+     expectation values with arbitrary probability density functions.
+
+   * :class:`vegas.PDFEV` --- an expectation value from
+     :class:`vegas.PDFIntegrator`.
+
+   * :class:`vegas.PDFEVArray` --- an array of expectation values from
+     :class:`vegas.PDFIntegrator`.
+
+   * :class:`vegas.PDFEVDict` --- a dictionary of expectation values from
+     :class:`vegas.PDFIntegrator`.
 
 These are described in detail below.
 
@@ -217,6 +233,7 @@ specialized integrator:
   Methods:
     .. automethod:: __call__(f=None, pdf=None, adapt_to_pdf=None, save=None, saveall=None, **kargs)
 
+    .. automethod:: stats(f, moments=False, histograms=False, **kargs)
 
 Other Objects and Functions
 ----------------------------
@@ -297,17 +314,19 @@ Other Objects and Functions
 
    .. automethod:: extend(ravg)
 
-.. autofunction:: vegas.batchintegrand
+.. autoclass:: vegas.PDFEV
 
-.. autoclass:: vegas.BatchIntegrand
+.. autoclass:: vegas.PDFEVArray
 
-.. autofunction:: vegas.rbatchintegrand
-
-.. autoclass:: vegas.RBatchIntegrand
+.. autoclass:: vegas.PDFEVDict
 
 .. autofunction:: vegas.lbatchintegrand
 
 .. autoclass:: vegas.LBatchIntegrand
+
+.. autofunction:: vegas.rbatchintegrand
+
+.. autoclass:: vegas.RBatchIntegrand
 
 .. autofunction:: vegas.ravg
 

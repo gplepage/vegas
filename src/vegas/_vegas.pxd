@@ -17,7 +17,7 @@ numpy.import_array()
 # index type for numpy is numpy.npy_intp (signed)
 # -- same as numpy.intp_t and Py_ssize_t (usually) in Cython
 
-cdef class BatchIntegrand:
+cdef class LBatchIntegrand:
     cdef public object fcn
 
 cdef class RBatchIntegrand:
@@ -62,7 +62,7 @@ cdef class Integrator:
     cdef public str save 
     cdef public str saveall
     cdef readonly numpy.npy_intp[::1] nstrat
-    cdef readonly object xdict
+    cdef readonly object xsample
     # generated
     cdef readonly AdaptiveMap map
     cdef readonly object pool

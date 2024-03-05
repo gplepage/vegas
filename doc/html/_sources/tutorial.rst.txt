@@ -796,55 +796,71 @@ This gives the following output:
 
 The correct result for ``I`` is |~| 0.85112. 
 
-Bayesian Integrals
+PDF Integrals
 ---------------------
 The |vegas| module has a special-purpose integrator for 
-evaluating averages over probability distributions. Given a 
-multi-dimensional Gaussian probability distribution 
-``g`` (specified by an array of ``gvar.GVar``\s or a dictionary whose 
-values are ``gvar.GVar``\s or arrays of ``gvar.GVar``\s),
-``vegas.PDFIntegrator(g)`` creates an integrator that 
-is optimized to evaluate integrals of ``f(p) * pdf(p)``
-where ``f(p)`` is an arbitrary function and ``pdf(p)``
-is the probability density function (PDF) corresponding to ``g``.
-Here ``p`` is a point in the parameter space of the 
-distribution — an array or dictionary having the 
-same layout as ``g``.
+evaluating averages over probability distributions. 
+In its simplest form, ::
+    
+    g_ev = vegas.PDFIntegrator(param=g)
+    
+creates an integrator optimized for the multi-dimensional Gaussian 
+probability distribution corresponding to ``g``. (``g`` is 
+an array of Gaussian random variables of type ``gvar.GVar``, 
+or a dictionary whose 
+values are ``gvar.GVar``\s or arrays of ``gvar.GVar``\s.)
+Then ``g_ev(f)`` evaluates the expectation value of a 
+function ``f(p)`` with respect to this distribution,
+where ``p`` is a point in the distribution's parameter 
+space. 
 
-|PDFIntegrator| integrates over the entire 
-parameter space of the
-distribution but re-expresses integrals in terms of variables
-that diagonalize ``g``'s covariance matrix and are centered at
+More generally ::
+
+    pdf_ev = vegas.PDFIntegrator(param=g, pdf=pdf)
+
+creates an integrator which calculates expectation values with 
+respect to an arbitrary probability density function ``pdf(p)``. 
+The parameter space for points ``p`` is again defined by 
+and optimized for the PDF corresponding to ``g``, but 
+expectation values are calculated with ``pdf(p)``. Typically
+``g``'s means and covariance would be chosen to emphasize 
+the regions where ``pdf(p)`` is large (e.g., ``g`` might be 
+set equal to the prior in a Bayesian analysis).
+ 
+In general, the integrator uses ``param`` to define and optimize the 
+internal integration parameters. It re-expresses integrals in 
+terms of variables
+that diagonalize ``param``'s correlation matrix and are centered at
 its mean value. This greatly facilitates integration over these
 variables using |vegas|, making integrals over
 many parameters feasible, even when the parameters are highly
 correlated. |PDFIntegrator| also pre-adapts the integrator 
-to ``g``'s PDF so it is often unnecessary to discard early iterations.
+to ``param``'s PDF so it is often unnecessary to discard early iterations.
 
-The PDF corresponding to ``g`` can be replaced by an arbitrary
-PDF function ``pdf(p)``. The integration variables are still
-specified by and optimized for ``g``, but the PDF used in the 
-integrals is ``pdf(p)``.
-|PDFIntegrator| normally evaluates the 
+|PDFIntegrator| evaluates the 
 integrals of both ``pdf(p) * f(p)`` and ``pdf(p)``. The expectation 
 value is the ratio of the two integrals, so the PDF need not be 
 normalized. Note also that Monte Carlo uncertainties in 
-the two integrals can be highly correlated, in which case 
+the two integrals are often highly correlated, in which case 
 the uncertainties are significantly reduced in the ratio.  
 
 A simple illustration of |PDFIntegrator| is given by the following
-code::
+code, where ``g`` determines both the parameterization of the integrals
+and the PDF used for expectation values::
 
     import vegas
     import gvar as gv
 
     # multi-dimensional distribution
     g = gv.BufferDict()
-    g['a'] = gv.gvar([0., 1.], [[1., 0.99], [0.99, 1.]])
+    g['a'] = gv.gvar([2., 1.], [[1., 0.99], [0.99, 1.]])
     g['fb(b)'] = gv.BufferDict.uniform('fb', 0.0, 2.0)
 
     # integrator for expectation values in distribution g
-    g_expval = vegas.PDFIntegrator(g)
+    g_ev = vegas.PDFIntegrator(g)
+
+    # adapt integrator to the PDF 
+    g_ev(neval=10_000, nit=5)
 
     # want expectation value of [fp, fp**2]
     def f_f2(p):
@@ -854,18 +870,18 @@ code::
         return [fp, fp ** 2]
 
     # <f_f2> in distribution g
-    results = g_expval(f_f2, neval=2000, nitn=5)
-    print(results.summary())
-    print('results =', results, '\n')
+    r = g_ev(f_f2, adapt=False)
+    print(r.summary())
+    print('results =', r, '\n')
 
     # mean and standard deviation of fp's distribution
-    fmean = results[0]
-    fsdev = gv.sqrt(results[1] - results[0] ** 2)
+    fmean = r[0]
+    fsdev = gv.sqrt(r[1] - r[0] ** 2)
     print ('fp.mean =', fmean, '   fp.sdev =', fsdev)
     print ("Gaussian approx'n for fp =", f_f2(g)[0], '\n')
 
     # g's pdf norm
-    print('PDF norm =', results.pdfnorm)
+    print('PDF norm =', r.pdfnorm)
 
 Here the distribution ``g`` describes two highly correlated Gaussian
 variables, ``a[0]`` and ``a[1]``, and a third uncorrelated variable ``b``
@@ -875,15 +891,74 @@ We use the integrator to calculated  the expectation value of
 ``fp = a[0] * a[1] + b`` and ``fp**2``, so we can compute the 
 mean and standard 
 deviation of the ``fp`` |~| distribution. The output from this code 
-shows that the Gaussian approximation 1.0(1.3) for the mean and 
+shows that the Gaussian approximation 3.0(3.1) for the mean and 
 standard deviation is not particularly 
-close to the correct value |~| 2.0(1.8):
+close to the correct value |~| 4.0(3.4):
 
 .. literalinclude:: eg7.out
 
-In general function ``f(p)`` can return a number, or an array of
+In general the function ``f(p)`` in ``g_ev(f)`` can return a number, 
+or an array of
 numbers, or a dictionary whose values are numbers or arrays of numbers.
 This allows multiple expectation values to be evaluated simultaneously.
+
+The example above can be coded much more simply using the
+:meth:`PDFIntegrator.stats` method to evaluate the 
+expectation value of function ``f(p)`` (rather 
+than ``f_f2(p)`` above)::
+
+    # want expectation value of f(p)
+    def f(p):
+        a = p['a']
+        b = p['b']
+        fp = a[0] * a[1] + b
+        return dict(a=a, b=b, fp=fp)
+
+    r = g_ev.stats(f)
+    print('results =', r)
+    print('\ncorrelation matrix:')
+    print(gv.evalcorr([r['a'][0], r['a'][1], r['b'], r['fp']]))
+
+``stats(f)`` calculates both the mean values and the standard deviations of 
+each component of ``f(p)``, combining them into :class:`gvar.GVar` objects.
+(The standard deviations include the uncertainties coming from the integration
+added in quadrature with the uncertainties coming from the distribution.)
+The output from this code compares the actual means and standard deviations
+from ``g_ev.stats(f)`` with what is obtained from the Gaussian 
+approximation (``f(g)``):
+
+.. literalinclude:: eg7a.out
+
+This shows that the results for ``f['a']`` agree with the inputs (as expected because
+they are Gaussian), but this is less true for ``r['b']`` and ``r['fp']`` whose 
+distributions are less well approximated by a Gaussian. 
+
+Additional information can be obtained by setting the keyword arguments ``moments`` 
+and/or ``histograms`` equal to ``True`` in :meth:`PDFIntegrator.stats`. The code ::
+    
+    r = g_ev.stats(f, moments=True, histograms=True)
+    print('Statistics for fp:')
+    print(r.stats['fp'])
+    r.stats['fp'].plot_histogram(show=True)
+
+shows the statistical analysis for ``fp``:
+
+.. literalinclude:: eg7b.out 
+
+``g_ev.stats(f, moments=True, histograms=True)`` calculates 
+moments for each output quantity, and uses the moments to determines 
+the mean, standard deviation, skewness, and excess kurtosis of each distribution. It also
+calculates a histogram for each distribution and fits the histogram with two 
+two-sided Gaussian models: one that is continuous (split-normal), and the other
+that is discontinuous centered on the median. The uncertainties shown for 
+each quantity come from the :mod:`vegas` integrations.
+
+The last line in 
+the code above displays the histogram
+for ``fp``, which confirms that it is not particularly Gaussian:
+
+.. image:: eg7b-plt.*
+   :width: 70%
 
 The discussion in :ref:`case_curve_fitting` illustrates how 
 |PDFIntegrator| can be used with a non-Gaussian PDF in two
@@ -928,7 +1003,7 @@ by ::
     import vegas
     import numpy as np
 
-    @vegas.batchintegrand
+    @vegas.llbatchintegrand
     def f_batch(x):
         # evaluate integrand at multiple points simultaneously
         dim = x.shape[1]
@@ -954,17 +1029,16 @@ time. Here, for example, function ``f_batch(x)`` accepts  an array of integratio
 points --- ``x[i, d]`` where ``i=0...`` labels the integration point and
 ``d=0...`` the direction --- and returns an array of integrand values
 corresponding  to those points. The decorator
-:func:`vegas.batchintegrand` tells |vegas| that it should send
+:func:`vegas.lbatchintegrand` tells |vegas| that it should send
 integration points to ``f(x)`` in batches.
 
-An alternative to a function decorated with :func:`vegas.batchintegrand` is
-a class derived from :class:`vegas.BatchIntegrand` that
-behaves like a batch integrand::
+An alternative to a function decorated with :func:`vegas.lbatchintegrand` is
+a class that behaves like a batch integrand::
 
     import vegas
     import numpy as np
 
-    @vegas.batchintegrand
+    @vegas.lbatchintegrand
     class f_batch:
         def __init__(self, dim):         
             self.dim = dim
@@ -987,7 +1061,7 @@ behaves like a batch integrand::
 This version is as fast as the previous batch integrand, but is
 potentially more flexible because it is built around a class rather
 than a function.  (Some classes won't allow decorators. An alternative 
-to the decorator is to derive the class from ``vegas.BatchIntegrand``.)
+to the decorator is to derive the class from ``vegas.LBatchIntegrand``.)
 
 The batch integrands here are fast because they are expressed in terms
 :mod:`numpy` operators that act on entire arrays --- they evaluate the
@@ -1028,7 +1102,7 @@ We put this in a separate file called, say,
 
     import vegas
     from cython_integrand import f_batch
-    f = vegas.batchintegrand(f_batch)
+    f = vegas.lbatchintegrand(f_batch)
 
     integ = vegas.Integrator(4 * [[0, 1]])
 
@@ -1050,7 +1124,7 @@ The code from the previous section could have been written as::
 
     dim = 4
 
-    @vegas.batchintegrand
+    @vegas.lbatchintegrand
     def f(x):
         ans = np.empty((x.shape[0], 3), float)
         dx2 = 0.0
@@ -1083,7 +1157,7 @@ by a dictionary-valued batch integrand: e.g., ::
 
     dim = 4
 
-    @vegas.batchintegrand
+    @vegas.lbatchintegrand
     def f(x):
         ans = {}
         dx2 = 0.0
@@ -1095,8 +1169,8 @@ by a dictionary-valued batch integrand: e.g., ::
         return ans
 
 It is sometimes more convenient to have the batch index be the last index 
-(the rightmost) rather than the first. Then ``@vegas.batchintegrand`` is
-replaced by ``@vegas.rbatchintegrand``, and ``vegas.BatchIntegrand`` by
+(the rightmost) rather than the first. Then ``@vegas.lbatchintegrand`` is
+replaced by ``@vegas.rbatchintegrand``, and ``vegas.LBatchIntegrand`` by
 ``vegas.RBatchIntegrand``. (Note that ``@vegas.batchintegrand``
 and ``@vegas.lbatchintegrand`` are the same, as are ``vegas.BatchIntegrand``
 and ``vegas.LBatchIntegrand``.)
@@ -1160,8 +1234,12 @@ function ``ridge(x)`` into a file and importing it into the script.
 
 |vegas| also supports multi-processor evaluation of integrands using MPI
 (via the Python module :mod:`mpi4py` which must be installed separately).
-Placing the code above in a file ``ridge.py``, with ``nproc=1`` (or 
-omitting ``nproc``), it can be run on 8 processors using ::
+Placing the code above in a file ``ridge.py``, with ``mpi=True`` set
+in the integrator (and with ``nproc=1`` or unset) --- ::
+
+    integ = vegas.Integrator(4 * [[0, 1]], mpi=True)
+
+--- ``ridge.py`` can be run on 8 processors using ::
 
     mpirun -np 8 python ridge.py
 

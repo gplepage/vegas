@@ -72,7 +72,7 @@ The following code does a Bayesian fit with this modified PDF::
             '1.51(20)', '1.73(20)', '2.16(20)', '1.85(20)', '2.00(20)',
             '2.11(20)', '2.75(20)', '0.86(20)', '2.73(20)'
             ])
-        
+
         # 2) create prior and modified PDF
         prior = make_prior()
         mod_pdf = ModifiedPDF(data=(x, y), fcn=fitfcn, prior=prior)
@@ -80,50 +80,29 @@ The following code does a Bayesian fit with this modified PDF::
         # 3) create integrator and adapt it to the modified PDF
         expval = vegas.PDFIntegrator(prior, pdf=mod_pdf)
         nitn = 10
-        neval = 10_000
-        warmup = expval(neval=neval, nitn=nitn)
+        neval = 2_000
+        warmup = expval(neval=neval, nitn=2*nitn)
 
-        # 4) evaluate expectation value of g(p)
+        # 4) evaluate statistics for g(p)
         @vegas.rbatchintegrand
         def g(p):
-            w = p['w']
-            b = p['b']
-            c = p['c']
-            c_outer = c[:, None] * c[None,:]
-            return dict(w=[w, w**2] , b=[b, b**2], c_mean=c, c_outer=c_outer)
-        results = expval(g, neval=neval, nitn=nitn, adapt=False)
+            return {k:p[k] for k in ['c', 'b', 'w']}
+        results = expval.stats(g, neval=neval, nitn=nitn)
         print(results.summary())
 
         # 5) print out results
-        print('vegas results:')
-        # c[i]
-        cmean = results['c_mean']
-        cov = results['c_outer'] - np.outer(cmean, cmean)
-        cov = (cov + cov.T) / 2
-        # w, b
-        wmean, w2mean = results['w']
-        wsdev = (w2mean - wmean**2)**0.5
-        bmean, b2mean = results['b']
-        bsdev = (b2mean - bmean**2)**0.5        
-        print('  c means =', cmean)
-        print('  c cov =', str(cov).replace('\n', '\n' + 10*' '))
-        print('  w mean =', str(wmean).replace('\n', '\n' + 11*' '))
-        print('  w sdev =', str(wsdev).replace('\n', '\n' + 11*' '))
-        print('  b mean =', bmean)
-        print('  b sdev =', bsdev)
+        print('Bayesian fit results:')
+        for k in results:
+            print(f'      {k} = {results[k]}')
+            if k == 'c':
+                # correlation matrix for c
+                print(
+                    ' corr_c =',
+                    np.array2string(gv.evalcorr(results['c']), prefix=10 * ' ', precision=3),
+                    )
         # Bayes Factor
         print('\n  logBF =', np.log(results.pdfnorm))
-        
-        print('\nCombine vegas errors with covariances for final results:')
-        # N.B. vegas errors are actually insignificant compared to covariances
-        c = cmean + gv.gvar(np.zeros(cmean.shape), gv.mean(cov))
-        w = wmean + gv.gvar(np.zeros(np.shape(wmean)), gv.mean(wsdev))
-        b = bmean + gv.gvar(np.zeros(np.shape(bmean)), bsdev.mean)
-        print('  c =', c)
-        print('  corr(c) =', str(gv.evalcorr(c)).replace('\n', '\n' + 12*' '))
-        print('  w =', str(w).replace('\n', '\n' + 6*' '))
-        print('  b =', b, '\n')
-            
+
     def fitfcn(x, p):
         c = p['c']
         return c[0] + c[1] * x
@@ -139,48 +118,30 @@ The following code does a Bayesian fit with this modified PDF::
     @vegas.rbatchintegrand
     class ModifiedPDF:
         """ Modified PDF to account for measurement failure. """
-
-        def __init__(self, data, fcn, prior):
+        def __init__(self, data, fitfcn, prior):
             x, y = data
-            # add rbatch index to arrays
+            self.fitfcn = fitfcn
+            self.prior_pdf = gv.PDF(prior, mode='rbatch')
+            # add rbatch index
             self.x = x[:, None]
-            self.y = y[:, None]
-            self.fcn = fcn
-            self.prior = gv.BufferDict()
-            self.prior['c'] = prior['c'][:, None]
-            if np.shape(prior['gw(w)']) != ():
-                self.prior['gw(w)'] = prior['gw(w)'][:, None]
-            else:
-                self.prior['gw(w)'] = prior['gw(w)']
-            self.prior['gb(b)'] = prior['gb(b)']
+            self.ymean = gv.mean(y)[:, None]
+            self.yvar = gv.var(y)[:, None]
 
         def __call__(self, p):
-            y_fx = self.y - self.fcn(self.x, p)
-            data_pdf1 = self.gaussian_pdf(y_fx)
-            data_pdf2 = self.gaussian_pdf(y_fx, broaden=p['b'])
-            prior_pdf = np.prod(
-                self.gaussian_pdf(p['c'] - self.prior['c']), 
-                axis=0
-                )
-            # Gaussians for gw(w) and gb(b)
-            if np.shape(self.prior['gw(w)']) == ():
-                prior_pdf *= self.gaussian_pdf(p['gw(w)'] - self.prior['gw(w)'])
-            else:
-                prior_pdf *= np.prod(
-                    self.gaussian_pdf(p['gw(w)'] - self.prior['gw(w)']), 
-                    axis=0
-                    )
-            prior_pdf *= self.gaussian_pdf(p['gb(b)'] - self.prior['gb(b)'])
-            # p['w'] derived (automatically) from p['gw(w)']
             w = p['w']
-            ans = np.prod((1. - w) * data_pdf1 + w * data_pdf2, axis=0) * prior_pdf
-            return ans
+            b = p['b']
 
-        @staticmethod
-        def gaussian_pdf(x, broaden=1.):
-            xmean = gv.mean(x)
-            xvar = gv.var(x) * broaden ** 2
-            return gv.exp(-xmean ** 2 / 2. /xvar) / gv.sqrt(2 * np.pi * xvar)
+            # modified PDF for data
+            fxp = self.fitfcn(self.x, p)
+            chi2 = (self.ymean - fxp) ** 2 / self.yvar
+            norm = np.sqrt(2 * np.pi * self.yvar)
+            y_pdf = np.exp(-chi2 / 2) / norm
+            yb_pdf = np.exp(-chi2 / (2 * b**2)) / (b * norm)
+            # product over PDFs for each y[i]
+            data_pdf = np.prod((1 - w) * y_pdf + w * yb_pdf, axis=0)
+
+            # multiply by prior PDF
+            return data_pdf * self.prior_pdf(p)
 
     if __name__ == '__main__':
         main()
@@ -190,11 +151,13 @@ Here class ``ModifiedPDF`` implements the modified PDF. The parameters for
 this distribution are the fit function coefficients ``c = p['c']``, the 
 weight ``w = p['w']``, and a breadth parameter ``p['b']``. As usual the PDF for
 the parameters (in ``__call__``) is the product of a PDF for the data times a
-PDF for the priors. The data PDF consists of the two Gaussian distributions: 
-one, ``data_pdf1``, with the
-nominal data errors and weigth ``(1-w)``, and the other, ``data_pdf2``, 
+PDF for the priors. The data PDF consists of the two Gaussian distributions 
+for each data point: 
+one, ``y_pdf``, with the
+nominal data errors and weight ``(1-w)``, and the other, ``yb_pdf``, 
 with errors that are ``p['b']``
-times larger and weigth |~| ``w``.
+times larger and weight |~| ``w``. The PDF for the prior is implemented 
+using ``gvar.PDF`` from the :mod:`gvar` module.
 
 We want broad Gaussian priors for the fit function coefficients, but 
 uniform priors for the weight parameter (:math:`0<w<1`) and breadth
@@ -232,12 +195,11 @@ of the prior's PDF, but replaces that PDF with the modified PDF when
 evaluating expectation values.
 
 We first call ``expval`` with no function, to allow the integrator to adapt
-to the modified PDF. We then use the integrator to evaluate the expectation value of
-function ``g(p)``, but now with ``adapt=False`` to get more reliable
-error estimates. The output dictionary ``results``
-contains expectation values of the corresponding entries in the dictionary
-returned ``g(p)``. These data allow us to calculate means, standard deviations
-and correlation matrices for the fit parameters.
+to the modified PDF. We then use the integrator's :meth:`PDFIntegrator.stats` 
+method to evaluate the expectation value and standard deviation of
+function of the fit parameters as returned by ``g(p)``. 
+The output dictionary ``results``
+contains fit results for each of the fit parameters.
 
 Note that ``g(p)`` and ``mod_pdf(p)`` are both batch integrands, with the 
 batch index on the right (i.e., the last index). This significantly 
@@ -255,7 +217,7 @@ for the fit. It
 is much larger than the value -117.5 obtained from a least-squares fit (i.e.,
 from the script above but with ``w=0`` in the PDF). This means that the 
 data much prefer the
-modified prior (by a factor of :math:`exp(-23.8 + 117.4)` or about 10\ :sup:`41`).
+modified prior (by a factor of exp(-23.8 + 117.4) or about 10\ :sup:`41`).
 
 The new fit parameters are much more reasonable than the results from the 
 least-squares fit. In particular the
@@ -312,7 +274,7 @@ The final results are quite similar to the other model:
 .. literalinclude:: outliers2.out
 
 The logarithm of the Bayes Factor ``logBF`` is slightly lower for
-this model than before. It is also less accurately determined (15x), because
+this model than before. It is also less accurately determined (11x), because
 22-parameter integrals are considerably more difficult than 4-parameter
 integrals. More precision can be obtained by increasing ``neval``, but
 the current precision is more than adequate.

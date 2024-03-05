@@ -3,7 +3,12 @@ import vegas
 import sys
 
 if sys.argv[1:]:
-    NPROC = eval(sys.argv[1])   # number of processors
+    if sys.argv[1] == 'mpi':
+        vegas.Integrator.defaults['mpi'] = True 
+        NPROC = 1
+    else:
+        vegas.Integrator.defaults['mpi'] = False 
+        NPROC = eval(sys.argv[1])   # number of processors
 else:
     NPROC = 1
 
@@ -27,7 +32,7 @@ def main():
     # final results
     result = integ(f, nitn=10, neval=1e4)
     # print from only one process if using MPI
-    if integ.mpi_rank == 0:
+    if not integ.mpi or integ.mpi_rank == 0:
         print('result =', result, '    Q = {:.2f}'.format(result.Q))
         print(result.summary())
 

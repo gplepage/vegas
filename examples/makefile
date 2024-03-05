@@ -42,7 +42,7 @@ run:
 	- diff -w ridge.out ridge.tmp
 	# mpi test
 	# - mpirun -np 2 -outfile-pattern=mpi-ridge.tmp.%r $(PYTHON)  ridge.py
-	- mpirun -np 8 $(PYTHON)  ridge.py > mpi-ridge.tmp
+	- mpirun -np 8 $(PYTHON)  ridge.py 'mpi' > mpi-ridge.tmp
 	- diff -w ridge.out mpi-ridge.tmp
 
 _time:

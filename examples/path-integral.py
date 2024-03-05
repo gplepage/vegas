@@ -49,7 +49,7 @@ else:
 
 def main():
     # seed random numbers so reproducible
-    gv.ranseed((1,))
+    gv.ranseed((1,22))
 
     # Harmonic oscillator: V = x ** 2 / 2
     print('Harmonic Oscillator')

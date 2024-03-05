@@ -1,3 +1,24 @@
+Version 5.7 2024-03-05
+=========================
+- Default value for vegas.Integrator parameter mpi is now False (was True) to avoid 
+  irritating security prompts on MacOS. Thus mpi=True must be specified if the plan 
+  is to use mpi. The default can be changed back to the old default using: 
+  vegas.Integrator.defaults['mpi'] = True. 
+
+- Fixes bug in Integrator.synchronize_random that caused crashes when using MPI.
+
+- As of Version 5.6, vegas.Integrators can be configured so that integrands are called 
+  with dictionaries rather than 1-d arrays -- so f(xdict) rather than f(x1darray). 
+  Now the arrays can have any shape (ie, not just 1-d).
+
+- Fixes bug that caused vegas to crash for integrands returning arrays with more than 1 dimension.
+
+- vegas.PDFIntegrator has a new method stats for calculating the means and standard 
+  deviations of arbitrary (multi-dimensional) functions f(p) with respect to a PDF.
+
+- vegas.PDFIntegrator(pdfitg) where pdfitg is a PDFIntegrator now works.
+
+
 Version 5.6 2023-12-18
 =========================
 vegas 5.6 adds one feature: vegas.Integrators now can be (optionally) 

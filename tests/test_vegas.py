@@ -448,7 +448,7 @@ class TestRAvg(unittest.TestCase):
         itg = Integrator(dim * [[-1,1]], nitn=2, neval=100)
         for _g in [g, ga, gd]:
             r = itg(_g)
-            def test_rx(rx):
+            def test_rx(rx, r=r):
                 " rx = r ?"
                 self.assertEqual(str(rx), str(r))
                 self.assertEqual(rx.summary(), r.summary())
@@ -473,6 +473,8 @@ class TestRAvg(unittest.TestCase):
             test_rx(r4)  
             r5 = ravg(r, weighted=False)
             self.assertNotEqual(str(r5), str(r))
+            r6 = gv.loads(gv.dumps(r5))
+            test_rx(r5, r6)
 
     def test_save_extend(self):
         " save and saveall keywords " 
@@ -564,7 +566,7 @@ class TestIntegrator(unittest.TestCase):
         for k in Integrator.defaults:
             if k in ['neval', 'nitn']:
                 self.assertNotEqual(getattr(I,k), Integrator.defaults[k])
-            elif k not in ['map']:
+            elif k not in ['map', 'xparam']:
                 self.assertEqual(getattr(I,k), Integrator.defaults[k])
         np.testing.assert_allclose([I.map.grid[0,0], I.map.grid[0, I.map.ninc[0]]], [0., 1.])
         np.testing.assert_allclose([I.map.grid[1,0], I.map.grid[1, I.map.ninc[1]]], [-1., 1.])
@@ -618,7 +620,7 @@ class TestIntegrator(unittest.TestCase):
             min_neval_batch=I.min_neval_batch, max_neval_hcube=float(I.max_neval_hcube),
             )
         self.assertEqual(outstr, I.settings())
-        I.set(xdict=dict(x=[0.], y=0.))
+        I = Integrator(dict(x=[[0.,1.]], y=[-1.,1.]), neval=254, nitn=123, neval_frac=0.75)
         outstr = [
             "Integrator Settings:",
             "    {neval} (approx) integrand evaluations in each of 123 iterations",
@@ -635,6 +637,32 @@ class TestIntegrator(unittest.TestCase):
             "    ---------------------------------------",
             "          x 0       0            (0.0, 1.0)",
             "            y       1           (-1.0, 1.0)\n",
+            ]
+        outstr = ('\n'.join(outstr)).format(
+            neval=I.neval, nstrat0=I.nstrat[0], nstrat1=I.nstrat[1],
+            ninc0=I.map.ninc[0], ninc1=I.map.ninc[1], nhcube=I.nhcube,
+            min_neval_hcube=I.min_neval_hcube, alpha=I.alpha, beta=I.beta,
+            min_neval_batch=I.min_neval_batch, max_neval_hcube=float(I.max_neval_hcube),
+            )
+        self.assertEqual(outstr, I.settings())
+
+        I = Integrator([[[0.,1.]], [[-1.,1.]]], neval=254, nitn=123, neval_frac=0.75)
+        outstr = [
+            "Integrator Settings:",
+            "    {neval} (approx) integrand evaluations in each of 123 iterations",
+            "    number of: strata/axis = [{nstrat0} {nstrat1}]",
+            "               increments/axis = [{ninc0} {ninc1}]",
+            "               h-cubes = {nhcube}  processors = 1",
+            "               evaluations/batch >= {min_neval_batch:.2g}",
+            "               {min_neval_hcube} <= evaluations/h-cube <= {max_neval_hcube:.2g}",
+            "    minimize_mem = False  adapt_to_errors = False  adapt = True",
+            "    accuracy: relative = 0  absolute = 0",
+            "    damping: alpha = {alpha}  beta= {beta}",
+            "",
+            "    key/index    axis    integration limits",
+            "    ---------------------------------------",
+            "          0,0       0            (0.0, 1.0)",
+            "          1,0       1           (-1.0, 1.0)\n",
             ]
         outstr = ('\n'.join(outstr)).format(
             neval=I.neval, nstrat0=I.nstrat[0], nstrat1=I.nstrat[1],
@@ -811,7 +839,7 @@ class TestIntegrator(unittest.TestCase):
 
     def test_VegasIntegrand(self):
         " VegasIntegrand(fcn) "
-        from vegas._vegas import VegasIntegrand
+        # from vegas._vegas import VegasIntegrand
         def f0(x):
             return x[0] + x[1] + x[2]
         @lbatchintegrand 
@@ -825,7 +853,9 @@ class TestIntegrator(unittest.TestCase):
         f1 = f1_class()
         self.assertTrue(batchintegrand is lbatchintegrand)
         self.assertTrue(BatchIntegrand is LBatchIntegrand)
-        f2 = rbatchintegrand(f0)
+        @rbatchintegrand
+        def f2(x):
+            return x[0] + x[1] + x[2]
         @lbatchintegrand
         def f3(x):
             return [[x[:, 0] + x[:, 1] + x[:, 2]]]
@@ -843,19 +873,23 @@ class TestIntegrator(unittest.TestCase):
         @lbatchintegrand
         def f6(x):
             return collections.OrderedDict([('a', [[x[:, 0] + x[:, 1] + x[:, 2]]])])
-        f7 = rbatchintegrand(f5)
+        @rbatchintegrand
+        def f7(x):
+            return collections.OrderedDict([('a', [[x[0] + x[1] + x[2]]])])
         x = numpy.random.uniform(size=(5,3))
         ans = numpy.sum(x, axis=1).reshape((5,1))
         map = AdaptiveMap(3 * [(0,1)])
         for f in [f0, f1, f2, f3, f4, f5, f6, f7]:
-            fcn = VegasIntegrand(f, map, uses_jac=False, xdict=None, mpi=False)
+            fcn = VegasIntegrand(f, map, uses_jac=False, xsample=x[0], mpi=False)
             self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
             fans = fcn.format_result(x[0,:1], x[:1,:1]**2)
             if f in [f0, f1, f2]:
+                self.assertTrue(isinstance(fans, gv.GVar))
                 self.assertEqual(numpy.shape(fans), ())
             if f in [f3, f4]:
                 self.assertEqual(numpy.shape(fans), (1,1))
             if f in [f5, f6, f7]:
+                self.assertEqual(fans.shape, None)
                 self.assertEqual(list(fans.keys()), ['a'])
                 self.assertEqual(numpy.shape(fans['a']), (1,1))
 
@@ -867,19 +901,25 @@ class TestIntegrator(unittest.TestCase):
             ans[:, 0, 0] = x[:, 0]
             ans[:, 1, 0] = x[:, 0] + x[:, 1] + x[:, 2]
             return ans
-        f10 = rbatchintegrand (f8)
+        @rbatchintegrand
+        def f10(x):
+            return [[x[0]], [x[0] + x[1] + x[2]]]
         def f11(x):
             return collections.OrderedDict([('a', x[0]), ('b', [[x[0] + x[1] + x[2]]])])
         @lbatchintegrand 
         def f12(x):
             return collections.OrderedDict([('a', x[:, 0]), ('b', (x[:, 0] + x[:, 1] + x[:, 2]).reshape((-1,1,1)))])
-        f13 = rbatchintegrand(f11)
+        @rbatchintegrand
+        def f13(x):
+            return collections.OrderedDict([('a', x[0]), ('b', [[x[0] + x[1] + x[2]]])])
+        x = gv.RNG.uniform(size=(5,3))
+        xsample = x[0]
         ans = numpy.empty((5,2), float)
         ans[:, 0] = x[:, 0]
         ans[:, 1] = numpy.sum(x, axis=1)
         map = AdaptiveMap(3 * [(0,1)])
         for f in [f8, f9, f10, f11, f12, f13]:
-            fcn = VegasIntegrand(f, map, uses_jac=False, xdict=None, mpi=False)
+            fcn = VegasIntegrand(f, map, uses_jac=False, xsample=xsample, mpi=False)
             self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
             fans = fcn.format_result(x[0,:2], x[:2,:2].dot(x[:2, :2].T))
             if f in [f8, f9, f10]:
@@ -889,9 +929,9 @@ class TestIntegrator(unittest.TestCase):
                 self.assertEqual(numpy.shape(fans['a']), ())
                 self.assertEqual(numpy.shape(fans['b']), (1,1))
         
-        # test xdict 
-        xdict = gv.BufferDict(a=[0., 0.], b=0.)
-        x = np.random.uniform(size=(5,3))
+        # test xparam=dict 
+        xsample = gv.BufferDict(a=[1., 2.], b=3.)
+        x = np.random.uniform(size=(5, xsample.size))
         ans = (x[:, 0] * x[:, 1] * x[:, 2]).reshape(5, 1)
         @lbatchintegrand
         def f14(xd):
@@ -903,8 +943,30 @@ class TestIntegrator(unittest.TestCase):
             return xd['a'][0] * xd['a'][1] * xd['b']
         map = AdaptiveMap(3 * [(0,1)])
         for f in [f14, f15, f16]:
-            fcn = VegasIntegrand(f, map, uses_jac=False, xdict=xdict, mpi=False)
+            fcn = VegasIntegrand(f, map, uses_jac=False, xsample=xsample, mpi=False)
             self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
+            np.testing.assert_allclose(f15(xsample), fcn(xsample))
+            self.assertTrue(isinstance(fcn(xsample), type(f15(xsample))))
+
+        # test xparam=tuple 
+        xsample = np.arange(1., 7.).reshape(3, 2)
+        x = np.random.uniform(size=(5,) + xsample.shape)
+        ans = (x[:, 0, 0] * x[:, 0, 1] ** 2).reshape(5, 1)
+        x = x.reshape(5,-1)
+        @lbatchintegrand
+        def f17(x):
+            return x[:, 0, 0] * x[:, 0, 1] ** 2
+        def f18(x):        
+            return x[0, 0] * x[0, 1] ** 2
+        @rbatchintegrand
+        def f19(x):      
+            return x[0, 0, :] * x[0, 1, :] ** 2
+        map = AdaptiveMap(xsample.size * [(0,1)])
+        for f in [f17, f18, f19]:
+            fcn = VegasIntegrand(f, map, uses_jac=False, xsample=xsample, mpi=False)
+            self.assertTrue(numpy.allclose(ans, fcn.eval(x, jac=None)))
+            np.testing.assert_allclose(f18(xsample), fcn(xsample))
+            self.assertTrue(isinstance(fcn(xsample), type(f18(xsample))))
 
         
     @unittest.skipIf(h5py is None,"missing h5py => minimize_mem=True not available")
@@ -1481,7 +1543,8 @@ class test_PDFIntegrator(unittest.TestCase):
         g = gv.gvar(1,0.1)
         for scale in [1., 2.]:
             integ = PDFIntegrator(g, limit=1., scale=scale)
-            norm = integ(neval=1000, nitn=5).pdfnorm
+            r = integ(neval=1000, nitn=5)
+            norm = r.pdfnorm
             self.assertLess(
                 abs(norm.mean - 0.682689492137), 5 * norm.sdev
                 )
@@ -1492,10 +1555,14 @@ class test_PDFIntegrator(unittest.TestCase):
                 )
 
     def test_no_f(self):
+        gv.ranseed(1)
+        def fmt(g):
+            return str(gv.fmt(g, format='{:.1p}'))
         for g in [gv.gvar(1,1), gv.gvar([2*['1(1)']]), gv.gvar(dict(a='1(1)', b=[2*['2(2)']]))]:
             gev = PDFIntegrator(g)
             norm = gev(nitn=1).pdfnorm 
             self.assertLess(abs(norm.mean-1), 5 * norm.sdev)
+            self.assertEqual(fmt(g), fmt(gev.stats()))
 
     def test_histogram(self):
         x = gv.gvar([5., 3.], [[4., 0.2], [0.2, 1.]])
@@ -1530,7 +1597,7 @@ class test_PDFIntegrator(unittest.TestCase):
         eval = PDFIntegrator(gg, nitn=2, neval=100)
         for _g in [g, ga, gd]:
             r = eval(_g)
-            def test_rx(rx):
+            def test_rx(rx, r=r):
                 self.assertEqual(str(rx), str(r))
                 self.assertEqual(rx.summary(), r.summary())
                 self.assertAlmostEqual(rx.chi2, r.chi2)
@@ -1548,6 +1615,26 @@ class test_PDFIntegrator(unittest.TestCase):
             test_rx(r4)  
             r5 = ravg(r, weighted=False)
             self.assertNotEqual(str(r5), str(r))
+            r6 = gv.loads(gv.dumps(r5))
+            test_rx(r6, r5)
+            r7 = pickle.loads(pickle.dumps(r5))
+            test_rx(r7, r5)
+        for _g in [g, ga, gd]:
+            r = eval.stats(_g)
+            def test_rx(rx, r=r):
+                self.assertEqual(str(rx), str(r))
+                self.assertEqual(rx.summary(), r.summary())
+                self.assertAlmostEqual(rx.chi2, r.chi2)
+                if _g is not g:
+                    self.assertEqual(str(gv.evalcorr(rx.flat[:])), str(gv.evalcorr(r.flat[:])))
+            d3 = pickle.dumps(r)
+            test_rx(r) # unchanged?
+            r3 = pickle.loads(d3)
+            test_rx(r3)  
+            d4 = gv.dumps(r)
+            test_rx(r) # unchanged?
+            r4 = gv.loads(d4)
+            test_rx(r4)  
 
     def test_save_extend(self): 
         "save, saveall keywords in PDFIntegrator (checks pickle too)"
@@ -1599,6 +1686,33 @@ class test_PDFIntegrator(unittest.TestCase):
                 self.assertGreater(new_r.pdfnorm.sdev, r1.pdfnorm.sdev)
                 self.assertAlmostEqual(1/(1/r.pdfnorm.sdev**2 + 1/new_r.pdfnorm.sdev**2)**.5, r1.pdfnorm.sdev, delta=0.001)
         os.remove('test-pdfsave.pkl')
+
+    def test_stats(self):
+        " PDFIntegrator.stats "
+        gv.ranseed(1234)
+        first = 0
+        for g in ['1(2)', [['1(2)'], ['2(3)']], dict(a='1(2)', b=['2(3)'])][:]:
+            g = gv.gvar(g)
+            gev = PDFIntegrator(g, neval=4000)
+            r = gev()
+            @rbatchintegrand 
+            def f(p):
+                return p 
+            r = gev.stats(f, moments=True, histograms=True)
+            self.assertEqual(str(r), str(g))
+            if isinstance(g, gv.GVar):
+                self.assertTrue(isinstance(r, gv.GVar))
+                gf = [g]
+                rf = [r.stats]
+            else:
+                gf = g.flat[:]
+                rf = r.stats.flat[:]
+            for gi, ri in zip(gf, rf):
+                self.assertEqual(str(gi), str(gv.gvar(ri.median.loc.mean, ri.median.plus.mean)))
+                self.assertEqual(str(gi), str(gv.gvar(ri.median.loc.mean, ri.median.minus.mean)))
+                self.assertEqual(str(gi), str(gv.gvar(ri.splitnormal.loc.mean, ri.splitnormal.plus.mean)))
+                self.assertEqual(str(gi), str(gv.gvar(ri.splitnormal.loc.mean, ri.splitnormal.minus.mean)))
+            
 
 if __name__ == '__main__':
     unittest.main()
