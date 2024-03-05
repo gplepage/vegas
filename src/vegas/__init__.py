@@ -769,7 +769,7 @@ class PDFIntegrator(Integrator):
         Additional statistical data are collected by setting keywords
         ``moments=True`` and/or ``histogram=True``::
 
-            >>> r = g_ev.stats(f, moments=True, histogram=True)
+            >>> r = g_ev.stats(f, moments=True, histograms=True)
             >>> for k in r:
             ...     print(10 * '-', k)
             ...     print(r.stats[k])
@@ -804,7 +804,7 @@ class PDFIntegrator(Integrator):
         for ``a**2 * b``. The histogram for this distribution can 
         be displayed using::
         
-            >>> r.stats['a**2 * b'].make_plot(show=True)
+            >>> r.stats['a**2 * b'].plot_histogram(show=True)
 
         Note that |vegas| adaptation is turned off (``adapt=False``)
         by default in :meth:`PDFIntegrator.stats`. This setting 

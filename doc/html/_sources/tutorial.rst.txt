@@ -916,7 +916,7 @@ than ``f_f2(p)`` above)::
 
     r = g_ev.stats(f)
     print('results =', r)
-    print ("f(g) =", f(g)['fp'])
+    print ('   f(g) =', f(g))
     print('\ncorrelation matrix:')
     print(gv.evalcorr([r['a'][0], r['a'][1], r['b'], r['fp']]))
 

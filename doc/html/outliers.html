@@ -82,10 +82,10 @@ malfunctions, resulting in much larger measurement errors than usual.
 This can be modeled in a Bayesian analysis by describing the
 data using a linear
 combination of two
-Gaussian probability density functions (PDFs).
-One is the usual PDF proportional to the
-product of <img class="math" src="_images/math/422f6e2d47c3b7254150f37154637d482563750d.svg" alt="exp(-(y-f(x))^2  / 2\sigma_y^2))"/>
-over all data points, where the fit function <img class="math" src="_images/math/fb62ba1e89ca6200f224a445c3f4a567fc451fe1.svg" alt="f(x)"/>
+Gaussian probability density functions (PDFs) for each data point.
+One is the usual PDF proportional to
+<img class="math" src="_images/math/422f6e2d47c3b7254150f37154637d482563750d.svg" alt="exp(-(y-f(x))^2  / 2\sigma_y^2))"/>, where
+the fit function <img class="math" src="_images/math/fb62ba1e89ca6200f224a445c3f4a567fc451fe1.svg" alt="f(x)"/>
 is <img class="math" src="_images/math/cb6500d7b30569927bea2aa68fc88d9e51ec68a7.svg" alt="c_0 + c_1 x"/>. The second is the same but
 with the <img class="math" src="_images/math/9497613bf54f0eb13b02eb1eccbf9426ae2dbec6.svg" alt="\sigma_y \to b \sigma_y"/> for some <img class="math" src="_images/math/403f64983bfd8de5ea4f011b3e405c2fb857c867.svg" alt="b&gt;1"/>.
 The relative weights assigned to
@@ -112,7 +112,7 @@ these two terms are <img class="math" src="_images/math/3b4ea90c6ed6abf0b29b4bd8
 
     <span class="c1"># 2) create prior and modified PDF</span>
     <span class="n">prior</span> <span class="o">=</span> <span class="n">make_prior</span><span class="p">()</span>
-    <span class="n">mod_pdf</span> <span class="o">=</span> <span class="n">ModifiedPDF</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">fcn</span><span class="o">=</span><span class="n">fitfcn</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">)</span>
+    <span class="n">mod_pdf</span> <span class="o">=</span> <span class="n">ModifiedPDF</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">fitfcn</span><span class="o">=</span><span class="n">fitfcn</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">)</span>
 
     <span class="c1"># 3) create integrator and adapt it to the modified PDF</span>
     <span class="n">expval</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">PDFIntegrator</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">pdf</span><span class="o">=</span><span class="n">mod_pdf</span><span class="p">)</span>

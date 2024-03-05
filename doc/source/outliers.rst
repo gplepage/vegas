@@ -43,10 +43,10 @@ malfunctions, resulting in much larger measurement errors than usual.
 This can be modeled in a Bayesian analysis by describing the 
 data using a linear 
 combination of two 
-Gaussian probability density functions (PDFs). 
-One is the usual PDF proportional to the 
-product of :math:`exp(-(y-f(x))^2  / 2\sigma_y^2))`
-over all data points, where the fit function :math:`f(x)` 
+Gaussian probability density functions (PDFs) for each data point. 
+One is the usual PDF proportional to 
+:math:`exp(-(y-f(x))^2  / 2\sigma_y^2))`, where 
+the fit function :math:`f(x)` 
 is :math:`c_0 + c_1 x`. The second is the same but 
 with the :math:`\sigma_y \to b \sigma_y` for some |~| :math:`b>1`. 
 The relative weights assigned to 
