@@ -1,6 +1,6 @@
 include README.rst INSTALLATION.txt LICENSE.txt MANIFEST.in CHANGES.txt
 include setup.py setup.cfg pyproject.toml makefile make_version.py
-inxlusw src/vegas.pxd src/vegas/*.pxd src/vegas/*.pyx 
+include src/vegas/*.pxd src/vegas/*.pyx 
 
 graft doc/html
 graft examples

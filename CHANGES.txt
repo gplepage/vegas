@@ -1,4 +1,8 @@
-Version 5.7 2024-03-05
+Version 6.0.1 2024-03-07
+==========================
+Move vegas.pxd to its proper place.
+
+Version 6.0 2024-03-05
 =========================
 - Default value for vegas.Integrator parameter mpi is now False (was True) to avoid 
   irritating security prompts on MacOS. Thus mpi=True must be specified if the plan 
