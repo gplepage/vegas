@@ -1343,7 +1343,7 @@ class test_PDFIntegrator(unittest.TestCase):
         self.assertTrue(r[1].shape == (2,3))
 
     def test_PDFIntegrator_sample(self):   ## add dictionaries
-        nbatch = 100_000
+        nbatch = 100000
         cov1 = np.array([[1., 0.99], [0.99, 1]])
         D = np.array([2, 1e-1])
         cov1 = D[None, :] * cov1 * D[:, None]

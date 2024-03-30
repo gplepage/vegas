@@ -1055,13 +1055,14 @@ class PDFIntegrator(Integrator):
             r = g_ev.stats()
             print('<p> =', r, '(vegas)')
 
-            # sample g_pdf(p) and use sample to evaluate <p> and <cos(p0)>
+            # sample g_pdf(p) 
             wgts, p_samples = g_ev.sample(nbatch=40_000)
-            p_avg = np.sum(wgts[None, :] * p_samples, axis=1)
-            cosp_avg = np.sum(wgts[None, :] * np.cos(p_samples), axis=1)
+            # evaluate mean values <p> and <cos(p0)>
+            p_avg = np.sum(wgts * p_samples, axis=1)
+            cosp0_avg = np.sum(wgts * np.cos(p_samples[0]))
             print('<p> =', p_avg, '(sample)')
-            print('<cos(p)> =', cosp_avg, '(sample)')
-
+            print('<cos(p0)> =', cosp0_avg, '(sample)')
+        
         Here ``p_samples[d, i]`` is a batch of about 40,000 random samples 
         for parameter ``p[d]`` drawn from the (bimodal) distribution with 
         PDF ``g_pdf(p)``. Index ``d=0,1`` labels directions in parameter 
@@ -1073,8 +1074,8 @@ class PDFIntegrator(Integrator):
         The output from this script is::
 
             <p> = [0.40(17) 0.40(17)] (vegas)
-            <p> = [0.39998773 0.39984626] (sample)
-            <cos(p)> = [0.90745871 0.9075133 ] (sample)
+            <p> = [0.40011804 0.39999454] (sample)
+            <cos(p0)> = 0.9074221724843065 (sample)
         
         Samples are also useful for making histograms and contour 
         plots of the probability density. For example, the following 
