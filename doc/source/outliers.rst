@@ -269,7 +269,7 @@ in :mod:`vegas`)::
         plt.show()
 
 The plots are created from approximately 50,000 random samples ``all_samples``, which
-is a dictionary where: ``all_samples['c'][d,i]`` are samples for parameters ``c[d]`` 
+is a dictionary where:  ``all_samples['c'][d,i]`` are samples for parameters ``c[d]`` 
 where index ``d=0,1`` labels directions in ``c``-space and index ``i`` 
 labels the sample; and ``all_samples['w'][i]`` and ``all_samples['b'][i]`` 
 are the corresponding samples for parameters ``w`` and ``b``, respectively. The 
