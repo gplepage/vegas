@@ -1,4 +1,4 @@
-Version 6.1 2024-03-30??
+Version 6.1 2024-03-30
 =========================
 - Adds PDFIntegrator.sample() which creates (weighted) samples 
   from the integrator's probability distribution (eg, for making 
