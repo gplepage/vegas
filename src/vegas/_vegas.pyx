@@ -1607,7 +1607,7 @@ cdef class Integrator(object):
         cdef double neval_sigf = (
             self.neval_frac * self.neval / self.sum_sigf
             if self.beta > 0 and self.sum_sigf > 0 and not self.adapt_to_errors
-            else 0.0    # use min_neval_hcube
+            else 0.0    # use min_neval_hcube (should not happen ever)
             )
         cdef numpy.npy_intp avg_neval_hcube = int(self.neval / self.nhcube) 
         cdef numpy.npy_intp min_neval_batch = self.min_neval_batch                # min_neval_batch * avg_neval_hcube   ####
@@ -2038,10 +2038,13 @@ cdef class Integrator(object):
                         if EPSILON * sum_wf2[s, s] > dvar[s]:
                             # roundoff error ==> add only on diagonal (uncorrelated)
                             var[s, s] += EPSILON * sum_wf2[s, s]
+                            if s == 0:
+                                sigf2 = EPSILON * sum_wf2[0, 0] * neval
                         else:
                             for t in range(s + 1):
                                 var[s, t] += dvar[t]
-                    sigf2 = abs(sum_wf2[0, 0] * neval - sum_wf[0] * sum_wf[0])
+                            if s == 0:
+                                sigf2 = abs(sum_wf2[0, 0] * neval - sum_wf[0] * sum_wf[0])
                     if adaptive_strat:
                         sigf[i - hcube[0]] = sigf2 ** (self.beta / 2.)
                         sum_sigf += sigf[i - hcube[0]]
@@ -2065,7 +2068,12 @@ cdef class Integrator(object):
             result.update(mean, var, self.last_neval)
 
             if self.beta > 0 and not self.adapt_to_errors and self.adapt:
-                self.sum_sigf = sum_sigf
+                if sum_sigf > 0:
+                    self.sum_sigf = sum_sigf
+                else:
+                    # integrand appears to be a constant => even distribution of points
+                    self.sigf[:] = 1. 
+                    self.sum_sigf = len(self.sigf)
             if self.alpha > 0 and self.adapt:
                 self.map.adapt(alpha=self.alpha)
             if self.analyzer is not None:

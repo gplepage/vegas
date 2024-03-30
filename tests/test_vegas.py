@@ -1219,22 +1219,26 @@ class TestIntegrator(unittest.TestCase):
         " integral of a constant "
         @batchintegrand
         def g(x):
-            return np.ones(x.shape[0], float)
+            return 7 * np.ones(x.shape[0], float)
+        places = 7
         # test weighted results
-        integ = Integrator([(0,1)],)
-        integ(g, nitn=1, neval=1e2, neval_frac=0.5)
-        res = integ(g, nitn=4, neval=1e2)
-        self.assertAlmostEqual(res.itn_results[0].sdev / res.sdev, 2.0)
+        integ = Integrator([(0,1)], neval=100, alpha=0)
+        res = integ(g, nitn=4)
+        self.assertAlmostEqual(res.itn_results[0].sdev/res.itn_results[1].sdev, 1.0, places=places)
+        self.assertAlmostEqual(res.itn_results[0].sdev / res.sdev, 2.0, places=places)
+        self.assertAlmostEqual(res.mean, 7.0, places=places)
         # test unweighted results
         res = integ(g, nitn=4, neval=1e2, adapt=False)
-        self.assertAlmostEqual(res.itn_results[0].sdev / res.sdev, 2.0)
+        self.assertAlmostEqual(res.itn_results[0].sdev/res.itn_results[1].sdev, 1.0, places=places)
+        self.assertAlmostEqual(res.itn_results[0].sdev / res.sdev, 2.0, places=places)
+        self.assertAlmostEqual(res.mean, 7.0, places=places)
         # zero
         @batchintegrand
         def g(x):
             return np.zeros(x.shape[0], float)
         # test weighted results
         integ = Integrator([(0,1)],)
-        res = integ(g, nitn=4, neval=1e2)
+        res = integ(g, nitn=4, neval=100)
         self.assertEqual(res.mean, 0.0)
 
     def test_uses_jac(self):
@@ -1337,6 +1341,42 @@ class test_PDFIntegrator(unittest.TestCase):
         self.assertTrue(ff2 == str(r[1][0,2]) == str(r[1][1,0]))
         self.assertTrue(ff3 == str(r[1][1,2]))
         self.assertTrue(r[1].shape == (2,3))
+
+    def test_PDFIntegrator_sample(self):   ## add dictionaries
+        nbatch = 100_000
+        cov1 = np.array([[1., 0.99], [0.99, 1]])
+        D = np.array([2, 1e-1])
+        cov1 = D[None, :] * cov1 * D[:, None]
+        g = gv.gvar([1, 2], cov1)
+        pdf = PDFIntegrator(g)
+        pdf()
+        for axis,mode in [(-1, 'rbatch'), (0, 'lbatch')]:
+            gv.ranseed(12)
+            _, p = pdf.sample(nbatch=nbatch, mode=mode)
+            wgts = _[:, None] if mode=='lbatch' else _[None, :]
+            pavg = np.sum(wgts * p, axis=axis)
+            psdev = ((np.sum(wgts * p ** 2, axis=axis) - pavg ** 2) / 1) ** 0.5
+            self.assertEqual(str(gv.gvar(pavg, psdev)), str(g))
+            if mode == 'rbatch':
+                cov01 = float(np.sum(p[0] * p[1] * wgts[0], axis=axis) - pavg[0] * pavg[1])
+                self.assertEqual(round(cov01, 2), round(gv.evalcov(g)[0,1], 2))
+            else:
+                cov01 = float(np.sum(p[:, 0] * p[:, 1] * wgts[:, 0], axis=axis) - pavg[0] * pavg[1])
+                self.assertEqual(round(cov01, 2), round(gv.evalcov(g)[0,1], 2))
+        g = gv.BufferDict(a=g[0], b=g[1])
+        pdf = PDFIntegrator(g)
+        pdf()
+        for axis,mode in [(-1, 'rbatch'), (0, 'lbatch')]:
+            gv.ranseed(12)
+            wgts,p = pdf.sample(nbatch=nbatch, mode=mode)
+            pavg = dict(a=np.sum(wgts * p['a'], axis=axis), b=np.sum(wgts * p['b'], axis=axis))
+            psdev = dict(
+                a=((np.sum(wgts * p['a'] ** 2, axis=axis) - pavg['a'] ** 2) / 1) ** 0.5,
+                b=((np.sum(wgts * p['b'] ** 2, axis=axis) - pavg['b'] ** 2) / 1) ** 0.5,
+                )
+            self.assertEqual(str(gv.gvar(pavg, psdev)), str(g))
+            cov01 = np.sum(wgts * p['a']*p['b'], axis=axis) - pavg['a'] * pavg['b']
+            self.assertEqual(round(cov01, 2), round(gv.evalcov(g)['a','b'][0,0], 2))
 
     def test_rbatch(self):
         # g is vector

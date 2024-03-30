@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>vegas Module &#8212; vegas 6.0.1 documentation</title>
+    <title>vegas Module &#8212; vegas 6.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -1356,6 +1356,116 @@ or <a class="reference internal" href="#vegas.PDFEVDict" title="vegas.PDFEVDict"
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="vegas.PDFIntegrator.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nbatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rbatch'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate random samples from the integrator’s PDF.</p>
+<p>Typical usage is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gvar</span> <span class="k">as</span> <span class="nn">gv</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">vegas</span>
+
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
+<span class="k">def</span> <span class="nf">g_pdf</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="mf">1.</span>
+    <span class="k">for</span> <span class="n">p0</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]:</span>
+        <span class="n">ans</span> <span class="o">+=</span> <span class="n">h</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">p</span><span class="o">-</span><span class="n">p0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="mf">.01</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">/=</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">ans</span>
+
+<span class="n">g_param</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[[</span><span class="mf">.25</span><span class="p">,</span> <span class="mf">.2</span><span class="p">],</span> <span class="p">[</span><span class="mf">.2</span><span class="p">,</span> <span class="mf">.25</span><span class="p">]])</span>
+<span class="n">g_ev</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">PDFIntegrator</span><span class="p">(</span><span class="n">param</span><span class="o">=</span><span class="n">g_param</span><span class="p">,</span> <span class="n">pdf</span><span class="o">=</span><span class="n">g_pdf</span><span class="p">)</span>
+
+<span class="c1"># adapt integrator to g_pdf(p) and evaluate &lt;p&gt;</span>
+<span class="n">g_ev</span><span class="p">(</span><span class="n">neval</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">g_ev</span><span class="o">.</span><span class="n">stats</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&lt;p&gt; =&#39;</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="s1">&#39;(vegas)&#39;</span><span class="p">)</span>
+
+<span class="c1"># sample g_pdf(p) and use sample to evaluate &lt;p&gt; and &lt;cos(p0)&gt;</span>
+<span class="n">wgts</span><span class="p">,</span> <span class="n">p_samples</span> <span class="o">=</span> <span class="n">g_ev</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">nbatch</span><span class="o">=</span><span class="mi">40_000</span><span class="p">)</span>
+<span class="n">p_avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">wgts</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">p_samples</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">cosp_avg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">wgts</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">p_samples</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&lt;p&gt; =&#39;</span><span class="p">,</span> <span class="n">p_avg</span><span class="p">,</span> <span class="s1">&#39;(sample)&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&lt;cos(p)&gt; =&#39;</span><span class="p">,</span> <span class="n">cosp_avg</span><span class="p">,</span> <span class="s1">&#39;(sample)&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">p_samples[d,</span> <span class="pre">i]</span></code> is a batch of about 40,000 random samples
+for parameter <code class="docutils literal notranslate"><span class="pre">p[d]</span></code> drawn from the (bimodal) distribution with
+PDF <code class="docutils literal notranslate"><span class="pre">g_pdf(p)</span></code>. Index <code class="docutils literal notranslate"><span class="pre">d=0,1</span></code> labels directions in parameter
+space, while index <code class="docutils literal notranslate"><span class="pre">i</span></code> labels the sample. The samples
+are weighted by <code class="docutils literal notranslate"><span class="pre">wgts[i]</span></code>; the sum of all weights equals one.
+The batch index in <code class="docutils literal notranslate"><span class="pre">p_samples</span></code> is the rightmost index because
+by default <code class="docutils literal notranslate"><span class="pre">mode='rbatch'</span></code>. (Set <code class="docutils literal notranslate"><span class="pre">mode='lbatch'</span></code> to move the
+batch index to the leftmost position: <code class="docutils literal notranslate"><span class="pre">p_samples[i,</span> <span class="pre">d]</span></code>.)
+The output from this script is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.40</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span> <span class="mf">0.40</span><span class="p">(</span><span class="mi">17</span><span class="p">)]</span> <span class="p">(</span><span class="n">vegas</span><span class="p">)</span>
+<span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.39998773</span> <span class="mf">0.39984626</span><span class="p">]</span> <span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+<span class="o">&lt;</span><span class="n">cos</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.90745871</span> <span class="mf">0.9075133</span> <span class="p">]</span> <span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Samples are also useful for making histograms and contour
+plots of the probability density. For example, the following
+code uses the <code class="xref py py-mod docutils literal notranslate"><span class="pre">corner</span></code> Python module to create histograms
+for each parameter, and a contour plot showing
+their joint distribution:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">corner</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="n">corner</span><span class="o">.</span><span class="n">corner</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">p_samples</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">wgts</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;p[0]&#39;</span><span class="p">,</span> <span class="s1">&#39;p[1]&#39;</span><span class="p">],</span>
+    <span class="nb">range</span><span class="o">=</span><span class="p">[</span><span class="mf">0.999</span><span class="p">,</span> <span class="mf">0.999</span><span class="p">],</span> <span class="n">show_titles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="p">[</span><span class="mf">0.16</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.84</span><span class="p">],</span>
+    <span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The output, showing the bimodal structure, is:</p>
+<a class="reference internal image-reference" href="_images/bimodal.png"><img alt="_images/bimodal.png" src="_images/bimodal.png" style="width: 80%;" /></a>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nbatch</strong> (<em>int</em>) – The integrator will return
+at least <code class="docutils literal notranslate"><span class="pre">nbatch</span></code> samples drawn from its PDF. The
+actual number of samples is the smallest multiple of
+<code class="docutils literal notranslate"><span class="pre">self.last_neval</span></code> that is equal to or larger than <code class="docutils literal notranslate"><span class="pre">nbatch</span></code>.
+Results are packaged in arrays or dictionaries
+whose elements have an extra index labeling the different
+samples in the batch. The batch index is
+the rightmost index if <code class="docutils literal notranslate"><span class="pre">mode='rbatch'</span></code>; it is
+the leftmost index if <code class="docutils literal notranslate"><span class="pre">mode</span></code> is <code class="docutils literal notranslate"><span class="pre">'lbatch'</span></code>.</p></li>
+<li><p><strong>mode</strong> (<em>bool</em>) – Batch mode. Allowed
+modes are <code class="docutils literal notranslate"><span class="pre">'rbatch'</span></code> or <code class="docutils literal notranslate"><span class="pre">'lbatch'</span></code>,
+corresponding to batch indices that are on the
+right or the left, respectively.
+Default is <code class="docutils literal notranslate"><span class="pre">mode='rbatch'</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>A tuple <code class="docutils literal notranslate"><span class="pre">(wgts,samples)</span></code> containing samples drawn from the integrator’s
+PDF, together with their weights <code class="docutils literal notranslate"><span class="pre">wgts</span></code>. The weighted sample points
+are distributed through parameter space with a density proportional to
+the PDF.</p>
+<p>In general, <code class="docutils literal notranslate"><span class="pre">samples</span></code> is either a dictionary or an array
+depending upon the format of <a class="reference internal" href="#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> parameter <code class="docutils literal notranslate"><span class="pre">param</span></code>.
+For example, if</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">param</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="s1">&#39;1.5(1)&#39;</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;3.2(8)&#39;</span><span class="p">,</span> <span class="s1">&#39;1.1(4)&#39;</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p>then <code class="docutils literal notranslate"><span class="pre">samples['s'][i]</span></code> is a sample for parameter <code class="docutils literal notranslate"><span class="pre">p['s']</span></code>
+where index <code class="docutils literal notranslate"><span class="pre">i=0,1...nbatch(approx)</span></code> labels the sample. The
+corresponding sample for <code class="docutils literal notranslate"><span class="pre">p['v'][d]</span></code>, where <code class="docutils literal notranslate"><span class="pre">d=0</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code>,
+is <code class="docutils literal notranslate"><span class="pre">samples['v'][d,</span> <span class="pre">i]</span></code> provided <code class="docutils literal notranslate"><span class="pre">mode='rbatch'</span></code>, which
+is the default. (Otherwise it is <code class="docutils literal notranslate"><span class="pre">p['v'][i,</span> <span class="pre">d]</span></code>, for
+<code class="docutils literal notranslate"><span class="pre">mode='lbatch'</span></code>.) The corresponding weight for this sample
+is <code class="docutils literal notranslate"><span class="pre">wgts[i]</span></code>.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">param</span></code> is an array, <code class="docutils literal notranslate"><span class="pre">samples</span></code> is an array with the same
+shape plus an extra sample index which is either on the right
+(<code class="docutils literal notranslate"><span class="pre">mode='rbatch'</span></code>, default) or left (<code class="docutils literal notranslate"><span class="pre">mode='lbatch'</span></code>).</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd>
 </dl>
 </dd></dl>
@@ -2007,7 +2117,7 @@ specified (or is <code class="docutils literal notranslate"><span class="pre">No
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>

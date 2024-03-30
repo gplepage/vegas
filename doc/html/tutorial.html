@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Tutorial &#8212; vegas 6.0.1 documentation</title>
+    <title>Tutorial &#8212; vegas 6.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>  
@@ -1117,8 +1117,13 @@ for <code class="docutils literal notranslate"><span class="pre">fp</span></code
 <p>The discussion in <a class="reference internal" href="outliers.html#case-curve-fitting"><span class="std std-ref">Case Study: Bayesian Curve Fitting</span></a> illustrates how
 <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> can be used with a non-Gaussian PDF in two
 examples, one with 4   parameters
-and the other with 22   parameters. Also the <code class="xref py py-mod docutils literal notranslate"><span class="pre">lsqfit</span></code>
-Python module uses it in a least-squares fitter <code class="xref py py-class docutils literal notranslate"><span class="pre">vegas_fit</span></code>
+and the other with 22   parameters. It also shows how to
+use <a class="reference internal" href="vegas.html#vegas.PDFIntegrator.sample" title="vegas.PDFIntegrator.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vegas.PDFIntegrator.sample()</span></code></a> to create (weighted)
+random samples of parameter points whose density is proportional
+to the integrator’s PDF.</p>
+<p>Finally, note that the <code class="xref py py-mod docutils literal notranslate"><span class="pre">lsqfit</span></code>
+Python module uses <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> to implement a least-squares
+fitter <code class="xref py py-class docutils literal notranslate"><span class="pre">vegas_fit</span></code>
 that uses Bayesian integration (rather than minimization).</p>
 </section>
 <section id="faster-integrands">
@@ -2188,7 +2193,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>

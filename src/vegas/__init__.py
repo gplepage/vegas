@@ -587,28 +587,27 @@ class PDFIntegrator(Integrator):
         ``self.pdf`` if it is defined externally.
         """
         tan_theta = numpy.tan(theta)
-        x = scale * tan_theta
-        # jac = dp_dtheta
-        jac = scale * numpy.prod((tan_theta ** 2 + 1.), axis=1) * param_pdf.dp_dchiv
-        p = param_pdf.pflat(x, mode='lbatch')
+        chiv = scale * tan_theta   
+        dp_dtheta = scale * numpy.prod((tan_theta ** 2 + 1.), axis=1) * param_pdf.dp_dchiv
+        p = param_pdf.pflat(chiv, mode='lbatch')
         if pdf is None:
-            # normalized in x space so don't want param_pdf.dpdx in jac
-            pdf = numpy.prod(numpy.exp(-(x ** 2) / 2.) / numpy.sqrt(2 * numpy.pi), axis=1) / param_pdf.dp_dchiv
+            # normalized in chiv space so don't want param_pdf.dp_dchiv in jac
+            pdf = numpy.prod(numpy.exp(-(chiv ** 2) / 2.) / numpy.sqrt(2 * numpy.pi), axis=1) / param_pdf.dp_dchiv
         else:
             pdf = numpy.prod(pdf.eval(p, jac=None), axis=1)
         if f is None:
-            ans = _gvar.BufferDict(pdf=jac * pdf)
+            ans = _gvar.BufferDict(pdf=dp_dtheta * pdf)
             return ans
-        fp = jac * pdf if f is None else f.format_evalx(f.eval(p))
+        fp = dp_dtheta * pdf if f is None else f.format_evalx(f.eval(p))
         ans = _gvar.BufferDict()
         if hasattr(fp, 'keys'):
-            ans['pdf'] = jac * pdf
+            ans['pdf'] = dp_dtheta * pdf
             for k in fp:
                 shape = numpy.shape(fp[k])
                 ans[('f(p)*pdf', k)] = fp[k] * ans['pdf'].reshape(shape[:1] + len(shape[1:]) * (1,))
         else:
             fp = numpy.asarray(fp)
-            ans['pdf'] = jac * pdf
+            ans['pdf'] = dp_dtheta * pdf
             shape = fp.shape
             fp *= ans['pdf'].reshape(shape[:1] + len(shape[1:]) * (1,))
             ans['f(p)*pdf'] = fp
@@ -1030,6 +1029,144 @@ class PDFIntegrator(Integrator):
                 p[k] = p[k]
         return p
 
+    def sample(self, nbatch, mode='rbatch'):
+        """ Generate random samples from the integrator's PDF.
+
+        Typical usage is::
+
+            import gvar as gv 
+            import numpy as np
+            import vegas
+
+            @vegas.rbatchintegrand
+            def g_pdf(p):
+                ans = 0
+                h = 1.
+                for p0 in [0.3, 0.6]:
+                    ans += h * np.exp(-np.sum((p-p0)**2, axis=0)/2/.01)
+                    h /= 2
+                return ans
+
+            g_param = gv.gvar([0.5, 0.5], [[.25, .2], [.2, .25]])
+            g_ev = vegas.PDFIntegrator(param=g_param, pdf=g_pdf)
+            
+            # adapt integrator to g_pdf(p) and evaluate <p>
+            g_ev(neval=4000, nitn=10)
+            r = g_ev.stats()
+            print('<p> =', r, '(vegas)')
+
+            # sample g_pdf(p) and use sample to evaluate <p> and <cos(p0)>
+            wgts, p_samples = g_ev.sample(nbatch=40_000)
+            p_avg = np.sum(wgts[None, :] * p_samples, axis=1)
+            cosp_avg = np.sum(wgts[None, :] * np.cos(p_samples), axis=1)
+            print('<p> =', p_avg, '(sample)')
+            print('<cos(p)> =', cosp_avg, '(sample)')
+
+        Here ``p_samples[d, i]`` is a batch of about 40,000 random samples 
+        for parameter ``p[d]`` drawn from the (bimodal) distribution with 
+        PDF ``g_pdf(p)``. Index ``d=0,1`` labels directions in parameter 
+        space, while index ``i`` labels the sample. The samples 
+        are weighted by ``wgts[i]``; the sum of all weights equals one. 
+        The batch index in ``p_samples`` is the rightmost index because 
+        by default ``mode='rbatch'``. (Set ``mode='lbatch'`` to move the 
+        batch index to the leftmost position: ``p_samples[i, d]``.)
+        The output from this script is::
+
+            <p> = [0.40(17) 0.40(17)] (vegas)
+            <p> = [0.39998773 0.39984626] (sample)
+            <cos(p)> = [0.90745871 0.9075133 ] (sample)
+        
+        Samples are also useful for making histograms and contour 
+        plots of the probability density. For example, the following 
+        code uses the :mod:`corner` Python module to create histograms 
+        for each parameter, and a contour plot showing 
+        their joint distribution::
+
+            import corner
+            import matplotlib.pyplot as plt
+            
+            corner.corner(
+                data=p_samples.T, weights=wgts, labels=['p[0]', 'p[1]'],
+                range=[0.999, 0.999], show_titles=True, quantiles=[0.16, 0.5, 0.84],
+                )
+            plt.show()
+
+        The output, showing the bimodal structure, is:
+
+        .. image:: bimodal.png
+            :width: 80%
+        
+
+        Args:
+            nbatch (int): The integrator will return
+                at least ``nbatch`` samples drawn from its PDF. The 
+                actual number of samples is the smallest multiple of 
+                ``self.last_neval`` that is equal to or larger than ``nbatch``.
+                Results are packaged in arrays or dictionaries
+                whose elements have an extra index labeling the different 
+                samples in the batch. The batch index is 
+                the rightmost index if ``mode='rbatch'``; it is 
+                the leftmost index if ``mode`` is ``'lbatch'``. 
+            mode (bool): Batch mode. Allowed 
+                modes are ``'rbatch'`` or ``'lbatch'``,
+                corresponding to batch indices that are on the 
+                right or the left, respectively. 
+                Default is ``mode='rbatch'``.
+        
+        Returns:
+            A tuple ``(wgts,samples)`` containing samples drawn from the integrator's
+            PDF, together with their weights ``wgts``. The weighted sample points 
+            are distributed through parameter space with a density proportional to
+            the PDF. 
+            
+            In general, ``samples`` is either a dictionary or an array 
+            depending upon the format of |PDFIntegrator| parameter ``param``. 
+            For example, if ::
+
+                param = gv.gvar(dict(s='1.5(1)', v=['3.2(8)', '1.1(4)']))
+
+            then ``samples['s'][i]`` is a sample for parameter ``p['s']``
+            where index ``i=0,1...nbatch(approx)`` labels the sample. The 
+            corresponding sample for ``p['v'][d]``, where ``d=0`` or ``1``, 
+            is ``samples['v'][d, i]`` provided ``mode='rbatch'``, which 
+            is the default. (Otherwise it is ``p['v'][i, d]``, for 
+            ``mode='lbatch'``.) The corresponding weight for this sample
+            is ``wgts[i]``.
+
+            When ``param`` is an array, ``samples`` is an array with the same 
+            shape plus an extra sample index which is either on the right 
+            (``mode='rbatch'``, default) or left (``mode='lbatch'``).
+        """
+        neval = self.last_neval if hasattr(self, 'last_neval') else self.neval
+        nit = 1 if nbatch is None else nbatch // neval 
+        if nit * neval < nbatch:
+            nit += 1    
+        samples = []
+        wgts = []
+        for _ in range(nit):
+            for theta, wgt in self.random_batch():
+                # following code comes mostly from _f_lbatch
+                tan_theta = numpy.tan(theta)
+                chiv = self.scale * tan_theta
+                # jac = dp_dtheta
+                dp_dtheta = self.scale * numpy.prod((tan_theta ** 2 + 1.), axis=1) * self.param_pdf.dp_dchiv
+                pflat = self.param_pdf.pflat(chiv, mode='lbatch')
+                if self.pdf is None:
+                    # normalized in chiv space so don't want param_pdf.dpdchiv in jac
+                    pdf = numpy.prod(numpy.exp(-(chiv ** 2) / 2.) / numpy.sqrt(2 * numpy.pi), axis=1) / self.param_pdf.dp_dchiv
+                else:
+                    pdf = numpy.prod(self.pdf.eval(pflat, jac=None), axis=1)
+                p = self.param_pdf._unflatten(pflat, mode='lbatch')
+                wgts.append(wgt * dp_dtheta * pdf)
+                samples.append(pflat)
+        samples =  numpy.concatenate(samples, axis=0)
+        wgts = numpy.concatenate(wgts)
+        wgts /= numpy.sum(wgts)
+        if mode == 'rbatch':
+            samples = self.param_pdf._unflatten(samples.T, mode='rbatch')
+        else:
+            samples = self.param_pdf._unflatten(samples, mode='lbatch')
+        return wgts, samples
 
 class PDFAnalyzer(object):
     """ |vegas| analyzer for implementing ``save``, ``saveall`` keywords for :class:`PDFIntegrator` """

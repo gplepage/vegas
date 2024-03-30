@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Case Study: Bayesian Curve Fitting &#8212; vegas 6.0.1 documentation</title>
+    <title>Case Study: Bayesian Curve Fitting &#8212; vegas 6.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Case Study: Bayesian Curve Fitting</a></li> 
       </ul>
     </div>  
@@ -117,14 +117,14 @@ these two terms are <img class="math" src="_images/math/3b4ea90c6ed6abf0b29b4bd8
     <span class="c1"># 3) create integrator and adapt it to the modified PDF</span>
     <span class="n">expval</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">PDFIntegrator</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">pdf</span><span class="o">=</span><span class="n">mod_pdf</span><span class="p">)</span>
     <span class="n">nitn</span> <span class="o">=</span> <span class="mi">10</span>
-    <span class="n">neval</span> <span class="o">=</span> <span class="mi">2_000</span>
-    <span class="n">warmup</span> <span class="o">=</span> <span class="n">expval</span><span class="p">(</span><span class="n">neval</span><span class="o">=</span><span class="n">neval</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">nitn</span><span class="p">)</span>
+    <span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">warmup</span> <span class="o">=</span> <span class="n">expval</span><span class="p">(</span><span class="n">nstrat</span><span class="o">=</span><span class="n">nstrat</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">nitn</span><span class="p">)</span>
 
     <span class="c1"># 4) evaluate statistics for g(p)</span>
     <span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
     <span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span><span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">]}</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">expval</span><span class="o">.</span><span class="n">stats</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="n">neval</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="n">nitn</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">expval</span><span class="o">.</span><span class="n">stats</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="n">nitn</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 
     <span class="c1"># 5) print out results</span>
@@ -222,42 +222,49 @@ available automatically even though <a class="reference internal" href="vegas.ht
 integrates over <code class="docutils literal notranslate"><span class="pre">p['gw(w)']</span></code>. The same strategy is used
 for the breadth parameter.</p>
 <p>The Bayesian integrals are estimated using <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a>
-<code class="docutils literal notranslate"><span class="pre">expval</span></code>, which is created from the prior.
+<code class="docutils literal notranslate"><span class="pre">expval</span></code>, which is created from the prior and the modified PDF.
 It is used to evaluate expectation values of arbitrary functions of the
 fit variables. Here it optimizes the integration variables for integrals
 of the prior’s PDF, but replaces that PDF with the modified PDF when
 evaluating expectation values.</p>
 <p>We first call <code class="docutils literal notranslate"><span class="pre">expval</span></code> with no function, to allow the integrator to adapt
-to the modified PDF. We then use the integrator’s <code class="xref py py-meth docutils literal notranslate"><span class="pre">PDFIntegrator.stats()</span></code>
-method to evaluate the expectation value and standard deviation of
-function of the fit parameters as returned by <code class="docutils literal notranslate"><span class="pre">g(p)</span></code>.
+to the modified PDF. We specify the number of stratifications for
+each direction in parameter space, concentrating
+stratifications in the
+<code class="docutils literal notranslate"><span class="pre">c[0]</span></code> and <code class="docutils literal notranslate"><span class="pre">c[1]</span></code> directions (because we expect more structure there);
+<code class="docutils literal notranslate"><span class="pre">expval</span></code> uses about 3000 integrand evaluations per iteration with
+this stratification.</p>
+<p>We next use the integrator’s <code class="xref py py-meth docutils literal notranslate"><span class="pre">PDFIntegrator.stats()</span></code>
+method to evaluate the expectation values, standard deviations and
+correlations of
+the functions of the fit parameters returned by <code class="docutils literal notranslate"><span class="pre">g(p)</span></code>.
 The output dictionary <code class="docutils literal notranslate"><span class="pre">results</span></code>
-contains fit results for each of the fit parameters.</p>
+contains fit results (<code class="xref py py-class docutils literal notranslate"><span class="pre">gvar.GVar</span></code>s) for each of the fit parameters.</p>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">g(p)</span></code> and <code class="docutils literal notranslate"><span class="pre">mod_pdf(p)</span></code> are both batch integrands, with the
 batch index on the right (i.e., the last index). This significantly
 reduces the time required for the integrations.</p>
-<p>The results from this code are as follows:</p>
+<p>The results  from this code are as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">average</span>         <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">4.545</span><span class="p">(</span><span class="mi">95</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.545</span><span class="p">(</span><span class="mi">95</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">4.53</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.538</span><span class="p">(</span><span class="mi">69</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.29</span>     <span class="mf">1.00</span>
-  <span class="mi">3</span>   <span class="mf">4.42</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.499</span><span class="p">(</span><span class="mi">57</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.83</span>     <span class="mf">0.73</span>
-  <span class="mi">4</span>   <span class="mf">4.479</span><span class="p">(</span><span class="mi">99</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.494</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.84</span>     <span class="mf">0.77</span>
-  <span class="mi">5</span>   <span class="mf">4.50</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.495</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.91</span>     <span class="mf">0.67</span>
-  <span class="mi">6</span>   <span class="mf">4.409</span><span class="p">(</span><span class="mi">97</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.481</span><span class="p">(</span><span class="mi">41</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.90</span>     <span class="mf">0.72</span>
-  <span class="mi">7</span>   <span class="mf">4.351</span><span class="p">(</span><span class="mi">97</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.462</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.87</span>     <span class="mf">0.81</span>
-  <span class="mi">8</span>   <span class="mf">4.331</span><span class="p">(</span><span class="mi">93</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.446</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.87</span>     <span class="mf">0.84</span>
-  <span class="mi">9</span>   <span class="mf">4.521</span><span class="p">(</span><span class="mi">94</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.454</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.89</span>     <span class="mf">0.80</span>
- <span class="mi">10</span>   <span class="mf">4.37</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">4.445</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.89</span>     <span class="mf">0.82</span>
+  <span class="mi">1</span>   <span class="mf">4.437</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.437</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">4.457</span><span class="p">(</span><span class="mi">43</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.447</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.30</span>     <span class="mf">1.00</span>
+  <span class="mi">3</span>   <span class="mf">4.509</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.468</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.81</span>     <span class="mf">0.76</span>
+  <span class="mi">4</span>   <span class="mf">4.548</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.488</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.61</span>     <span class="mf">0.98</span>
+  <span class="mi">5</span>   <span class="mf">4.491</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.488</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.54</span>     <span class="mf">1.00</span>
+  <span class="mi">6</span>   <span class="mf">4.523</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.494</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.57</span>     <span class="mf">1.00</span>
+  <span class="mi">7</span>   <span class="mf">4.444</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.487</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.58</span>     <span class="mf">1.00</span>
+  <span class="mi">8</span>   <span class="mf">4.433</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.480</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.62</span>     <span class="mf">1.00</span>
+  <span class="mi">9</span>   <span class="mf">4.530</span><span class="p">(</span><span class="mi">48</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.486</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.62</span>     <span class="mf">1.00</span>
+ <span class="mi">10</span>   <span class="mf">4.511</span><span class="p">(</span><span class="mi">47</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">4.488</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.63</span>     <span class="mf">1.00</span>
 
 <span class="n">Bayesian</span> <span class="n">fit</span> <span class="n">results</span><span class="p">:</span>
-      <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.29</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span> <span class="mf">0.620</span><span class="p">(</span><span class="mi">55</span><span class="p">)]</span>
- <span class="n">corr_c</span> <span class="o">=</span> <span class="p">[[</span> <span class="mf">1.</span>    <span class="o">-</span><span class="mf">0.891</span><span class="p">]</span>
-           <span class="p">[</span><span class="o">-</span><span class="mf">0.891</span>  <span class="mf">1.</span>   <span class="p">]]</span>
-      <span class="n">b</span> <span class="o">=</span> <span class="mf">10.7</span><span class="p">(</span><span class="mf">3.7</span><span class="p">)</span>
+      <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.29</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span> <span class="mf">0.620</span><span class="p">(</span><span class="mi">58</span><span class="p">)]</span>
+ <span class="n">corr_c</span> <span class="o">=</span> <span class="p">[[</span> <span class="mf">1.</span>    <span class="o">-</span><span class="mf">0.897</span><span class="p">]</span>
+           <span class="p">[</span><span class="o">-</span><span class="mf">0.897</span>  <span class="mf">1.</span>   <span class="p">]]</span>
+      <span class="n">b</span> <span class="o">=</span> <span class="mf">10.6</span><span class="p">(</span><span class="mf">3.7</span><span class="p">)</span>
       <span class="n">w</span> <span class="o">=</span> <span class="mf">0.27</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
 
-  <span class="n">logBF</span> <span class="o">=</span> <span class="o">-</span><span class="mf">23.8366</span><span class="p">(</span><span class="mi">70</span><span class="p">)</span>
+  <span class="n">logBF</span> <span class="o">=</span> <span class="o">-</span><span class="mf">23.8270</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The table shows results for the normalization of the
@@ -275,13 +282,54 @@ intercept is 0.29(14) which
 is much more plausible than the least-squares result (compare the dashed line in red
 with the dotted line):</p>
 <a class="reference internal image-reference" href="_images/outliers2.png"><img alt="_images/outliers2.png" src="_images/outliers2.png" style="width: 60%;" /></a>
-<p>Note, from the correlation matrix, that the intercept and slope are
-anti-correlated, as one might guess for this fit.
-The analysis also gives us an estimate for the failure rate <code class="docutils literal notranslate"><span class="pre">w=0.27(12)</span></code>
+<p>The analysis also gives us an estimate for the failure rate <code class="docutils literal notranslate"><span class="pre">w=0.27(12)</span></code>
 of our devices — they fail about a quarter of the time — and
 shows that the <code class="docutils literal notranslate"><span class="pre">y</span></code> errors are <code class="docutils literal notranslate"><span class="pre">b=10.6(3.7)</span></code> times larger when
 there is a failure.</p>
-<p>Finally, note that the Monte Carlo integrations can be made more than
+<p>Note, from the correlation matrix, that the intercept and slope are
+anti-correlated, as one might guess for this fit. We can illustrate this
+correlation and look for others by sampling the distribution associated
+with the modified PDF and using the samples to create histograms and
+contour plots of the distributions. The following code uses
+<a class="reference internal" href="vegas.html#vegas.PDFIntegrator.sample" title="vegas.PDFIntegrator.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vegas.PDFIntegrator.sample()</span></code></a> to sample the distribution, and
+the <code class="xref py py-mod docutils literal notranslate"><span class="pre">corner</span></code> Python module to make the plots (requires the
+the <code class="xref py py-mod docutils literal notranslate"><span class="pre">corner</span></code> and <code class="xref py py-mod docutils literal notranslate"><span class="pre">arviz</span></code> Python modules, which are not included
+in <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">corner</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="k">def</span> <span class="nf">make_cornerplots</span><span class="p">(</span><span class="n">expval</span><span class="p">):</span>
+    <span class="c1"># sample the distribution and repack with the variables we want to analyze</span>
+    <span class="n">wgts</span><span class="p">,</span> <span class="n">all_samples</span> <span class="o">=</span> <span class="n">expval</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">nbatch</span><span class="o">=</span><span class="mi">50_000</span><span class="p">)</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">c0</span><span class="o">=</span><span class="n">all_samples</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">c1</span><span class="o">=</span><span class="n">all_samples</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">b</span><span class="o">=</span><span class="n">all_samples</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">],</span> <span class="n">w</span><span class="o">=</span><span class="n">all_samples</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="c1"># corner plots</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">corner</span><span class="o">.</span><span class="n">corner</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">wgts</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="mi">4</span><span class="o">*</span><span class="p">[</span><span class="mf">0.99</span><span class="p">],</span>
+        <span class="n">show_titles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="p">[</span><span class="mf">0.16</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.84</span><span class="p">],</span>
+        <span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The plots are created from approximately 50,000 random samples <code class="docutils literal notranslate"><span class="pre">all_samples</span></code>, which
+is a dictionary where: <code class="docutils literal notranslate"><span class="pre">all_samples['c'][d,i]</span></code> are samples for parameters <code class="docutils literal notranslate"><span class="pre">c[d]</span></code>
+where index <code class="docutils literal notranslate"><span class="pre">d=0,1</span></code> labels directions in <code class="docutils literal notranslate"><span class="pre">c</span></code>-space and index <code class="docutils literal notranslate"><span class="pre">i</span></code>
+labels the sample; and <code class="docutils literal notranslate"><span class="pre">all_samples['w'][i]</span></code> and <code class="docutils literal notranslate"><span class="pre">all_samples['b'][i]</span></code>
+are the corresponding samples for parameters <code class="docutils literal notranslate"><span class="pre">w</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code>, respectively. The
+corresponding weight for this sample is <code class="docutils literal notranslate"><span class="pre">wgts[i]</span></code>.</p>
+<p>The output shows histograms of the probability density for each parameter, and contour
+plots for each pair of parameters:</p>
+<a class="reference internal image-reference" href="_images/outliers3.png"><img alt="_images/outliers3.png" src="_images/outliers3.png" style="width: 90%;" /></a>
+<p>From the plots, parameters <code class="docutils literal notranslate"><span class="pre">c[0]</span></code> and <code class="docutils literal notranslate"><span class="pre">c[1]</span></code> are reasonably Gaussian, with
+a strong negative correlation, as expected. The other parameters are somewhat
+skewed, but show only weak correlations. The contour
+lines are at 0.5, 1, 1.5, and 2 sigma.
+The histograms are labeled with the median values
+of the parameters with plus/minus uncertainties that enclose 34% of the probability
+on either side of the median (<code class="docutils literal notranslate"><span class="pre">quantiles=[0.16,</span> <span class="pre">0.5,</span> <span class="pre">0.84]</span></code>).</p>
+<p>Finally, note that the Monte Carlo integrations can be made
 twice as accurate (or faster) by using the results of a least-squares fit
 in place of the
 prior to define the <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a>. This is done, for
@@ -311,38 +359,39 @@ PDF.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">prior</span> <span class="o">=</span> <span class="n">make_prior</span><span class="p">(</span><span class="n">w_shape</span><span class="o">=</span><span class="mi">19</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The Bayesian integral then has 22 parameters, rather than the 4 parameters
+<p>and <code class="docutils literal notranslate"><span class="pre">nstat</span></code> is replaced by <code class="docutils literal notranslate"><span class="pre">nstat</span> <span class="pre">=</span> <span class="pre">[20,</span> <span class="pre">20]</span> <span class="pre">+</span> <span class="pre">20</span> <span class="pre">*</span> <span class="pre">[1]</span></code>.
+The Bayesian integral then has 22 parameters, rather than the 4 parameters
 before. The code still takes only seconds to run on a 2020 laptop.</p>
 <p>The final results are quite similar to the other model:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">average</span>         <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">1.95</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">1.95</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">2.09</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.02</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.88</span>     <span class="mf">0.92</span>
-  <span class="mi">3</span>   <span class="mf">1.96</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.00</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.90</span>     <span class="mf">0.95</span>
-  <span class="mi">4</span>   <span class="mf">2.36</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.09</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.87</span>     <span class="mf">1.00</span>
-  <span class="mi">5</span>   <span class="mf">3.9</span><span class="p">(</span><span class="mf">1.6</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.45</span><span class="p">(</span><span class="mi">35</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.46</span>     <span class="mf">1.00</span>
-  <span class="mi">6</span>   <span class="mf">2.74</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.50</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.53</span>     <span class="mf">1.00</span>
-  <span class="mi">7</span>   <span class="mf">2.21</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.46</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.64</span>     <span class="mf">1.00</span>
-  <span class="mi">8</span>   <span class="mf">2.32</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.44</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.67</span>     <span class="mf">1.00</span>
-  <span class="mi">9</span>   <span class="mf">2.37</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.43</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.74</span>     <span class="mf">1.00</span>
- <span class="mi">10</span>   <span class="mf">2.54</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.44</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">0.77</span>     <span class="mf">1.00</span>
+  <span class="mi">1</span>   <span class="mf">2.558</span><span class="p">(</span><span class="mi">97</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">2.558</span><span class="p">(</span><span class="mi">97</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">2.88</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.72</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>        <span class="mf">1.13</span>     <span class="mf">0.06</span>
+  <span class="mi">3</span>   <span class="mf">2.691</span><span class="p">(</span><span class="mi">96</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">2.710</span><span class="p">(</span><span class="mi">86</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">1.03</span>     <span class="mf">0.28</span>
+  <span class="mi">4</span>   <span class="mf">2.658</span><span class="p">(</span><span class="mi">91</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">2.697</span><span class="p">(</span><span class="mi">68</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">1.02</span>     <span class="mf">0.33</span>
+  <span class="mi">5</span>   <span class="mf">2.69</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.695</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">1.00</span>     <span class="mf">0.48</span>
+  <span class="mi">6</span>   <span class="mf">2.63</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.685</span><span class="p">(</span><span class="mi">55</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.99</span>     <span class="mf">0.58</span>
+  <span class="mi">7</span>   <span class="mf">2.495</span><span class="p">(</span><span class="mi">73</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">2.658</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.98</span>     <span class="mf">0.68</span>
+  <span class="mi">8</span>   <span class="mf">2.462</span><span class="p">(</span><span class="mi">81</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">2.633</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.97</span>     <span class="mf">0.82</span>
+  <span class="mi">9</span>   <span class="mf">2.446</span><span class="p">(</span><span class="mi">76</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>   <span class="mf">2.613</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.98</span>     <span class="mf">0.72</span>
+ <span class="mi">10</span>   <span class="mf">2.51</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>    <span class="mf">2.602</span><span class="p">(</span><span class="mi">37</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">11</span>       <span class="mf">0.97</span>     <span class="mf">0.84</span>
 
 <span class="n">Bayesian</span> <span class="n">fit</span> <span class="n">results</span><span class="p">:</span>
-      <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.30</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span> <span class="mf">0.611</span><span class="p">(</span><span class="mi">62</span><span class="p">)]</span>
- <span class="n">corr_c</span> <span class="o">=</span> <span class="p">[[</span> <span class="mf">1.</span>    <span class="o">-</span><span class="mf">0.883</span><span class="p">]</span>
-           <span class="p">[</span><span class="o">-</span><span class="mf">0.883</span>  <span class="mf">1.</span>   <span class="p">]]</span>
-      <span class="n">b</span> <span class="o">=</span> <span class="mf">9.0</span><span class="p">(</span><span class="mf">3.1</span><span class="p">)</span>
-      <span class="n">w</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.40</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span> <span class="mf">0.64</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span> <span class="mf">0.38</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.39</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.68</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span> <span class="mf">0.48</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span> <span class="mf">0.49</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span> <span class="mf">0.39</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>
- <span class="mf">0.40</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span> <span class="mf">0.39</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.36</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.40</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span> <span class="mf">0.41</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.41</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span> <span class="mf">0.39</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.41</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>
- <span class="mf">0.48</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span> <span class="mf">0.65</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span> <span class="mf">0.38</span><span class="p">(</span><span class="mi">25</span><span class="p">)]</span>
+      <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.31</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span> <span class="mf">0.608</span><span class="p">(</span><span class="mi">70</span><span class="p">)]</span>
+ <span class="n">corr_c</span> <span class="o">=</span> <span class="p">[[</span> <span class="mf">1.</span>    <span class="o">-</span><span class="mf">0.902</span><span class="p">]</span>
+           <span class="p">[</span><span class="o">-</span><span class="mf">0.902</span>  <span class="mf">1.</span>   <span class="p">]]</span>
+      <span class="n">b</span> <span class="o">=</span> <span class="mf">8.8</span><span class="p">(</span><span class="mf">3.0</span><span class="p">)</span>
+      <span class="n">w</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.39</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.66</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span> <span class="mf">0.40</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.40</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.66</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span> <span class="mf">0.49</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span> <span class="mf">0.51</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span> <span class="mf">0.37</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>
+ <span class="mf">0.42</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span> <span class="mf">0.39</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.38</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.37</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.42</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span> <span class="mf">0.39</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span> <span class="mf">0.38</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span> <span class="mf">0.39</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>
+ <span class="mf">0.48</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span> <span class="mf">0.66</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span> <span class="mf">0.39</span><span class="p">(</span><span class="mi">27</span><span class="p">)]</span>
 
-  <span class="n">logBF</span> <span class="o">=</span> <span class="o">-</span><span class="mf">24.435</span><span class="p">(</span><span class="mi">78</span><span class="p">)</span>
+  <span class="n">logBF</span> <span class="o">=</span> <span class="o">-</span><span class="mf">24.372</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The logarithm of the Bayes Factor <code class="docutils literal notranslate"><span class="pre">logBF</span></code> is slightly lower for
-this model than before. It is also less accurately determined (11x), because
-22-parameter integrals are considerably more difficult than 4-parameter
-integrals. More precision can be obtained by increasing <code class="docutils literal notranslate"><span class="pre">neval</span></code>, but
+this model than before. It is also less accurately determined (4x), because
+22-parameter integrals are more difficult than 4-parameter
+integrals. More precision can be obtained by increasing <code class="docutils literal notranslate"><span class="pre">nstat</span></code>, but
 the current precision is more than adequate.</p>
 <p>Only three of the <code class="docutils literal notranslate"><span class="pre">w[i]</span></code> values listed in the output are more than two
 standard deviations away from zero. Not surprisingly, these correspond to
@@ -424,7 +473,7 @@ example, the intercept would be 0.35(17).</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Case Study: Bayesian Curve Fitting</a></li> 
       </ul>
     </div>

@@ -964,8 +964,14 @@ for ``fp``, which confirms that it is not particularly Gaussian:
 The discussion in :ref:`case_curve_fitting` illustrates how 
 |PDFIntegrator| can be used with a non-Gaussian PDF in two
 examples, one with 4 |~| parameters 
-and the other with 22 |~| parameters. Also the :mod:`lsqfit`
-Python module uses it in a least-squares fitter :class:`vegas_fit` 
+and the other with 22 |~| parameters. It also shows how to 
+use :meth:`vegas.PDFIntegrator.sample` to create (weighted)
+random samples of parameter points whose density is proportional
+to the integrator's PDF.
+
+Finally, note that the :mod:`lsqfit`
+Python module uses |PDFIntegrator| to implement a least-squares 
+fitter :class:`vegas_fit` 
 that uses Bayesian integration (rather than minimization). 
 
 

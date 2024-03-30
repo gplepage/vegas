@@ -80,14 +80,14 @@ The following code does a Bayesian fit with this modified PDF::
         # 3) create integrator and adapt it to the modified PDF
         expval = vegas.PDFIntegrator(prior, pdf=mod_pdf)
         nitn = 10
-        neval = 2_000
-        warmup = expval(neval=neval, nitn=2*nitn)
+        nstrat = [10, 10, 2, 2]
+        warmup = expval(nstrat=nstrat, nitn=2*nitn)
 
         # 4) evaluate statistics for g(p)
         @vegas.rbatchintegrand
         def g(p):
             return {k:p[k] for k in ['c', 'b', 'w']}
-        results = expval.stats(g, neval=neval, nitn=nitn)
+        results = expval.stats(g, nitn=nitn)
         print(results.summary())
 
         # 5) print out results
@@ -188,24 +188,32 @@ integrates over |~| ``p['gw(w)']``. The same strategy is used
 for the breadth parameter.
 
 The Bayesian integrals are estimated using :class:`vegas.PDFIntegrator`
-``expval``, which is created from the prior.
+``expval``, which is created from the prior and the modified PDF.
 It is used to evaluate expectation values of arbitrary functions of the
 fit variables. Here it optimizes the integration variables for integrals
 of the prior's PDF, but replaces that PDF with the modified PDF when 
 evaluating expectation values.
 
 We first call ``expval`` with no function, to allow the integrator to adapt
-to the modified PDF. We then use the integrator's :meth:`PDFIntegrator.stats` 
-method to evaluate the expectation value and standard deviation of
-function of the fit parameters as returned by ``g(p)``. 
+to the modified PDF. We specify the number of stratifications for 
+each direction in parameter space, concentrating 
+stratifications in the 
+``c[0]`` and ``c[1]`` directions (because we expect more structure there);
+``expval`` uses about 3000 integrand evaluations per iteration with 
+this stratification.
+
+We next use the integrator's :meth:`PDFIntegrator.stats` 
+method to evaluate the expectation values, standard deviations and
+correlations of
+the functions of the fit parameters returned by ``g(p)``. 
 The output dictionary ``results``
-contains fit results for each of the fit parameters.
+contains fit results (|GVar|\s) for each of the fit parameters.
 
 Note that ``g(p)`` and ``mod_pdf(p)`` are both batch integrands, with the 
 batch index on the right (i.e., the last index). This significantly 
 reduces the time required for the integrations.
 
-The results from this code are as follows:
+The results  from this code are as follows:
 
 .. literalinclude:: outliers1.out
 
@@ -228,14 +236,60 @@ with the dotted line):
 .. image:: outliers2.png
    :width: 60%
 
-Note, from the correlation matrix, that the intercept and slope are
-anti-correlated, as one might guess for this fit.
 The analysis also gives us an estimate for the failure rate ``w=0.27(12)``
 of our devices --- they fail about a quarter of the time --- and 
 shows that the ``y`` errors are ``b=10.6(3.7)`` times larger when 
 there is a failure.
 
-Finally, note that the Monte Carlo integrations can be made more than 
+Note, from the correlation matrix, that the intercept and slope are
+anti-correlated, as one might guess for this fit. We can illustrate this 
+correlation and look for others by sampling the distribution associated
+with the modified PDF and using the samples to create histograms and 
+contour plots of the distributions. The following code uses 
+:meth:`vegas.PDFIntegrator.sample` to sample the distribution, and 
+the :mod:`corner` Python module to make the plots (requires the 
+the :mod:`corner` and :mod:`arviz` Python modules, which are not included 
+in :mod:`vegas`)::
+
+    import corner
+    import matplotlib.pyplot as plt
+
+    def make_cornerplots(expval):
+        # sample the distribution and repack with the variables we want to analyze
+        wgts, all_samples = expval.sample(nbatch=50_000)
+        samples = dict(
+            c0=all_samples['c'][0], c1=all_samples['c'][1],
+            b=all_samples['b'], w=all_samples['w']
+            )
+        # corner plots
+        fig = corner.corner(
+            data=samples, weights=wgts, range=4*[0.99], 
+            show_titles=True, quantiles=[0.16, 0.5, 0.84],
+            )
+        plt.show()
+
+The plots are created from approximately 50,000 random samples ``all_samples``, which
+is a dictionary where: ``all_samples['c'][d,i]`` are samples for parameters ``c[d]`` 
+where index ``d=0,1`` labels directions in ``c``-space and index ``i`` 
+labels the sample; and ``all_samples['w'][i]`` and ``all_samples['b'][i]`` 
+are the corresponding samples for parameters ``w`` and ``b``, respectively. The 
+corresponding weight for this sample is ``wgts[i]``. 
+
+The output shows histograms of the probability density for each parameter, and contour 
+plots for each pair of parameters:
+
+.. image:: outliers3.png
+    :width: 90%
+
+From the plots, parameters ``c[0]`` and ``c[1]`` are reasonably Gaussian, with 
+a strong negative correlation, as expected. The other parameters are somewhat 
+skewed, but show only weak correlations. The contour 
+lines are at 0.5, 1, 1.5, and 2 sigma.
+The histograms are labeled with the median values 
+of the parameters with plus/minus uncertainties that enclose 34% of the probability
+on either side of the median (``quantiles=[0.16, 0.5, 0.84]``).
+
+Finally, note that the Monte Carlo integrations can be made
 twice as accurate (or faster) by using the results of a least-squares fit 
 in place of the 
 prior to define the :class:`vegas.PDFIntegrator`. This is done, for 
@@ -266,6 +320,7 @@ is replaced by ::
 
     prior = make_prior(w_shape=19)
 
+and ``nstat`` is replaced by ``nstat = [20, 20] + 20 * [1]``.
 The Bayesian integral then has 22 |~| parameters, rather than the 4 |~| parameters
 before. The code still takes only seconds to run on a 2020 laptop.
 
@@ -274,9 +329,9 @@ The final results are quite similar to the other model:
 .. literalinclude:: outliers2.out
 
 The logarithm of the Bayes Factor ``logBF`` is slightly lower for
-this model than before. It is also less accurately determined (11x), because
-22-parameter integrals are considerably more difficult than 4-parameter
-integrals. More precision can be obtained by increasing ``neval``, but
+this model than before. It is also less accurately determined (4x), because
+22-parameter integrals are more difficult than 4-parameter
+integrals. More precision can be obtained by increasing ``nstat``, but
 the current precision is more than adequate.
 
 Only three of the ``w[i]`` values listed in the output are more than two

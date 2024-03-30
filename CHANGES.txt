@@ -1,3 +1,11 @@
+Version 6.1 2024-03-30??
+=========================
+- Adds PDFIntegrator.sample() which creates (weighted) samples 
+  from the integrator's probability distribution (eg, for making 
+  histograms or contour plots of probability distributions).
+
+- Fixes defect in handling of round-off errors (in sigf).
+
 Version 6.0.1 2024-03-07
 ==========================
 Move vegas.pxd to its proper place.

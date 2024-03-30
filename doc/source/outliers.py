@@ -5,6 +5,11 @@ import gvar as gv
 import lsqfit
 import vegas
 
+try:
+    import corner
+except ImportError:
+    corner = None
+
 from outputsplitter import log_stdout
 
 _gvar = gv 
@@ -55,13 +60,16 @@ def main():
 
     # adapt integrator to pdf
     nitn = 10
-    neval = 2_000
-    warmup = expval(neval=neval, nitn=2 * nitn)
+    if W_SHAPE == ():
+        nstrat = [10,10,2,2]
+    else:
+        nstrat = [20,20] + W_SHAPE * [1] + [1]
+    warmup = expval(nstrat=nstrat, nitn=2 * nitn)
 
     # calculate expectation values
-    results = expval.stats(g, neval=neval, nitn=nitn)
+    results = expval.stats(g, nitn=nitn)
     print(results.summary())
-
+    
     # print out results
     print('Bayesian fit results:')
     for k in results:
@@ -78,6 +86,8 @@ def main():
 
     # Plot results
     make_plot(x, y, prior, results['c'])
+    if W_SHAPE == () and FIT_KEYS == ['c', 'b', 'w'] and USE_FIT == False:
+        make_cornerplots(expval, results)
 
 @vegas.rbatchintegrand
 class ModifiedPDF:
@@ -154,6 +164,47 @@ def make_plot(x, y, prior, c):
     plt.fill_between(xline, yp, ym, color='r', alpha=0.2)
     plt.savefig('outliers2.png', bbox_inches='tight')
     # plt.show()
+
+def make_cornerplots(expval, results):
+    wgts, psamples = expval.sample(nbatch=50_000)
+    if corner is not None:
+        samples = dict(
+            c0=psamples['c'][0], c1=psamples['c'][1],
+            b=psamples['b'], w=psamples['w']
+            )
+        fig = corner.corner(
+            data=samples, weights=wgts,  
+            range=4*[0.99], show_titles=True, quantiles=[0.16, 0.5, 0.84],
+
+            )
+        # mean = gv.mean([results['c'][0], results['c'][1], results['w'], results['b']])
+        # corner.overplot_lines(fig, mean, color="C1")
+        plt.savefig('outliers3.png', bbox_inches='tight')
+        plt.show()
+        return
+    csamples = psamples['c']
+    c = results['c']
+    # range for plot
+    s = 2.5
+    range = []
+    for d in np.arange(2):
+        range.append((c[d].mean - s * c[d].sdev, c[d].mean + s * c[d].sdev))
+    # 2-d histogram H
+    H, xedges, yedges = np.histogram2d(
+        csamples[0], csamples[1], bins=20, 
+        weights=wgts, density=True, range=range
+        )
+    # contour plot of histogram H
+    xmids = (xedges[1:] + xedges[:-1]) / 2
+    ymids = (yedges[1:] + yedges[:-1]) / 2
+    X, Y = np.meshgrid(xmids, ymids)
+    plt.cla()
+    plt.contourf(X, Y, H,)
+    plt.xlabel('c[0]')
+    plt.ylabel('c[1]')
+    # plt.savefig('outliers3.png', bbox_inches='tight')
+    plt.show()
+
 
 if __name__ == '__main__':
     main()

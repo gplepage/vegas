@@ -235,6 +235,8 @@ specialized integrator:
 
     .. automethod:: stats(f, moments=False, histograms=False, **kargs)
 
+    .. automethod:: sample(nbatch, mode='rbatch')
+
 Other Objects and Functions
 ----------------------------
 .. autoclass:: vegas.RAvg
