@@ -65,15 +65,14 @@ test-linking:
 	$(PYTHON) cfcn_cffi-build.py
 	$(PYTHON) cfcn-cffi.py > cfcn-cffi.tmp
 	- diff -w cfcn.out cfcn-cffi.tmp
+	-rm cfcn_cython*.so
+	$(PYTHON) cfcn-cython.py > cfcn-cython.tmp
+	- diff -w cfcn.out cfcn-cython.tmp
 	# ----------------------------------------
 	$(FORTRAN) -c ffcn.f -o ffcn.o
 	$(PYTHON) ffcn_cffi-build.py
 	$(PYTHON) ffcn-cffi.py > ffcn-cffi.tmp
 	- diff -w cfcn.out ffcn-cffi.tmp
-	# ----------------------------------------
-	-rm cfcn_cython*.so
-	$(PYTHON) cfcn-cython.py > cfcn-cython.tmp
-	- diff -w cfcn.out cfcn-cython.tmp
 	# ----------------------------------------
 	-f2py -m ffcn_f2py --quiet -c ffcn.f
 	$(PYTHON) ffcn-f2py.py > ffcn-f2py.tmp
