@@ -1,8 +1,8 @@
-# cython: language_level=3str, binding=True
+# cython: language_level=3str, binding=True, boundscheck=False
 # c#ython: profile=True
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-23 G. Peter Lepage.
+# Copyright (c) 2013-24 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ import gvar
 
 cdef double TINY = 10 ** (sys.float_info.min_10_exp + 50)  # smallest and biggest
 cdef double HUGE = 10 ** (sys.float_info.max_10_exp - 50)  # with extra headroom
-cdef double EPSILON = sys.float_info.epsilon * 10.         # roundoff error threshold
+cdef double EPSILON = sys.float_info.epsilon * 1e4        # roundoff error threshold (see Schubert and Gertz Table 2)
 
 # AdaptiveMap is used by Integrator
 cdef class AdaptiveMap:
@@ -1927,13 +1927,13 @@ cdef class Integrator(object):
         cdef double[:, ::1] y
         cdef double[::1] fdv2
         cdef double[:, ::1] fx
-        cdef double[::1] wf
+        cdef double[::1] dwf
         cdef double[::1] sum_wf
-        cdef double[:, ::1] sum_wf2
+        cdef double[::1] sum_dwf
+        cdef double[:, ::1] sum_dwf2
         cdef double[::1] mean = numpy.empty(1, numpy.float_)
         cdef double[:, ::1] var = numpy.empty((1, 1), numpy.float_)
-        cdef double[::1] dvar = numpy.empty(1, numpy.float_)
-        cdef numpy.npy_intp itn, i, j, s, t, neval 
+        cdef numpy.npy_intp itn, i, j, jtmp, s, t, neval, fcn_size, len_hcube
         cdef bint adaptive_strat
         cdef double sum_sigf, sigf2
         cdef bint firsteval = True
@@ -1960,14 +1960,15 @@ cdef class Integrator(object):
         #     fcn, map=self.map, uses_jac=self.uses_jac, xsample=self.xsample,
         #     mpi=False if self.nproc > 1 else self.mpi
         #     )
+        fcn_size = fcn.size
 
         # allocate work arrays
-        wf = numpy.empty(fcn.size, numpy.float_)
-        sum_wf = numpy.empty(fcn.size, numpy.float_)
-        sum_wf2 = numpy.empty((fcn.size, fcn.size), numpy.float_)
-        mean = numpy.empty(fcn.size, numpy.float_)
-        var = numpy.empty((fcn.size, fcn.size), numpy.float_)
-        dvar = numpy.empty(fcn.size, numpy.float_)
+        dwf = numpy.empty(fcn_size, numpy.float_)
+        sum_wf = numpy.empty(fcn_size, numpy.float_)
+        sum_dwf = numpy.empty(fcn_size, numpy.float_)
+        sum_dwf2 = numpy.empty((fcn_size, fcn_size), numpy.float_)
+        mean = numpy.empty(fcn_size, numpy.float_)
+        var = numpy.empty((fcn_size, fcn_size), numpy.float_)
         mean[:] = 0.0
         var[:, :] = 0.0
         result = VegasResult(fcn, weighted=self.adapt)
@@ -1986,6 +1987,7 @@ cdef class Integrator(object):
                 yield_hcube=True, yield_y=True, fcn=fcn
                 ):
                 fdv2 = self.fdv2        # must be inside loop
+                len_hcube = len(hcube)
 
                 # evaluate integrand at all points in x
                 if self.nproc > 1:
@@ -2018,33 +2020,37 @@ cdef class Integrator(object):
                 for i in range(hcube[0], hcube[-1] + 1):
                     # iterate over h-cubes
                     sum_wf[:] = 0.0
-                    sum_wf2[:, :] = 0.0
+                    sum_dwf[:] = 0.0
+                    sum_dwf2[:, :] = 0.0
                     neval = 0
-                    while j < len(hcube) and hcube[j] == i:
-                        for s in range(fcn.size):
-                            wf[s] = wgt[j] * fx[j, s]
-                            sum_wf[s] += wf[s]
-                            for t in range(s + 1):
-                                sum_wf2[s, t] += wf[s] * wf[t]
-                        fdv2[j] = (wf[0] * self.neval_hcube[i - hcube[0]]) ** 2 # neval_hcube -> bad style!
-                        j += 1
+                    jtmp = j
+                    while jtmp < len_hcube and hcube[jtmp] == i:
+                        # iterate over points in hypercube for mean and neval
+                        for s in range(fcn_size):
+                            sum_wf[s] += wgt[jtmp] * fx[jtmp, s]
+                        jtmp += 1
                         neval += 1
-                    for s in range(fcn.size):
-                        mean[s] += sum_wf[s]
+                    while j < len_hcube and hcube[j] == i:
+                        # iterate over points in hypercube for variances
+                        for s in range(fcn_size):
+                            dwf[s] = wgt[j] * fx[j, s] - sum_wf[s] / neval
+                            if abs(dwf[s]) < EPSILON * abs(sum_wf[s] / neval):
+                                dwf[s] = EPSILON * abs(sum_wf[s] / neval)
+                                sum_dwf2[s, s] += dwf[s] ** 2
+                                dwf[s] = 0.             # kills off-diagonal covariances
+                            else:
+                                sum_dwf2[s, s] += dwf[s] ** 2
+                            sum_dwf[s] += dwf[s]        # doesn't contribute if round-off
+                            for t in range(s):
+                                sum_dwf2[s, t] += dwf[s] * dwf[t]
+                        fdv2[j] = (wgt[j] * fx[j, 0] * neval) ** 2 
+                        j += 1
+                    for s in range(fcn_size):
+                        # include Neely corrections (makes very little difference)
+                        mean[s] += sum_wf[s] + sum_dwf[s]
                         for t in range(s + 1):
-                            dvar[t] = (
-                                sum_wf2[s, t] * neval - sum_wf[s] * sum_wf[t]
-                                ) / (neval - 1.)
-                        if EPSILON * sum_wf2[s, s] > dvar[s]:
-                            # roundoff error ==> add only on diagonal (uncorrelated)
-                            var[s, s] += EPSILON * sum_wf2[s, s]
-                            if s == 0:
-                                sigf2 = EPSILON * sum_wf2[0, 0] * neval
-                        else:
-                            for t in range(s + 1):
-                                var[s, t] += dvar[t]
-                            if s == 0:
-                                sigf2 = abs(sum_wf2[0, 0] * neval - sum_wf[0] * sum_wf[0])
+                            var[s, t] += (neval * sum_dwf2[s, t] - sum_dwf[s] * sum_dwf[t]) / (neval - 1.) 
+                    sigf2 = abs((neval * sum_dwf2[0, 0] - sum_dwf[0] * sum_dwf[0])  / (neval - 1.))
                     if adaptive_strat:
                         sigf[i - hcube[0]] = sigf2 ** (self.beta / 2.)
                         sum_sigf += sigf[i - hcube[0]]

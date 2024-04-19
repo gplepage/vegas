@@ -265,6 +265,8 @@ in :mod:`vegas`)::
         fig = corner.corner(
             data=samples, weights=wgts, range=4*[0.99], 
             show_titles=True, quantiles=[0.16, 0.5, 0.84],
+            plot_datapoints=False, fill_contours=True,
+            contourf_kwargs=dict(cmap='Blues', colors=None),
             )
         plt.show()
 

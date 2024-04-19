@@ -1089,6 +1089,7 @@ class PDFIntegrator(Integrator):
             corner.corner(
                 data=p_samples.T, weights=wgts, labels=['p[0]', 'p[1]'],
                 range=[0.999, 0.999], show_titles=True, quantiles=[0.16, 0.5, 0.84],
+                plot_datapoints=False, fill_contours=True,
                 )
             plt.show()
 

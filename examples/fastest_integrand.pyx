@@ -16,7 +16,7 @@ cimport vegas
 
 # cython doesn't like @vegas.batchintegrand here, 
 # so derive from BatchIntegrand instead
-cdef class f_cython(vegas.BatchIntegrand):
+cdef class f_cython(vegas.LBatchIntegrand):
     cdef readonly int dim
     cdef double norm_ac
     cdef double norm_b

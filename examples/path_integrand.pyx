@@ -16,7 +16,7 @@ from libc.math cimport exp, tan
 import collections
 import numpy as np
 
-cdef class PathIntegrand(vegas.BatchIntegrand):
+cdef class PathIntegrand(vegas.LBatchIntegrand):
     """ Integrand for path integral corresponding to < x0 | exp(-H*T) | x0 >
 
     This class creates a vegas integrand whose integrals correspond to

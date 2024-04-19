@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Case Study: Bayesian Curve Fitting &#8212; vegas 6.1 documentation</title>
+    <title>Case Study: Bayesian Curve Fitting &#8212; vegas 6.1.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Case Study: Bayesian Curve Fitting</a></li> 
       </ul>
     </div>  
@@ -309,6 +309,8 @@ in <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Ad
     <span class="n">fig</span> <span class="o">=</span> <span class="n">corner</span><span class="o">.</span><span class="n">corner</span><span class="p">(</span>
         <span class="n">data</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">wgts</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="mi">4</span><span class="o">*</span><span class="p">[</span><span class="mf">0.99</span><span class="p">],</span>
         <span class="n">show_titles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="p">[</span><span class="mf">0.16</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.84</span><span class="p">],</span>
+        <span class="n">plot_datapoints</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fill_contours</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">contourf_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Blues&#39;</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
         <span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -473,7 +475,7 @@ example, the intercept would be 0.35(17).</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Case Study: Bayesian Curve Fitting</a></li> 
       </ul>
     </div>

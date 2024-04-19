@@ -175,7 +175,8 @@ def make_cornerplots(expval, results):
         fig = corner.corner(
             data=samples, weights=wgts,  
             range=4*[0.99], show_titles=True, quantiles=[0.16, 0.5, 0.84],
-
+            plot_datapoints=False, fill_contours=True,
+            contourf_kwargs=dict(cmap='Blues', colors=None),
             )
         # mean = gv.mean([results['c'][0], results['c'][1], results['w'], results['b']])
         # corner.overplot_lines(fig, mean, color="C1")

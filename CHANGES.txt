@@ -1,3 +1,7 @@
+Version 6.1.1 2024-04-19
+========================
+- Improves treatment of round-off errors when computing variances in vegas.
+
 Version 6.1 2024-03-30
 =========================
 - Adds PDFIntegrator.sample() which creates (weighted) samples 
