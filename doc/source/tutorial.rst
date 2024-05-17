@@ -866,7 +866,7 @@ and the PDF used for expectation values::
     def f_f2(p):
         a = p['a']
         b = p['b']
-        fp = a[0] * a[1] + b
+        fp = a[0] * a[1] + 3 * b
         return [fp, fp ** 2]
 
     # <f_f2> in distribution g
@@ -891,9 +891,9 @@ We use the integrator to calculated  the expectation value of
 ``fp = a[0] * a[1] + b`` and ``fp**2``, so we can compute the 
 mean and standard 
 deviation of the ``fp`` |~| distribution. The output from this code 
-shows that the Gaussian approximation 3.0(3.1) for the mean and 
+shows that the Gaussian approximation 5.0(3.8) for the mean and 
 standard deviation is not particularly 
-close to the correct value |~| 4.0(3.4):
+close to the correct value |~| 6.0(3.8):
 
 .. literalinclude:: eg7.out
 
@@ -940,7 +940,9 @@ and/or ``histograms`` equal to ``True`` in :meth:`PDFIntegrator.stats`. The code
     r = g_ev.stats(f, moments=True, histograms=True)
     print('Statistics for fp:')
     print(r.stats['fp'])
-    r.stats['fp'].plot_histogram(show=True)
+    plt = r.stats['fp'].plot_histogram().show()
+    plt.xlabel('a[0] * a[1] + 3 * b')
+    plt.show()
 
 shows the statistical analysis for ``fp``:
 

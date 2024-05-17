@@ -21,7 +21,7 @@ g_expval(neval=10_000, nitn=5)
 def f_f2(p):
     a = p['a']
     b = p['b']
-    fp = a[0] * a[1] + b
+    fp = a[0] * a[1] + 3 * b
     return [fp, fp ** 2]
 
 # <f_f2> in distribution g
@@ -50,7 +50,7 @@ g_expval(neval=10_000, nitn=5)
 def f(p):
     a = p['a']
     b = p['b']
-    fp = a[0] * a[1] + b
+    fp = a[0] * a[1] + 3 * b
     return dict(a=a, b=b, fp=fp)
 
 # <f> in distribution g and other measures
@@ -65,4 +65,6 @@ log_stdout('eg7b.out')
 print('Statistics for fp:')
 print(r.stats['fp'])
 unlog_stdout()
-r.stats['fp'].plot_histogram(show=True)
+plt = r.stats['fp'].plot_histogram()
+plt.xlabel('a[0] * a[1] + 3 * b')
+plt.show()
