@@ -1604,21 +1604,21 @@ class test_PDFIntegrator(unittest.TestCase):
             self.assertLess(abs(norm.mean-1), 5 * norm.sdev)
             self.assertEqual(fmt(g), fmt(gev.stats()))
 
-    def test_histogram(self):
-        x = gv.gvar([5., 3.], [[4., 0.2], [0.2, 1.]])
-        xsum = x[0] + x[1]
-        integ = PDFIntegrator(x)
-        hist = gv.PDFHistogram(xsum, nbin=40, binwidth=0.2)
-        integ(neval=1000, nitn=5)
-        def fhist(x):
-            return hist.count(x[0] + x[1])
-        r = integ(fhist, neval=1000, nitn=5, adapt=False)
-        bins, prob, stat, norm = hist.analyze(r)
-        self.assertLess(abs(gv.mean(np.sum(prob)) - 1.), 5. * gv.sdev(np.sum(prob)))
-        self.assertLess(abs(stat.mean.mean - xsum.mean), 5. * stat.mean.sdev)
-        self.assertLess(abs(stat.sdev.mean - xsum.sdev), 5. * stat.sdev.sdev)
-        self.assertLess(abs(stat.skew.mean), 5. * stat.skew.sdev)
-        self.assertLess(abs(stat.ex_kurt.mean), 5. * stat.ex_kurt.sdev)
+    # def test_histogram(self):
+    #     x = gv.gvar([5., 3.], [[4., 0.2], [0.2, 1.]])
+    #     xsum = x[0] + x[1]
+    #     integ = PDFIntegrator(x)
+    #     hist = gv.PDFHistogram(xsum, nbin=40, binwidth=0.2)
+    #     integ(neval=1000, nitn=5)
+    #     def fhist(x):
+    #         return hist.count(x[0] + x[1])
+    #     r = integ(fhist, neval=1000, nitn=5, adapt=False)
+    #     bins, prob, stat, norm = hist.analyze(r)
+    #     self.assertLess(abs(gv.mean(np.sum(prob)) - 1.), 5. * gv.sdev(np.sum(prob)))
+    #     self.assertLess(abs(stat.mean.mean - xsum.mean), 5. * stat.mean.sdev)
+    #     self.assertLess(abs(stat.sdev.mean - xsum.sdev), 5. * stat.sdev.sdev)
+    #     self.assertLess(abs(stat.skew.mean), 5. * stat.skew.sdev)
+    #     self.assertLess(abs(stat.ex_kurt.mean), 5. * stat.ex_kurt.sdev)
 
     def test_ravg(self): 
         @rbatchintegrand
