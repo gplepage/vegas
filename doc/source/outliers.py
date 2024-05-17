@@ -12,9 +12,6 @@ except ImportError:
 
 from outputsplitter import log_stdout
 
-_gvar = gv 
-numpy = np
-
 # options (default is 2nd in each case)
 USE_FIT = True
 USE_FIT = False
@@ -116,7 +113,7 @@ class ModifiedPDF:
         data_pdf1 = self.gaussian_pdf(y_fx, broaden=1.)
         data_pdf2 = self.gaussian_pdf(y_fx, broaden=bwide)
         prior_pdf = np.prod(self.gaussian_pdf(p['c'] - self.prior['c']), axis=0)
-        if numpy.shape(self.prior['gw(w)']) == ():
+        if np.shape(self.prior['gw(w)']) == ():
             prior_pdf *= self.gaussian_pdf(p['gw(w)'] - self.prior['gw(w)'])
         else:
             prior_pdf *= np.prod(self.gaussian_pdf(p['gw(w)'] - self.prior['gw(w)']), axis=0)
@@ -175,7 +172,7 @@ def make_cornerplots(expval, results):
         fig = corner.corner(
             data=samples, weights=wgts,  
             range=4*[0.99], show_titles=True, quantiles=[0.16, 0.5, 0.84],
-            plot_datapoints=False, fill_contours=True,
+            plot_datapoints=False, fill_contours=True, smooth=1,
             contourf_kwargs=dict(cmap='Blues', colors=None),
             )
         # mean = gv.mean([results['c'][0], results['c'][1], results['w'], results['b']])

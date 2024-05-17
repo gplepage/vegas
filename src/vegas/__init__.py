@@ -129,6 +129,10 @@ class PDFEV(_gvar.GVar):
         vegas_cov: |vegas| estimate for the covariance matrix 
             of ``f(p)``. The uncertainties in ``vegas_cov`` 
             are the integration errors from |vegas|.
+
+        vegas_sdev: |vegas| estimate for the standard deviation 
+            of ``f(p)``. The uncertainties in ``vegas_sdev`` 
+            are the integration errors from |vegas|.
     """
     def __init__(self, results, analyzer=None):
         self.results = pickle.loads(results) if isinstance(results, bytes) else results
@@ -222,6 +226,10 @@ class PDFEVArray(numpy.ndarray):
         vegas_cov: |vegas| estimate for the covariance matrix
             of ``f(p)``. The uncertainties in ``vegas_cov`` 
             are the integration errors from |vegas|.
+
+        vegas_sdev: |vegas| estimate for the standard deviation 
+            of ``f(p)``. The uncertainties in ``vegas_sdev`` 
+            are the integration errors from |vegas|.
     """
     def __new__(cls, results, analyzer=None):
         results = pickle.loads(results) if isinstance(results, bytes) else results
@@ -312,6 +320,10 @@ class PDFEVDict(_gvar.BufferDict):
 
         vegas_cov: |vegas| estimate for the covariance matrix
             of ``f(p)``. The uncertainties in ``vegas_cov`` 
+            are the integration errors from |vegas|.
+
+        vegas_sdev: |vegas| estimate for the standard deviation 
+            of ``f(p)``. The uncertainties in ``vegas_sdev`` 
             are the integration errors from |vegas|.
     """
     def __init__(self, results, analyzer=None):
@@ -588,7 +600,7 @@ class PDFIntegrator(Integrator):
         """
         tan_theta = numpy.tan(theta)
         chiv = scale * tan_theta   
-        dp_dtheta = scale * numpy.prod((tan_theta ** 2 + 1.), axis=1) * param_pdf.dp_dchiv
+        dp_dtheta = numpy.prod(scale * (tan_theta ** 2 + 1.), axis=1) * param_pdf.dp_dchiv
         p = param_pdf.pflat(chiv, mode='lbatch')
         if pdf is None:
             # normalized in chiv space so don't want param_pdf.dp_dchiv in jac
@@ -833,7 +845,7 @@ class PDFIntegrator(Integrator):
                 of each histogram: for example, ::
 
                     histograms=dict(
-                        binwidth=0.3, nbin=30, 
+                        binwidth=0.5, nbin=12, 
                         loc=gv.gvar({
                             'a': '1.0(5)', 'b': '2(1)', 
                             'a**2 * b': '2.5(2.7)'
@@ -877,8 +889,8 @@ class PDFIntegrator(Integrator):
         if histograms is not False:
             if histograms is True:
                 histograms = {}
-            nbin = histograms.get('nbin', 30)
-            binwidth = histograms.get('binwidth', 0.3)
+            nbin = histograms.get('nbin', 12)
+            binwidth = histograms.get('binwidth', 0.5)
             histograms['nbin'] = nbin 
             histograms['binwidth'] = binwidth
             loc = histograms.get('loc', None)
@@ -962,6 +974,7 @@ class PDFIntegrator(Integrator):
             mean = _gvar.BufferDict(fpsample, buf=fp)
             tcov = _gvar.evalcov(mean)
             cov = _gvar.BufferDict()
+            sdev= _gvar.BufferDict()
             for k in mean:
                 ksl = mean.slice(k)
                 for l in mean:
@@ -969,16 +982,19 @@ class PDFIntegrator(Integrator):
                     if tcov[k,l].shape == (1, 1) or tcov[k,l].shape == ():
                         cov[k, l] = covfpfp[ksl, lsl]
                     else:
-                        cov[k, l] = covfpfp[ksl,lsl].reshape(tcov[k,l].shape)            
+                        cov[k, l] = covfpfp[ksl,lsl].reshape(tcov[k,l].shape) 
+                sdev[k] = _gvar.fabs(cov[k, k]) ** 0.5           
         elif fpsample.shape == ():
             ans = ans.flat[0]
             mean = fp.flat[0]
             cov = covfpfp
+            sdev = _gvar.fabs(cov) ** 0.5
         else:
             ans = ans.reshape(fpsample.shape)
             mean = fp.reshape(fpsample.shape)
             tcov = _gvar.evalcov(mean)
             cov = covfpfp.reshape(tcov.shape)
+            sdev = _gvar.fabs(tcov.diagonal()).reshape(mean.shape) ** 0.5
         # 2) moments and histogram
         stats = numpy.array(fpsample.size * [None])
         for i in range(len(stats)):
@@ -997,7 +1013,7 @@ class PDFIntegrator(Integrator):
             stats = stats.flat[0]
         else:
             stats = stats.reshape(ans.shape)
-        return ans, dict(stats=stats, vegas_mean=mean, vegas_cov=cov)
+        return ans, dict(stats=stats, vegas_mean=mean, vegas_cov=cov, vegas_sdev=sdev)
 
     @staticmethod
     def _stats_integrand(p, f, moments=False, histograms=False):

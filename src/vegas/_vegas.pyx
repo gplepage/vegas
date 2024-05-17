@@ -2270,7 +2270,7 @@ class RAvg(gvar.GVar):
             super(RAvg, self).__init__(*gvar.gvar(mean, sdev).internaldata)
         else:
             self._msum += g.mean
-            self._varsum += g.var if g.var > TINY else TINY
+            self._varsum += g.var #if g.var > TINY else TINY
             self._n += 1
             mean = self._msum / self._n 
             var = self._varsum / self._n ** 2
@@ -2579,13 +2579,13 @@ class RAvgArray(numpy.ndarray):
             self.add(r)
         self.sum_neval += ravg.sum_neval
 
-    def _w(self, matrix):
+    def _w(self, matrix, rescale=False):
         " Decompose inverse matrix, with protection against singular matrices. "
         # extra factor of 1e4 is from trial and error with degenerate integrands (need extra buffer);
         # also negative svdcut and rescale=False are important for degenerate integrands
         # (alternative svdcut>0 and rescale=True introduces biases; also rescale=True not needed 
         #  since now have self.rescale)
-        s = gvar.SVD(matrix, svdcut=-EPSILON * len(matrix) * 1e4, rescale=False)
+        s = gvar.SVD(matrix, svdcut=-EPSILON * len(matrix) * 1e4, rescale=rescale)
         return s.decomp(-1)
 
     def converged(self, rtol, atol):
@@ -2606,12 +2606,13 @@ class RAvgArray(numpy.ndarray):
                     ans += wi.dot(m - wavg) ** 2
             return ans
         else:
-            invw = self._w(self._covsum / self._n)
+            if self._invw is None:
+                self._invw = self._w(self._covsum /self._n)
             wavg = gvar.mean(self).reshape((-1,))
             ans = 0.0
             for m in self._mlist:
                 delta = wavg - m 
-                for invwi in invw:
+                for invwi in self._invw:
                     ans += invwi.dot(delta) ** 2
             return ans
     chi2 = property(_chi2, None, None, "*chi**2* of weighted average.")
@@ -2619,7 +2620,12 @@ class RAvgArray(numpy.ndarray):
     def _dof(self):
         if len(self.itn_results) <= 1:
             return 0
-        return (len(self.itn_results) - 1) * self.itn_results[0].size
+        if not self.weighted:
+            if self._invw is None:
+                self._invw = self._w(self._covsum /self._n)
+            return (len(self.itn_results) - 1) * len(self._invw)
+        else:
+            return numpy.sum([len(w) for w in self._wlist]) - self.size
     dof = property(
         _dof, None, None,
         "Number of degrees of freedom in weighted average."
@@ -2677,15 +2683,15 @@ class RAvgArray(numpy.ndarray):
                     for invwi in invw:
                         mean += invwi * invwi.dot(wj) * wj_m
             self[:] = (gvar.gvar(mean, cov) * self._rescale).reshape(self.shape)
-            # self[:].shape = self.shape
         else:
             gmean = gvar.mean(g)       
             gcov = gvar.evalcov(g)
-            idx = (gcov[numpy.diag_indices_from(gcov)] <= 0.0)
-            gcov[numpy.diag_indices_from(gcov)][idx] = TINY
+            # idx = (gcov[numpy.diag_indices_from(gcov)] <= 0.0)
+            # gcov[numpy.diag_indices_from(gcov)][idx] = TINY
             self._mlist.append(gmean)
             self._msum += gmean
             self._covsum += gcov
+            self._invw = None
             self._n += 1
             mean = self._msum / self._n
             cov = self._covsum / (self._n ** 2)

@@ -30,7 +30,7 @@ run:
 	- diff -w slow.out faster.tmp
 	$(PYTHON) fastest.py > fastest.tmp
 	- diff -w fastest.out fastest.tmp
-	$(PYTHON) bayes.py > bayes.tmp
+	$(PYTHON) bayes.py $(PLOT) > bayes.tmp
 	- diff -w bayes.out bayes.tmp
 	$(PYTHON) distribution.py > distribution.tmp
 	- diff -w distribution.out distribution.tmp
@@ -50,7 +50,7 @@ _time:
 	$(PYTHON) slow.py > slow.tmp
 	$(PYTHON) faster.py > faster.tmp
 	$(PYTHON) fastest.py > fastest.tmp
-	$(PYTHON) bayes.py > bayes.tmp
+	$(PYTHON) bayes.py $(PLOT) > bayes.tmp
 	$(PYTHON) distribution.py > distribution.tmp
 	$(PYTHON) path-integral.py $(PLOT) > path-integral.tmp 
 	$(PYTHON) parallel-pools.py > parallel-pools.tmp
@@ -79,13 +79,13 @@ test-linking:
 	- diff -w cfcn.out ffcn-f2py.tmp
 
 update-all:
-	$(PYTHON) simple.py > simple.out
+	$(PYTHON) simple.py False > simple.out
 	$(PYTHON) slow.py > slow.out
 	$(PYTHON) faster.py > faster.out
 	$(PYTHON) fastest.py > fastest.out
-	$(PYTHON) bayes.py > bayes.out
+	$(PYTHON) bayes.py False > bayes.out
 	$(PYTHON) distribution.py > distribution.out
-	$(PYTHON) path-integral.py > path-integral.out
+	$(PYTHON) path-integral.py False > path-integral.out
 	$(PYTHON) parallel-pools.py > parallel-pools.out
 	$(PYTHON) ridge.py > ridge.out
 

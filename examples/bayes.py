@@ -1,29 +1,36 @@
-import matplotlib.pyplot as plt
 import numpy as np
-
-import gvar as gv
-import lsqfit
-import vegas
 import sys
 
-if sys.argv[1:]:
-    NPROC = eval(sys.argv[1])   # number of processors
-else:
-    NPROC = 8
+import gvar as gv
+import vegas
 
-numpy = np
+try:
+    import corner
+except ImportError:
+    corner = None
+
+try:
+    import lsqfit 
+except ImportError:
+    lsqfit = None
+
+if sys.argv[1:]:
+    SHOW_PLOTS = eval(sys.argv[1])   # display picture of grid ?
+else:
+    SHOW_PLOTS = True
+
 
 # options (default is 2nd in each case)
-SHOW_PLOT = True 
-SHOW_PLOT = False
-USE_FIT = True    # integration errors much smaller in this case
+USE_FIT = True
 USE_FIT = False
+FIT_KEYS = ['c', 'w']
+FIT_KEYS = ['c', 'b', 'w']
 W_SHAPE = 19
 W_SHAPE = ()
 
+gv.ranseed(123)
 
 def main():
-    print('NPROC =', NPROC)
     x = np.array([
         0.2, 0.4, 0.6, 0.8, 1.,
         1.2, 1.4, 1.6, 1.8, 2.,
@@ -41,73 +48,53 @@ def main():
     # modified probability density function
     mod_pdf = ModifiedPDF(data=(x, y), fcn=fitfcn, prior=prior)
 
+    # evaluate expectation value of g(p)[k] for k='w','c'
+    @vegas.rbatchintegrand
+    def g(p):
+        return {k:p[k] for k in FIT_KEYS}
+
     # integrator for expectation values with modified PDF
-    # nproc=8 makes things go only a little bit faster
-    if USE_FIT:
+    if USE_FIT and lsqfit is not None:
         fit = lsqfit.nonlinear_fit(data=(x,y), prior=prior, fcn=fitfcn)
-        expval = vegas.PDFIntegrator(fit.p, pdf=mod_pdf, nproc=NPROC)
+        expval = vegas.PDFIntegrator(fit.p, pdf=mod_pdf)
     else:
-        expval = vegas.PDFIntegrator(prior, pdf=mod_pdf, nproc=NPROC)
+        expval = vegas.PDFIntegrator(prior, pdf=mod_pdf)
 
     # adapt integrator to pdf
     nitn = 10
-    neval = 10_000
-    warmup = expval(neval=neval, nitn=nitn)
+    if W_SHAPE == ():
+        nstrat = [10,10,2,2]
+    else:
+        nstrat = [20,20] + W_SHAPE * [1] + [1]
+    warmup = expval(nstrat=nstrat, nitn=2 * nitn)
 
     # calculate expectation values
-    # N.B. nproc > 1 slows things down (integrand too simple, neval too small)
-    # but including it here to make sure it works.
-    results = expval(g, neval=neval, nitn=nitn, adapt=False)
+    results = expval.stats(g, nitn=nitn)
     print(results.summary())
+    
+    # print out results
+    print('Bayesian fit results:')
+    for k in results:
+        print(f'      {k} = {results[k]}')
+        if k == 'c':
+            # correlation matrix for c
+            print(
+                ' corr_c =',
+                np.array2string(gv.evalcorr(results['c']), prefix=10 * ' ', precision=3),
+                )
 
-    print('vegas results:')
-    # c[i]
-    cmean = results['c_mean']
-    cov = results['c_outer'] - np.outer(cmean, cmean)
-    cov = (cov + cov.T) / 2
-    # w, b
-    wmean, w2mean = results['w']
-    wsdev = (w2mean - wmean**2)**0.5
-    bmean, b2mean = results['b']
-    bsdev = (b2mean - bmean**2)**0.5
-    print('  c means =', cmean)
-    print('  c cov =', str(cov).replace('\n', '\n' + 10 * ' '))
-    print('  w mean =', str(wmean).replace('\n', '\n' + 11 * ' '))
-    print('  w sdev =', str(wsdev).replace('\n', '\n' + 11 * ' '))
-    print('  b mean =', bmean)
-    print('  b sdev =', bsdev)
     # Bayes Factor
     print('\n  logBF =', np.log(results.pdfnorm))
-    
-    print('\nCombine vegas errors with covariances for final results:')
-    # N.B. vegas errors are actually insignificant compared to covariances
-    c = cmean + gv.gvar(np.zeros(cmean.shape), gv.mean(cov))
-    w = wmean + gv.gvar(np.zeros(np.shape(wmean)), gv.mean(wsdev))
-    b = bmean + gv.gvar(np.zeros(np.shape(bmean)), bsdev.mean)
-    print('  c =', c)
-    print('  corr(c) =', str(gv.evalcorr(c)).replace('\n', '\n' + 12*' '))
-    print('  w =', str(w).replace('\n', '\n' + 6*' '))
-    print('  b =', b, '\n')
 
-    ### Plot results
-    make_plot(data=(x, y), prior=prior, c=c)
-
-# evaluating expectation value of g(p)
-@vegas.rbatchintegrand
-def g(p):
-    try:
-        w = p['w']
-    except KeyError:
-        print(type(p), p)
-        exit(0)
-    c = p['c']
-    c_outer = c[:, None] * c[None,:]
-    b = p['b']
-    return dict(w=[w, w**2] , c_mean=c, c_outer=c_outer, b=[b, b**2])
+    # Plot results
+    make_plot(x, y, prior, results['c'])
+    if W_SHAPE == () and FIT_KEYS == ['c', 'b', 'w'] and USE_FIT == False:
+        make_cornerplots(expval, results)
 
 @vegas.rbatchintegrand
 class ModifiedPDF:
     """ Modified PDF to account for measurement failure. """
+
     def __init__(self, data, fcn, prior):
         x, y = data
         # add rbatch index to arrays
@@ -116,33 +103,27 @@ class ModifiedPDF:
         self.fcn = fcn
         self.prior = gv.BufferDict()
         self.prior['c'] = prior['c'][:, None]
-        # check whether one w or lots of w's
         if np.shape(prior['gw(w)']) != ():
             self.prior['gw(w)'] = prior['gw(w)'][:, None]
         else:
             self.prior['gw(w)'] = prior['gw(w)']
         self.prior['gb(b)'] = prior['gb(b)']
 
-    # support pickling (needed because of GVars in y and prior) 
-    # allows nproc>1
-    def __getstate__(self):
-        return gv.dumps(self.__dict__)
-
-    def __setstate__(self, bstr):
-        self.__dict__ = gv.loads(bstr)
-
     def __call__(self, p):
+        if 'b' in FIT_KEYS:
+            bwide = p['b']
+        else:
+            bwide = 10.
         y_fx = self.y - self.fcn(self.x, p)
-        data_pdf1 = self.gaussian_pdf(y_fx)
-        data_pdf2 = self.gaussian_pdf(y_fx, broaden=p['b'])
+        data_pdf1 = self.gaussian_pdf(y_fx, broaden=1.)
+        data_pdf2 = self.gaussian_pdf(y_fx, broaden=bwide)
         prior_pdf = np.prod(self.gaussian_pdf(p['c'] - self.prior['c']), axis=0)
-        # Gaussians for gw(w) and gb(b)
         if np.shape(self.prior['gw(w)']) == ():
             prior_pdf *= self.gaussian_pdf(p['gw(w)'] - self.prior['gw(w)'])
         else:
             prior_pdf *= np.prod(self.gaussian_pdf(p['gw(w)'] - self.prior['gw(w)']), axis=0)
-        prior_pdf *= self.gaussian_pdf(p['gb(b)'] - self.prior['gb(b)'])
-        # p['w'] derived (automatically) from p['gw(w)']
+        if 'b' in FIT_KEYS:
+            prior_pdf *= self.gaussian_pdf(p['gb(b)'] - self.prior['gb(b)'])
         w = p['w']
         return np.prod((1. - w) * data_pdf1 + w * data_pdf2, axis=0) * prior_pdf
 
@@ -163,22 +144,23 @@ def make_prior(w_shape=()):
     prior['gb(b)'] = gv.BufferDict.uniform('gb', 5., 20.)
     return prior
 
-def make_plot(data, prior, c):
-    if not SHOW_PLOT:
-        return
+def make_plot(x, y, prior, c):
+    if not SHOW_PLOTS:
+        return 
+    import matplotlib.pyplot as plt
     # plot data
-    x, y = data
     plt.errorbar(x, gv.mean(y), gv.sdev(y), fmt='o', c='b')
 
-    # plot lsqfit fit
-    fit = lsqfit.nonlinear_fit(data=(x,y), fcn=fitfcn, prior=prior)
-    xline = np.linspace(x[0], x[-1], 100)
-    yline = fitfcn(xline, fit.pmean)
-    plt.plot(xline, gv.mean(yline), 'k:')
-    plt.xlabel('x')
-    plt.ylabel('y')
-    # plt.savefig('outliers1.png', bbox_inches='tight')
-    # plt.show()
+    if lsqfit is not None:
+        # plot lsqfit fit
+        fit = lsqfit.nonlinear_fit(data=(x,y), fcn=fitfcn, prior=prior)
+        xline = np.linspace(x[0], x[-1], 100)
+        yline = fitfcn(xline, fit.pmean)
+        plt.plot(xline, gv.mean(yline), 'k:')
+        plt.xlabel('x')
+        plt.ylabel('y')
+        # plt.savefig('outliers1.png', bbox_inches='tight')
+        # plt.show()
 
     # add modified fit to plot
     yline = fitfcn(xline, dict(c=c))
@@ -186,9 +168,51 @@ def make_plot(data, prior, c):
     yp = gv.mean(yline) + gv.sdev(yline)
     ym = gv.mean(yline) - gv.sdev(yline)
     plt.fill_between(xline, yp, ym, color='r', alpha=0.2)
-    plt.savefig('outliers2.png', bbox_inches='tight')
+    # plt.savefig('outliers2.png', bbox_inches='tight')
     plt.show()
 
+def make_cornerplots(expval, results):
+    if not SHOW_PLOTS:
+        return 
+    import matplotlib.pyplot as plt
+    wgts, psamples = expval.sample(nbatch=50_000)
+    if corner is not None:
+        samples = dict(
+            c0=psamples['c'][0], c1=psamples['c'][1],
+            b=psamples['b'], w=psamples['w']
+            )
+        fig = corner.corner(
+            data=samples, weights=wgts,  
+            range=4*[0.99], show_titles=True, quantiles=[0.16, 0.5, 0.84],
+            plot_datapoints=False, fill_contours=True, smooth=1,
+            contourf_kwargs=dict(cmap='Blues', colors=None),
+            )
+        # plt.savefig('outliers3.png', bbox_inches='tight')
+        plt.show()
+    else:
+        csamples = psamples['c']
+        c = results['c']
+        # range for plot
+        s = 2.5
+        range = []
+        for d in np.arange(2):
+            range.append((c[d].mean - s * c[d].sdev, c[d].mean + s * c[d].sdev))
+        # 2-d histogram H
+        H, xedges, yedges = np.histogram2d(
+            csamples[0], csamples[1], bins=20, 
+            weights=wgts, density=True, range=range
+            )
+        # contour plot of histogram H
+        xmids = (xedges[1:] + xedges[:-1]) / 2
+        ymids = (yedges[1:] + yedges[:-1]) / 2
+        X, Y = np.meshgrid(xmids, ymids)
+        plt.cla()
+        plt.contourf(X, Y, H,)
+        plt.xlabel('c[0]')
+        plt.ylabel('c[1]')
+        # plt.savefig('outliers3.png', bbox_inches='tight')
+        plt.show()
+
+
 if __name__ == '__main__':
-    gv.ranseed(1)
     main()

@@ -1,3 +1,14 @@
+Version 6.1.2 ????
+====================
+
+- Fixes bug in implementation of PDFIntegrator's scale parameter. There was no 
+  problem when scale=1 but other values were wrong.
+
+- Fixes bug when calculating the number of degrees of freedom when averaging 
+  results over multiple iterations with multiple integrands.
+
+- Tweaks to PDFIntegrator.
+  
 Version 6.1.1 2024-04-19
 ========================
 - More robust treatment of round-off errors when calculating means and variances in vegas.

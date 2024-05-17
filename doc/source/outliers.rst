@@ -245,10 +245,10 @@ Note, from the correlation matrix, that the intercept and slope are
 anti-correlated, as one might guess for this fit. We can illustrate this 
 correlation and look for others by sampling the distribution associated
 with the modified PDF and using the samples to create histograms and 
-contour plots of the distributions. The following code uses 
+contour plots of the distributions. The following  code uses 
 :meth:`vegas.PDFIntegrator.sample` to sample the distribution, and 
 the :mod:`corner` Python module to make the plots (requires the 
-the :mod:`corner` and :mod:`arviz` Python modules, which are not included 
+the :mod:`corner` and :mod:`arviz` Python  modules, which are not included 
 in :mod:`vegas`)::
 
     import corner
@@ -265,7 +265,7 @@ in :mod:`vegas`)::
         fig = corner.corner(
             data=samples, weights=wgts, range=4*[0.99], 
             show_titles=True, quantiles=[0.16, 0.5, 0.84],
-            plot_datapoints=False, fill_contours=True,
+            plot_datapoints=False, fill_contours=True, smooth=1,
             contourf_kwargs=dict(cmap='Blues', colors=None),
             )
         plt.show()
