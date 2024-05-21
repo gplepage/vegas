@@ -1024,7 +1024,7 @@ variables, <code class="docutils literal notranslate"><span class="pre">a[0]</sp
 that is uniformly distributed on the interval [0,2] (see the <code class="xref py py-mod docutils literal notranslate"><span class="pre">gvar</span></code>
 documentation for more information).
 We use the integrator to calculated  the expectation value of
-<code class="docutils literal notranslate"><span class="pre">fp</span> <span class="pre">=</span> <span class="pre">a[0]</span> <span class="pre">*</span> <span class="pre">a[1]</span> <span class="pre">+</span> <span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">fp**2</span></code>, so we can compute the
+<code class="docutils literal notranslate"><span class="pre">fp</span> <span class="pre">=</span> <span class="pre">a[0]*a[1]</span> <span class="pre">+</span> <span class="pre">3*b</span></code> and <code class="docutils literal notranslate"><span class="pre">fp**2</span></code>, so we can compute the
 mean and standard
 deviation of the <code class="docutils literal notranslate"><span class="pre">fp</span></code>   distribution. The output from this code
 shows that the Gaussian approximation 5.0(3.8) for the mean and
@@ -1058,7 +1058,7 @@ than <code class="docutils literal notranslate"><span class="pre">f_f2(p)</span>
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
     <span class="n">a</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span>
     <span class="n">b</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>
-    <span class="n">fp</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span>
+    <span class="n">fp</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">b</span>
     <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="n">fp</span><span class="p">)</span>
 
 <span class="n">r</span> <span class="o">=</span> <span class="n">g_ev</span><span class="o">.</span><span class="n">stats</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -1114,7 +1114,7 @@ that is discontinuous centered on the median. The uncertainties shown for
 each quantity come from the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrations.</p>
 <p>The last line in
 the code above displays the histogram
-for <code class="docutils literal notranslate"><span class="pre">fp</span></code>, which confirms that it is not particularly Gaussian:</p>
+for <code class="docutils literal notranslate"><span class="pre">fp</span></code>, which confirms that it is not quite Gaussian:</p>
 <a class="reference internal image-reference" href="_images/eg7b-plt.png"><img alt="_images/eg7b-plt.png" src="_images/eg7b-plt.png" style="width: 70%;" /></a>
 <p>The discussion in <a class="reference internal" href="outliers.html#case-curve-fitting"><span class="std std-ref">Case Study: Bayesian Curve Fitting</span></a> illustrates how
 <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> can be used with a non-Gaussian PDF in two

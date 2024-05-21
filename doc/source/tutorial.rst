@@ -888,7 +888,7 @@ variables, ``a[0]`` and ``a[1]``, and a third uncorrelated variable ``b``
 that is uniformly distributed on the interval [0,2] (see the :mod:`gvar` 
 documentation for more information).
 We use the integrator to calculated  the expectation value of 
-``fp = a[0] * a[1] + b`` and ``fp**2``, so we can compute the 
+``fp = a[0]*a[1] + 3*b`` and ``fp**2``, so we can compute the 
 mean and standard 
 deviation of the ``fp`` |~| distribution. The output from this code 
 shows that the Gaussian approximation 5.0(3.8) for the mean and 
@@ -911,7 +911,7 @@ than ``f_f2(p)`` above)::
     def f(p):
         a = p['a']
         b = p['b']
-        fp = a[0] * a[1] + b
+        fp = a[0] * a[1] + 3 * b
         return dict(a=a, b=b, fp=fp)
 
     r = g_ev.stats(f)
@@ -958,7 +958,7 @@ each quantity come from the :mod:`vegas` integrations.
 
 The last line in 
 the code above displays the histogram
-for ``fp``, which confirms that it is not particularly Gaussian:
+for ``fp``, which confirms that it is not quite Gaussian:
 
 .. image:: eg7b-plt.*
    :width: 70%
