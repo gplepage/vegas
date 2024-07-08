@@ -34,6 +34,11 @@ import warnings
 import numpy
 import gvar
 
+if numpy.version.version >= '2.0':
+    FLOAT_TYPE = numpy.float64
+else:
+    FLOAT_TYPE = numpy.float_
+
 cdef double TINY = 10 ** (sys.float_info.min_10_exp + 50)  # smallest and biggest
 cdef double HUGE = 10 ** (sys.float_info.max_10_exp - 50)  # with extra headroom
 cdef double EPSILON = sys.float_info.epsilon * 1e4        # roundoff error threshold (see Schubert and Gertz Table 2)
@@ -230,8 +235,8 @@ cdef class AdaptiveMap:
                 "no of increments < 1 in AdaptiveMap -- %s"
                 % str(ninc)
                 )
-        new_inc = numpy.empty((dim, max(ninc)), numpy.float_)
-        new_grid = numpy.empty((dim, new_inc.shape[1] + 1), numpy.float_)
+        new_inc = numpy.empty((dim, max(ninc)), FLOAT_TYPE)
+        new_grid = numpy.empty((dim, new_inc.shape[1] + 1), FLOAT_TYPE)
         for d in range(dim):
             tmp = numpy.linspace(self.grid[d, 0], self.grid[d, self.ninc[d]], ninc[d] + 1)
             for i in range(ninc[d] + 1):
@@ -256,11 +261,11 @@ cdef class AdaptiveMap:
         if y is None:
             y = gvar.RNG.random(size=self.dim)
         else:
-            y = numpy.asarray(y, numpy.float_)
+            y = numpy.asarray(y, FLOAT_TYPE)
         y_shape = y.shape
         y.shape = -1, y.shape[-1]
         x = 0 * y
-        jac = numpy.empty(y.shape[0], numpy.float_)
+        jac = numpy.empty(y.shape[0], FLOAT_TYPE)
         self.map(y, x, jac)
         x.shape = y_shape
         return x
@@ -282,7 +287,7 @@ cdef class AdaptiveMap:
         y_shape = y.shape 
         y.shape = -1, y.shape[-1]
         ny = y.shape[0]
-        jac = numpy.empty(y.shape, numpy.float_)
+        jac = numpy.empty(y.shape, FLOAT_TYPE)
         for i in range(ny):
             for d in range(dim):
                 ninc = self.ninc[d]
@@ -451,8 +456,8 @@ cdef class AdaptiveMap:
         cdef numpy.npy_intp i, d
         if self.sum_f is None:
             shape = (self.inc.shape[0], self.inc.shape[1])
-            self.sum_f = numpy.zeros(shape, numpy.float_)
-            self.n_f = numpy.zeros(shape, numpy.float_) + TINY
+            self.sum_f = numpy.zeros(shape, FLOAT_TYPE)
+            self.n_f = numpy.zeros(shape, FLOAT_TYPE) + TINY
         if ny < 0:
             ny = y.shape[0]
         elif ny > y.shape[0]:
@@ -520,12 +525,12 @@ cdef class AdaptiveMap:
         if min(new_ninc) < 1:
             raise ValueError('ninc < 1: ' + str(list(new_ninc)))
         if max(new_ninc) == 1:
-            new_grid = numpy.empty((dim, 2), numpy.float_)
+            new_grid = numpy.empty((dim, 2), FLOAT_TYPE)
             for d in range(dim):
                 new_grid[d, 0] = self.grid[d, 0]
                 new_grid[d, 1] = self.grid[d, self.ninc[d]]
             self.grid = numpy.asarray(new_grid)
-            self.inc = numpy.empty((dim, 1), numpy.float_)
+            self.inc = numpy.empty((dim, 1), FLOAT_TYPE)
             self.ninc = numpy.array(dim * [1], dtype=numpy.intp)
             for d in range(dim):
                 self.inc[d, 0] = self.grid[d, 1] - self.grid[d, 0]
@@ -533,10 +538,10 @@ cdef class AdaptiveMap:
             return
 
         # smooth and regrid
-        new_grid = numpy.empty((dim, max(new_ninc) + 1), numpy.float_)
-        avg_f = numpy.ones(self.inc.shape[1], numpy.float_) # default = uniform
+        new_grid = numpy.empty((dim, max(new_ninc) + 1), FLOAT_TYPE)
+        avg_f = numpy.ones(self.inc.shape[1], FLOAT_TYPE) # default = uniform
         if alpha > 0 and max(self.ninc) > 1:
-            tmp_f = numpy.empty(self.inc.shape[1], numpy.float_)
+            tmp_f = numpy.empty(self.inc.shape[1], FLOAT_TYPE)
         for d in range(dim):
             old_ninc = self.ninc[d]
             if alpha != 0 and old_ninc > 1:
@@ -1142,7 +1147,7 @@ cdef class Integrator(object):
             self.sum_sigf = numpy.sum(self.sigf)
             self.nstrat = numpy.array(map.nstrat)
         else:
-            self.sigf = numpy.array([], numpy.float_) # reset sigf (dummy)
+            self.sigf = numpy.array([], FLOAT_TYPE) # reset sigf (dummy)
             self.sum_sigf = HUGE
             args = dict(Integrator.defaults)
             if 'map' in args:
@@ -1169,7 +1174,7 @@ cdef class Integrator(object):
             self.sigf_h5.close()
             os.unlink(fname)
             self.sigf_h5 = None
-            self.sigf = numpy.array([], numpy.float_) # reset sigf (dummy)
+            self.sigf = numpy.array([], FLOAT_TYPE) # reset sigf (dummy)
             self.sum_sigf = HUGE
 
     def __reduce__(Integrator self not None):
@@ -1371,7 +1376,7 @@ cdef class Integrator(object):
                 # need to recalculate stratification distribution for beta>0
                 # unless a new sigf was set
                 old_val['sigf'] = self.sigf
-                self.sigf = numpy.array([], numpy.float_) # reset sigf (dummy)
+                self.sigf = numpy.array([], FLOAT_TYPE) # reset sigf (dummy)
                 self.sum_sigf = HUGE
             self.nstrat = nstrat
 
@@ -1398,7 +1403,7 @@ cdef class Integrator(object):
             # set up sigf
             self._clear_sigf_h5()
             if not self.minimize_mem:
-                self.sigf = numpy.ones(nsigf, numpy.float_)
+                self.sigf = numpy.ones(nsigf, FLOAT_TYPE)
             else:
                 try: 
                     import h5py
@@ -1410,10 +1415,10 @@ cdef class Integrator(object):
             self.sum_sigf = nsigf 
         self.neval_hcube = numpy.empty(self.min_neval_batch // 2 + 1, dtype=numpy.intp) 
         self.neval_hcube[:] = avg_neval_hcube
-        self.y = numpy.empty((self.min_neval_batch, self.dim), numpy.float_)
-        self.x = numpy.empty((self.min_neval_batch, self.dim), numpy.float_)
-        self.jac = numpy.empty(self.min_neval_batch, numpy.float_)
-        self.fdv2 = numpy.empty(self.min_neval_batch, numpy.float_)
+        self.y = numpy.empty((self.min_neval_batch, self.dim), FLOAT_TYPE)
+        self.x = numpy.empty((self.min_neval_batch, self.dim), FLOAT_TYPE)
+        self.jac = numpy.empty(self.min_neval_batch, FLOAT_TYPE)
+        self.fdv2 = numpy.empty(self.min_neval_batch, FLOAT_TYPE)
         return old_val
 
     def settings(Integrator self not None, ngrid=0):
@@ -1669,10 +1674,10 @@ cdef class Integrator(object):
 
             # 1) resize work arrays if needed (to double what is needed)
             if neval_batch > self.y.shape[0]:
-                self.y = numpy.empty((2 * neval_batch, self.dim), numpy.float_)
-                self.x = numpy.empty((2 * neval_batch, self.dim), numpy.float_)
-                self.jac = numpy.empty(2 * neval_batch, numpy.float_)
-                self.fdv2 = numpy.empty(2 * neval_batch, numpy.float_)
+                self.y = numpy.empty((2 * neval_batch, self.dim), FLOAT_TYPE)
+                self.x = numpy.empty((2 * neval_batch, self.dim), FLOAT_TYPE)
+                self.jac = numpy.empty(2 * neval_batch, FLOAT_TYPE)
+                self.fdv2 = numpy.empty(2 * neval_batch, FLOAT_TYPE)
             y = self.y
             x = self.x
             jac = self.jac
@@ -1931,8 +1936,8 @@ cdef class Integrator(object):
         cdef double[::1] sum_wf
         cdef double[::1] sum_dwf
         cdef double[:, ::1] sum_dwf2
-        cdef double[::1] mean = numpy.empty(1, numpy.float_)
-        cdef double[:, ::1] var = numpy.empty((1, 1), numpy.float_)
+        cdef double[::1] mean = numpy.empty(1, FLOAT_TYPE)
+        cdef double[:, ::1] var = numpy.empty((1, 1), FLOAT_TYPE)
         cdef numpy.npy_intp itn, i, j, jtmp, s, t, neval, fcn_size, len_hcube
         cdef bint adaptive_strat
         cdef double sum_sigf, sigf2
@@ -1963,12 +1968,12 @@ cdef class Integrator(object):
         fcn_size = fcn.size
 
         # allocate work arrays
-        dwf = numpy.empty(fcn_size, numpy.float_)
-        sum_wf = numpy.empty(fcn_size, numpy.float_)
-        sum_dwf = numpy.empty(fcn_size, numpy.float_)
-        sum_dwf2 = numpy.empty((fcn_size, fcn_size), numpy.float_)
-        mean = numpy.empty(fcn_size, numpy.float_)
-        var = numpy.empty((fcn_size, fcn_size), numpy.float_)
+        dwf = numpy.empty(fcn_size, FLOAT_TYPE)
+        sum_wf = numpy.empty(fcn_size, FLOAT_TYPE)
+        sum_dwf = numpy.empty(fcn_size, FLOAT_TYPE)
+        sum_dwf2 = numpy.empty((fcn_size, fcn_size), FLOAT_TYPE)
+        mean = numpy.empty(fcn_size, FLOAT_TYPE)
+        var = numpy.empty((fcn_size, fcn_size), FLOAT_TYPE)
         mean[:] = 0.0
         var[:, :] = 0.0
         result = VegasResult(fcn, weighted=self.adapt)
@@ -2958,14 +2963,14 @@ cdef class VegasIntegrand:
                 nx = x.shape[0] // self.mpi_nproc + 1
                 i0 = self.rank * nx
                 i1 = min(i0 + nx, x.shape[0])
-                f = numpy.empty((nx, self.size), numpy.float_)
+                f = numpy.empty((nx, self.size), FLOAT_TYPE)
                 if i1 > i0:
                     # fill f so long as haven't gone off end
                     if jac is None:
                         f[:(i1-i0)] = _eval(x[i0:i1], jac=None)
                     else:
                         f[:(i1-i0)] = _eval(x[i0:i1], jac=jac[i0:i1])
-                results = numpy.empty((self.mpi_nproc * nx, self.size), numpy.float_)
+                results = numpy.empty((self.mpi_nproc * nx, self.size), FLOAT_TYPE)
                 self.comm.Allgather(f, results)
                 return results[:x.shape[0]]
             self.eval = _mpi_eval
@@ -3108,7 +3113,7 @@ cdef class _BatchIntegrand_from_NonBatch(_BatchIntegrand_from_Base):
     def __call__(self, numpy.ndarray[numpy.double_t, ndim=2] x, jac=None):
         cdef numpy.npy_intp i
         cdef numpy.ndarray[numpy.float_t, ndim=2] f = numpy.empty(
-            (x.shape[0], self.size),  numpy.float_
+            (x.shape[0], self.size),  FLOAT_TYPE
             )
         if self.shape == ():
             # very common special case

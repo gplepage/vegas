@@ -1,5 +1,9 @@
-Version 6.1.2 ????
-====================
+Version 6.1.3 2024-07-08
+=========================
+Modified so that it works with numpy>=2.0.
+
+Version 6.1.2 2024-05-21
+========================
 
 - Fixes bug in implementation of PDFIntegrator's scale parameter. There was no 
   problem when scale=1 but other values were wrong.
