@@ -1,7 +1,10 @@
-Version 6.2 2024-12-04
+Version 6.2 2024-12-07
 ======================
-Modified so Integrator works with 32-bit floats as well as 64-bit floats. This is 
-to accommodate integrands that are run on GPUs (see updated documentation for examples).
+Modified so Integrator works with integrands that return 32-bit floats 
+as well as 64-bit floats. This is to accommodate integrands that are run on GPUs. 
+
+See updated documentation for examples that use GPUs, Cython, numba, or Pythran to 
+speed up vegas integrations. 
 
 Adds method Integrator.sample() for generating sample sets of integration points.
 
