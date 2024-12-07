@@ -1,4 +1,6 @@
-Integrands in C or Fortran
+.. _compiled_integrands:
+
+Compiled Integrands for Speed; GPUs 
 =======================================
 
 .. moduleauthor:: G. Peter Lepage <g.p.lepage@cornell.edu>
@@ -11,7 +13,185 @@ Integrands in C or Fortran
 .. |x| replace:: x
 .. |y| replace:: y
 
+As discussed in the section on :ref:`faster_integrands`, 
+it is possible to create very fast integrands using 
+tools like the :mod:`numba` JIT compiler to replace 
+Python code for an integrand with optimized machine code. 
+In this 
+section we discuss several other tools that can do 
+the same thing.
 
+Cython and Pythran
+--------------------
+Cython is a compiled hybrid of Python and C. 
+The Cython version of the (lbatch) 
+ridge integrand (see :ref:`faster_integrands`) is::
+
+    # file: cython_ridge.pyx
+
+    import numpy as np
+    import vegas
+
+    # use exp from C
+    from libc.math cimport exp
+
+    @vegas.lbatchintegrand
+    def ridge(double[:, ::1] xbatch):
+        cdef int i          # labels integration point
+        cdef int j          # labels point on diagonal 
+        cdef int d          # labels direction
+        cdef int dim = xbatch.shape[1]
+        cdef int nbatch = xbatch.shape[0]
+        cdef int N = 1000
+        cdef double norm = (100. / np.pi) ** (dim / 2.) / N
+        cdef double dx2
+        cdef double[::1] x
+        cdef double[::1] ans = np.zeros(nbatch, float)
+        for i in range(nbatch):
+            # integrand for integration point x
+            x = xbatch[i]
+            for j in range(N):
+                x0 = 0.25 + 0.5 * j / (N - 1)
+                dx2 =  (x[0] - x0) ** 2
+                for d in range(1, dim):
+                    dx2 += (x[d] - x0) ** 2
+                ans[i] += exp(-100. * dx2)
+            ans[i] *= norm 
+        return ans 
+
+We put this in a separate file called, say,
+``cython_ridge.pyx``, and compile it using ::
+
+    cythonize -i cython_ridge.pyx
+
+This creates a compiled Python module (.so file) 
+which can be imported and used with vegas::
+
+    import vegas
+
+    from cython_ridge import ridge
+
+    integ = vegas.Integrator(4 * [[0, 1]])
+
+    integ(ridge, nitn=10, neval=2e5)
+    result = integ(ridge, nitn=10, neval=2e5, adapt=False)
+    print('result = %s   Q = %.2f' % (result, result.Q))
+
+This code returns the following::
+
+    result = 1.00008(29)   Q = 0.55
+
+It runs about as fast as the :mod:`numba` version 
+described in :ref:`faster_integrands` (15 sec on a 2024 laptop). 
+
+Cython is much more flexible than :mod:`numba` but the 
+code is typically more complicated. Another option, 
+more similar to :mod:`numba`, is the Pythran compiler,
+which compiles a subset of Python into optimized C++ 
+code that is then compiled into a Python module (.so file).
+To use Pythran, we write the integrand in low-level 
+Python and place it in a separate file called, say,
+``pythran_ridge.py``::
+
+    # in file pythran_ridge.py 
+
+    import numpy as np 
+
+    #pythran export ridge(float[:,:])
+
+    def ridge(xbatch):
+        " Ridge of N Gaussians distributed along part of the diagonal. "
+        dim = xbatch.shape[1]
+        N = 1000
+        norm = (100. / np.pi) ** (dim / 2.) / N
+        ans = np.zeros(len(xbatch), dtype=float)
+        for i in range(len(xbatch)):
+            # iterate over each integration point x in xbatch
+            x = xbatch[i]
+            for j in range(N):
+                x0 = 0.25 + 0.5 * j / (N - 1)
+                dx2 = (x[0] - x0) ** 2
+                for d in range(1, dim):
+                    dx2 += (x[d] - x0) ** 2
+                ans[i] += np.exp(-100. * dx2)
+            ans[i] *= norm
+        return ans
+
+The ``#pythran`` line tells the compiler what to export 
+from the module. 
+This file is compiled by Pythran and converted into 
+an optimized Python module :mod:`pythran_ridge` using::
+
+    pythran -DUSE_XSIMD -fopenmp pythran_ridge.py
+
+The main code is then::
+
+    import vegas
+
+    from cython_ridge import ridge
+    ridge = vegas.lbatchintegrand(ridge)
+
+    integ = vegas.Integrator(4 * [[0, 1]])
+
+    integ(ridge, nitn=10, neval=2e5)
+    result = integ(ridge, nitn=10, neval=2e5, adapt=False)
+    print('result = %s   Q = %.2f' % (result, result.Q))
+
+This runs as fast as the :mod:`numba` and Cython versions.
+
+GPUs
+------
+Another option for speeding up expensive integrands is to evaluate them using 
+GPUs. Vectorized :mod:`numpy` code that is not too complicated is readily adapted 
+for GPUs using Python modules such 
+the :mod:`jax` module (or :mod:`mlx` for Apple hardware).
+The following integrand ``ridge(x)`` uses the :mod:`jax` module to compile 
+and run the ``ridge`` 
+integrand (from the previous sections) on a GPU::
+
+    import jax 
+    jnp = jax.numpy         
+
+    @jax.jit
+    def _jridge(x): 
+        N = 1000
+        x0 = jnp.linspace(0.25, 0.75, N)
+        dx2 = 0.0
+        for xd in x:
+            dx2 += (xd[None,:] - x0[:, None]) ** 2
+        return jnp.sum(jnp.exp(-100. * dx2), axis=0) *  (100. / jnp.pi) ** (len(x) / 2.) / N
+
+    @vegas.rbatchintegrand
+    def ridge(x):
+        return _jridge(jnp.array(x))
+
+Code for the :mod:`mlx` module is almost identical::
+
+    import mlx.core as mx 
+
+    @mx.compile
+    def _mridge(x):
+        N = 1000
+        x0 = mx.linspace(0.25, 0.75, N)
+        dx2 = 0.0
+        for xd in x:
+            dx2 += (xd[None,:] - x0[:, None]) ** 2
+        return mx.sum(mx.exp(-100. * dx2), axis=0) *  (100. / mx.pi) ** (len(x) / 2.) / N
+
+    @vegas.rbatchintegrand
+    def ridge(x):
+        return _mridge(mx.array(x))    
+
+These integrands run 20 times faster than  the original (vectorized) batch 
+integrand (1 sec versus 20 sec using the built-in GPU on a 2024 laptop). 
+The speedup is substantial because this integrand is quite 
+costly to evaluate; the original batch integrand is just as fast as the GPU
+versions when ``N=1`` (instead of ``N=1000``).
+
+
+
+C and Fortran
+---------------
 Older implementations of the |vegas| algorithm
 have been used extensively in C and Fortran codes. The Python
 implementation described here uses a more powerful algorithm.

@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Integrands in C or Fortran &#8212; vegas 6.2 documentation</title>
+    <title>Compiled Integrands for Speed; GPUs &#8212; vegas 6.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
     <script src="_static/documentation_options.js?v=ef7fcc1c"></script>
@@ -13,6 +13,8 @@
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="How vegas Works" href="background.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <!--[if lte IE 6]>
@@ -30,8 +32,14 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="background.html" title="How vegas Works"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Integrands in C or Fortran</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Compiled Integrands for Speed; GPUs</a></li> 
       </ul>
     </div>  
 
@@ -40,8 +48,183 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="integrands-in-c-or-fortran">
-<h1>Integrands in C or Fortran<a class="headerlink" href="#integrands-in-c-or-fortran" title="Link to this heading">¶</a></h1>
+  <section id="compiled-integrands-for-speed-gpus">
+<span id="compiled-integrands"></span><h1>Compiled Integrands for Speed; GPUs<a class="headerlink" href="#compiled-integrands-for-speed-gpus" title="Link to this heading">¶</a></h1>
+<p>As discussed in the section on <a class="reference internal" href="tutorial.html#faster-integrands"><span class="std std-ref">Faster Integrands</span></a>,
+it is possible to create very fast integrands using
+tools like the <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code> JIT compiler to replace
+Python code for an integrand with optimized machine code.
+In this
+section we discuss several other tools that can do
+the same thing.</p>
+<section id="cython-and-pythran">
+<h2>Cython and Pythran<a class="headerlink" href="#cython-and-pythran" title="Link to this heading">¶</a></h2>
+<p>Cython is a compiled hybrid of Python and C.
+The Cython version of the (lbatch)
+ridge integrand (see <a class="reference internal" href="tutorial.html#faster-integrands"><span class="std std-ref">Faster Integrands</span></a>) is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># file: cython_ridge.pyx</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">vegas</span>
+
+<span class="c1"># use exp from C</span>
+<span class="kn">from</span> <span class="nn">libc.math</span> <span class="n">cimport</span> <span class="n">exp</span>
+
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">lbatchintegrand</span>
+<span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">double</span><span class="p">[:,</span> <span class="p">::</span><span class="mi">1</span><span class="p">]</span> <span class="n">xbatch</span><span class="p">):</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">i</span>          <span class="c1"># labels integration point</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">j</span>          <span class="c1"># labels point on diagonal</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">d</span>          <span class="c1"># labels direction</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">dim</span> <span class="o">=</span> <span class="n">xbatch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">nbatch</span> <span class="o">=</span> <span class="n">xbatch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">cdef</span> <span class="n">double</span> <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+    <span class="n">cdef</span> <span class="n">double</span> <span class="n">dx2</span>
+    <span class="n">cdef</span> <span class="n">double</span><span class="p">[::</span><span class="mi">1</span><span class="p">]</span> <span class="n">x</span>
+    <span class="n">cdef</span> <span class="n">double</span><span class="p">[::</span><span class="mi">1</span><span class="p">]</span> <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nbatch</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbatch</span><span class="p">):</span>
+        <span class="c1"># integrand for integration point x</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">xbatch</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="mf">0.25</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">j</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">dx2</span> <span class="o">=</span>  <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+                <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+        <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">norm</span>
+    <span class="k">return</span> <span class="n">ans</span>
+</pre></div>
+</div>
+<p>We put this in a separate file called, say,
+<code class="docutils literal notranslate"><span class="pre">cython_ridge.pyx</span></code>, and compile it using</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cythonize</span> <span class="o">-</span><span class="n">i</span> <span class="n">cython_ridge</span><span class="o">.</span><span class="n">pyx</span>
+</pre></div>
+</div>
+<p>This creates a compiled Python module (.so file)
+which can be imported and used with vegas:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+
+<span class="kn">from</span> <span class="nn">cython_ridge</span> <span class="kn">import</span> <span class="n">ridge</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+
+<span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">   Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This code returns the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="mf">1.00008</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>   <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.55</span>
+</pre></div>
+</div>
+<p>It runs about as fast as the <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code> version
+described in <a class="reference internal" href="tutorial.html#faster-integrands"><span class="std std-ref">Faster Integrands</span></a> (15 sec on a 2024 laptop).</p>
+<p>Cython is much more flexible than <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code> but the
+code is typically more complicated. Another option,
+more similar to <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code>, is the Pythran compiler,
+which compiles a subset of Python into optimized C++
+code that is then compiled into a Python module (.so file).
+To use Pythran, we write the integrand in low-level
+Python and place it in a separate file called, say,
+<code class="docutils literal notranslate"><span class="pre">pythran_ridge.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># in file pythran_ridge.py</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1">#pythran export ridge(float[:,:])</span>
+
+<span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">xbatch</span><span class="p">):</span>
+    <span class="s2">&quot; Ridge of N Gaussians distributed along part of the diagonal. &quot;</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="n">xbatch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xbatch</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xbatch</span><span class="p">)):</span>
+        <span class="c1"># iterate over each integration point x in xbatch</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">xbatch</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="mf">0.25</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">j</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">dx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+                <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+        <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">norm</span>
+    <span class="k">return</span> <span class="n">ans</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">#pythran</span></code> line tells the compiler what to export
+from the module.
+This file is compiled by Pythran and converted into
+an optimized Python module <code class="xref py py-mod docutils literal notranslate"><span class="pre">pythran_ridge</span></code> using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pythran</span> <span class="o">-</span><span class="n">DUSE_XSIMD</span> <span class="o">-</span><span class="n">fopenmp</span> <span class="n">pythran_ridge</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>The main code is then:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+
+<span class="kn">from</span> <span class="nn">cython_ridge</span> <span class="kn">import</span> <span class="n">ridge</span>
+<span class="n">ridge</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">lbatchintegrand</span><span class="p">(</span><span class="n">ridge</span><span class="p">)</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+
+<span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">   Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This runs as fast as the <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code> and Cython versions.</p>
+</section>
+<section id="gpus">
+<h2>GPUs<a class="headerlink" href="#gpus" title="Link to this heading">¶</a></h2>
+<p>Another option for speeding up expensive integrands is to evaluate them using
+GPUs. Vectorized <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> code that is not too complicated is readily adapted
+for GPUs using Python modules such
+the <code class="xref py py-mod docutils literal notranslate"><span class="pre">jax</span></code> module (or <code class="xref py py-mod docutils literal notranslate"><span class="pre">mlx</span></code> for Apple hardware).
+The following integrand <code class="docutils literal notranslate"><span class="pre">ridge(x)</span></code> uses the <code class="xref py py-mod docutils literal notranslate"><span class="pre">jax</span></code> module to compile
+and run the <code class="docutils literal notranslate"><span class="pre">ridge</span></code>
+integrand (from the previous sections) on a GPU:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">jax</span>
+<span class="n">jnp</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">numpy</span>
+
+<span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span> <span class="nf">_jridge</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">xd</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">xd</span><span class="p">[</span><span class="kc">None</span><span class="p">,:]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span>  <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">jnp</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
+<span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_jridge</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Code for the <code class="xref py py-mod docutils literal notranslate"><span class="pre">mlx</span></code> module is almost identical:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mlx.core</span> <span class="k">as</span> <span class="nn">mx</span>
+
+<span class="nd">@mx</span><span class="o">.</span><span class="n">compile</span>
+<span class="k">def</span> <span class="nf">_mridge</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">mx</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">xd</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">xd</span><span class="p">[</span><span class="kc">None</span><span class="p">,:]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">mx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mx</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span>  <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">mx</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
+<span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_mridge</span><span class="p">(</span><span class="n">mx</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>These integrands run 20 times faster than  the original (vectorized) batch
+integrand (1 sec versus 20 sec using the built-in GPU on a 2024 laptop).
+The speedup is substantial because this integrand is quite
+costly to evaluate; the original batch integrand is just as fast as the GPU
+versions when <code class="docutils literal notranslate"><span class="pre">N=1</span></code> (instead of <code class="docutils literal notranslate"><span class="pre">N=1000</span></code>).</p>
+</section>
+<section id="c-and-fortran">
+<h2>C and Fortran<a class="headerlink" href="#c-and-fortran" title="Link to this heading">¶</a></h2>
 <p>Older implementations of the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> algorithm
 have been used extensively in C and Fortran codes. The Python
 implementation described here uses a more powerful algorithm.
@@ -53,7 +236,7 @@ There are
 many ways to access C and Fortran integrands from Python. Here we
 review a few of the options.</p>
 <section id="cffi-for-c">
-<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> for C<a class="headerlink" href="#cffi-for-c" title="Link to this heading">¶</a></h2>
+<h3><code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> for C<a class="headerlink" href="#cffi-for-c" title="Link to this heading">¶</a></h3>
 <p>The simplest way to access an integrand coded in C is to use the
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> module in Python. To illustrate, consider the following
 integrand, written in C and stored in file <code class="docutils literal notranslate"><span class="pre">cfcn.c</span></code>:</p>
@@ -212,7 +395,7 @@ the <code class="xref py py-mod docutils literal notranslate"><span class="pre">
 gives slower code.</p>
 </section>
 <section id="cffi-for-fortran">
-<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> for Fortran<a class="headerlink" href="#cffi-for-fortran" title="Link to this heading">¶</a></h2>
+<h3><code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> for Fortran<a class="headerlink" href="#cffi-for-fortran" title="Link to this heading">¶</a></h3>
 <p>Module <code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> can be used for Fortran integrands by calling the
 Fortran function from C code. Consider a Fortran implementation of
 the integrand discussed above, stored in file <code class="docutils literal notranslate"><span class="pre">ffcn.f</span></code>:</p>
@@ -305,7 +488,7 @@ module <code class="docutils literal notranslate"><span class="pre">cfcn_cffi</s
 section.</p>
 </section>
 <section id="cython-for-c-or-c-or-fortran">
-<h2>Cython for C (or C++ or Fortran)<a class="headerlink" href="#cython-for-c-or-c-or-fortran" title="Link to this heading">¶</a></h2>
+<h3>Cython for C (or C++ or Fortran)<a class="headerlink" href="#cython-for-c-or-c-or-fortran" title="Link to this heading">¶</a></h3>
 <p>A more flexible interface to a C integrand can be
 created using Cython. To increase efficiency,
 we use Cython code in file <code class="docutils literal notranslate"><span class="pre">cfcn.pyx</span></code> to convert the original
@@ -369,7 +552,7 @@ Cython also works with C++. It can also work with Fortran code, analogously
 to <code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code>.</p>
 </section>
 <section id="f2py-for-fortran">
-<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code> for Fortran<a class="headerlink" href="#f2py-for-fortran" title="Link to this heading">¶</a></h2>
+<h3><code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code> for Fortran<a class="headerlink" href="#f2py-for-fortran" title="Link to this heading">¶</a></h3>
 <p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">f2py</span></code> package, which is distributed with <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code>,
 makes it relatively easy to compile Fortran
 code directly into Python modules. Using the same Fortran code as
@@ -435,6 +618,7 @@ is then:</p>
 speed as the batch versions of the C code, above.</p>
 </section>
 </section>
+</section>
 
 
             <div class="clearer"></div>
@@ -446,7 +630,10 @@ speed as the batch versions of the C code, above.</p>
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Integrands in C or Fortran</a><ul>
+<li><a class="reference internal" href="#">Compiled Integrands for Speed; GPUs</a><ul>
+<li><a class="reference internal" href="#cython-and-pythran">Cython and Pythran</a></li>
+<li><a class="reference internal" href="#gpus">GPUs</a></li>
+<li><a class="reference internal" href="#c-and-fortran">C and Fortran</a><ul>
 <li><a class="reference internal" href="#cffi-for-c"><code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> for C</a></li>
 <li><a class="reference internal" href="#cffi-for-fortran"><code class="xref py py-mod docutils literal notranslate"><span class="pre">cffi</span></code> for Fortran</a></li>
 <li><a class="reference internal" href="#cython-for-c-or-c-or-fortran">Cython for C (or C++ or Fortran)</a></li>
@@ -454,12 +641,24 @@ speed as the batch versions of the C code, above.</p>
 </ul>
 </li>
 </ul>
+</li>
+</ul>
 
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="tutorial.html"
+                          title="previous chapter">Tutorial</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="background.html"
+                          title="next chapter">How <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Works</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/c_fortran.rst.txt"
+      <li><a href="_sources/compiled_integrands.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -486,8 +685,14 @@ speed as the batch versions of the C code, above.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="background.html" title="How vegas Works"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Integrands in C or Fortran</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Compiled Integrands for Speed; GPUs</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
