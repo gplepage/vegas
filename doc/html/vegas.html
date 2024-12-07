@@ -1,19 +1,16 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>vegas Module &#8212; vegas 6.1.3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
+    <title>vegas Module &#8212; vegas 6.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
+    <script src="_static/documentation_options.js?v=ef7fcc1c"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Case Study: Bayesian Curve Fitting" href="outliers.html" />
@@ -37,7 +34,7 @@
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -48,9 +45,9 @@
           <div class="body" role="main">
             
   <section id="vegas-module">
-<h1><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Module<a class="headerlink" href="#vegas-module" title="Permalink to this heading">¶</a></h1>
-<span class="target" id="module-vegas"></span><section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading">¶</a></h2>
+<h1><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Module<a class="headerlink" href="#vegas-module" title="Link to this heading">¶</a></h1>
+<section id="introduction">
+<span id="module-vegas"></span><h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
 <p>The key Python objects and functions supported by the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> module are:</p>
 <blockquote>
 <div><ul class="simple">
@@ -86,11 +83,11 @@ expectation values with arbitrary probability density functions.</p></li>
 <p>These are described in detail below.</p>
 </section>
 <section id="integrator-objects">
-<h2>Integrator Objects<a class="headerlink" href="#integrator-objects" title="Permalink to this heading">¶</a></h2>
+<h2>Integrator Objects<a class="headerlink" href="#integrator-objects" title="Link to this heading">¶</a></h2>
 <p>The central component of the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> package is the integrator class:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.Integrator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">Integrator</span></span><a class="headerlink" href="#vegas.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">Integrator</span></span><a class="headerlink" href="#vegas.Integrator" title="Link to this definition">¶</a></dt>
 <dd><p>Adaptive multidimensional Monte Carlo integration.</p>
 <p><a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a> objects make Monte Carlo
 estimates of multidimensional functions <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>
@@ -144,7 +141,7 @@ points <code class="docutils literal notranslate"><span class="pre">x</span></co
 passed to the integrand <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>.</p>
 <p>More generally, the integrator packages integration points in
 multidimensional arrays <code class="docutils literal notranslate"><span class="pre">x[d1,</span> <span class="pre">d2..dn]</span></code> when the integration
-limits are specified by <code class="docutils literal notranslate"><span class="pre">map[d1,</span> <span class="pre">d2...dn,</span> <span class="pre">i]`</span> <span class="pre">with</span> <span class="pre">``i=0,1</span></code>.
+limits are specified by <code class="docutils literal notranslate"><span class="pre">map[d1,</span> <span class="pre">d2...dn,</span> <span class="pre">i]</span></code> with <code class="docutils literal notranslate"><span class="pre">i=0,1</span></code>.
 These arrays can have any shape.</p>
 <p>Alternatively, the integration region can be specified by a
 dictionary whose values <code class="docutils literal notranslate"><span class="pre">map[key]</span></code> are either 2-tuples or
@@ -351,7 +348,7 @@ is installed.</p></li>
 <dl>
 <dt>Methods:</dt><dd><dl class="py method">
 <dt class="sig sig-object py" id="vegas.Integrator.__call__">
-<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fcn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveall</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.__call__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fcn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveall</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.__call__" title="Link to this definition">¶</a></dt>
 <dd><p>Integrate integrand <code class="docutils literal notranslate"><span class="pre">fcn</span></code>.</p>
 <p>A typical integrand has the form, for example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -463,7 +460,7 @@ an object of type <a class="reference internal" href="#vegas.RAvg" title="vegas.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.Integrator.set">
-<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ka</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.set" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ka</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.set" title="Link to this definition">¶</a></dt>
 <dd><p>Reset default parameters in integrator.</p>
 <p>Usage is analogous to the constructor
 for <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>: for example,</p>
@@ -481,7 +478,7 @@ to restore the old defaults using, for example:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.Integrator.settings">
-<span class="sig-name descname"><span class="pre">settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ngrid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.settings" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ngrid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.settings" title="Link to this definition">¶</a></dt>
 <dd><p>Assemble summary of integrator settings into string.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -497,8 +494,8 @@ The default is 0.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.Integrator.random">
-<span class="sig-name descname"><span class="pre">random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yield_hcube</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yield_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.random" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterator over integration points and weights.</p>
+<span class="sig-name descname"><span class="pre">random</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yield_hcube</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yield_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.random" title="Link to this definition">¶</a></dt>
+<dd><p>Low-level iterator over integration points and weights.</p>
 <p>This method creates an iterator that returns integration
 points from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>, and their corresponding weights in an
 integral. Each point <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> is accompanied by the weight
@@ -521,8 +518,8 @@ corresponds to a single iteration.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.Integrator.random_batch">
-<span class="sig-name descname"><span class="pre">random_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yield_hcube</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yield_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.random_batch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterator over integration points and weights.</p>
+<span class="sig-name descname"><span class="pre">random_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yield_hcube</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yield_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.Integrator.random_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Low-level batch iterator over integration points and weights.</p>
 <p>This method creates an iterator that returns integration
 points from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>, and their corresponding weights in an
 integral. The points are provided in arrays <code class="docutils literal notranslate"><span class="pre">x[i,</span> <span class="pre">d]</span></code> where
@@ -553,31 +550,31 @@ is controlled by parameter <code class="docutils literal notranslate"><span clas
 
 </section>
 <section id="adaptivemap-objects">
-<h2>AdaptiveMap Objects<a class="headerlink" href="#adaptivemap-objects" title="Permalink to this heading">¶</a></h2>
+<h2>AdaptiveMap Objects<a class="headerlink" href="#adaptivemap-objects" title="Link to this heading">¶</a></h2>
 <p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s remapping of the integration variables is handled
 by a <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.AdaptiveMap</span></code></a> object, which maps the original
 integration variables x into new variables y in a unit hypercube.
 Each direction has its own map specified by a grid in x space:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/530e5cb1976f764189866fce2e85424d78e6d201.svg" alt="x_0 &amp;= a \\
+<p><img src="_images/math/95d67f13b060563af0291450013fc9d17e3a429f.svg" alt="x_0 &amp;= a \\
 x_1 &amp;= x_0 + \Delta x_0 \\
 x_2 &amp;= x_1 + \Delta x_1 \\
 \cdots \\
 x_N &amp;= x_{N-1} + \Delta x_{N-1} = b"/></p>
 </div></div></blockquote>
-<p>where <img class="math" src="_images/math/34934efedf7cb6cf31f0333b486c4ab43e90855d.svg" alt="a"/> and <img class="math" src="_images/math/5cf70d30bed668864d41ac882237465737e7f20f.svg" alt="b"/> are the limits of integration.
+<p>where <img class="math" src="_images/math/abd35952da9e1b03a3b5b1e27fd81674a259239f.svg" alt="a"/> and <img class="math" src="_images/math/5f3942dd8bf9ff56e4aeb2f698c5db1adb475065.svg" alt="b"/> are the limits of integration.
 The grid specifies the transformation function at the points
-<img class="math" src="_images/math/4011b7a530d6ec1b95ffad04de4ed07502a3f8b0.svg" alt="y=i/N"/> for <img class="math" src="_images/math/dda86e9e64f520a61e58012f9e1638c0a93fa1a6.svg" alt="i=0,1\ldots N"/>:</p>
+<img class="math" src="_images/math/48b596c06bc26cab8c6cac1a33ba7ba110c9fbc5.svg" alt="y=i/N"/> for <img class="math" src="_images/math/fc7340add9e2606de2c3e9805e45724d44e61b00.svg" alt="i=0,1\ldots N"/>:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/1ad1f2a16147f5fee5b6ccdbe551bc9512841c6f.svg" alt="x(y\!=\!i/N) = x_i"/></p>
+<p><img src="_images/math/538662068c1c6ce17698491009df76e8530cd2d2.svg" alt="x(y\!=\!i/N) = x_i"/></p>
 </div></div></blockquote>
 <p>Linear interpolation is used between those points. The Jacobian
 for this transformation is:</p>
 <blockquote>
 <div><div class="math">
-<p><img src="_images/math/43b71c97d41ce6b26dd55bb3f1538e17839a09e3.svg" alt="J(y) = J_i = N \Delta x_i"/></p>
+<p><img src="_images/math/5c748eaf55aeab8c3bb477849eee65a3318e53ce.svg" alt="J(y) = J_i = N \Delta x_i"/></p>
 </div></div></blockquote>
 <p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adjusts the increments sizes to optimize its Monte Carlo
 estimates of the integral. This involves training the grid. To
@@ -663,7 +660,7 @@ It uses those same samples to train its <a class="reference internal" href="#veg
 fashion, for use in subsequent iterations of the algorithm.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">AdaptiveMap</span></span><a class="headerlink" href="#vegas.AdaptiveMap" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">AdaptiveMap</span></span><a class="headerlink" href="#vegas.AdaptiveMap" title="Link to this definition">¶</a></dt>
 <dd><p>Adaptive map <code class="docutils literal notranslate"><span class="pre">y-&gt;x(y)</span></code> for multidimensional <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
 <p>An <a class="reference internal" href="#vegas.AdaptiveMap" title="vegas.AdaptiveMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">AdaptiveMap</span></code></a> defines a multidimensional map <code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">-&gt;</span> <span class="pre">x(y)</span></code>
 from the unit hypercube, with <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">y[d]</span> <span class="pre">&lt;=</span> <span class="pre">1</span></code>, to an arbitrary
@@ -723,7 +720,7 @@ down in order to avoid instabilities caused by random fluctuations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>grid</strong> (<em>list of arrays</em>) – Initial <code class="docutils literal notranslate"><span class="pre">x</span></code> grid, where <code class="docutils literal notranslate"><span class="pre">grid[d][i]</span></code>
+<li><p><strong>grid</strong> (<em>list</em><em> of </em><em>arrays</em>) – Initial <code class="docutils literal notranslate"><span class="pre">x</span></code> grid, where <code class="docutils literal notranslate"><span class="pre">grid[d][i]</span></code>
 is the <code class="docutils literal notranslate"><span class="pre">i</span></code>-th node in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. Different directions
 can have different numbers of nodes.</p></li>
 <li><p><strong>ninc</strong> (int or array or <code class="docutils literal notranslate"><span class="pre">None</span></code>) – <code class="docutils literal notranslate"><span class="pre">ninc[d]</span></code> (or <code class="docutils literal notranslate"><span class="pre">ninc</span></code>, if it
@@ -737,19 +734,19 @@ Jacobian <code class="docutils literal notranslate"><span class="pre">dx(y)/dy</
 <dl>
 <dt>Attributes and methods:</dt><dd><dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.dim">
-<span class="sig-name descname"><span class="pre">dim</span></span><a class="headerlink" href="#vegas.AdaptiveMap.dim" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dim</span></span><a class="headerlink" href="#vegas.AdaptiveMap.dim" title="Link to this definition">¶</a></dt>
 <dd><p>Number of dimensions.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.ninc">
-<span class="sig-name descname"><span class="pre">ninc</span></span><a class="headerlink" href="#vegas.AdaptiveMap.ninc" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">ninc</span></span><a class="headerlink" href="#vegas.AdaptiveMap.ninc" title="Link to this definition">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">ninc[d]</span></code> is the number increments in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.grid">
-<span class="sig-name descname"><span class="pre">grid</span></span><a class="headerlink" href="#vegas.AdaptiveMap.grid" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">grid</span></span><a class="headerlink" href="#vegas.AdaptiveMap.grid" title="Link to this definition">¶</a></dt>
 <dd><p>The nodes of the grid defining the maps are <code class="docutils literal notranslate"><span class="pre">self.grid[d,</span> <span class="pre">i]</span></code>
 where <code class="docutils literal notranslate"><span class="pre">d=0...</span></code> specifies the direction and <code class="docutils literal notranslate"><span class="pre">i=0...self.ninc</span></code>
 the node.</p>
@@ -757,7 +754,7 @@ the node.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.inc">
-<span class="sig-name descname"><span class="pre">inc</span></span><a class="headerlink" href="#vegas.AdaptiveMap.inc" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">inc</span></span><a class="headerlink" href="#vegas.AdaptiveMap.inc" title="Link to this definition">¶</a></dt>
 <dd><p>The increment widths of the grid:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">inc</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
 </pre></div>
@@ -766,7 +763,7 @@ the node.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.adapt">
-<span class="sig-name descname"><span class="pre">adapt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ninc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.adapt" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">adapt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ninc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.adapt" title="Link to this definition">¶</a></dt>
 <dd><p>Adapt grid to accumulated training data.</p>
 <p><code class="docutils literal notranslate"><span class="pre">self.adapt(...)</span></code> projects the training data onto
 each axis independently and maps it into <code class="docutils literal notranslate"><span class="pre">x</span></code> space.
@@ -803,7 +800,7 @@ which is the default).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.add_training_data">
-<span class="sig-name descname"><span class="pre">add_training_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ny</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.add_training_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_training_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ny</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.add_training_data" title="Link to this definition">¶</a></dt>
 <dd><p>Add training data <code class="docutils literal notranslate"><span class="pre">f</span></code> for <code class="docutils literal notranslate"><span class="pre">y</span></code>-space points <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
 <p>Accumulates training data for later use by <code class="docutils literal notranslate"><span class="pre">self.adapt()</span></code>.
 Grid increments will be made smaller in regions where
@@ -828,7 +825,7 @@ omitted (or negative).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.adapt_to_samples">
-<span class="sig-name descname"><span class="pre">adapt_to_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nitn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nproc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.adapt_to_samples" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">adapt_to_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nitn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nproc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.adapt_to_samples" title="Link to this definition">¶</a></dt>
 <dd><p>Adapt map to data <code class="docutils literal notranslate"><span class="pre">{x,</span> <span class="pre">f(x)}</span></code>.</p>
 <p>Replace grid with one that is optimized for integrating
 function <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>. New grid is found iteratively</p>
@@ -876,7 +873,7 @@ Default value is <code class="docutils literal notranslate"><span class="pre">np
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.__call__">
-<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.__call__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.__call__" title="Link to this definition">¶</a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">x</span></code> values corresponding to <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">y</span></code> can be a single <code class="docutils literal notranslate"><span class="pre">dim</span></code>-dimensional point, or it
 can be an array <code class="docutils literal notranslate"><span class="pre">y[i,j,</span> <span class="pre">...,</span> <span class="pre">d]</span></code> of such points (<code class="docutils literal notranslate"><span class="pre">d=0..dim-1</span></code>).</p>
@@ -886,7 +883,7 @@ in the volume.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.jac">
-<span class="sig-name descname"><span class="pre">jac</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.jac" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">jac</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.jac" title="Link to this definition">¶</a></dt>
 <dd><p>Return the map’s Jacobian at <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">y</span></code> can be a single <code class="docutils literal notranslate"><span class="pre">dim</span></code>-dimensional point, or it
 can be an array <code class="docutils literal notranslate"><span class="pre">y[i,j,...,d]</span></code> of such points (<code class="docutils literal notranslate"><span class="pre">d=0..dim-1</span></code>).
@@ -897,7 +894,7 @@ to <code class="docutils literal notranslate"><span class="pre">y[i,j,...]</span
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.jac1d">
-<span class="sig-name descname"><span class="pre">jac1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.jac1d" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">jac1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.jac1d" title="Link to this definition">¶</a></dt>
 <dd><p>Return the map’s Jacobian at <code class="docutils literal notranslate"><span class="pre">y</span></code> for each direction.</p>
 <p><code class="docutils literal notranslate"><span class="pre">y</span></code> can be a single <code class="docutils literal notranslate"><span class="pre">dim</span></code>-dimensional point, or it
 can be an array <code class="docutils literal notranslate"><span class="pre">y[i,j,...,d]</span></code> of such points (<code class="docutils literal notranslate"><span class="pre">d=0..dim-1</span></code>).
@@ -908,7 +905,7 @@ to <code class="docutils literal notranslate"><span class="pre">y[i,j,...,d]</sp
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.make_uniform">
-<span class="sig-name descname"><span class="pre">make_uniform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ninc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.make_uniform" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">make_uniform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ninc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.make_uniform" title="Link to this definition">¶</a></dt>
 <dd><p>Replace the grid with a uniform grid.</p>
 <p>The new grid has <code class="docutils literal notranslate"><span class="pre">ninc[d]</span></code>  (or <code class="docutils literal notranslate"><span class="pre">ninc</span></code>, if it is a number)
 increments along each direction if <code class="docutils literal notranslate"><span class="pre">ninc</span></code> is specified.
@@ -918,7 +915,7 @@ of increments in each direction as the old grid.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.map">
-<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jac</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ny</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.map" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jac</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ny</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.map" title="Link to this definition">¶</a></dt>
 <dd><p>Map y to x, where jac is the Jacobian  (<code class="docutils literal notranslate"><span class="pre">dx/dy</span></code>).</p>
 <p><code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code> is an array of <code class="docutils literal notranslate"><span class="pre">ny</span></code> <code class="docutils literal notranslate"><span class="pre">y</span></code>-values for direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.
 <code class="docutils literal notranslate"><span class="pre">x[j,</span> <span class="pre">d]</span></code> is filled with the corresponding <code class="docutils literal notranslate"><span class="pre">x</span></code> values,
@@ -948,7 +945,7 @@ omitted (or negative).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.invmap">
-<span class="sig-name descname"><span class="pre">invmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jac</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.invmap" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">invmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jac</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.invmap" title="Link to this definition">¶</a></dt>
 <dd><p>Map x to y, where jac is the Jacobian (<code class="docutils literal notranslate"><span class="pre">dx/dy</span></code>).</p>
 <p><code class="docutils literal notranslate"><span class="pre">y[j,</span> <span class="pre">d]</span></code> is an array of <code class="docutils literal notranslate"><span class="pre">ny</span></code> <code class="docutils literal notranslate"><span class="pre">y</span></code>-values for direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.
 <code class="docutils literal notranslate"><span class="pre">x[j,</span> <span class="pre">d]</span></code> is filled with the corresponding <code class="docutils literal notranslate"><span class="pre">x</span></code> values,
@@ -978,7 +975,7 @@ omitted (or negative).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.show_grid">
-<span class="sig-name descname"><span class="pre">show_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ngrid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shrink</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.show_grid" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">show_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ngrid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shrink</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.show_grid" title="Link to this definition">¶</a></dt>
 <dd><p>Display plots showing the current grid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1004,7 +1001,7 @@ plots are displayed using <code class="docutils literal notranslate"><span class
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.settings">
-<span class="sig-name descname"><span class="pre">settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ngrid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.settings" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ngrid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.settings" title="Link to this definition">¶</a></dt>
 <dd><p>Create string with information about grid nodes.</p>
 <p>Creates a string containing the locations of the nodes
 in the map grid for each direction. Parameter
@@ -1014,13 +1011,13 @@ in the map grid for each direction. Parameter
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.extract_grid">
-<span class="sig-name descname"><span class="pre">extract_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.extract_grid" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">extract_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.extract_grid" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of lists specifying the map’s grid.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.AdaptiveMap.clear">
-<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.clear" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vegas.AdaptiveMap.clear" title="Link to this definition">¶</a></dt>
 <dd><p>Clear information accumulated by <a class="reference internal" href="#vegas.AdaptiveMap.add_training_data" title="vegas.AdaptiveMap.add_training_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AdaptiveMap.add_training_data()</span></code></a>.</p>
 </dd></dl>
 
@@ -1030,14 +1027,14 @@ in the map grid for each direction. Parameter
 
 </section>
 <section id="pdfintegrator-objects">
-<h2>PDFIntegrator Objects<a class="headerlink" href="#pdfintegrator-objects" title="Permalink to this heading">¶</a></h2>
+<h2>PDFIntegrator Objects<a class="headerlink" href="#pdfintegrator-objects" title="Link to this heading">¶</a></h2>
 <p>Expectation values using probability density functions defined by
 collections of Gaussian random variables (see <code class="xref py py-mod docutils literal notranslate"><span class="pre">gvar</span></code>)
 can be evaluated using the following
 specialized integrator:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.PDFIntegrator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">PDFIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">svdcut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-15</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">PDFIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">svdcut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-15</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator for PDF expectation values.</p>
 <p><code class="docutils literal notranslate"><span class="pre">PDFIntegrator(param,</span> <span class="pre">pdf)</span></code> creates a <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator that
 evaluates expectation values of arbitrary functions <code class="docutils literal notranslate"><span class="pre">f(p)</span></code> with
@@ -1148,7 +1145,7 @@ covariance matrix unchanged. Default is <code class="docutils literal notranslat
 <dl>
 <dt>Methods:</dt><dd><dl class="py method">
 <dt class="sig sig-object py" id="vegas.PDFIntegrator.__call__">
-<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapt_to_pdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveall</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator.__call__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapt_to_pdf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveall</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator.__call__" title="Link to this definition">¶</a></dt>
 <dd><p>Estimate expectation value of function <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>.</p>
 <p>Uses module <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to estimate the integral of
 <code class="docutils literal notranslate"><span class="pre">f(p)</span></code> multiplied by the probability density function
@@ -1215,7 +1212,7 @@ integrator; see the <a class="reference internal" href="#module-vegas" title="ve
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.PDFIntegrator.stats">
-<span class="sig-name descname"><span class="pre">stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">histograms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator.stats" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">histograms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator.stats" title="Link to this definition">¶</a></dt>
 <dd><p>Statistical analysis of function <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>.</p>
 <p>Uses the <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator to evaluate the expectation
 values and (co)variances of <code class="docutils literal notranslate"><span class="pre">f(p)</span></code> with
@@ -1358,7 +1355,7 @@ or <a class="reference internal" href="#vegas.PDFEVDict" title="vegas.PDFEVDict"
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.PDFIntegrator.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nbatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rbatch'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator.sample" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nbatch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rbatch'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFIntegrator.sample" title="Link to this definition">¶</a></dt>
 <dd><p>Generate random samples from the integrator’s PDF.</p>
 <p>Typical usage is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gvar</span> <span class="k">as</span> <span class="nn">gv</span>
@@ -1474,10 +1471,10 @@ shape plus an extra sample index which is either on the right
 
 </section>
 <section id="other-objects-and-functions">
-<h2>Other Objects and Functions<a class="headerlink" href="#other-objects-and-functions" title="Permalink to this heading">¶</a></h2>
+<h2>Other Objects and Functions<a class="headerlink" href="#other-objects-and-functions" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.RAvg">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itn_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_neval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_rescale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itn_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_neval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_rescale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg" title="Link to this definition">¶</a></dt>
 <dd><p>Running average of scalar-valued Monte Carlo estimates.</p>
 <p>This class accumulates independent Monte Carlo
 estimates (e.g., of an integral) and combines
@@ -1491,55 +1488,55 @@ otherwise straight, unweighted averages are used.</p>
 <dl>
 <dt>Attributes and methods:</dt><dd><dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvg.mean">
-<span class="sig-name descname"><span class="pre">mean</span></span><a class="headerlink" href="#vegas.RAvg.mean" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">mean</span></span><a class="headerlink" href="#vegas.RAvg.mean" title="Link to this definition">¶</a></dt>
 <dd><p>The mean value of the weighted average.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvg.sdev">
-<span class="sig-name descname"><span class="pre">sdev</span></span><a class="headerlink" href="#vegas.RAvg.sdev" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sdev</span></span><a class="headerlink" href="#vegas.RAvg.sdev" title="Link to this definition">¶</a></dt>
 <dd><p>The standard deviation of the weighted average.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvg.chi2">
-<span class="sig-name descname"><span class="pre">chi2</span></span><a class="headerlink" href="#vegas.RAvg.chi2" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">chi2</span></span><a class="headerlink" href="#vegas.RAvg.chi2" title="Link to this definition">¶</a></dt>
 <dd><p><em>chi**2</em> of weighted average.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvg.dof">
-<span class="sig-name descname"><span class="pre">dof</span></span><a class="headerlink" href="#vegas.RAvg.dof" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dof</span></span><a class="headerlink" href="#vegas.RAvg.dof" title="Link to this definition">¶</a></dt>
 <dd><p>Number of degrees of freedom in weighted average.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvg.Q">
-<span class="sig-name descname"><span class="pre">Q</span></span><a class="headerlink" href="#vegas.RAvg.Q" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">Q</span></span><a class="headerlink" href="#vegas.RAvg.Q" title="Link to this definition">¶</a></dt>
 <dd><p><em>Q</em> or <em>p-value</em> of weighted average’s <em>chi**2</em>.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvg.itn_results">
-<span class="sig-name descname"><span class="pre">itn_results</span></span><a class="headerlink" href="#vegas.RAvg.itn_results" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">itn_results</span></span><a class="headerlink" href="#vegas.RAvg.itn_results" title="Link to this definition">¶</a></dt>
 <dd><p>A list of the results from each iteration.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvg.sum_neval">
-<span class="sig-name descname"><span class="pre">sum_neval</span></span><a class="headerlink" href="#vegas.RAvg.sum_neval" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sum_neval</span></span><a class="headerlink" href="#vegas.RAvg.sum_neval" title="Link to this definition">¶</a></dt>
 <dd><p>Total number of integrand evaluations used in all iterations.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.RAvg.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg.add" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg.add" title="Link to this definition">¶</a></dt>
 <dd><p>Add estimate <code class="docutils literal notranslate"><span class="pre">g</span></code> to the running average.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.RAvg.summary">
-<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg.summary" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg.summary" title="Link to this definition">¶</a></dt>
 <dd><p>Assemble summary of results, iteration-by-iteration, into a string.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1552,7 +1549,7 @@ Default behavior is determined by <a class="reference internal" href="#module-ve
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.RAvg.extend">
-<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ravg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg.extend" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ravg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg.extend" title="Link to this definition">¶</a></dt>
 <dd><p>Merge results from <a class="reference internal" href="#vegas.RAvg" title="vegas.RAvg"><code class="xref py py-class docutils literal notranslate"><span class="pre">RAvg</span></code></a> object <code class="docutils literal notranslate"><span class="pre">ravg</span></code> after results currently in <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
 </dd></dl>
 
@@ -1562,7 +1559,7 @@ Default behavior is determined by <a class="reference internal" href="#module-ve
 
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.RAvgArray">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvgArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'object'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strides=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itn_results=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_neval=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale=True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgArray" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvgArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'object'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strides=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itn_results=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_neval=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale=True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgArray" title="Link to this definition">¶</a></dt>
 <dd><p>Running average of array-valued Monte Carlo estimates.</p>
 <p>This class accumulates independent arrays of Monte Carlo
 estimates (e.g., of an integral) and combines
@@ -1576,43 +1573,43 @@ otherwise straight, unweighted averages are used.</p>
 <dl>
 <dt>Attributes and methods:</dt><dd><dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvgArray.chi2">
-<span class="sig-name descname"><span class="pre">chi2</span></span><a class="headerlink" href="#vegas.RAvgArray.chi2" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">chi2</span></span><a class="headerlink" href="#vegas.RAvgArray.chi2" title="Link to this definition">¶</a></dt>
 <dd><p><em>chi**2</em> of weighted average.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvgArray.dof">
-<span class="sig-name descname"><span class="pre">dof</span></span><a class="headerlink" href="#vegas.RAvgArray.dof" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dof</span></span><a class="headerlink" href="#vegas.RAvgArray.dof" title="Link to this definition">¶</a></dt>
 <dd><p>Number of degrees of freedom in weighted average.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvgArray.Q">
-<span class="sig-name descname"><span class="pre">Q</span></span><a class="headerlink" href="#vegas.RAvgArray.Q" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">Q</span></span><a class="headerlink" href="#vegas.RAvgArray.Q" title="Link to this definition">¶</a></dt>
 <dd><p><em>Q</em> or <em>p-value</em> of weighted average’s <em>chi**2</em>.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvgArray.itn_results">
-<span class="sig-name descname"><span class="pre">itn_results</span></span><a class="headerlink" href="#vegas.RAvgArray.itn_results" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">itn_results</span></span><a class="headerlink" href="#vegas.RAvgArray.itn_results" title="Link to this definition">¶</a></dt>
 <dd><p>A list of the results from each iteration.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvgArray.sum_neval">
-<span class="sig-name descname"><span class="pre">sum_neval</span></span><a class="headerlink" href="#vegas.RAvgArray.sum_neval" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sum_neval</span></span><a class="headerlink" href="#vegas.RAvgArray.sum_neval" title="Link to this definition">¶</a></dt>
 <dd><p>Total number of integrand evaluations used in all iterations.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.RAvgArray.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgArray.add" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgArray.add" title="Link to this definition">¶</a></dt>
 <dd><p>Add estimate <code class="docutils literal notranslate"><span class="pre">g</span></code> to the running average.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.RAvgArray.summary">
-<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extended</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgArray.summary" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extended</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgArray.summary" title="Link to this definition">¶</a></dt>
 <dd><p>Assemble summary of results, iteration-by-iteration, into a string.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1629,7 +1626,7 @@ Default behavior is determined by <a class="reference internal" href="#module-ve
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.RAvgArray.extend">
-<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ravg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgArray.extend" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ravg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgArray.extend" title="Link to this definition">¶</a></dt>
 <dd><p>Merge results from <a class="reference internal" href="#vegas.RAvgArray" title="vegas.RAvgArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">RAvgArray</span></code></a> object <code class="docutils literal notranslate"><span class="pre">ravg</span></code> after results currently in <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
 </dd></dl>
 
@@ -1639,7 +1636,7 @@ Default behavior is determined by <a class="reference internal" href="#module-ve
 
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.RAvgDict">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvgDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itn_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_neval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvgDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itn_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_neval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict" title="Link to this definition">¶</a></dt>
 <dd><p>Running average of dictionary-valued Monte Carlo estimates.</p>
 <p>This class accumulates independent dictionaries of Monte Carlo
 estimates (e.g., of an integral) and combines
@@ -1652,37 +1649,37 @@ otherwise straight, unweighted averages are used.</p>
 <dl>
 <dt>Attributes and methods:</dt><dd><dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvgDict.chi2">
-<span class="sig-name descname"><span class="pre">chi2</span></span><a class="headerlink" href="#vegas.RAvgDict.chi2" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">chi2</span></span><a class="headerlink" href="#vegas.RAvgDict.chi2" title="Link to this definition">¶</a></dt>
 <dd><p><em>chi**2</em> of weighted average.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvgDict.dof">
-<span class="sig-name descname"><span class="pre">dof</span></span><a class="headerlink" href="#vegas.RAvgDict.dof" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dof</span></span><a class="headerlink" href="#vegas.RAvgDict.dof" title="Link to this definition">¶</a></dt>
 <dd><p>Number of degrees of freedom in weighted average.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvgDict.Q">
-<span class="sig-name descname"><span class="pre">Q</span></span><a class="headerlink" href="#vegas.RAvgDict.Q" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">Q</span></span><a class="headerlink" href="#vegas.RAvgDict.Q" title="Link to this definition">¶</a></dt>
 <dd><p><em>Q</em> or <em>p-value</em> of weighted average’s <em>chi**2</em>.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvgDict.itn_results">
-<span class="sig-name descname"><span class="pre">itn_results</span></span><a class="headerlink" href="#vegas.RAvgDict.itn_results" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">itn_results</span></span><a class="headerlink" href="#vegas.RAvgDict.itn_results" title="Link to this definition">¶</a></dt>
 <dd><p>A list of the results from each iteration.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.RAvgDict.sum_neval">
-<span class="sig-name descname"><span class="pre">sum_neval</span></span><a class="headerlink" href="#vegas.RAvgDict.sum_neval" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sum_neval</span></span><a class="headerlink" href="#vegas.RAvgDict.sum_neval" title="Link to this definition">¶</a></dt>
 <dd><p>Total number of integrand evaluations used in all iterations.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.RAvgDict.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict.add" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict.add" title="Link to this definition">¶</a></dt>
 <dd><p>Augment buffer with data <code class="docutils literal notranslate"><span class="pre">v</span></code>, indexed by key <code class="docutils literal notranslate"><span class="pre">k</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">v</span></code> is either a scalar or a <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> array (or a list or
 other data type that can be changed into a numpy.array).
@@ -1693,7 +1690,7 @@ If <code class="docutils literal notranslate"><span class="pre">v</span></code> 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.RAvgDict.summary">
-<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extended</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict.summary" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extended</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict.summary" title="Link to this definition">¶</a></dt>
 <dd><p>Assemble summary of results, iteration-by-iteration, into a string.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1710,7 +1707,7 @@ Default behavior is determined by <a class="reference internal" href="#module-ve
 
 <dl class="py method">
 <dt class="sig sig-object py" id="vegas.RAvgDict.extend">
-<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ravg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict.extend" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ravg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvgDict.extend" title="Link to this definition">¶</a></dt>
 <dd><p>Merge results from <a class="reference internal" href="#vegas.RAvgDict" title="vegas.RAvgDict"><code class="xref py py-class docutils literal notranslate"><span class="pre">RAvgDict</span></code></a> object <code class="docutils literal notranslate"><span class="pre">ravg</span></code> after results currently in <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
 </dd></dl>
 
@@ -1720,7 +1717,7 @@ Default behavior is determined by <a class="reference internal" href="#module-ve
 
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.PDFEV">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">PDFEV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analyzer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFEV" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">PDFEV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analyzer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFEV" title="Link to this definition">¶</a></dt>
 <dd><p>Expectation value from <a class="reference internal" href="#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a>.</p>
 <p>Expectation values are returned by
 <a class="reference internal" href="#vegas.PDFIntegrator.__call__" title="vegas.PDFIntegrator.__call__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vegas.PDFIntegrator.__call__()</span></code></a> and
@@ -1745,13 +1742,13 @@ is negligible here).</p>
 <p><a class="reference internal" href="#vegas.PDFEV" title="vegas.PDFEV"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFEV</span></code></a>s have the following attributes:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEV.pdfnorm">
-<span class="sig-name descname"><span class="pre">pdfnorm</span></span><a class="headerlink" href="#vegas.PDFEV.pdfnorm" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pdfnorm</span></span><a class="headerlink" href="#vegas.PDFEV.pdfnorm" title="Link to this definition">¶</a></dt>
 <dd><p>Divide PDF by <code class="docutils literal notranslate"><span class="pre">pdfnorm</span></code> to normalize it.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEV.results">
-<span class="sig-name descname"><span class="pre">results</span></span><a class="headerlink" href="#vegas.PDFEV.results" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">results</span></span><a class="headerlink" href="#vegas.PDFEV.results" title="Link to this definition">¶</a></dt>
 <dd><p>Results from
 the underlying integrals.</p>
 <dl class="field-list simple">
@@ -1767,7 +1764,7 @@ the underlying integrals.</p>
 <code class="docutils literal notranslate"><span class="pre">vegas.PDFIntegrator.stats(self,</span> <span class="pre">f...)</span></code> has three further attributes:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEV.stats">
-<span class="sig-name descname"><span class="pre">stats</span></span><a class="headerlink" href="#vegas.PDFEV.stats" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stats</span></span><a class="headerlink" href="#vegas.PDFEV.stats" title="Link to this definition">¶</a></dt>
 <dd><p>An instance of <code class="xref py py-class docutils literal notranslate"><span class="pre">gvar.PDFStatistics</span></code>
 containing statistical information about
 the distribution of <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>.</p>
@@ -1775,7 +1772,7 @@ the distribution of <code class="docutils literal notranslate"><span class="pre"
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEV.vegas_mean">
-<span class="sig-name descname"><span class="pre">vegas_mean</span></span><a class="headerlink" href="#vegas.PDFEV.vegas_mean" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">vegas_mean</span></span><a class="headerlink" href="#vegas.PDFEV.vegas_mean" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimate for the mean value of
 <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>. The uncertainties in <code class="docutils literal notranslate"><span class="pre">vegas_mean</span></code>
 are the integration errors from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.</p>
@@ -1783,7 +1780,7 @@ are the integration errors from <a class="reference internal" href="#module-vega
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEV.vegas_cov">
-<span class="sig-name descname"><span class="pre">vegas_cov</span></span><a class="headerlink" href="#vegas.PDFEV.vegas_cov" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">vegas_cov</span></span><a class="headerlink" href="#vegas.PDFEV.vegas_cov" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimate for the covariance matrix
 of <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>. The uncertainties in <code class="docutils literal notranslate"><span class="pre">vegas_cov</span></code>
 are the integration errors from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.</p>
@@ -1791,7 +1788,7 @@ are the integration errors from <a class="reference internal" href="#module-vega
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEV.vegas_sdev">
-<span class="sig-name descname"><span class="pre">vegas_sdev</span></span><a class="headerlink" href="#vegas.PDFEV.vegas_sdev" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">vegas_sdev</span></span><a class="headerlink" href="#vegas.PDFEV.vegas_sdev" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimate for the standard deviation
 of <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>. The uncertainties in <code class="docutils literal notranslate"><span class="pre">vegas_sdev</span></code>
 are the integration errors from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.</p>
@@ -1801,7 +1798,7 @@ are the integration errors from <a class="reference internal" href="#module-vega
 
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.PDFEVArray">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">PDFEVArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analyzer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFEVArray" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">PDFEVArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analyzer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFEVArray" title="Link to this definition">¶</a></dt>
 <dd><p>Array of expectation values from <a class="reference internal" href="#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a>.</p>
 <p>Expectation values are returned by
 <a class="reference internal" href="#vegas.PDFIntegrator.__call__" title="vegas.PDFIntegrator.__call__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vegas.PDFIntegrator.__call__()</span></code></a> and
@@ -1825,13 +1822,13 @@ associated with <code class="docutils literal notranslate"><span class="pre">g</
 <p><a class="reference internal" href="#vegas.PDFEVArray" title="vegas.PDFEVArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFEVArray</span></code></a>s have the following attributes:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVArray.pdfnorm">
-<span class="sig-name descname"><span class="pre">pdfnorm</span></span><a class="headerlink" href="#vegas.PDFEVArray.pdfnorm" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pdfnorm</span></span><a class="headerlink" href="#vegas.PDFEVArray.pdfnorm" title="Link to this definition">¶</a></dt>
 <dd><p>Divide PDF by <code class="docutils literal notranslate"><span class="pre">pdfnorm</span></code> to normalize it.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVArray.results">
-<span class="sig-name descname"><span class="pre">results</span></span><a class="headerlink" href="#vegas.PDFEVArray.results" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">results</span></span><a class="headerlink" href="#vegas.PDFEVArray.results" title="Link to this definition">¶</a></dt>
 <dd><p>Results from
 the underlying integrals.</p>
 <dl class="field-list simple">
@@ -1848,7 +1845,7 @@ the underlying integrals.</p>
 attributes:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVArray.stats">
-<span class="sig-name descname"><span class="pre">stats</span></span><a class="headerlink" href="#vegas.PDFEVArray.stats" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stats</span></span><a class="headerlink" href="#vegas.PDFEVArray.stats" title="Link to this definition">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">s.stats[i]</span></code> is a <code class="xref py py-class docutils literal notranslate"><span class="pre">gvar.PDFStatistics</span></code>
 object containing statistical information about
 the distribution of <code class="docutils literal notranslate"><span class="pre">f(p)[i]</span></code>.</p>
@@ -1856,7 +1853,7 @@ the distribution of <code class="docutils literal notranslate"><span class="pre"
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVArray.vegas_mean">
-<span class="sig-name descname"><span class="pre">vegas_mean</span></span><a class="headerlink" href="#vegas.PDFEVArray.vegas_mean" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">vegas_mean</span></span><a class="headerlink" href="#vegas.PDFEVArray.vegas_mean" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimates for the mean values
 of <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>. The uncertainties in <code class="docutils literal notranslate"><span class="pre">vegas_mean</span></code>
 are the integration errors from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.</p>
@@ -1864,7 +1861,7 @@ are the integration errors from <a class="reference internal" href="#module-vega
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVArray.vegas_cov">
-<span class="sig-name descname"><span class="pre">vegas_cov</span></span><a class="headerlink" href="#vegas.PDFEVArray.vegas_cov" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">vegas_cov</span></span><a class="headerlink" href="#vegas.PDFEVArray.vegas_cov" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimate for the covariance matrix
 of <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>. The uncertainties in <code class="docutils literal notranslate"><span class="pre">vegas_cov</span></code>
 are the integration errors from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.</p>
@@ -1872,7 +1869,7 @@ are the integration errors from <a class="reference internal" href="#module-vega
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVArray.vegas_sdev">
-<span class="sig-name descname"><span class="pre">vegas_sdev</span></span><a class="headerlink" href="#vegas.PDFEVArray.vegas_sdev" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">vegas_sdev</span></span><a class="headerlink" href="#vegas.PDFEVArray.vegas_sdev" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimate for the standard deviation
 of <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>. The uncertainties in <code class="docutils literal notranslate"><span class="pre">vegas_sdev</span></code>
 are the integration errors from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.</p>
@@ -1882,7 +1879,7 @@ are the integration errors from <a class="reference internal" href="#module-vega
 
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.PDFEVDict">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">PDFEVDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analyzer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFEVDict" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">PDFEVDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analyzer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.PDFEVDict" title="Link to this definition">¶</a></dt>
 <dd><p>Dictionary of expectation values from <a class="reference internal" href="#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a>.</p>
 <p>Expectation values are returned by
 <a class="reference internal" href="#vegas.PDFIntegrator.__call__" title="vegas.PDFIntegrator.__call__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vegas.PDFIntegrator.__call__()</span></code></a> and
@@ -1906,13 +1903,13 @@ associated with <code class="docutils literal notranslate"><span class="pre">g</
 <p><a class="reference internal" href="#vegas.PDFEVDict" title="vegas.PDFEVDict"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFEVDict</span></code></a> objects have the following attributes:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVDict.pdfnorm">
-<span class="sig-name descname"><span class="pre">pdfnorm</span></span><a class="headerlink" href="#vegas.PDFEVDict.pdfnorm" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pdfnorm</span></span><a class="headerlink" href="#vegas.PDFEVDict.pdfnorm" title="Link to this definition">¶</a></dt>
 <dd><p>Divide PDF by <code class="docutils literal notranslate"><span class="pre">pdfnorm</span></code> to normalize it.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVDict.results">
-<span class="sig-name descname"><span class="pre">results</span></span><a class="headerlink" href="#vegas.PDFEVDict.results" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">results</span></span><a class="headerlink" href="#vegas.PDFEVDict.results" title="Link to this definition">¶</a></dt>
 <dd><p>Results from
 the underlying integrals.</p>
 <dl class="field-list simple">
@@ -1928,7 +1925,7 @@ the underlying integrals.</p>
 <a class="reference internal" href="#vegas.PDFIntegrator.stats" title="vegas.PDFIntegrator.stats"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vegas.PDFIntegrator.stats()</span></code></a> has three further attributes:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVDict.stats">
-<span class="sig-name descname"><span class="pre">stats</span></span><a class="headerlink" href="#vegas.PDFEVDict.stats" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stats</span></span><a class="headerlink" href="#vegas.PDFEVDict.stats" title="Link to this definition">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">s.stats[k]</span></code> is a <code class="xref py py-class docutils literal notranslate"><span class="pre">gvar.PDFStatistics</span></code>
 object containing statistical information about
 the distribution of <code class="docutils literal notranslate"><span class="pre">f(p)[k]</span></code>.</p>
@@ -1936,7 +1933,7 @@ the distribution of <code class="docutils literal notranslate"><span class="pre"
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVDict.vegas_mean">
-<span class="sig-name descname"><span class="pre">vegas_mean</span></span><a class="headerlink" href="#vegas.PDFEVDict.vegas_mean" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">vegas_mean</span></span><a class="headerlink" href="#vegas.PDFEVDict.vegas_mean" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimates for the mean values
 of <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>. The uncertainties in <code class="docutils literal notranslate"><span class="pre">vegas_mean</span></code>
 are the integration errors from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.</p>
@@ -1944,7 +1941,7 @@ are the integration errors from <a class="reference internal" href="#module-vega
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVDict.vegas_cov">
-<span class="sig-name descname"><span class="pre">vegas_cov</span></span><a class="headerlink" href="#vegas.PDFEVDict.vegas_cov" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">vegas_cov</span></span><a class="headerlink" href="#vegas.PDFEVDict.vegas_cov" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimate for the covariance matrix
 of <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>. The uncertainties in <code class="docutils literal notranslate"><span class="pre">vegas_cov</span></code>
 are the integration errors from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.</p>
@@ -1952,7 +1949,7 @@ are the integration errors from <a class="reference internal" href="#module-vega
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="vegas.PDFEVDict.vegas_sdev">
-<span class="sig-name descname"><span class="pre">vegas_sdev</span></span><a class="headerlink" href="#vegas.PDFEVDict.vegas_sdev" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">vegas_sdev</span></span><a class="headerlink" href="#vegas.PDFEVDict.vegas_sdev" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimate for the standard deviation
 of <code class="docutils literal notranslate"><span class="pre">f(p)</span></code>. The uncertainties in <code class="docutils literal notranslate"><span class="pre">vegas_sdev</span></code>
 are the integration errors from <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.</p>
@@ -1962,7 +1959,7 @@ are the integration errors from <a class="reference internal" href="#module-vega
 
 <dl class="py function">
 <dt class="sig sig-object py" id="vegas.lbatchintegrand">
-<span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">lbatchintegrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.lbatchintegrand" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">lbatchintegrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.lbatchintegrand" title="Link to this definition">¶</a></dt>
 <dd><p>Decorator for batch integrand functions.</p>
 <p>Applying <a class="reference internal" href="#vegas.lbatchintegrand" title="vegas.lbatchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.lbatchintegrand()</span></code></a> to a function <code class="docutils literal notranslate"><span class="pre">fcn</span></code> repackages
 the function in a format that <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> can understand. Appropriate
@@ -1980,7 +1977,7 @@ points. The meaning of <code class="docutils literal notranslate"><span class="p
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>for the two-dimensional integrand <img class="math" src="_images/math/84b2eb1fcb99afba0bb57bf5e59fd86a51e913f8.svg" alt="\exp(-x_0 - x_1)"/>.
+<p>for the two-dimensional integrand <img class="math" src="_images/math/0af64a192b713a3fe3a4bc37570bb6b8d835e7aa.svg" alt="\exp(-x_0 - x_1)"/>.
 When integrands have dictionary arguments <code class="docutils literal notranslate"><span class="pre">xd</span></code>, each element of the
 dictionary has an extra index (on the left): <code class="docutils literal notranslate"><span class="pre">xd[key][:,</span> <span class="pre">...]</span></code>.</p>
 <p><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.batchintegrand()</span></code> is the same as <a class="reference internal" href="#vegas.lbatchintegrand" title="vegas.lbatchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.lbatchintegrand()</span></code></a>.</p>
@@ -1988,7 +1985,7 @@ dictionary has an extra index (on the left): <code class="docutils literal notra
 
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.LBatchIntegrand">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">LBatchIntegrand</span></span><a class="headerlink" href="#vegas.LBatchIntegrand" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">LBatchIntegrand</span></span><a class="headerlink" href="#vegas.LBatchIntegrand" title="Link to this definition">¶</a></dt>
 <dd><p>Wrapper for lbatch integrands.</p>
 <p>Used by <a class="reference internal" href="#vegas.lbatchintegrand" title="vegas.lbatchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.lbatchintegrand()</span></code></a>.</p>
 <p><a class="reference internal" href="#vegas.LBatchIntegrand" title="vegas.LBatchIntegrand"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.LBatchIntegrand</span></code></a> is the same as
@@ -1997,19 +1994,19 @@ dictionary has an extra index (on the left): <code class="docutils literal notra
 
 <dl class="py function">
 <dt class="sig sig-object py" id="vegas.rbatchintegrand">
-<span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">rbatchintegrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.rbatchintegrand" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">rbatchintegrand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.rbatchintegrand" title="Link to this definition">¶</a></dt>
 <dd><p>Same as <a class="reference internal" href="#vegas.lbatchintegrand" title="vegas.lbatchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.lbatchintegrand()</span></code></a> but with batch indices on the right (not left).</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.RBatchIntegrand">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RBatchIntegrand</span></span><a class="headerlink" href="#vegas.RBatchIntegrand" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RBatchIntegrand</span></span><a class="headerlink" href="#vegas.RBatchIntegrand" title="Link to this definition">¶</a></dt>
 <dd><p>Same as <a class="reference internal" href="#vegas.LBatchIntegrand" title="vegas.LBatchIntegrand"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.LBatchIntegrand</span></code></a> but with batch indices on the right (not left).</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="vegas.ravg">
-<span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">ravg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reslist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.ravg" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">ravg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reslist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.ravg" title="Link to this definition">¶</a></dt>
 <dd><p>Create running average from list of <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> results.</p>
 <p>This function is used to change how the weighted average of
 <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> results is calculated. For example, the following code
@@ -2096,10 +2093,119 @@ specified (or is <code class="docutils literal notranslate"><span class="pre">No
     <ul>
 <li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
-<li><a class="reference internal" href="#integrator-objects">Integrator Objects</a></li>
-<li><a class="reference internal" href="#adaptivemap-objects">AdaptiveMap Objects</a></li>
-<li><a class="reference internal" href="#pdfintegrator-objects">PDFIntegrator Objects</a></li>
-<li><a class="reference internal" href="#other-objects-and-functions">Other Objects and Functions</a></li>
+<li><a class="reference internal" href="#integrator-objects">Integrator Objects</a><ul>
+<li><a class="reference internal" href="#vegas.Integrator"><code class="docutils literal notranslate"><span class="pre">Integrator</span></code></a><ul>
+<li><a class="reference internal" href="#vegas.Integrator.__call__"><code class="docutils literal notranslate"><span class="pre">Integrator.__call__()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.Integrator.set"><code class="docutils literal notranslate"><span class="pre">Integrator.set()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.Integrator.settings"><code class="docutils literal notranslate"><span class="pre">Integrator.settings()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.Integrator.random"><code class="docutils literal notranslate"><span class="pre">Integrator.random()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.Integrator.random_batch"><code class="docutils literal notranslate"><span class="pre">Integrator.random_batch()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#adaptivemap-objects">AdaptiveMap Objects</a><ul>
+<li><a class="reference internal" href="#vegas.AdaptiveMap"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap</span></code></a><ul>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.dim"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.dim</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.ninc"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.ninc</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.grid"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.grid</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.inc"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.inc</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.adapt"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.adapt()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.add_training_data"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.add_training_data()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.adapt_to_samples"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.adapt_to_samples()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.__call__"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.__call__()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.jac"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.jac()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.jac1d"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.jac1d()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.make_uniform"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.make_uniform()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.map"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.map()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.invmap"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.invmap()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.show_grid"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.show_grid()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.settings"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.settings()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.extract_grid"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.extract_grid()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.AdaptiveMap.clear"><code class="docutils literal notranslate"><span class="pre">AdaptiveMap.clear()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pdfintegrator-objects">PDFIntegrator Objects</a><ul>
+<li><a class="reference internal" href="#vegas.PDFIntegrator"><code class="docutils literal notranslate"><span class="pre">PDFIntegrator</span></code></a><ul>
+<li><a class="reference internal" href="#vegas.PDFIntegrator.__call__"><code class="docutils literal notranslate"><span class="pre">PDFIntegrator.__call__()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFIntegrator.stats"><code class="docutils literal notranslate"><span class="pre">PDFIntegrator.stats()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFIntegrator.sample"><code class="docutils literal notranslate"><span class="pre">PDFIntegrator.sample()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#other-objects-and-functions">Other Objects and Functions</a><ul>
+<li><a class="reference internal" href="#vegas.RAvg"><code class="docutils literal notranslate"><span class="pre">RAvg</span></code></a><ul>
+<li><a class="reference internal" href="#vegas.RAvg.mean"><code class="docutils literal notranslate"><span class="pre">RAvg.mean</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvg.sdev"><code class="docutils literal notranslate"><span class="pre">RAvg.sdev</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvg.chi2"><code class="docutils literal notranslate"><span class="pre">RAvg.chi2</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvg.dof"><code class="docutils literal notranslate"><span class="pre">RAvg.dof</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvg.Q"><code class="docutils literal notranslate"><span class="pre">RAvg.Q</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvg.itn_results"><code class="docutils literal notranslate"><span class="pre">RAvg.itn_results</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvg.sum_neval"><code class="docutils literal notranslate"><span class="pre">RAvg.sum_neval</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvg.add"><code class="docutils literal notranslate"><span class="pre">RAvg.add()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvg.summary"><code class="docutils literal notranslate"><span class="pre">RAvg.summary()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvg.extend"><code class="docutils literal notranslate"><span class="pre">RAvg.extend()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vegas.RAvgArray"><code class="docutils literal notranslate"><span class="pre">RAvgArray</span></code></a><ul>
+<li><a class="reference internal" href="#vegas.RAvgArray.chi2"><code class="docutils literal notranslate"><span class="pre">RAvgArray.chi2</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgArray.dof"><code class="docutils literal notranslate"><span class="pre">RAvgArray.dof</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgArray.Q"><code class="docutils literal notranslate"><span class="pre">RAvgArray.Q</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgArray.itn_results"><code class="docutils literal notranslate"><span class="pre">RAvgArray.itn_results</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgArray.sum_neval"><code class="docutils literal notranslate"><span class="pre">RAvgArray.sum_neval</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgArray.add"><code class="docutils literal notranslate"><span class="pre">RAvgArray.add()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgArray.summary"><code class="docutils literal notranslate"><span class="pre">RAvgArray.summary()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgArray.extend"><code class="docutils literal notranslate"><span class="pre">RAvgArray.extend()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vegas.RAvgDict"><code class="docutils literal notranslate"><span class="pre">RAvgDict</span></code></a><ul>
+<li><a class="reference internal" href="#vegas.RAvgDict.chi2"><code class="docutils literal notranslate"><span class="pre">RAvgDict.chi2</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgDict.dof"><code class="docutils literal notranslate"><span class="pre">RAvgDict.dof</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgDict.Q"><code class="docutils literal notranslate"><span class="pre">RAvgDict.Q</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgDict.itn_results"><code class="docutils literal notranslate"><span class="pre">RAvgDict.itn_results</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgDict.sum_neval"><code class="docutils literal notranslate"><span class="pre">RAvgDict.sum_neval</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgDict.add"><code class="docutils literal notranslate"><span class="pre">RAvgDict.add()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgDict.summary"><code class="docutils literal notranslate"><span class="pre">RAvgDict.summary()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RAvgDict.extend"><code class="docutils literal notranslate"><span class="pre">RAvgDict.extend()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vegas.PDFEV"><code class="docutils literal notranslate"><span class="pre">PDFEV</span></code></a><ul>
+<li><a class="reference internal" href="#vegas.PDFEV.pdfnorm"><code class="docutils literal notranslate"><span class="pre">PDFEV.pdfnorm</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEV.results"><code class="docutils literal notranslate"><span class="pre">PDFEV.results</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEV.stats"><code class="docutils literal notranslate"><span class="pre">PDFEV.stats</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEV.vegas_mean"><code class="docutils literal notranslate"><span class="pre">PDFEV.vegas_mean</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEV.vegas_cov"><code class="docutils literal notranslate"><span class="pre">PDFEV.vegas_cov</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEV.vegas_sdev"><code class="docutils literal notranslate"><span class="pre">PDFEV.vegas_sdev</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vegas.PDFEVArray"><code class="docutils literal notranslate"><span class="pre">PDFEVArray</span></code></a><ul>
+<li><a class="reference internal" href="#vegas.PDFEVArray.pdfnorm"><code class="docutils literal notranslate"><span class="pre">PDFEVArray.pdfnorm</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEVArray.results"><code class="docutils literal notranslate"><span class="pre">PDFEVArray.results</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEVArray.stats"><code class="docutils literal notranslate"><span class="pre">PDFEVArray.stats</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEVArray.vegas_mean"><code class="docutils literal notranslate"><span class="pre">PDFEVArray.vegas_mean</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEVArray.vegas_cov"><code class="docutils literal notranslate"><span class="pre">PDFEVArray.vegas_cov</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEVArray.vegas_sdev"><code class="docutils literal notranslate"><span class="pre">PDFEVArray.vegas_sdev</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vegas.PDFEVDict"><code class="docutils literal notranslate"><span class="pre">PDFEVDict</span></code></a><ul>
+<li><a class="reference internal" href="#vegas.PDFEVDict.pdfnorm"><code class="docutils literal notranslate"><span class="pre">PDFEVDict.pdfnorm</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEVDict.results"><code class="docutils literal notranslate"><span class="pre">PDFEVDict.results</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEVDict.stats"><code class="docutils literal notranslate"><span class="pre">PDFEVDict.stats</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEVDict.vegas_mean"><code class="docutils literal notranslate"><span class="pre">PDFEVDict.vegas_mean</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEVDict.vegas_cov"><code class="docutils literal notranslate"><span class="pre">PDFEVDict.vegas_cov</span></code></a></li>
+<li><a class="reference internal" href="#vegas.PDFEVDict.vegas_sdev"><code class="docutils literal notranslate"><span class="pre">PDFEVDict.vegas_sdev</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vegas.lbatchintegrand"><code class="docutils literal notranslate"><span class="pre">lbatchintegrand()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.LBatchIntegrand"><code class="docutils literal notranslate"><span class="pre">LBatchIntegrand</span></code></a></li>
+<li><a class="reference internal" href="#vegas.rbatchintegrand"><code class="docutils literal notranslate"><span class="pre">rbatchintegrand()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.RBatchIntegrand"><code class="docutils literal notranslate"><span class="pre">RBatchIntegrand</span></code></a></li>
+<li><a class="reference internal" href="#vegas.ravg"><code class="docutils literal notranslate"><span class="pre">ravg()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -2117,7 +2223,7 @@ specified (or is <code class="docutils literal notranslate"><span class="pre">No
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -2125,7 +2231,7 @@ specified (or is <code class="docutils literal notranslate"><span class="pre">No
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
@@ -2143,13 +2249,13 @@ specified (or is <code class="docutils literal notranslate"><span class="pre">No
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013-2023, G. P. Lepage.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    &#169; Copyright 2013-2023, G. P. Lepage.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
     </div>
   </body>
 </html>

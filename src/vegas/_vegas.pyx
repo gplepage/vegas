@@ -898,7 +898,7 @@ cdef class Integrator(object):
 
             More generally, the integrator packages integration points in 
             multidimensional arrays ``x[d1, d2..dn]`` when the integration 
-            limits are specified by ``map[d1, d2...dn, i]` with ``i=0,1``. 
+            limits are specified by ``map[d1, d2...dn, i]`` with ``i=0,1``. 
             These arrays can have any shape.
 
             Alternatively, the integration region can be specified by a 
@@ -1574,9 +1574,9 @@ cdef class Integrator(object):
         Integrator self not None,
         bint yield_hcube=False,
         bint yield_y=False,
-        fcn = None,
+        # fcn = None,
         ):
-        """ Iterator over integration points and weights.
+        """ Low-level batch iterator over integration points and weights.
 
         This method creates an iterator that returns integration
         points from |vegas|, and their corresponding weights in an
@@ -1694,7 +1694,7 @@ cdef class Integrator(object):
                     tmp_hcube = (tmp_hcube - y0[d]) // self.nstrat[d]
                 for d in range(self.dim):
                     for i in range(i_start, i_start + neval_hcube[ihcube]):
-                        y[i, d] = (y0[d] + yran[i, d]) / self.nstrat[d]
+                        y[i, d] = (y0[d] + yran[i, d]) / self.nstrat[d] 
                 i_start += neval_hcube[ihcube]
             self.map.map(y, x, jac, neval_batch)
 
@@ -1726,7 +1726,7 @@ cdef class Integrator(object):
     def random(
         Integrator self not None, bint yield_hcube=False, bint yield_y=False
         ):
-        """ Iterator over integration points and weights.
+        """ Low-level iterator over integration points and weights.
 
         This method creates an iterator that returns integration
         points from |vegas|, and their corresponding weights in an
@@ -1769,6 +1769,56 @@ cdef class Integrator(object):
                 for i in range(x.shape[0]):
                     yield (x[i], wgt[i])
 
+    def sample(self, nbatch=None, mode='rbatch'):
+        """ Generate random sample of integration weights and points.
+
+        Given a :class:`vegas.Integrator` called ``integ``, the code ::
+
+            wgt, x = integ.sample(mode='lbatch')
+
+        generates a random array of integration points  ``x`` and the
+        array of corresponding weights ``w`` such that ::
+
+            r = sum(wgt * f(x))
+
+        is an estimate of the integral of ``lbatch`` integrand ``f(x)``. 
+        Setting parameter ``mode='rbatch'`` formats ``x`` for use 
+        in ``rbatch`` integrands.
+
+        Parameter ``nbatch`` specifies the minimum number of integration
+        points in the sample. The actual number is the smallest integer
+        multiple of ``integ.last_neval`` that is equal to or larger than  
+        ``nbatch``.
+        """
+        neval = self.last_neval if self.last_neval > 0 else self.neval
+        nbatch = neval if nbatch is None else int(nbatch)
+        nit = nbatch // neval 
+        if nit * neval < nbatch:
+            nit += 1    
+        samples = []
+        wgts = []
+        for _ in range(nit):
+            for x, w in self.random_batch():
+                samples.append(numpy.array(x))
+                wgts.append(numpy.array(w))
+        samples =  numpy.concatenate(samples, axis=0)
+        wgts = numpy.concatenate(wgts) / nit
+        # need to fix following to allow other formats for x
+        if self.xsample.shape is None:
+            if mode == 'rbatch':
+                samples = gvar.BufferDict(self.xsample, rbatch_buf=samples.T)
+            else:
+                samples = gvar.BufferDict(self.xsample, lbatch_buf=samples)
+        else:
+            if self.xsample.shape != ():
+                if mode == 'rbatch':
+                    samples = samples.T 
+                    samples.shape = self.xsample.shape + (-1,)
+                else:
+                    samples.shape = (-1,) + self.xsample.shape
+        return wgts, samples
+
+
     @staticmethod
     def synchronize_random():
         try:
@@ -1793,14 +1843,14 @@ cdef class Integrator(object):
     def _make_std_integrand(self, fcn, xsample=None):
         """ Convert integrand ``fcn`` into an lbatch integrand.
         
-        Returns an object of ``vi`` of type :class:`VegasIntegrand`.  
+        Returns an object ``vi`` of type :class:`VegasIntegrand`.  
         This object converts an arbitrary integrand ``fcn`` (``lbatch`, `rbatch`, 
         and non-batch, with or without dictionaries for input or output)
         into a standard form: an lbatch integrand whose output is a
         2-d lbatch array.
 
         This is useful when building integrands that call other 
-        functions of the parameters. The latter are converted 
+        functions of the parameters. The latter are converted to
         lbatch integrands irrespective of what they were 
         originally. This standardizes them, making it straightforward
         to build them into a new integrand.
@@ -1989,7 +2039,7 @@ cdef class Integrator(object):
 
             # iterate batch-slices of integration points
             for x, y, wgt, hcube in self.random_batch(
-                yield_hcube=True, yield_y=True, fcn=fcn
+                yield_hcube=True, yield_y=True, #fcn=fcn
                 ):
                 fdv2 = self.fdv2        # must be inside loop
                 len_hcube = len(hcube)
@@ -2010,10 +2060,13 @@ cdef class Integrator(object):
                             [(x[i*nx : (i+1)*nx], None) for i in range(self.nproc) if i*nx < x.shape[0]],
                             1,
                             )
-                    fx = numpy.concatenate(results, axis=0)
-                else:
-                    fx = fcn.eval(x, jac=self.map.jac1d(y) if self.uses_jac else None)
-                
+                    fx = numpy.concatenate(results, axis=0, dtype=float)
+                else: 
+                    # fx = fcn.eval(x, jac=self.map.jac1d(y) if self.uses_jac else None)
+                    fx = numpy.asarray(
+                        fcn.eval(x, jac=self.map.jac1d(y) if self.uses_jac else None),
+                        dtype=float
+                        )
                 # sanity check
                 if numpy.any(numpy.isnan(fx)):
                     raise ValueError('integrand evaluates to nan')

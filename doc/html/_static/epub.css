@@ -4,7 +4,7 @@
  *
  * Sphinx stylesheet -- default theme.
  *
- * :copyright: Copyright 2007-2022 by the Sphinx team, see AUTHORS.
+ * :copyright: Copyright 2007-2024 by the Sphinx team, see AUTHORS.
  * :license: BSD, see LICENSE for details.
  *
  */
@@ -199,9 +199,9 @@ div.seealso {
     background-color: #ffc;
     border: 1px solid #ff6;
 }
+
 nav.contents,
 aside.topic,
-
 div.topic {
     background-color: #eee;
 }

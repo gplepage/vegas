@@ -1,19 +1,16 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Case Study: Bayesian Curve Fitting &#8212; vegas 6.1.3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
+    <title>Case Study: Bayesian Curve Fitting &#8212; vegas 6.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
+    <script src="_static/documentation_options.js?v=ef7fcc1c"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="vegas Module" href="vegas.html" />
@@ -41,7 +38,7 @@
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Case Study: Bayesian Curve Fitting</a></li> 
       </ul>
     </div>  
@@ -52,7 +49,7 @@
           <div class="body" role="main">
             
   <section id="case-study-bayesian-curve-fitting">
-<span id="case-curve-fitting"></span><h1>Case Study: Bayesian Curve Fitting<a class="headerlink" href="#case-study-bayesian-curve-fitting" title="Permalink to this heading">¶</a></h1>
+<span id="case-curve-fitting"></span><h1>Case Study: Bayesian Curve Fitting<a class="headerlink" href="#case-study-bayesian-curve-fitting" title="Link to this heading">¶</a></h1>
 <p>In this case study, we use <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to fit a straight line
 to data with with outliers. We use the specialized
 integrator <code class="xref py py-class docutils literal notranslate"><span class="pre">PDFIntegrator</span></code> with a non-Gaussian
@@ -64,7 +61,7 @@ and the other with 22 parameters.</p>
 on his <a class="reference external" href="http://jakevdp.github.io/blog/2014/06/06/frequentism-and-bayesianism-2-when-results-differ">Python blog</a>.
 It is also discussed in the documentation for the <code class="xref py py-mod docutils literal notranslate"><span class="pre">lsqfit</span></code> module.</p>
 <section id="the-problem">
-<h2>The Problem<a class="headerlink" href="#the-problem" title="Permalink to this heading">¶</a></h2>
+<h2>The Problem<a class="headerlink" href="#the-problem" title="Link to this heading">¶</a></h2>
 <p>We want to extrapolate the <code class="docutils literal notranslate"><span class="pre">y</span></code> values in the following figure to <code class="docutils literal notranslate"><span class="pre">x=0</span></code>:</p>
 <a class="reference internal image-reference" href="_images/outliers1.png"><img alt="_images/outliers1.png" src="_images/outliers1.png" style="width: 60%;" /></a>
 <p>A linear least-squares fit to the data (dotted line) is unconvincing; in particular,
@@ -73,23 +70,23 @@ near <code class="docutils literal notranslate"><span class="pre">x=0</span></co
 caused by the outliers. There are at least three outliers.</p>
 </section>
 <section id="a-solution">
-<h2>A Solution<a class="headerlink" href="#a-solution" title="Permalink to this heading">¶</a></h2>
+<h2>A Solution<a class="headerlink" href="#a-solution" title="Link to this heading">¶</a></h2>
 <p>There are many <em>ad hoc</em> prescriptions for handling outliers. In the best
 of situations one has an explanation for the outliers and can
 model them accordingly. For example,
-we might know that some fraction <img class="math" src="_images/math/84072168b5bd3b9bc072876ef2bcfcdae05d3f1a.svg" alt="w"/> of the time our device
+we might know that some fraction <img class="math" src="_images/math/63f3ea5f62558e304f951e3b315c4b49f2a236b5.svg" alt="w"/> of the time our device
 malfunctions, resulting in much larger measurement errors than usual.
 This can be modeled in a Bayesian analysis by describing the
 data using a linear
 combination of two
 Gaussian probability density functions (PDFs) for each data point.
 One is the usual PDF proportional to
-<img class="math" src="_images/math/422f6e2d47c3b7254150f37154637d482563750d.svg" alt="exp(-(y-f(x))^2  / 2\sigma_y^2))"/>, where
-the fit function <img class="math" src="_images/math/fb62ba1e89ca6200f224a445c3f4a567fc451fe1.svg" alt="f(x)"/>
-is <img class="math" src="_images/math/cb6500d7b30569927bea2aa68fc88d9e51ec68a7.svg" alt="c_0 + c_1 x"/>. The second is the same but
-with the <img class="math" src="_images/math/9497613bf54f0eb13b02eb1eccbf9426ae2dbec6.svg" alt="\sigma_y \to b \sigma_y"/> for some <img class="math" src="_images/math/403f64983bfd8de5ea4f011b3e405c2fb857c867.svg" alt="b&gt;1"/>.
+<img class="math" src="_images/math/178d28bb6305699c4cbe781a28ffb610dd5a2156.svg" alt="exp(-(y-f(x))^2  / 2\sigma_y^2))"/>, where
+the fit function <img class="math" src="_images/math/cf669b5c367d259a73b5121e5fc467a1a76fd85f.svg" alt="f(x)"/>
+is <img class="math" src="_images/math/78ed43ba63d7b2f418dd3751f57fce5fa7a64ac4.svg" alt="c_0 + c_1 x"/>. The second is the same but
+with the <img class="math" src="_images/math/da0757e67a0ca0064256b1eba7527e9a66ec3c75.svg" alt="\sigma_y \to b \sigma_y"/> for some <img class="math" src="_images/math/6d97dcfef681fb16bb81fffcccfaf9f4dee9f7b1.svg" alt="b&gt;1"/>.
 The relative weights assigned to
-these two terms are <img class="math" src="_images/math/3b4ea90c6ed6abf0b29b4bd86f347100d614479b.svg" alt="1-w"/> and <img class="math" src="_images/math/84072168b5bd3b9bc072876ef2bcfcdae05d3f1a.svg" alt="w"/>, respectively.</p>
+these two terms are <img class="math" src="_images/math/2a8befcd5c95df0b044dfc9da68bf6437812912b.svg" alt="1-w"/> and <img class="math" src="_images/math/63f3ea5f62558e304f951e3b315c4b49f2a236b5.svg" alt="w"/>, respectively.</p>
 <p>The following code does a Bayesian fit with this modified PDF:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">gvar</span> <span class="k">as</span> <span class="nn">gv</span>
@@ -196,8 +193,8 @@ with errors that are <code class="docutils literal notranslate"><span class="pre
 times larger and weight <code class="docutils literal notranslate"><span class="pre">w</span></code>. The PDF for the prior is implemented
 using <code class="docutils literal notranslate"><span class="pre">gvar.PDF</span></code> from the <code class="xref py py-mod docutils literal notranslate"><span class="pre">gvar</span></code> module.</p>
 <p>We want broad Gaussian priors for the fit function coefficients, but
-uniform priors for the weight parameter (<img class="math" src="_images/math/09dda2e4fbdcea440c01cfc09f793c1390416f1f.svg" alt="0&lt;w&lt;1"/>) and breadth
-parameter (<img class="math" src="_images/math/161ae0c0e037e364e4977f1ba6b3d21982c1e997.svg" alt="5&lt;b&lt;20"/>). An easy way to implement the uniform
+uniform priors for the weight parameter (<img class="math" src="_images/math/40291e918008cb4573efa616e8cc3922869d6545.svg" alt="0&lt;w&lt;1"/>) and breadth
+parameter (<img class="math" src="_images/math/65fea8e571ace792b2e110a57d40328feefba947.svg" alt="5&lt;b&lt;20"/>). An easy way to implement the uniform
 priors for use by <a class="reference internal" href="vegas.html#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> is to replace the weight
 and breadth parameters by new parameters <code class="docutils literal notranslate"><span class="pre">p['gw(w)']</span></code> and <code class="docutils literal notranslate"><span class="pre">p['gb(b)']</span></code>,
 respectively, that map the uniform distributions onto Gaussian
@@ -351,7 +348,7 @@ case but the optimized integration variables used by
 PDF.</p>
 </section>
 <section id="a-variation">
-<h2>A Variation<a class="headerlink" href="#a-variation" title="Permalink to this heading">¶</a></h2>
+<h2>A Variation<a class="headerlink" href="#a-variation" title="Link to this heading">¶</a></h2>
 <p>A somewhat different model for the data PDF assigns a separate value
 <code class="docutils literal notranslate"><span class="pre">w</span></code> to each data point. The script above does this if</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">prior</span> <span class="o">=</span> <span class="n">make_prior</span><span class="p">()</span>
@@ -446,7 +443,7 @@ example, the intercept would be 0.35(17).</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -454,7 +451,7 @@ example, the intercept would be 0.35(17).</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
@@ -475,13 +472,13 @@ example, the intercept would be 0.35(17).</p>
         <li class="right" >
           <a href="background.html" title="How vegas Works"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Case Study: Bayesian Curve Fitting</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013-2023, G. P. Lepage.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    &#169; Copyright 2013-2023, G. P. Lepage.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
     </div>
   </body>
 </html>

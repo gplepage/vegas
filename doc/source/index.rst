@@ -15,7 +15,7 @@ Contents:
    :maxdepth: 2
 
    tutorial.rst
-   c_fortran.rst
+   compiled_integrands.rst
    background.rst
    outliers.rst
    vegas.rst

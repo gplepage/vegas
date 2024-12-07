@@ -517,6 +517,8 @@ There are several things to note here:
     used at all when ``neval`` is changed at the same time ``adapt=False``
     is set.
 
+.. _multiple_integrands_simultaneously:
+
 Multiple Integrands Simultaneously
 -----------------------------------
 |vegas| can be used to integrate multiple integrands simultaneously, using
@@ -976,6 +978,7 @@ Python module uses |PDFIntegrator| to implement a least-squares
 fitter :class:`vegas_fit` 
 that uses Bayesian integration (rather than minimization). 
 
+.. _faster_integrands:
 
 Faster Integrands
 -------------------------
@@ -988,239 +991,245 @@ enough precision. Some problems, however, require
 hundreds of thousands or millions of function evaluations, or more.
 
 We can significantly reduce the cost of evaluating the integrand
-by using |vegas|'s batch mode. For example, replacing ::
+by using |vegas|'s batch mode and :mod:`numpy` vectors. For example, 
+the following code runs in about 58 min (on a 2024 laptop)::
 
     import vegas
-    import math
+    import numpy as np
 
-    def f(x):
+    def ridge(x):
+        " Ridge of N Gaussians distributed along part of the diagonal. "
         dim = len(x)
-        norm = 1013.2118364296088 ** (dim / 4.)
-        dx2 = 0.0
-        for d in range(dim):
-            dx2 += (x[d] - 0.5) ** 2
-        return math.exp(-100. * dx2) * norm
+        N = 1000
+        norm = (100. / np.pi) ** (dim / 2.) / N
+        ans = 0
+        for x0 in np.linspace(0.25, 0.75, N):
+            dx2 = (x[0] - x0) ** 2
+            for d in range(1, dim):
+                dx2 += (x[d] - x0) ** 2
+            ans += np.exp(-100. * dx2) 
+        return ans * norm
 
     integ = vegas.Integrator(4 * [[0, 1]])
 
-    integ(f, nitn=10, neval=2e5)
-    result = integ(f, nitn=10, neval=2e5)
+    warmup = integ(ridge, nitn=10, neval=2e5)
+    result = integ(ridge, nitn=10, neval=2e5, adapt=False)
     print('result = %s   Q = %.2f' % (result, result.Q))
 
+It generates the following output::  
 
+    result = 0.99987(29)    Q = 0.81
 
-by ::
+Adding a decorator to the integrand function ``ridge(x)`` ::
+
+    @vegas.rbatchintegrand
+    def ridge(x):
+        ...
+
+reduces the run time to 20 sec, which is more than 170 times faster.
+
+The decorator instructs |vegas| to present integration points to 
+the integrand in batches of 50,000 points 
+(|vegas| parameter ``min_neval_batch``)
+rather than offering them one at a time.
+Here, for example, function ``ridge(x)`` with the decorator
+takes as its argument  an array of integration
+points --- ``x[d, i]`` where ``d=0...`` labels the direction and 
+``i=0...`` the integration point --- and returns an array of integrand 
+values ``ans[i] * norm`` corresponding  to those points. Typically one 
+must modify the integrand code to deal with the extra index ``i``, 
+but that is not necessary in ``ridge`` because the extra index is handled 
+implicitly: ``x[d]`` represents an array ``x[d, :]`` of values when 
+using the decorator. 
+The batch integrand is faster because the arrays are :mod:`numpy` 
+arrays, and therefore arithmetic operators act on the entire arrays using
+highly optimized (compiled) :mod:`numpy` code. 
+The integrand is evaluated for all integration points in a batch at 
+the same time. 
+
+The advantage gained from using |vegas|'s batch mode 
+(with :mod:`numpy` vectorization)
+is particularly 
+large in this example because the integrand is quite expensive to evaluate. 
+The original (non-batch) integral runs 160 times faster when ``N`` is 
+decreased from ``N=1000`` to ``N=1``. Batch mode is 
+still faster then, but by a more modest factor of about 50.
+
+An alternative to a function decorated with :func:`vegas.rbatchintegrand` is
+a class, derived from :class:`vegas.RBatchIntegrand`, that behaves 
+like a batch integrand::
 
     import vegas
     import numpy as np
 
-    @vegas.llbatchintegrand
-    def f_batch(x):
-        # evaluate integrand at multiple points simultaneously
-        dim = x.shape[1]
-        norm = 1013.2118364296088 ** (dim / 4.)
-        dx2 = 0.0
-        for d in range(dim):
-            dx2 += (x[:, d] - 0.5) ** 2
-        return np.exp(-100. * dx2) * norm
-
-    integ = vegas.Integrator(4 * [[0, 1]])
-
-    integ(f_batch, nitn=10, neval=2e5)
-    result = integ(f_batch, nitn=10, neval=2e5)
-    print('result = %s   Q = %.2f' % (result, result.Q))
-
-reduces the cost of the integral by an order of magnitude. Internally |vegas|
-processes integration points in batches. (|vegas| parameter ``min_neval_batch``
-determines the number of integration
-points per batch (typically 10,000s).) In batch mode,
-|vegas| presents integration points to the integrand in batches
-rather than offering them one at a
-time. Here, for example, function ``f_batch(x)`` accepts  an array of integration
-points --- ``x[i, d]`` where ``i=0...`` labels the integration point and
-``d=0...`` the direction --- and returns an array of integrand values
-corresponding  to those points. The decorator
-:func:`vegas.lbatchintegrand` tells |vegas| that it should send
-integration points to ``f(x)`` in batches.
-
-An alternative to a function decorated with :func:`vegas.lbatchintegrand` is
-a class that behaves like a batch integrand::
-
-    import vegas
-    import numpy as np
-
-    @vegas.lbatchintegrand
-    class f_batch:
-        def __init__(self, dim):         
-            self.dim = dim
-            self.norm = 1013.2118364296088 ** (dim / 4.)
+    class batch_ridge(vegas.RBatchIntegrand):
+        def __init__(self, dim):
+            self.dim = dim          
+            self.N = 1000
+            self.norm = (100. / np.pi) ** (self.dim / 2.) / self.N
+            self.x0array = np.linspace(0.25, 0.75, self.N)
 
         def __call__(self, x):
-            # evaluate integrand at multiple points simultaneously
-            dx2 = 0.0
-            for d in range(self.dim):
-                dx2 += (x[:, d] - 0.5) ** 2
-            return np.exp(-100. * dx2) * self.norm
+            " Ridge of N Gaussians distributed along part of the diagonal. "
+            ans = 0
+            for x0 in self.x0array:
+                dx2 = (x[0] - x0) ** 2
+                for d in range(1, self.dim):
+                    dx2 += (x[d] - x0) ** 2
+                ans += np.exp(-100. * dx2) 
+            return ans * self.norm
 
-    f = f_batch(dim=4)
-    integ = vegas.Integrator(f.dim * [[0, 1]])
+    ridge = batch_ridge(dim=4)
+    integ = vegas.Integrator(ridge.dim * [[0, 1]])
 
-    integ(f, nitn=10, neval=2e5)
-    result = integ(f, nitn=10, neval=2e5)
+    warmup = integ(ridge, nitn=10, neval=2e5)
+    result = integ(ridge, nitn=10, neval=2e5, adapt=False)
     print('result = %s   Q = %.2f' % (result, result.Q))
 
 This version is as fast as the previous batch integrand, but is
 potentially more flexible because it is built around a class rather
-than a function.  (Some classes won't allow decorators. An alternative 
-to the decorator is to derive the class from ``vegas.LBatchIntegrand``.)
+than a function.
 
-The batch integrands here are fast because they are expressed in terms
-:mod:`numpy` operators that act on entire arrays --- they evaluate the
-integrand for all integration points in a batch at the same time.
-That optimization is not always possible or simple.
-It is unnecessary if we write the integrand in Cython, which
-is a compiled hybrid of Python and C. The Cython version
-of the (batch) integrand is::
+Batch mode is also useful for array-valued and dictionary-valued integrands.
+For example, the following two integrands 
+(see :ref:`multiple_integrands_simultaneously`) 
+are equivalent::
 
-    # file: cython_integrand.pyx
+    def f(x):
+        dx2 = 0.0
+        for d in range(4):
+            dx2 += (x[d] - 0.5) ** 2
+        f = np.exp(-200 * dx2)
+        return [f, f * x[0], f * x[0] ** 2]
+
+    @vegas.rbatchintegrand 
+    def f_rbatch(x):
+        dx2 = 0.0
+        for d in range(4):
+            dx2 += (x[d] - 0.5) ** 2
+        f = np.exp(-200 * dx2)
+        return [f, f * x[0], f * x[0] ** 2] 
+
+But the second integrand is much faster because again ``dx2``, ``x[d]``,
+and ``f`` 
+are all :mod:`numpy` arrays --- ``dx2[:]``, ``x[d, :]``, and ``f[:]`` --- 
+so that the entire batch of integration points is processed at the same 
+time. The array returned by ``f_rbatch(x)`` has an additional index 
+(on the right) labeling the integration point. 
+
+The batch integrands above have the batch index in the last/rightmost
+position. 
+It is sometimes more convenient to have the batch index 
+be the first/leftmost index 
+rather than the last. Then ``@vegas.rbatchintegrand`` should be
+replaced by ``@vegas.lbatchintegrand``, and ``vegas.RBatchIntegrand`` by
+``vegas.LBatchIntegrand``. The ``lbatch`` version of the integrand ``f(x)``
+above is::
+
+    @vegas.lbatchintegrand 
+    def f_lbatch(x):
+        dx2 = 0.0
+        for d in range(4):
+            dx2 += (x[:, d] - 0.5) ** 2
+        f = np.exp(-200 * dx2)
+        ans = np.empty((x.shape[0], 3), float)
+        for n in range(3):
+            ans[:, n] = f * x[:, 0] ** n
+        return ans 
+
+Note where the batch index must be explicit here (``x[:,d]`` and ``ans[:, n]``), 
+unlike in the ``rbatch`` version.
+
+The batch integrands above are fast because they are expressed in terms of
+:mod:`numpy` operators that act on entire arrays.
+That optimization is not always possible or simple. It is unnecessary if 
+we use the :mod:`numba` Python module to compile the integrand. Returning 
+to the ``ridge`` integral above, for example, a :mod:`numba` implementation
+would be::
 
     import numpy as np
-
-    # use exp from C
-    from libc.math cimport exp
-
-    def f_batch(double[:, ::1] x):
-        cdef int i          # labels integration point
-        cdef int d          # labels direction
-        cdef int dim = x.shape[1]
-        cdef double norm = 1013.2118364296088 ** (dim / 4.)
-        cdef double dx2
-        cdef double[::1] ans = np.empty(x.shape[0], float)
-        for i in range(x.shape[0]):
-            # integrand for integration point x[i]
-            dx2 = 0.0
-            for d in range(dim):
-                dx2 += (x[i, d] - 0.5) ** 2
-            ans[i] = exp(-100. * dx2) * norm
-        return ans
-
-We put this in a separate file called, say,
-``cython_integrand.pyx``, and rewrite the main code as::
-
-    import numpy as np
-    import pyximport
-    pyximport.install(inplace=True)
-
     import vegas
-    from cython_integrand import f_batch
-    f = vegas.lbatchintegrand(f_batch)
+    import numba
+    
+    @vegas.lbatchintegrand
+    @numba.njit
+    def ridge(xbatch):
+        " Ridge of N Gaussians distributed along part of the diagonal. "
+        dim = xbatch.shape[1]
+        N = 1000
+        norm = (100. / np.pi) ** (dim / 2.) / N
+        ans = np.zeros(len(xbatch), dtype=float)
+        for i in range(len(xbatch)):
+            # iterate over each integration point x in xbatch
+            x = xbatch[i]
+            for j in range(N):
+                x0 = 0.25 + 0.5 * j / (N - 1)
+                dx2 = (x[0] - x0) ** 2
+                for d in range(1, dim):
+                    dx2 += (x[d] - x0) ** 2
+                ans[i] += np.exp(-100. * dx2) 
+            ans[i] *= norm
+        return ans
 
     integ = vegas.Integrator(4 * [[0, 1]])
 
-    integ(f, nitn=10, neval=2e5)
-    result = integ(f, nitn=10, neval=2e5)
+    warmup = integ(ridge, nitn=10, neval=2e5)
+    result = integ(ridge, nitn=10, neval=2e5, adapt=False)
     print('result = %s   Q = %.2f' % (result, result.Q))
 
-Module :mod:`pyximport` is used here to cause the Cython
-module ``cython_integrand.pyx`` to be compiled the first time
-it is imported. The compiled code is used in subsequent
-imports, so compilation occurs only once.
+Here the decorator ``@numba.njit`` causes the ``ridge`` function to be 
+compiled into efficient machine code the first time it is called, and 
+the machine code is used in place of the Python function for that 
+and all subsequent calls. :mod:`numba` is particularly effective when 
+used with low-level code such as this, where standard numerical 
+datatypes (integers, floats) are manipulated directly (rather than 
+relying on :mod:`numpy` array operations). This code is somewhat 
+faster than the batch integrands above that use :mod:`numpy` array 
+arithmetic (15 sec versus 20 sec).
 
-Batch mode is also useful for array-valued integrands.
-The code from the previous section could have been written as::
-
-    import vegas
-    import gvar as gv
-    import numpy as np
-
-    dim = 4
-
-    @vegas.lbatchintegrand
-    def f(x):
-        ans = np.empty((x.shape[0], 3), float)
-        dx2 = 0.0
-        for d in range(dim):
-            dx2 += (x[:, d] - 0.5) ** 2
-        ans[:, 0] = np.exp(-200 * dx2)
-        ans[:, 1] = x[:, 0] * ans[:, 0]
-        ans[:, 2] = x[:, 0] ** 2 * ans[:, 0]
-        return ans
-
-    integ = vegas.Integrator(4 * [[0, 1]])
-
-    # adapt grid
-    training = integ(f, nitn=10, neval=2000)
-
-    # final analysis
-    result = integ(f, nitn=10, neval=10000)
-    print('I[0] =', result[0], '  I[1] =', result[1], '  I[2] =', result[2])
-    print('Q = %.2f\n' % result.Q)
-    print('<x> =', result[1] / result[0])
-    print(
-        'sigma_x**2 = <x**2> - <x>**2 =',
-        result[2] / result[0] - (result[1] / result[0]) ** 2
-        )
-    print('\ncorrelation matrix:\n', gv.evalcorr(result))
-
-Note that the batch index (here ``:``) always comes first. An extra
-(first) index is also added to each value in the dictionary returned
-by a dictionary-valued batch integrand: e.g., ::
-
-    dim = 4
-
-    @vegas.lbatchintegrand
-    def f(x):
-        ans = {}
-        dx2 = 0.0
-        for d in range(dim):
-            dx2 += (x[:, d] - 0.5) ** 2
-        ans['1'] = np.exp(-200 * dx2)
-        ans['x'] = x[:, 0] * ans['1']
-        ans['x**2'] = x[:, 0] ** 2 * ans['1']
-        return ans
-
-It is sometimes more convenient to have the batch index be the last index 
-(the rightmost) rather than the first. Then ``@vegas.lbatchintegrand`` is
-replaced by ``@vegas.rbatchintegrand``, and ``vegas.LBatchIntegrand`` by
-``vegas.RBatchIntegrand``. (Note that ``@vegas.batchintegrand``
-and ``@vegas.lbatchintegrand`` are the same, as are ``vegas.BatchIntegrand``
-and ``vegas.LBatchIntegrand``.)
-
+There are a variety of other ways to create optimized codes using 
+compilers. Some of these are discussed below in the section on
+:ref:`compiled_integrands`.
 
 Multiple Processors
 ---------------------------
 |vegas| supports parallel evaluation of integrands 
 on multiple processors. This
 can shorten execution time substantially when the integrand is 
-costly to evaluate. The following code, for example,
-runs more than five times faster 
+costly to evaluate. Returning to the ``ridge`` example from the 
+previous section, the following code
+runs almost six times faster 
 when using ``nproc=8`` processors instead of the 
-default ``nproc=1`` (on a 2019 laptop)::
+default ``nproc=1`` (on a 2024 laptop)::
 
-    import vegas
     import numpy as np
+    import vegas
 
-    # Integrand: ridge of N Gaussians spread along part of the diagonal
+    @vegas.rbatchintegrand
     def ridge(x):
-        N = 10000
-        x0 = np.linspace(0.4, 0.6, N)
-        dx2 = 0.0
-        for xd in x:
-            dx2 += (xd - x0) ** 2
-        return np.average(np.exp(-100. * dx2)) *  (100. / np.pi) ** (len(x) / 2.)
+        " Ridge of N Gaussians distributed along part of the diagonal. "
+        dim = len(x)
+        N = 1000
+        norm = (100. / np.pi) ** (dim / 2.) / N
+        ans = 0
+        for x0 in np.linspace(0.25, 0.75, N):
+            dx2 = (x[0] - x0) ** 2
+            for d in range(1, dim):
+                dx2 += (x[d] - x0) ** 2
+            ans += np.exp(-100. * dx2)
+        return ans * norm
 
     def main():
         integ = vegas.Integrator(4 * [[0, 1]], nproc=8)  # 8 processors
-        # adapt
-        integ(ridge, nitn=10, neval=1e4)
-        # final results
-        result = integ(ridge, nitn=10, neval=1e4)
+        warmup = integ(ridge, nitn=10, neval=2e5)
+        result = integ(ridge, nitn=10, adapt=False, neval=2e5)
         print('result = %s    Q = %.2f' % (result, result.Q))
 
     if __name__ == '__main__':
         main()
 
-The code doesn't run eight times faster because it takes time to 
+One might have expected the code to run eight times faster 
+(instead of six), but it takes time to 
 initiate the ``nproc`` processes, and to feed data and 
 collect results from them. 
 Parallel processing only becomes useful when integrands are 
@@ -1263,8 +1272,51 @@ happens automatically for the default random-number generator.
 
 |vegas|'s batch mode makes it possible to implement other strategies
 for distributing integrand evaluations across multiple processors.
-For example, we can create a class ``parallelintegrand``
-whose function is similar to decorator :func:`vegas.batchintegrand`,
+For example, :mod:`numba` provides support for 
+parallel evaluation of specific loops. The :mod:`numba` version 
+of the ``ridge`` integrand (see previous section) can be 
+rewritten ::
+
+    import vegas
+    import numba
+    import numpy as np
+    
+    @vegas.lbatchintegrand
+    @numba.njit(parallel=True)
+    def ridge(xbatch):
+        " Ridge of N Gaussians distributed along part of the diagonal. "
+        dim = xbatch.shape[1]
+        N = 1000
+        norm = (100. / np.pi) ** (dim / 2.) / N
+        ans = np.zeros(len(xbatch), dtype=float)
+        for i in numba.prange(len(xbatch)):
+            # iterate over each integration point x in xbatch
+            x = xbatch[i]
+            for j in range(N):
+                x0 = 0.25 + 0.5 * j / (N - 1)
+                dx2 = (x[0] - x0) ** 2
+                for d in range(1, dim):
+                    dx2 += (x[d] - x0) ** 2
+                ans[i] += np.exp(-100. * dx2) 
+            ans[i] *= norm
+        return ans
+
+    integ = vegas.Integrator(4 * [[0, 1]])  # leave nproc unset
+                                            # parallelization handled by ridge(x)
+
+    warmup = integ(ridge, nitn=10, neval=2e5)
+    result = integ(ridge, nitn=10, neval=2e5, adapt=False)
+    print('result = %s   Q = %.2f' % (result, result.Q))
+
+where function ``numba.prange`` is used instead of Python's ``range`` function to 
+indicate that different iterations of the loop can be run in parallel 
+on multiple processors. :mod:`numba` uses 
+all processors available. The speedup for this example is similar to that using 
+the other multi-processor methods above.
+
+As another example exploiting |vegas|'s batch mode, 
+we can create a class ``parallelintegrand``
+whose function is similar to decorator :func:`vegas.lbatchintegrand`,
 but where Python's
 :mod:`multiprocessing` module provides parallel processing::
 
@@ -1272,7 +1324,7 @@ but where Python's
     import numpy as np
     import vegas
 
-    class parallelintegrand(vegas.BatchIntegrand):
+    class parallelintegrand(vegas.LBatchIntegrand):
         """ Convert (batch) integrand into multiprocessor integrand.
 
         Integrand should return a numpy array.
@@ -1302,10 +1354,11 @@ but where Python's
 Then ``fparallel = parallelintegrand(f, 4)``, for example, will create a
 new integrand ``fparallel(x)`` that uses 4 CPU cores.
 
+
 Sums with |vegas|
 -------------------
-The code in the previous sections is inefficient in the way it
-handles the sum over 10,000 Gaussians. It is not necessary to include every
+The ``ridge`` code in the previous sections is inefficient in the way it
+handles the sum over ``N = 1000`` Gaussians. It is not necessary to include every
 term in the sum for every integration point. Rather we can sample the sum,
 using |vegas| to do the sampling. The trick is to replace the sum with
 an equivalent integral:
@@ -1316,37 +1369,40 @@ an equivalent integral:
 
 where :math:`\mathrm{floor}(x)` is the largest
 integer smaller than :math:`x`. The
-resulting integral can then be handed to |vegas|. Using this trick,
-the integral in the previous section can be re-cast as a 5-dimensional
-integral::
+resulting integral can then be handed to |vegas|. 
+
+Using this trick,
+the batch version of ``ridge`` integral from :ref:`faster_integrands` can
+be re-cast as a 5-dimensional
+integral, where the integral over ``x[-1]`` does the sum over Gaussians::
 
     import vegas
     import numpy as np
 
-    # Integrand: ridge of N Gaussians spread evenly along the diagonal
+    @vegas.rbatchintegrand
     def ridge(x):
-        N = 10000
-        dim = 4
-        x0 = 0.4 + 0.2 * np.floor(x[-1] * N) / (N - 1.)
-        dx2 = 0.0
-        for xd in x[:-1]:
-            dx2 += (xd - x0) ** 2
-        return np.exp(-100. * dx2) *  (100. / np.pi) ** (dim / 2.)
+        """ Ridge of N Gaussians distributed along part of the diagonal. 
+        
+        Gaussians are at points x0[d]  = 0.25 + 0.5 * i /(N-1) for 
+        all directions d and Gaussians i=0...N-1.
+        """
+        dim = len(x) - 1
+        N = 1000
+        norm = (100. / np.pi) ** (dim / 2.)
+        x0 = 0.25 + 0.5 * np.floor(x[-1] * N) / (N - 1)
+        dx2 = (x[0] - x0) ** 2
+        for d in range(1, dim):
+            dx2 += (x[d] - x0) ** 2
+        return np.exp(-100. * dx2) * norm
 
-    def main():
-        integ = vegas.Integrator(5 * [[0, 1]])
-        # adapt
-        integ(ridge, nitn=10, neval=5e4)
-        # final results
-        result = integ(ridge, nitn=10, neval=5e4)
-        print('result = %s    Q = %.2f' % (result, result.Q))
+    integ = vegas.Integrator(5 * [[0, 1]])
 
-    if __name__ == '__main__':
-        main()
+    warmup = integ(ridge, nitn=10, neval=8e5)
+    result = integ(ridge, nitn=10, neval=8e5, adapt=False)
+    print('result = %s   Q = %.2f' % (result, result.Q))
 
-This code gives a result with the same precision, but is 5x |~| faster
-than the code in the previous section (with ``nproc=1``; it is another 
-3x |~| faster when ``nproc=8``).
+This code gives a result with the same precision as the earlier (batch) 
+integral, but is 20 times faster (1 sec versus 20 sec). 
 
 The same trick can be generalized to sums over multiple indices, including sums
 to infinity. |vegas| will provide Monte Carlo estimates of the sums, emphasizing
@@ -1820,7 +1876,41 @@ the separate errors, because of correlations between the two results.
 -------------------------------------
 A |vegas| integrator generates random points in its integration volume from a
 distribution that is optimized for integrals of whatever function it
-was trained on. The integrator
+was trained on. A random sample of integration points and their corresponding weights 
+can be obtained using the :meth:`vegas.Integrator.sample`: for example, 
+the code ::
+
+    import vegas 
+
+    @vegas.lbatchintegrand
+    def f(x):
+        return 6 * x[:, 0] * x[:, 1] ** 2 
+
+    integ = vegas.Integrator([(0., 1.), (0., 1.)])
+    r = integ(f, neval=1000, nitn=10)
+    print('integral =', r)
+
+    # estimate integral using 5 random sets of integration points
+    estimates = []
+    for _ in range(5):
+        wgt, x = integ.sample(mode='lbatch')
+        estimates += [sum(wgt * f(x))]
+
+    print('integral =', sum(estimates) / 5)
+    print('estimates =', estimates)
+
+gives the following output::
+
+    integral = 0.99982(74)
+    integral = 1.0001291624491842
+    estimates = [0.9992910111775233, 1.0001775493725942, 1.0013094938697416, 1.0001468331496914, 0.9997209246763705]
+
+In this example, ``x[i, d]`` is an array of integration points, and 
+``wgt[i]`` is the array of weights assigned by |vegas| to each point so that 
+``sum(wgt * f(x))`` (or ``wgt.dot(f(x))``) is an estimate of 
+the integral of (``lbatch``) integrand ``f(x)``.
+
+The integrator also 
 provides low-level access to the random-point generator
 through the iterators :meth:`vegas.Integrator.random` and
 :meth:`vegas.Integrator.random_batch`.
@@ -1849,7 +1939,7 @@ this::
 
 Here ``x[i, d]`` is an array of integration points, ``wgt[i]`` contains the
 corresponding weights, and ``batch_f(x)`` returns an array containing the
-corresponding integrand values.
+corresponding (``lbatch``) integrand values.
 
 The random points generated by |vegas| are stratified into hypercubes: |vegas|
 uses transformed integration variables to improve its Monte Carlo

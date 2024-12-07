@@ -1,22 +1,19 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Tutorial &#8212; vegas 6.1.3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
+    <title>Tutorial &#8212; vegas 6.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
+    <script src="_static/documentation_options.js?v=ef7fcc1c"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Integrands in C or Fortran" href="c_fortran.html" />
+    <link rel="next" title="Compiled Integrands for Speed; GPUs" href="compiled_integrands.html" />
     <link rel="prev" title="vegas Documentation" href="index.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -36,12 +33,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="c_fortran.html" title="Integrands in C or Fortran"
+          <a href="compiled_integrands.html" title="Compiled Integrands for Speed; GPUs"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>  
@@ -52,9 +49,9 @@
           <div class="body" role="main">
             
   <section id="tutorial">
-<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this heading">¶</a></h1>
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Link to this heading">¶</a></h1>
 <section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading">¶</a></h2>
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
 <p>Class <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a> gives Monte Carlo estimates of arbitrary
 multidimensional integrals using the <em>vegas</em> algorithm
 (G. P. Lepage, J. Comput. Phys. 27 (1978) 192 and J. Comput. Phys. 439 (2021) 110386).
@@ -110,12 +107,12 @@ using Python 2, or add</p>
 <p>at the start of your file.</p>
 </section>
 <section id="basic-integrals">
-<span id="id1"></span><h2>Basic Integrals<a class="headerlink" href="#basic-integrals" title="Permalink to this heading">¶</a></h2>
+<span id="id1"></span><h2>Basic Integrals<a class="headerlink" href="#basic-integrals" title="Link to this heading">¶</a></h2>
 <p>Here we illustrate the use of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> by estimating the integral</p>
 <div class="math">
-<p><img src="_images/math/10f15d585cec02bd9848ecd8a7a12b7ce6a0c0b5.svg" alt="C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
+<p><img src="_images/math/1de84d848233a3579b11f49f5374847fcac94175.svg" alt="C\int_{-1}^1 dx_0 \int_0^1 dx_1 \int_0^1 dx_2 \int_0^1 dx_3
 \,\,\mathrm{e}^{- 100 \sum_{d}(x_d-0.5)^2}  ,"/></p>
-</div><p>where constant <img class="math" src="_images/math/eee0c581e3899b4942c271cc92121d38cc88bcb5.svg" alt="C"/> is chosen so that the exact integral is 1.
+</div><p>where constant <img class="math" src="_images/math/541256ca21ce44accc931671c333e351d880f8c9.svg" alt="C"/> is chosen so that the exact integral is 1.
 The following code shows how this can be done:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -197,23 +194,23 @@ distributions. The distributions are Gaussian provided
 the number of integrand evaluations per iteration (<code class="docutils literal notranslate"><span class="pre">neval</span></code>)
 is sufficiently large, in which case the standard deviation
 is a reliable estimate of the error.
-The weighted average <img class="math" src="_images/math/3e7c8bf10db39edb6ea695d7a489d65f99e6f0a6.svg" alt="\overline I"/>  minimizes</p>
+The weighted average <img class="math" src="_images/math/541ec0b3e8c34fb06a019a0c31afa46d205fb6b0.svg" alt="\overline I"/>  minimizes</p>
 <div class="math">
-<p><img src="_images/math/48eb852541f4f71434b6607c0bb076bb4580fb64.svg" alt="\chi^2 \,\equiv\, \sum_i \frac{(I_i - \overline I)^2}{\sigma_{i}^2}"/></p>
-</div><p>where <img class="math" src="_images/math/77d7a0fb0bf211ded83f0a8942792a6e8b80e04c.svg" alt="I_i \pm \sigma_{i}"/> are the estimates from
-individual iterations. If the <img class="math" src="_images/math/ad9237e5266db3b68290fb53b678017e9bc184b8.svg" alt="I_i"/> are Gaussian,
-<img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> should be of order the number of degrees of
+<p><img src="_images/math/d0270c264a170737153cccd5c2a81d2acf368eb5.svg" alt="\chi^2 \,\equiv\, \sum_i \frac{(I_i - \overline I)^2}{\sigma_{i}^2}"/></p>
+</div><p>where <img class="math" src="_images/math/0b7d38e075070ef753add582d1ca8c184ab85dba.svg" alt="I_i \pm \sigma_{i}"/> are the estimates from
+individual iterations. If the <img class="math" src="_images/math/e797e95faec2f60bcc2d604fc4b6383d75edd688.svg" alt="I_i"/> are Gaussian,
+<img class="math" src="_images/math/3049b41e4ab6ebe9380f9b54ed1d16b7fda6d45a.svg" alt="\chi^2"/> should be of order the number of degrees of
 freedom (plus or minus the square root of double that number);
 here the number of degrees of freedom is the number of
 iterations minus 1.</p>
 <p>The distributions are likely non-Gaussian, and error estimates
-unreliable, if <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> is
+unreliable, if <img class="math" src="_images/math/3049b41e4ab6ebe9380f9b54ed1d16b7fda6d45a.svg" alt="\chi^2"/> is
 much larger than the number of iterations. This criterion is quantified
-by the <em>Q</em> or <em>p-value</em> of the <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/>,
+by the <em>Q</em> or <em>p-value</em> of the <img class="math" src="_images/math/3049b41e4ab6ebe9380f9b54ed1d16b7fda6d45a.svg" alt="\chi^2"/>,
 which is the probability that a
-larger <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> could result from random (Gaussian)
+larger <img class="math" src="_images/math/3049b41e4ab6ebe9380f9b54ed1d16b7fda6d45a.svg" alt="\chi^2"/> could result from random (Gaussian)
 fluctuations. A very small <em>Q</em> (less than 0.05-0.1) indicates
-that the <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> is too large to be accounted for by
+that the <img class="math" src="_images/math/3049b41e4ab6ebe9380f9b54ed1d16b7fda6d45a.svg" alt="\chi^2"/> is too large to be accounted for by
 statistical fluctuations — that is, the estimates of the integral
 from different iterations do not agree with each other to
 within errors. This means that <code class="docutils literal notranslate"><span class="pre">neval</span></code> is not sufficiently
@@ -225,15 +222,15 @@ attributes:</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">result.mean</span></code> — weighted average of all estimates of the integral;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.sdev</span></code> — standard deviation of the weighted average;</p>
-<p><code class="docutils literal notranslate"><span class="pre">result.chi2</span></code> — <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> of the weighted average;</p>
+<p><code class="docutils literal notranslate"><span class="pre">result.chi2</span></code> — <img class="math" src="_images/math/3049b41e4ab6ebe9380f9b54ed1d16b7fda6d45a.svg" alt="\chi^2"/> of the weighted average;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.dof</span></code> — number of degrees of freedom;</p>
-<p><code class="docutils literal notranslate"><span class="pre">result.Q</span></code> — <em>Q</em> or <em>p-value</em> of the weighted average’s <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/>;</p>
+<p><code class="docutils literal notranslate"><span class="pre">result.Q</span></code> — <em>Q</em> or <em>p-value</em> of the weighted average’s <img class="math" src="_images/math/3049b41e4ab6ebe9380f9b54ed1d16b7fda6d45a.svg" alt="\chi^2"/>;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.itn_results</span></code> — list of the integral estimates from each iteration;</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.sum_neval</span></code> — total number of integrand evaluations used.</p>
 <p><code class="docutils literal notranslate"><span class="pre">result.avg_neval</span></code> — average number of integrand evaluations per iteration</p>
 </div></blockquote>
 <p>In this example the final <em>Q</em> is 0.25, indicating that the
-<img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> for this average is not particularly unlikely and
+<img class="math" src="_images/math/3049b41e4ab6ebe9380f9b54ed1d16b7fda6d45a.svg" alt="\chi^2"/> for this average is not particularly unlikely and
 thus the error estimate is likely reliable.</p>
 <p><strong>Precision:</strong> The precision of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> estimates is
 determined by <code class="docutils literal notranslate"><span class="pre">nitn</span></code>, the number of iterations
@@ -270,7 +267,7 @@ than twice as accurate as increasing <code class="docutils literal notranslate">
 want to use no more than 10 or 20 iterations beyond the
 point where <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> has fully adapted. You want some number of
 iterations so that you can verify Gaussian behavior by
-checking the <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> and <em>Q</em>, but not too many.</p>
+checking the <img class="math" src="_images/math/3049b41e4ab6ebe9380f9b54ed1d16b7fda6d45a.svg" alt="\chi^2"/> and <em>Q</em>, but not too many.</p>
 <p>It is also generally useful to compare two or more
 results from values of <code class="docutils literal notranslate"><span class="pre">neval</span></code> that differ by a
 significant factor (4–10, say). These should agree within
@@ -284,7 +281,7 @@ effects. The systematic error vanishes like
 the statistical error as <code class="docutils literal notranslate"><span class="pre">neval</span></code> increases.
 The systematic error can bias the Monte Carlo estimate, however,
 if <code class="docutils literal notranslate"><span class="pre">neval</span></code> is insufficiently large. This usually
-results in a large <img class="math" src="_images/math/2b01024bf11fcc819bfbd2bfda455169af2b8cba.svg" alt="\chi^2"/> (and small <em>Q</em>), but a
+results in a large <img class="math" src="_images/math/3049b41e4ab6ebe9380f9b54ed1d16b7fda6d45a.svg" alt="\chi^2"/> (and small <em>Q</em>), but a
 more reliable check is to compare
 results that use significantly different values of <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
 The systematic errors due to non-Gaussian behavior are
@@ -469,10 +466,10 @@ been cut in half had we used the integration volume
 <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">[[0.3,</span> <span class="pre">0.7]]</span></code> instead of <code class="docutils literal notranslate"><span class="pre">[[-1,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1],</span> <span class="pre">[0,</span> <span class="pre">1]]</span></code>.</p>
 <p>Note, finally, that integration to infinity is also possible:
 map the relevant variable into a different variable
-of finite range. For example,  an integral over <img class="math" src="_images/math/2364a1b4da9be013cbc21d70565f4d4f2bb8d36a.svg" alt="x\equiv b z / (1-z)"/>
+of finite range. For example,  an integral over <img class="math" src="_images/math/6736bd811ad81fdfee6a140d5d89a2e1bc375628.svg" alt="x\equiv b z / (1-z)"/>
 from 0 to infinity is easily re-expressed as
-an integral over <img class="math" src="_images/math/ee2481120b689ebecdf833b153b1e44372af448e.svg" alt="z"/> from 0 to 1, where the transformation
-emphasizes the region in <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/> of order free parameter <img class="math" src="_images/math/5cf70d30bed668864d41ac882237465737e7f20f.svg" alt="b"/>.</p>
+an integral over <img class="math" src="_images/math/2c56203254af12df1dd4b2c61082bfbed14028f7.svg" alt="z"/> from 0 to 1, where the transformation
+emphasizes the region in <img class="math" src="_images/math/ab7f1721dbcf7398485913e30d2b94b3632ff40c.svg" alt="x"/> of order free parameter <img class="math" src="_images/math/5f3942dd8bf9ff56e4aeb2f698c5db1adb475065.svg" alt="b"/>.</p>
 <p><strong>Damping:</strong> The result in the previous section
 can be improved somewhat by slowing down
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s adaptation:</p>
@@ -589,7 +586,7 @@ is set.</p>
 </div></blockquote>
 </section>
 <section id="multiple-integrands-simultaneously">
-<h2>Multiple Integrands Simultaneously<a class="headerlink" href="#multiple-integrands-simultaneously" title="Permalink to this heading">¶</a></h2>
+<span id="id2"></span><h2>Multiple Integrands Simultaneously<a class="headerlink" href="#multiple-integrands-simultaneously" title="Link to this heading">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> can be used to integrate multiple integrands simultaneously, using
 the same integration points for each of the integrands. This is useful
 in situations where the integrands have similar structure, with peaks in
@@ -603,7 +600,7 @@ of the resulting integrals as the fluctuations cancel.</p>
 the normalization and first two moments of a
 sharply peaked probability distribution:</p>
 <div class="math">
-<p><img src="_images/math/0ebc3bed016de125ac98c1326eeeabe8da41df8e.svg" alt="I_0  &amp;\equiv  \int_0^1 d^4x\;
+<p><img src="_images/math/213a324818dbcf826fbb5023f20a16db17e640e4.svg" alt="I_0  &amp;\equiv  \int_0^1 d^4x\;
     \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2}\\
 I_1  &amp;\equiv \int_0^1 d^4x\; x_0 \;
     \mathrm{e}^{- 200 \sum_{d}(x_d-0.5)^2} \\
@@ -612,7 +609,7 @@ I_2 &amp;\equiv \int_0^1 d^4x\; x_0^2 \;
 </div><p>From these integrals we determine the mean and width of the  distribution
 projected onto one of the axes:</p>
 <div class="math">
-<p><img src="_images/math/d5488347740d19138b8a1594844357d45b7e33b9.svg" alt="\langle x \rangle  &amp;\equiv I_1 / I_0 \\[1ex]
+<p><img src="_images/math/8a2f87c47c9a6ee77d7e8f816eada511053bee65.svg" alt="\langle x \rangle  &amp;\equiv I_1 / I_0 \\[1ex]
 \sigma_x^2  &amp;\equiv \langle x^2 \rangle - \langle x \rangle^2 \\
            &amp;= I_2 / I_0  - (I_1 / I_0)^2"/></p>
 </div><p>This can be done using the following code:</p>
@@ -665,14 +662,14 @@ of the integrals, taken together.</p>
 </div>
 <p>The estimates for the individual integrals are separately accurate to
 about ±0.05%,
-but the estimate for <img class="math" src="_images/math/b785fc9691be3f36efb57cce04fb51a9dfec3f31.svg" alt="\langle x \rangle = I_1/I_0"/>
+but the estimate for <img class="math" src="_images/math/f9f9752ccd7f184cdb486e2ca6c03ff1ef69bc0b.svg" alt="\langle x \rangle = I_1/I_0"/>
 is accurate to ±0.01%.
 This is almost an order
 of magnitude (8x) more accurate than we would obtain absent correlations.
 The correlation matrix shows that there is 98% correlation between the
-statistical fluctuations in estimates for <img class="math" src="_images/math/d25d10db2f48c689f2f1828bd46bd83bb2cb39fc.svg" alt="I_0"/> and <img class="math" src="_images/math/f606987c7e9ceb513a97df8072fed44ceedd7548.svg" alt="I_1"/>,
+statistical fluctuations in estimates for <img class="math" src="_images/math/fa353b8267fd50c5aabbc0ad8314d3207d81f102.svg" alt="I_0"/> and <img class="math" src="_images/math/cdb04439720001c8df035b65f5c33b6fccab9e06.svg" alt="I_1"/>,
 and so the bulk of these fluctuations cancel in the ratio.
-The estimate for the variance <img class="math" src="_images/math/870b49e4c0f492ceb54b077b1dce6d609980a228.svg" alt="\sigma^2_x"/>
+The estimate for the variance <img class="math" src="_images/math/576f10392256aaa6c7913c21937740c670bdac43.svg" alt="\sigma^2_x"/>
 is 48x more accurate than we would
 have obtained had the integrals been evaluated separately. Both estimates
 are correct to within the quoted errors.</p>
@@ -687,7 +684,7 @@ at <a class="reference external" href="https://gvar.readthedocs.io">https://gvar
 at <a class="reference external" href="https://github.com/gplepage/gvar.git">https://github.com/gplepage/gvar.git</a>.)</p>
 </section>
 <section id="dictionaries">
-<h2>Dictionaries<a class="headerlink" href="#dictionaries" title="Permalink to this heading">¶</a></h2>
+<h2>Dictionaries<a class="headerlink" href="#dictionaries" title="Link to this heading">¶</a></h2>
 <p>Integrands can return dictionaries instead of arrays. The example
 in the previous section,
 for example, can be rewritten as</p>
@@ -750,7 +747,7 @@ unit sphere using spherical coordinates:</p>
 </pre></div>
 </div>
 <p>Running this code gives a result of 4.1852(44) which agrees well (0.1%) with the correct
-result <img class="math" src="_images/math/02712a7422fc88f7ebdf7dbc24f54681cd02a849.svg" alt="4\pi/3"/>. This can be generalized to <code class="docutils literal notranslate"><span class="pre">DIM</span></code> dimensions,
+result <img class="math" src="_images/math/3492d77fb5139b407b90cbbe088959538244a99c.svg" alt="4\pi/3"/>. This can be generalized to <code class="docutils literal notranslate"><span class="pre">DIM</span></code> dimensions,
 where now <code class="docutils literal notranslate"><span class="pre">xd['phi']</span></code> is an array of variables: e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">vegas</span>
@@ -805,7 +802,7 @@ where now <code class="docutils literal notranslate"><span class="pre">xd['phi']
 </div>
 </section>
 <section id="calculating-distributions">
-<h2>Calculating Distributions<a class="headerlink" href="#calculating-distributions" title="Permalink to this heading">¶</a></h2>
+<h2>Calculating Distributions<a class="headerlink" href="#calculating-distributions" title="Link to this heading">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is often used to calculate distributions. The following
 code, for example, evaluates both an integral <code class="docutils literal notranslate"><span class="pre">I</span></code> and the contributions
 <code class="docutils literal notranslate"><span class="pre">dI</span></code> to the integral coming from each of five different intervals <code class="docutils literal notranslate"><span class="pre">dr</span></code>
@@ -937,7 +934,7 @@ so the inversion of the covariance matrices is unnecessary.</p>
 <p>The correct result for <code class="docutils literal notranslate"><span class="pre">I</span></code> is   0.85112.</p>
 </section>
 <section id="pdf-integrals">
-<h2>PDF Integrals<a class="headerlink" href="#pdf-integrals" title="Permalink to this heading">¶</a></h2>
+<h2>PDF Integrals<a class="headerlink" href="#pdf-integrals" title="Link to this heading">¶</a></h2>
 <p>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> module has a special-purpose integrator for
 evaluating averages over probability distributions.
 In its simplest form,</p>
@@ -1129,7 +1126,7 @@ fitter <code class="xref py py-class docutils literal notranslate"><span class="
 that uses Bayesian integration (rather than minimization).</p>
 </section>
 <section id="faster-integrands">
-<h2>Faster Integrands<a class="headerlink" href="#faster-integrands" title="Permalink to this heading">¶</a></h2>
+<span id="id3"></span><h2>Faster Integrands<a class="headerlink" href="#faster-integrands" title="Link to this heading">¶</a></h2>
 <p>The computational cost of a realistic multidimensional integral
 comes mostly from
 the cost of evaluating the integrand at the Monte Carlo sample
@@ -1138,233 +1135,238 @@ enough for problems where <code class="docutils literal notranslate"><span class
 enough precision. Some problems, however, require
 hundreds of thousands or millions of function evaluations, or more.</p>
 <p>We can significantly reduce the cost of evaluating the integrand
-by using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s batch mode. For example, replacing</p>
+by using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s batch mode and <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> vectors. For example,
+the following code runs in about 58 min (on a 2024 laptop):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
-<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="s2">&quot; Ridge of N Gaussians distributed along part of the diagonal. &quot;</span>
     <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span>
-    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
-        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="n">norm</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">x0</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+            <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">ans</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ans</span> <span class="o">*</span> <span class="n">norm</span>
 
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 
-<span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">warmup</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">   Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>by</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
-<span class="nd">@vegas</span><span class="o">.</span><span class="n">llbatchintegrand</span>
-<span class="k">def</span> <span class="nf">f_batch</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="c1"># evaluate integrand at multiple points simultaneously</span>
-    <span class="n">dim</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span>
-    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
-        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="n">norm</span>
-
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
-
-<span class="n">integ</span><span class="p">(</span><span class="n">f_batch</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f_batch</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">   Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+<p>It generates the following output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="mf">0.99987</span><span class="p">(</span><span class="mi">29</span><span class="p">)</span>    <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.81</span>
 </pre></div>
 </div>
-<p>reduces the cost of the integral by an order of magnitude. Internally <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
-processes integration points in batches. (<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> parameter <code class="docutils literal notranslate"><span class="pre">min_neval_batch</span></code>
-determines the number of integration
-points per batch (typically 10,000s).) In batch mode,
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> presents integration points to the integrand in batches
-rather than offering them one at a
-time. Here, for example, function <code class="docutils literal notranslate"><span class="pre">f_batch(x)</span></code> accepts  an array of integration
-points — <code class="docutils literal notranslate"><span class="pre">x[i,</span> <span class="pre">d]</span></code> where <code class="docutils literal notranslate"><span class="pre">i=0...</span></code> labels the integration point and
-<code class="docutils literal notranslate"><span class="pre">d=0...</span></code> the direction — and returns an array of integrand values
-corresponding  to those points. The decorator
-<a class="reference internal" href="vegas.html#vegas.lbatchintegrand" title="vegas.lbatchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.lbatchintegrand()</span></code></a> tells <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> that it should send
-integration points to <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> in batches.</p>
-<p>An alternative to a function decorated with <a class="reference internal" href="vegas.html#vegas.lbatchintegrand" title="vegas.lbatchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.lbatchintegrand()</span></code></a> is
-a class that behaves like a batch integrand:</p>
+<p>Adding a decorator to the integrand function <code class="docutils literal notranslate"><span class="pre">ridge(x)</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
+<span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>reduces the run time to 20 sec, which is more than 170 times faster.</p>
+<p>The decorator instructs <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to present integration points to
+the integrand in batches of 50,000 points
+(<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> parameter <code class="docutils literal notranslate"><span class="pre">min_neval_batch</span></code>)
+rather than offering them one at a time.
+Here, for example, function <code class="docutils literal notranslate"><span class="pre">ridge(x)</span></code> with the decorator
+takes as its argument  an array of integration
+points — <code class="docutils literal notranslate"><span class="pre">x[d,</span> <span class="pre">i]</span></code> where <code class="docutils literal notranslate"><span class="pre">d=0...</span></code> labels the direction and
+<code class="docutils literal notranslate"><span class="pre">i=0...</span></code> the integration point — and returns an array of integrand
+values <code class="docutils literal notranslate"><span class="pre">ans[i]</span> <span class="pre">*</span> <span class="pre">norm</span></code> corresponding  to those points. Typically one
+must modify the integrand code to deal with the extra index <code class="docutils literal notranslate"><span class="pre">i</span></code>,
+but that is not necessary in <code class="docutils literal notranslate"><span class="pre">ridge</span></code> because the extra index is handled
+implicitly: <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> represents an array <code class="docutils literal notranslate"><span class="pre">x[d,</span> <span class="pre">:]</span></code> of values when
+using the decorator.
+The batch integrand is faster because the arrays are <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code>
+arrays, and therefore arithmetic operators act on the entire arrays using
+highly optimized (compiled) <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> code.
+The integrand is evaluated for all integration points in a batch at
+the same time.</p>
+<p>The advantage gained from using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s batch mode
+(with <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> vectorization)
+is particularly
+large in this example because the integrand is quite expensive to evaluate.
+The original (non-batch) integral runs 160 times faster when <code class="docutils literal notranslate"><span class="pre">N</span></code> is
+decreased from <code class="docutils literal notranslate"><span class="pre">N=1000</span></code> to <code class="docutils literal notranslate"><span class="pre">N=1</span></code>. Batch mode is
+still faster then, but by a more modest factor of about 50.</p>
+<p>An alternative to a function decorated with <a class="reference internal" href="vegas.html#vegas.rbatchintegrand" title="vegas.rbatchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.rbatchintegrand()</span></code></a> is
+a class, derived from <a class="reference internal" href="vegas.html#vegas.RBatchIntegrand" title="vegas.RBatchIntegrand"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.RBatchIntegrand</span></code></a>, that behaves
+like a batch integrand:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="nd">@vegas</span><span class="o">.</span><span class="n">lbatchintegrand</span>
-<span class="k">class</span> <span class="nc">f_batch</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">batch_ridge</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">RBatchIntegrand</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x0array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="c1"># evaluate integrand at multiple points simultaneously</span>
-        <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">):</span>
-            <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span>
+        <span class="s2">&quot; Ridge of N Gaussians distributed along part of the diagonal. &quot;</span>
+        <span class="n">ans</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">x0</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0array</span><span class="p">:</span>
+            <span class="n">dx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">):</span>
+                <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">ans</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ans</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span>
 
-<span class="n">f</span> <span class="o">=</span> <span class="n">f_batch</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="n">ridge</span> <span class="o">=</span> <span class="n">batch_ridge</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">ridge</span><span class="o">.</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 
-<span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">warmup</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">   Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>This version is as fast as the previous batch integrand, but is
 potentially more flexible because it is built around a class rather
-than a function.  (Some classes won’t allow decorators. An alternative
-to the decorator is to derive the class from <code class="docutils literal notranslate"><span class="pre">vegas.LBatchIntegrand</span></code>.)</p>
-<p>The batch integrands here are fast because they are expressed in terms
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> operators that act on entire arrays — they evaluate the
-integrand for all integration points in a batch at the same time.
-That optimization is not always possible or simple.
-It is unnecessary if we write the integrand in Cython, which
-is a compiled hybrid of Python and C. The Cython version
-of the (batch) integrand is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># file: cython_integrand.pyx</span>
+than a function.</p>
+<p>Batch mode is also useful for array-valued and dictionary-valued integrands.
+For example, the following two integrands
+(see <a class="reference internal" href="#multiple-integrands-simultaneously"><span class="std std-ref">Multiple Integrands Simultaneously</span></a>)
+are equivalent:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">200</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="n">f</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">]</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
-<span class="c1"># use exp from C</span>
-<span class="kn">from</span> <span class="nn">libc.math</span> <span class="n">cimport</span> <span class="n">exp</span>
-
-<span class="k">def</span> <span class="nf">f_batch</span><span class="p">(</span><span class="n">double</span><span class="p">[:,</span> <span class="p">::</span><span class="mi">1</span><span class="p">]</span> <span class="n">x</span><span class="p">):</span>
-    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">i</span>          <span class="c1"># labels integration point</span>
-    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">d</span>          <span class="c1"># labels direction</span>
-    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">dim</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">cdef</span> <span class="n">double</span> <span class="n">norm</span> <span class="o">=</span> <span class="mf">1013.2118364296088</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">4.</span><span class="p">)</span>
-    <span class="n">cdef</span> <span class="n">double</span> <span class="n">dx2</span>
-    <span class="n">cdef</span> <span class="n">double</span><span class="p">[::</span><span class="mi">1</span><span class="p">]</span> <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="c1"># integrand for integration point x[i]</span>
-        <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
-            <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-        <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="n">norm</span>
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
+<span class="k">def</span> <span class="nf">f_rbatch</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">200</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="n">f</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>But the second integrand is much faster because again <code class="docutils literal notranslate"><span class="pre">dx2</span></code>, <code class="docutils literal notranslate"><span class="pre">x[d]</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">f</span></code>
+are all <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> arrays — <code class="docutils literal notranslate"><span class="pre">dx2[:]</span></code>, <code class="docutils literal notranslate"><span class="pre">x[d,</span> <span class="pre">:]</span></code>, and <code class="docutils literal notranslate"><span class="pre">f[:]</span></code> —
+so that the entire batch of integration points is processed at the same
+time. The array returned by <code class="docutils literal notranslate"><span class="pre">f_rbatch(x)</span></code> has an additional index
+(on the right) labeling the integration point.</p>
+<p>The batch integrands above have the batch index in the last/rightmost
+position.
+It is sometimes more convenient to have the batch index
+be the first/leftmost index
+rather than the last. Then <code class="docutils literal notranslate"><span class="pre">&#64;vegas.rbatchintegrand</span></code> should be
+replaced by <code class="docutils literal notranslate"><span class="pre">&#64;vegas.lbatchintegrand</span></code>, and <code class="docutils literal notranslate"><span class="pre">vegas.RBatchIntegrand</span></code> by
+<code class="docutils literal notranslate"><span class="pre">vegas.LBatchIntegrand</span></code>. The <code class="docutils literal notranslate"><span class="pre">lbatch</span></code> version of the integrand <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>
+above is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@vegas</span><span class="o">.</span><span class="n">lbatchintegrand</span>
+<span class="k">def</span> <span class="nf">f_lbatch</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">200</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">ans</span><span class="p">[:,</span> <span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span> <span class="o">*</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="n">n</span>
     <span class="k">return</span> <span class="n">ans</span>
 </pre></div>
 </div>
-<p>We put this in a separate file called, say,
-<code class="docutils literal notranslate"><span class="pre">cython_integrand.pyx</span></code>, and rewrite the main code as:</p>
+<p>Note where the batch index must be explicit here (<code class="docutils literal notranslate"><span class="pre">x[:,d]</span></code> and <code class="docutils literal notranslate"><span class="pre">ans[:,</span> <span class="pre">n]</span></code>),
+unlike in the <code class="docutils literal notranslate"><span class="pre">rbatch</span></code> version.</p>
+<p>The batch integrands above are fast because they are expressed in terms of
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> operators that act on entire arrays.
+That optimization is not always possible or simple. It is unnecessary if
+we use the <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code> Python module to compile the integrand. Returning
+to the <code class="docutils literal notranslate"><span class="pre">ridge</span></code> integral above, for example, a <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code> implementation
+would be:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pyximport</span>
-<span class="n">pyximport</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
 <span class="kn">import</span> <span class="nn">vegas</span>
-<span class="kn">from</span> <span class="nn">cython_integrand</span> <span class="kn">import</span> <span class="n">f_batch</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">lbatchintegrand</span><span class="p">(</span><span class="n">f_batch</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">numba</span>
+
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">lbatchintegrand</span>
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span>
+<span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">xbatch</span><span class="p">):</span>
+    <span class="s2">&quot; Ridge of N Gaussians distributed along part of the diagonal. &quot;</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="n">xbatch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xbatch</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xbatch</span><span class="p">)):</span>
+        <span class="c1"># iterate over each integration point x in xbatch</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">xbatch</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="mf">0.25</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">j</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">dx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+                <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+        <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">norm</span>
+    <span class="k">return</span> <span class="n">ans</span>
 
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 
-<span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">warmup</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">   Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Module <code class="xref py py-mod docutils literal notranslate"><span class="pre">pyximport</span></code> is used here to cause the Cython
-module <code class="docutils literal notranslate"><span class="pre">cython_integrand.pyx</span></code> to be compiled the first time
-it is imported. The compiled code is used in subsequent
-imports, so compilation occurs only once.</p>
-<p>Batch mode is also useful for array-valued integrands.
-The code from the previous section could have been written as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
-<span class="kn">import</span> <span class="nn">gvar</span> <span class="k">as</span> <span class="nn">gv</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
-<span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
-
-<span class="nd">@vegas</span><span class="o">.</span><span class="n">lbatchintegrand</span>
-<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
-    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
-        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="n">ans</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">200</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
-    <span class="n">ans</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ans</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-    <span class="n">ans</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ans</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">ans</span>
-
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
-
-<span class="c1"># adapt grid</span>
-<span class="n">training</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
-
-<span class="c1"># final analysis</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;I[0] =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;  I[1] =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;  I[2] =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Q = </span><span class="si">%.2f</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&lt;x&gt; =&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="s1">&#39;sigma_x**2 = &lt;x**2&gt; - &lt;x&gt;**2 =&#39;</span><span class="p">,</span>
-    <span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">correlation matrix:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">gv</span><span class="o">.</span><span class="n">evalcorr</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>Note that the batch index (here <code class="docutils literal notranslate"><span class="pre">:</span></code>) always comes first. An extra
-(first) index is also added to each value in the dictionary returned
-by a dictionary-valued batch integrand: e.g.,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
-
-<span class="nd">@vegas</span><span class="o">.</span><span class="n">lbatchintegrand</span>
-<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">ans</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
-        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="n">ans</span><span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">200</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
-    <span class="n">ans</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ans</span><span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">]</span>
-    <span class="n">ans</span><span class="p">[</span><span class="s1">&#39;x**2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ans</span><span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">ans</span>
-</pre></div>
-</div>
-<p>It is sometimes more convenient to have the batch index be the last index
-(the rightmost) rather than the first. Then <code class="docutils literal notranslate"><span class="pre">&#64;vegas.lbatchintegrand</span></code> is
-replaced by <code class="docutils literal notranslate"><span class="pre">&#64;vegas.rbatchintegrand</span></code>, and <code class="docutils literal notranslate"><span class="pre">vegas.LBatchIntegrand</span></code> by
-<code class="docutils literal notranslate"><span class="pre">vegas.RBatchIntegrand</span></code>. (Note that <code class="docutils literal notranslate"><span class="pre">&#64;vegas.batchintegrand</span></code>
-and <code class="docutils literal notranslate"><span class="pre">&#64;vegas.lbatchintegrand</span></code> are the same, as are <code class="docutils literal notranslate"><span class="pre">vegas.BatchIntegrand</span></code>
-and <code class="docutils literal notranslate"><span class="pre">vegas.LBatchIntegrand</span></code>.)</p>
+<p>Here the decorator <code class="docutils literal notranslate"><span class="pre">&#64;numba.njit</span></code> causes the <code class="docutils literal notranslate"><span class="pre">ridge</span></code> function to be
+compiled into efficient machine code the first time it is called, and
+the machine code is used in place of the Python function for that
+and all subsequent calls. <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code> is particularly effective when
+used with low-level code such as this, where standard numerical
+datatypes (integers, floats) are manipulated directly (rather than
+relying on <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> array operations). This code is somewhat
+faster than the batch integrands above that use <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> array
+arithmetic (15 sec versus 20 sec).</p>
+<p>There are a variety of other ways to create optimized codes using
+compilers. Some of these are discussed below in the section on
+<a class="reference internal" href="compiled_integrands.html#compiled-integrands"><span class="std std-ref">Compiled Integrands for Speed; GPUs</span></a>.</p>
 </section>
 <section id="multiple-processors">
-<h2>Multiple Processors<a class="headerlink" href="#multiple-processors" title="Permalink to this heading">¶</a></h2>
+<h2>Multiple Processors<a class="headerlink" href="#multiple-processors" title="Link to this heading">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> supports parallel evaluation of integrands
 on multiple processors. This
 can shorten execution time substantially when the integrand is
-costly to evaluate. The following code, for example,
-runs more than five times faster
+costly to evaluate. Returning to the <code class="docutils literal notranslate"><span class="pre">ridge</span></code> example from the
+previous section, the following code
+runs almost six times faster
 when using <code class="docutils literal notranslate"><span class="pre">nproc=8</span></code> processors instead of the
-default <code class="docutils literal notranslate"><span class="pre">nproc=1</span></code> (on a 2019 laptop):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+default <code class="docutils literal notranslate"><span class="pre">nproc=1</span></code> (on a 2024 laptop):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">vegas</span>
 
-<span class="c1"># Integrand: ridge of N Gaussians spread along part of the diagonal</span>
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
 <span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">N</span> <span class="o">=</span> <span class="mi">10000</span>
-    <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
-    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="k">for</span> <span class="n">xd</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
-        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">xd</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">))</span> <span class="o">*</span>  <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+    <span class="s2">&quot; Ridge of N Gaussians distributed along part of the diagonal. &quot;</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">x0</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+            <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">ans</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ans</span> <span class="o">*</span> <span class="n">norm</span>
 
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>  <span class="c1"># 8 processors</span>
-    <span class="c1"># adapt</span>
-    <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">)</span>
-    <span class="c1"># final results</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">1e4</span><span class="p">)</span>
+    <span class="n">warmup</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The code doesn’t run eight times faster because it takes time to
+<p>One might have expected the code to run eight times faster
+(instead of six), but it takes time to
 initiate the <code class="docutils literal notranslate"><span class="pre">nproc</span></code> processes, and to feed data and
 collect results from them.
 Parallel processing only becomes useful when integrands are
@@ -1403,15 +1405,57 @@ produces the same random numbers on the different processors. This
 happens automatically for the default random-number generator.</p>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s batch mode makes it possible to implement other strategies
 for distributing integrand evaluations across multiple processors.
-For example, we can create a class <code class="docutils literal notranslate"><span class="pre">parallelintegrand</span></code>
-whose function is similar to decorator <code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.batchintegrand()</span></code>,
+For example, <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code> provides support for
+parallel evaluation of specific loops. The <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code> version
+of the <code class="docutils literal notranslate"><span class="pre">ridge</span></code> integrand (see previous section) can be
+rewritten</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">numba</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">lbatchintegrand</span>
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">xbatch</span><span class="p">):</span>
+    <span class="s2">&quot; Ridge of N Gaussians distributed along part of the diagonal. &quot;</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="n">xbatch</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xbatch</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">numba</span><span class="o">.</span><span class="n">prange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xbatch</span><span class="p">)):</span>
+        <span class="c1"># iterate over each integration point x in xbatch</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">xbatch</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="mf">0.25</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">j</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">dx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+                <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
+        <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">norm</span>
+    <span class="k">return</span> <span class="n">ans</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>  <span class="c1"># leave nproc unset</span>
+                                        <span class="c1"># parallelization handled by ridge(x)</span>
+
+<span class="n">warmup</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">   Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>where function <code class="docutils literal notranslate"><span class="pre">numba.prange</span></code> is used instead of Python’s <code class="docutils literal notranslate"><span class="pre">range</span></code> function to
+indicate that different iterations of the loop can be run in parallel
+on multiple processors. <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code> uses
+all processors available. The speedup for this example is similar to that using
+the other multi-processor methods above.</p>
+<p>As another example exploiting <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s batch mode,
+we can create a class <code class="docutils literal notranslate"><span class="pre">parallelintegrand</span></code>
+whose function is similar to decorator <a class="reference internal" href="vegas.html#vegas.lbatchintegrand" title="vegas.lbatchintegrand"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.lbatchintegrand()</span></code></a>,
 but where Python’s
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code> module provides parallel processing:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">multiprocessing</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">vegas</span>
 
-<span class="k">class</span> <span class="nc">parallelintegrand</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">BatchIntegrand</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">parallelintegrand</span><span class="p">(</span><span class="n">vegas</span><span class="o">.</span><span class="n">LBatchIntegrand</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Convert (batch) integrand into multiprocessor integrand.</span>
 
 <span class="sd">    Integrand should return a numpy array.</span>
@@ -1443,53 +1487,55 @@ but where Python’s
 new integrand <code class="docutils literal notranslate"><span class="pre">fparallel(x)</span></code> that uses 4 CPU cores.</p>
 </section>
 <section id="sums-with-vegas">
-<h2>Sums with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#sums-with-vegas" title="Permalink to this heading">¶</a></h2>
-<p>The code in the previous sections is inefficient in the way it
-handles the sum over 10,000 Gaussians. It is not necessary to include every
+<h2>Sums with <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#sums-with-vegas" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">ridge</span></code> code in the previous sections is inefficient in the way it
+handles the sum over <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">=</span> <span class="pre">1000</span></code> Gaussians. It is not necessary to include every
 term in the sum for every integration point. Rather we can sample the sum,
 using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to do the sampling. The trick is to replace the sum with
 an equivalent integral:</p>
 <div class="math">
-<p><img src="_images/math/e65ce044b5b0ca6f70b35493e4a0da05e5aea432.svg" alt="\frac{1}{N}\sum_{i=0}^{N-1} f(i) = \int_0^1 dx \; f(\mathrm{floor}(x N))"/></p>
-</div><p>where <img class="math" src="_images/math/114017b7ca9787a241a654b2e85845ef4db6908c.svg" alt="\mathrm{floor}(x)"/> is the largest
-integer smaller than <img class="math" src="_images/math/f17001eeaaf629b968df3d9e25ad477c78f2ce2a.svg" alt="x"/>. The
-resulting integral can then be handed to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>. Using this trick,
-the integral in the previous section can be re-cast as a 5-dimensional
-integral:</p>
+<p><img src="_images/math/4ab87bac1cabadedb6adf39caeebef3b48e76c61.svg" alt="\frac{1}{N}\sum_{i=0}^{N-1} f(i) = \int_0^1 dx \; f(\mathrm{floor}(x N))"/></p>
+</div><p>where <img class="math" src="_images/math/a5edf0b2302db13bc83f0cec6d411c70f1a4334e.svg" alt="\mathrm{floor}(x)"/> is the largest
+integer smaller than <img class="math" src="_images/math/ab7f1721dbcf7398485913e30d2b94b3632ff40c.svg" alt="x"/>. The
+resulting integral can then be handed to <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>.</p>
+<p>Using this trick,
+the batch version of <code class="docutils literal notranslate"><span class="pre">ridge</span></code> integral from <a class="reference internal" href="#faster-integrands"><span class="std std-ref">Faster Integrands</span></a> can
+be re-cast as a 5-dimensional
+integral, where the integral over <code class="docutils literal notranslate"><span class="pre">x[-1]</span></code> does the sum over Gaussians:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="c1"># Integrand: ridge of N Gaussians spread evenly along the diagonal</span>
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
 <span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="n">N</span> <span class="o">=</span> <span class="mi">10000</span>
-    <span class="n">dim</span> <span class="o">=</span> <span class="mi">4</span>
-    <span class="n">x0</span> <span class="o">=</span> <span class="mf">0.4</span> <span class="o">+</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span>
-    <span class="n">dx2</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="k">for</span> <span class="n">xd</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
-        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">xd</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span>  <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Ridge of N Gaussians distributed along part of the diagonal.</span>
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
-    <span class="c1"># adapt</span>
-    <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">5e4</span><span class="p">)</span>
-    <span class="c1"># final results</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">5e4</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">    Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+<span class="sd">    Gaussians are at points x0[d]  = 0.25 + 0.5 * i /(N-1) for</span>
+<span class="sd">    all directions d and Gaussians i=0...N-1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="mf">100.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">dim</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="mf">0.25</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">N</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+        <span class="n">dx2</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span> <span class="o">*</span> <span class="n">norm</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">main</span><span class="p">()</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+
+<span class="n">warmup</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">8e5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">8e5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">   Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>This code gives a result with the same precision, but is 5x   faster
-than the code in the previous section (with <code class="docutils literal notranslate"><span class="pre">nproc=1</span></code>; it is another
-3x   faster when <code class="docutils literal notranslate"><span class="pre">nproc=8</span></code>).</p>
+<p>This code gives a result with the same precision as the earlier (batch)
+integral, but is 20 times faster (1 sec versus 20 sec).</p>
 <p>The same trick can be generalized to sums over multiple indices, including sums
 to infinity. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> will provide Monte Carlo estimates of the sums, emphasizing
 the more important terms.</p>
 </section>
 <section id="saving-results-automatically">
-<h2>Saving Results Automatically<a class="headerlink" href="#saving-results-automatically" title="Permalink to this heading">¶</a></h2>
+<h2>Saving Results Automatically<a class="headerlink" href="#saving-results-automatically" title="Link to this heading">¶</a></h2>
 <p>Results returned by a <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator can be pickled for later use using <code class="docutils literal notranslate"><span class="pre">pickle.dump/load</span></code> (or
 <code class="docutils literal notranslate"><span class="pre">gvar.dump/load</span></code>) in the usual way. Results can also be saved automatically using the
 <code class="docutils literal notranslate"><span class="pre">save</span></code> keyword to specify a file name for the pickled result: for example, running</p>
@@ -1649,20 +1695,20 @@ The (adapted) <a class="reference internal" href="vegas.html#vegas.AdaptiveMap" 
 be pickled by itself and results in a smaller file.</p>
 </section>
 <section id="vegas-maps-and-preconditioning-vegas">
-<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Maps and Preconditioning <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#vegas-maps-and-preconditioning-vegas" title="Permalink to this heading">¶</a></h2>
+<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Maps and Preconditioning <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a><a class="headerlink" href="#vegas-maps-and-preconditioning-vegas" title="Link to this heading">¶</a></h2>
 <p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adapts by remapping the integration variables (see <a class="reference internal" href="background.html#importance-sampling"><span class="std std-ref">Importance Sampling</span></a>). It
 is possible to precondition this map, before creating a <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>.
 Preconditioned maps can improve <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> results when
 much is known about the integrand ahead of time. Consider,
 for example, the integral</p>
 <div class="math">
-<p><img src="_images/math/aecd6cba1132b855db75f14a3b885b7338d451c8.svg" alt="C\int_0^1 \!d^5x\,
+<p><img src="_images/math/721b44b77eb2a14f226faefe482bb91362cc29b3.svg" alt="C\int_0^1 \!d^5x\,
 \,\sum_{i=1}^2 \mathrm{e}^{-50 |\mathbf{x} - \mathbf{r}_i|},"/></p>
 </div><p>which has high, narrow peaks at</p>
 <div class="math">
-<p><img src="_images/math/18d5a0cdc61eefff2ceb835e168b3e5e2883637d.svg" alt="\mathbf{r}_1 = (0.45, 0.45, 0.45, 0.45, 0.45),"/></p>
+<p><img src="_images/math/9be1b594a582b717e0f1023fc848342229e02050.svg" alt="\mathbf{r}_1 = (0.45, 0.45, 0.45, 0.45, 0.45),"/></p>
 </div><div class="math">
-<p><img src="_images/math/fb07bef831b1dee26b9d1d806630c4c0872f9a91.svg" alt="\mathbf{r}_2 = (0.7, 0.7, 0.7, 0.7, 0.7)."/></p>
+<p><img src="_images/math/37d329e244c9cc941241cf13f2af6e674ce4490f.svg" alt="\mathbf{r}_2 = (0.7, 0.7, 0.7, 0.7, 0.7)."/></p>
 </div><p>Given the locations of the peaks we can create a <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map before integrating
 that emphasizes the regions around them:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
@@ -1783,7 +1829,7 @@ integrand by running several iterations of <a class="reference internal" href="v
 the integrand and using the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator’s map: <code class="docutils literal notranslate"><span class="pre">integ.map</span></code>.</p>
 </section>
 <section id="vegas-stratifications">
-<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Stratifications<a class="headerlink" href="#vegas-stratifications" title="Permalink to this heading">¶</a></h2>
+<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Stratifications<a class="headerlink" href="#vegas-stratifications" title="Link to this heading">¶</a></h2>
 <p>Having mapped the integration variables <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> to new variables <code class="docutils literal notranslate"><span class="pre">y[d]</span></code>,
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> evaluates the integral in <code class="docutils literal notranslate"><span class="pre">y</span></code>-space using stratified Monte
 Carlo sampling (see <a class="reference internal" href="background.html#adaptive-stratified-sampling"><span class="std std-ref">Adaptive Stratified Sampling</span></a>). This is
@@ -1795,10 +1841,10 @@ in each hypercube, adjusting the number of integrand evaluations
 used in each one to minimize errors. By default, the number of
 stratifications is set automatically based on the number <code class="docutils literal notranslate"><span class="pre">neval</span></code>
 of integrand evaluations per iteration: <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> is set
-equal to <img class="math" src="_images/math/fdedcfaa76dd6907a61c87518d65e3f97e3569cf.svg" alt="M_\mathrm{st}+1"/> for the first <img class="math" src="_images/math/b5d0b9c16509b4f0b46195f2dbe7886c2ce2f098.svg" alt="D_0"/> directions
-and <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}"/> for
-the remaining directions, where <img class="math" src="_images/math/f10031a1388c224cfedd052b692cf2a55fc7de51.svg" alt="M_\mathrm{st}"/>
-and <img class="math" src="_images/math/b5d0b9c16509b4f0b46195f2dbe7886c2ce2f098.svg" alt="D_0"/> are chosen
+equal to <img class="math" src="_images/math/4c86252f32d131a8f44f26758116800882fcdd96.svg" alt="M_\mathrm{st}+1"/> for the first <img class="math" src="_images/math/7321a4e74c1565fae8df6410c912914eb8e26628.svg" alt="D_0"/> directions
+and <img class="math" src="_images/math/73d8c1ea5fd68b2fb5ced2dcbe4d7fa7560543c8.svg" alt="M_\mathrm{st}"/> for
+the remaining directions, where <img class="math" src="_images/math/73d8c1ea5fd68b2fb5ced2dcbe4d7fa7560543c8.svg" alt="M_\mathrm{st}"/>
+and <img class="math" src="_images/math/7321a4e74c1565fae8df6410c912914eb8e26628.svg" alt="D_0"/> are chosen
 to maximize the number stratifications consistent with <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
 It is also possible, however, to specify the number of
 stratifications <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> for each direction separately.</p>
@@ -1814,15 +1860,15 @@ it is worthwhile using larger values
 for <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> for those directions.</p>
 <p>An example is the 20-dimensional integral</p>
 <div class="math">
-<p><img src="_images/math/8fef71ba07e5ea61c67b56cb21222510782953e8.svg" alt="C\int_0^1 \!d^{20}x\,
+<p><img src="_images/math/4cbd656a936928ee266d7fbb4c91f4d930093a64.svg" alt="C\int_0^1 \!d^{20}x\,
 \,\sum_{i=1}^3 \mathrm{e}^{-100 (\mathbf{x} - \mathbf{r}_i)^2},"/></p>
 </div><p>which has high, narrow peaks at</p>
 <div class="math">
-<p><img src="_images/math/30de301357e262b8ff6d3bf776c593bfa424976c.svg" alt="\mathbf{r}_1 = (0.23, 0.23, 0.23, 0.23, 0.23, 0.45, \ldots, 0.45),"/></p>
+<p><img src="_images/math/d4f7a60234de384939a7339f7dcf857e7e70574e.svg" alt="\mathbf{r}_1 = (0.23, 0.23, 0.23, 0.23, 0.23, 0.45, \ldots, 0.45),"/></p>
 </div><div class="math">
-<p><img src="_images/math/8bd0e26564055bae659b56ce9eae9f73089dc653.svg" alt="\mathbf{r}_2 = (0.39, 0.39, 0.39, 0.39, 0.39, 0.45, \ldots, 0.45),"/></p>
+<p><img src="_images/math/c23804d04a86b92acee6aec7bdd3c5ad91d08bf2.svg" alt="\mathbf{r}_2 = (0.39, 0.39, 0.39, 0.39, 0.39, 0.45, \ldots, 0.45),"/></p>
 </div><div class="math">
-<p><img src="_images/math/91cf73bd9d7d2a99728aa904fff31852dca0cffa.svg" alt="\mathbf{r}_3 = (0.74, 0.74, 0.74, 0.74, 0.74, 0.45, \ldots, 0.45)."/></p>
+<p><img src="_images/math/4106b88d732927357e6da91b3153720979f97316.svg" alt="\mathbf{r}_3 = (0.74, 0.74, 0.74, 0.74, 0.74, 0.45, \ldots, 0.45)."/></p>
 </div><p>These peaks are aligned along the diagonal of the integration volume for the
 first five directions, but are on top of each other in the remaining directions.
 This makes the integrals over the first five directions much more challenging
@@ -1889,39 +1935,39 @@ integrand evaluations (about 800,000 per iteration):</p>
 </div>
 </section>
 <section id="vegas-jacobian">
-<span id="id2"></span><h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Jacobian<a class="headerlink" href="#vegas-jacobian" title="Permalink to this heading">¶</a></h2>
+<span id="id4"></span><h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Jacobian<a class="headerlink" href="#vegas-jacobian" title="Link to this heading">¶</a></h2>
 <p>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Jacobian is useful when integrating multiple integrands simultaneously when some of the integrands depend only on a subset of the integration variables.</p>
 <p>Consider, for example, the integral</p>
 <div class="math">
-<p><img src="_images/math/f1929d906e21bdd8fa0dd0ac206d9271290ed80a.svg" alt="\int^{\pi/2}_0 dx_0 \, \frac{1}{(x_0-\delta)^2 + 0.01}."/></p>
+<p><img src="_images/math/3890847c19e053620c346df97a4f497f57370dd7.svg" alt="\int^{\pi/2}_0 dx_0 \, \frac{1}{(x_0-\delta)^2 + 0.01}."/></p>
 </div><p>We want to compare this integral for two different cases: a)
-where <img class="math" src="_images/math/90057b4db4589ddd94bcb6ef4e237cbaf129d964.svg" alt="\delta=x_1"/> is a random number near zero drawn from a distribution
-proportional to <img class="math" src="_images/math/e5e8ace873852c2f0a8ea0785cc39db97a7b5b18.svg" alt="\mathrm{exp}(-100\, \mathrm{sin} (x_1))"/>
-with <img class="math" src="_images/math/2042c108a638219d4268724b3fca8329ee46b0e4.svg" alt="0\le x_1 \le \pi/2"/>;
-and b) where <img class="math" src="_images/math/6b7383edd5b38c8fc7f48d0f20e1742a3aedc8cb.svg" alt="\delta=0"/>. The result for the first case is
-<img class="math" src="_images/math/1a570870b3eca321272b1fb845873a1b095b6b04.svg" alt="I_a = I_a^\mathrm{num}/I_a^\mathrm{den}"/> where</p>
+where <img class="math" src="_images/math/02c4a20bde8b055bb7b6f51cceaac435da16ff4a.svg" alt="\delta=x_1"/> is a random number near zero drawn from a distribution
+proportional to <img class="math" src="_images/math/bcab076307ff41e86010879301646afde5dd2f53.svg" alt="\mathrm{exp}(-100\, \mathrm{sin} (x_1))"/>
+with <img class="math" src="_images/math/271cf2288236b608b35028228f2d4d897d477529.svg" alt="0\le x_1 \le \pi/2"/>;
+and b) where <img class="math" src="_images/math/b39c8a1091721593433ecb77fd97cb4649579207.svg" alt="\delta=0"/>. The result for the first case is
+<img class="math" src="_images/math/3454d807ce969cbcc21b7df83c286b4782adff5f.svg" alt="I_a = I_a^\mathrm{num}/I_a^\mathrm{den}"/> where</p>
 <div class="math">
-<p><img src="_images/math/3889054504efe42e12038ffe759d4f6594167b9d.svg" alt="I_a^\mathrm{num} &amp;= \int^{\pi/2}_0 dx_0 \int^{\pi/2}_0 dx_1
+<p><img src="_images/math/d8b94a9767baec34910969270fb1b59f15bc82ae.svg" alt="I_a^\mathrm{num} &amp;= \int^{\pi/2}_0 dx_0 \int^{\pi/2}_0 dx_1
 \, \mathrm{e}^{-100\,\mathrm{sin}(x_1)}
  \, \frac{1}{(x_0-x_1)^2 + 0.01} \\
 I_a^\mathrm{den} &amp;= \int^{\pi/2}_0 dx_1
 \, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}."/></p>
 </div><p>The result for the second case is</p>
 <div class="math">
-<p><img src="_images/math/146e265b4ff0a009f454279f6fd9f9386bc296dd.svg" alt="I_b = \int^{\pi/2}_0 dx_0
+<p><img src="_images/math/6ceb0dc78c1893847595d3be7fdca125133b57cc.svg" alt="I_b = \int^{\pi/2}_0 dx_0
 \, \frac{1}{(x_0)^2 + 0.01}."/></p>
-</div><p>The first two integrals should have very similar dependence on <img class="math" src="_images/math/212712c54959852f9475bf600ab722a654434b96.svg" alt="x_1"/>, while
-the first and third integrals should have similar dependence on <img class="math" src="_images/math/cedacf3e2b5e3647040e2088bd52ca1f59dc7829.svg" alt="x_0"/>.
+</div><p>The first two integrals should have very similar dependence on <img class="math" src="_images/math/fd08d489b27848595e2576724ca3e5fbc7442e3e.svg" alt="x_1"/>, while
+the first and third integrals should have similar dependence on <img class="math" src="_images/math/b0beda9b652b1ca46a8b6c5c22446ded776ef23c.svg" alt="x_0"/>.
 Given these similarities, we would like to do all three integrals simultaneously;
 but one integral is two-dimensional and the other two are one-dimensional.</p>
 <p>One solution is to turn the one-dimensional integrals into two-dimensional
-integrals by rewriting <img class="math" src="_images/math/34d1ab9b9fa6e6a13feac39116e27a5a49d06d59.svg" alt="I_a^\mathrm{den}"/> as</p>
+integrals by rewriting <img class="math" src="_images/math/202d65934be52f25b7eb7d0eb77b6116951a6f5c.svg" alt="I_a^\mathrm{den}"/> as</p>
 <div class="math">
-<p><img src="_images/math/090edb6e16048bc0fcff8ef72d8e0972a6e0e613.svg" alt="I_a^\mathrm{den} &amp;=
+<p><img src="_images/math/e8a691cab137e12d70b20fb77688cfda7fa15d0c.svg" alt="I_a^\mathrm{den} &amp;=
 \int^{\pi/2}_0 \frac{dx_0}{\pi/2}
 \int^{\pi/2}_0 dx_1
 \, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}."/></p>
-</div><p>and similarly for <img class="math" src="_images/math/129d5e5e3591bf98b702018df32d92f8a4d30303.svg" alt="I_b"/>.
+</div><p>and similarly for <img class="math" src="_images/math/62750d6d8dd5c70d59680f422635963f97a74109.svg" alt="I_b"/>.
 These are then easily integrated together —</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -1959,22 +2005,22 @@ These are then easily integrated together —</p>
 <span class="n">Ia</span> <span class="o">=</span> <span class="mf">16.0562</span><span class="p">(</span><span class="mi">99</span><span class="p">)</span> <span class="n">Ia</span> <span class="o">-</span> <span class="n">Ib</span> <span class="o">=</span> <span class="mf">1.43</span><span class="p">(</span><span class="mi">88</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><img class="math" src="_images/math/129d5e5e3591bf98b702018df32d92f8a4d30303.svg" alt="I_b"/> is almost 100x less accurate than <img class="math" src="_images/math/c150b60b5edc3a5c09fabddc71d7a09d7c52291e.svg" alt="I_a"/>, despite
+<p><img class="math" src="_images/math/62750d6d8dd5c70d59680f422635963f97a74109.svg" alt="I_b"/> is almost 100x less accurate than <img class="math" src="_images/math/40ed4aeb446063f687f3a3ad7231a95504f7aa10.svg" alt="I_a"/>, despite
 having an integrand with no <code class="docutils literal notranslate"><span class="pre">x[1]</span></code> dependence. The problem is that the
-<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map for <code class="docutils literal notranslate"><span class="pre">x[1]</span></code> is tailored to <img class="math" src="_images/math/5af8a3ee2729271982a439fe302eb384645d0e64.svg" alt="I_a^\mathrm{num}"/>, which has
+<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map for <code class="docutils literal notranslate"><span class="pre">x[1]</span></code> is tailored to <img class="math" src="_images/math/e6416205c29be213cd4cc575de9ddb0c992ad0ca.svg" alt="I_a^\mathrm{num}"/>, which has
 a strong peak at <code class="docutils literal notranslate"><span class="pre">x[1]=0</span></code>. That map is highly sub-optimal for integrating
-a function, like that in <img class="math" src="_images/math/129d5e5e3591bf98b702018df32d92f8a4d30303.svg" alt="I_b"/>, that is independent of <code class="docutils literal notranslate"><span class="pre">x[1]</span></code>.</p>
+a function, like that in <img class="math" src="_images/math/62750d6d8dd5c70d59680f422635963f97a74109.svg" alt="I_b"/>, that is independent of <code class="docutils literal notranslate"><span class="pre">x[1]</span></code>.</p>
 <p>A much better approach is to rewrite the one-dimensional integrals
 as two-dimensional integrals using the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
-map’s Jacobian <img class="math" src="_images/math/4f252a7f4470b972a280445b0d1634e45d1db20f.svg" alt="dx_d/dy_d"/> in the extra direction   <img class="math" src="_images/math/71ad8370b0b8e9dafe0121a2623e940d29f4cae5.svg" alt="d"/>.
+map’s Jacobian <img class="math" src="_images/math/5ae6a1ac19ddf50143e7ca54148fc9c0576e3c2b.svg" alt="dx_d/dy_d"/> in the extra direction   <img class="math" src="_images/math/76b3e7e49a237eba20ecc53b88ab647d7333530d.svg" alt="d"/>.
 For example,</p>
 <div class="math">
-<p><img src="_images/math/0c0d1ed9170a223387ee25d79f0630047e95c4fb.svg" alt="I_a^\mathrm{den} &amp;=
+<p><img src="_images/math/b93914075d7c609f74feb2a3a36eb0642dd5e9ec.svg" alt="I_a^\mathrm{den} &amp;=
 \int^{\pi/2}_0 \frac{dx_0}{dx_0/dy_0}
 \int^{\pi/2}_0 dx_1
 \, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}."/></p>
-</div><p>This turns the <img class="math" src="_images/math/cedacf3e2b5e3647040e2088bd52ca1f59dc7829.svg" alt="x_0"/> integral into an integral over <img class="math" src="_images/math/d90be46e29b6ed78394732e5a28423444e6c3522.svg" alt="0\le y_0 \le 1`"/>
-with an integrand equal to   1. The Monte Carlo integral over <img class="math" src="_images/math/b543363ec2b79d432aba848d80a0ad4a5eba2445.svg" alt="y_0"/>
+</div><p>This turns the <img class="math" src="_images/math/b0beda9b652b1ca46a8b6c5c22446ded776ef23c.svg" alt="x_0"/> integral into an integral over <img class="math" src="_images/math/d0072f79f0054e5602204317caf20f893d513d8d.svg" alt="0\le y_0 \le 1`"/>
+with an integrand equal to   1. The Monte Carlo integral over <img class="math" src="_images/math/93b37f0a1c695b1525d5dfef58ebe2c75d4fb1bb.svg" alt="y_0"/>
 in <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is then exact; it is unaffected by the map for that direction.
 This is easily implemented for both one-dimensional integrals by setting
 keyword <code class="docutils literal notranslate"><span class="pre">uses_jac=True</span></code> in the integrator and modifying the integrand:</p>
@@ -2010,15 +2056,48 @@ as <code class="docutils literal notranslate"><span class="pre">x</span></code>)
 <span class="n">Ia</span> <span class="o">=</span> <span class="mf">16.0536</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> <span class="n">Ia</span> <span class="o">-</span> <span class="n">Ib</span> <span class="o">=</span> <span class="mf">0.97868</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>— where now <img class="math" src="_images/math/c150b60b5edc3a5c09fabddc71d7a09d7c52291e.svg" alt="I_a"/> and <img class="math" src="_images/math/129d5e5e3591bf98b702018df32d92f8a4d30303.svg" alt="I_b"/> are comparable in precision and the difference is
+<p>— where now <img class="math" src="_images/math/40ed4aeb446063f687f3a3ad7231a95504f7aa10.svg" alt="I_a"/> and <img class="math" src="_images/math/62750d6d8dd5c70d59680f422635963f97a74109.svg" alt="I_b"/> are comparable in precision and the difference is
 quite accurate. Note that the error on the difference is smaller than either of
 the separate errors, because of correlations between the two results.</p>
 </section>
 <section id="vegas-as-a-random-number-generator">
-<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> as a Random Number Generator<a class="headerlink" href="#vegas-as-a-random-number-generator" title="Permalink to this heading">¶</a></h2>
+<h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> as a Random Number Generator<a class="headerlink" href="#vegas-as-a-random-number-generator" title="Link to this heading">¶</a></h2>
 <p>A <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator generates random points in its integration volume from a
 distribution that is optimized for integrals of whatever function it
-was trained on. The integrator
+was trained on. A random sample of integration points and their corresponding weights
+can be obtained using the <code class="xref py py-meth docutils literal notranslate"><span class="pre">vegas.Integrator.sample()</span></code>: for example,
+the code</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+
+<span class="nd">@vegas</span><span class="o">.</span><span class="n">lbatchintegrand</span>
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">([(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)])</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;integral =&#39;</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+
+<span class="c1"># estimate integral using 5 random sets of integration points</span>
+<span class="n">estimates</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">wgt</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">integ</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lbatch&#39;</span><span class="p">)</span>
+    <span class="n">estimates</span> <span class="o">+=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">wgt</span> <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;integral =&#39;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">estimates</span><span class="p">)</span> <span class="o">/</span> <span class="mi">5</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;estimates =&#39;</span><span class="p">,</span> <span class="n">estimates</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>gives the following output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.99982</span><span class="p">(</span><span class="mi">74</span><span class="p">)</span>
+<span class="n">integral</span> <span class="o">=</span> <span class="mf">1.0001291624491842</span>
+<span class="n">estimates</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.9992910111775233</span><span class="p">,</span> <span class="mf">1.0001775493725942</span><span class="p">,</span> <span class="mf">1.0013094938697416</span><span class="p">,</span> <span class="mf">1.0001468331496914</span><span class="p">,</span> <span class="mf">0.9997209246763705</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>In this example, <code class="docutils literal notranslate"><span class="pre">x[i,</span> <span class="pre">d]</span></code> is an array of integration points, and
+<code class="docutils literal notranslate"><span class="pre">wgt[i]</span></code> is the array of weights assigned by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to each point so that
+<code class="docutils literal notranslate"><span class="pre">sum(wgt</span> <span class="pre">*</span> <span class="pre">f(x))</span></code> (or <code class="docutils literal notranslate"><span class="pre">wgt.dot(f(x))</span></code>) is an estimate of
+the integral of (<code class="docutils literal notranslate"><span class="pre">lbatch</span></code>) integrand <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>.</p>
+<p>The integrator also
 provides low-level access to the random-point generator
 through the iterators <a class="reference internal" href="vegas.html#vegas.Integrator.random" title="vegas.Integrator.random"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vegas.Integrator.random()</span></code></a> and
 <a class="reference internal" href="vegas.html#vegas.Integrator.random_batch" title="vegas.Integrator.random_batch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vegas.Integrator.random_batch()</span></code></a>.</p>
@@ -2045,7 +2124,7 @@ this:</p>
 </div>
 <p>Here <code class="docutils literal notranslate"><span class="pre">x[i,</span> <span class="pre">d]</span></code> is an array of integration points, <code class="docutils literal notranslate"><span class="pre">wgt[i]</span></code> contains the
 corresponding weights, and <code class="docutils literal notranslate"><span class="pre">batch_f(x)</span></code> returns an array containing the
-corresponding integrand values.</p>
+corresponding (<code class="docutils literal notranslate"><span class="pre">lbatch</span></code>) integrand values.</p>
 <p>The random points generated by <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> are stratified into hypercubes: <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>
 uses transformed integration variables to improve its Monte Carlo
 estimates. It further improves those estimates by subdividing the
@@ -2101,7 +2180,7 @@ used to construct the
 dictionary <code class="docutils literal notranslate"><span class="pre">xd</span></code>.</p>
 </section>
 <section id="implementation-notes">
-<h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this heading">¶</a></h2>
+<h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Link to this heading">¶</a></h2>
 <p>This implementation relies upon Cython for its speed and
 numpy for array processing. It also uses <code class="xref py py-mod docutils literal notranslate"><span class="pre">matplotlib</span></code>
 for graphics, <code class="xref py py-mod docutils literal notranslate"><span class="pre">h5py</span></code> when <code class="docutils literal notranslate"><span class="pre">minimize_mem=True</span></code>, and
@@ -2156,8 +2235,8 @@ deviations, and properly correlated with other
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="c_fortran.html"
-                          title="next chapter">Integrands in C or Fortran</a></p>
+    <p class="topless"><a href="compiled_integrands.html"
+                          title="next chapter">Compiled Integrands for Speed; GPUs</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -2166,7 +2245,7 @@ deviations, and properly correlated with other
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -2174,7 +2253,7 @@ deviations, and properly correlated with other
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
@@ -2190,18 +2269,18 @@ deviations, and properly correlated with other
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="c_fortran.html" title="Integrands in C or Fortran"
+          <a href="compiled_integrands.html" title="Compiled Integrands for Speed; GPUs"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013-2023, G. P. Lepage.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    &#169; Copyright 2013-2023, G. P. Lepage.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
     </div>
   </body>
 </html>

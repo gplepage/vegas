@@ -8,7 +8,7 @@ except:
     exit(1)
 
 # find version number from setup.cfg
-pattern = re.compile('^\w*version[ =]*(.*)$')
+pattern = re.compile(r'^\w*version[ =]*(.*)$')
 with open('setup.cfg', 'r') as ifile:
     for line in ifile.readlines():
         m = pattern.match(line[:-1])

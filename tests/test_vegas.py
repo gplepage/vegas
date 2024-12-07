@@ -1099,6 +1099,60 @@ class TestIntegrator(unittest.TestCase):
             integral += wgt * f(x)
         self.assertLess(abs(result.mean-integral), 5 * result.sdev)
 
+    def test_sample(self ):
+        " sample "
+        neval = 1000
+        nitn = 5
+
+        # dictionary 'rbatch'
+        @rbatchintegrand
+        def f(x):
+            return 2 * x['s'] * 3 * x['v'][0, 0] ** 2 * 4 * x['v'][1, 0] ** 3
+        itg = Integrator(dict(s=(0.,1.), v=[[(1.,2.)], [(2.,3.)]]), neval=neval, nitn=nitn)
+        rv = itg(f)
+        w,x = itg.sample(nbatch=nitn * itg.last_neval, mode='rbatch')
+        assert len(w) == nitn * itg.last_neval
+        rs = np.sum(w * f(x))
+        re = 1 * (8 - 1) * (81 - 16)
+        assert abs(rs - re) < 5 * rv.sdev
+
+        # dictionary 'lbatch'
+        @lbatchintegrand
+        def f(x):
+            return 2 * x['s'] * 3 * x['v'][:, 0, 0] ** 2 * 4 * x['v'][:, 1, 0] ** 3
+        itg = Integrator(dict(s=(0.,1.), v=[[(1.,2.)], [(2.,3.)]]), neval=neval, nitn=nitn)
+        rv = itg(f)
+        w,x = itg.sample(nbatch=nitn * itg.last_neval, mode='lbatch')
+        assert len(w) == nitn * itg.last_neval
+        rs = np.sum(w * f(x))
+        re = 1 * (8 - 1) * (81 - 16)
+        assert abs(rs - re) < 5 * rv.sdev
+
+        # array 'rbatch'
+        @rbatchintegrand
+        def f(x):
+            return 2 * x[0, 0] * 3 * x[0, 1] ** 2 * 4 * x[0, 2] ** 3
+        itg = Integrator([[(0.,1.), (1.,2.), (2.,3.)]], neval=neval, nitn=nitn)
+        rv = itg(f)
+        w,x = itg.sample(nbatch=nitn * itg.last_neval, mode='rbatch')
+        assert len(w) == nitn * itg.last_neval
+        rs = np.sum(w * f(x))
+        re = 1 * (8 - 1) * (81 - 16)
+        assert abs(rs - re) < 5 * rv.sdev
+
+        # array 'lbatch'
+        @lbatchintegrand
+        def f(x):
+            return 2 * x[:, 0, 0] * 3 * x[:, 0, 1] ** 2 * 4 * x[:, 0, 2] ** 3
+        itg = Integrator([[(0.,1.), (1.,2.), (2.,3.)]], neval=neval, nitn=nitn)
+        rv = itg(f)
+        w,x = itg.sample(nbatch=nitn * itg.last_neval, mode='lbatch')
+        assert len(w) == nitn * itg.last_neval
+        rs = np.sum(w * f(x))
+        re = 1 * (8 - 1) * (81 - 16)
+        assert abs(rs - re) < 5 * rv.sdev
+
+
     def test_multi(self):
         " multi-integrand "
         def f_s(x):
