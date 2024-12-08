@@ -128,7 +128,7 @@ The main code is then::
 
     import vegas
 
-    from cython_ridge import ridge
+    from pythran_ridge import ridge
     ridge = vegas.lbatchintegrand(ridge)
 
     integ = vegas.Integrator(4 * [[0, 1]])

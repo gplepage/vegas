@@ -162,7 +162,7 @@ an optimized Python module <code class="xref py py-mod docutils literal notransl
 <p>The main code is then:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 
-<span class="kn">from</span> <span class="nn">cython_ridge</span> <span class="kn">import</span> <span class="n">ridge</span>
+<span class="kn">from</span> <span class="nn">pythran_ridge</span> <span class="kn">import</span> <span class="n">ridge</span>
 <span class="n">ridge</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">lbatchintegrand</span><span class="p">(</span><span class="n">ridge</span><span class="p">)</span>
 
 <span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
