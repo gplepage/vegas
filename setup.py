@@ -3,7 +3,7 @@ from Cython.Build import cythonize
 import numpy
 
 ext_args = dict(
-    include_dirs=[numpy.get_include()],
+    include_dirs=[numpy.get_include()],  # not needed anymore
     library_dirs=[],
     runtime_library_dirs=[],
     extra_link_args=[]
