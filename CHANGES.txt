@@ -1,5 +1,5 @@
-Version 6.2.1 ?????
-======================
+Version 6.2.1 2025-02-07
+========================
 - Integrator.random_batch() no longer exposes internal work buffers to users (it 
   now makes copies).
 
