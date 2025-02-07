@@ -78,7 +78,7 @@ import pickle
 
 
 class PDFEV(_gvar.GVar):
-    """ Expectation value from |PDFIntegrator|.
+    r""" Expectation value from |PDFIntegrator|.
     
     Expectation values are returned by 
     :meth:`vegas.PDFIntegrator.__call__` and 
@@ -148,7 +148,7 @@ class PDFEV(_gvar.GVar):
             self.analyzer = analyzer
 
     def extend(self, pdfev):
-        """ Merge results from :class:`PDFEV` object ``pdfev`` after results currently in ``self``. """
+        r""" Merge results from :class:`PDFEV` object ``pdfev`` after results currently in ``self``. """
         self.results.extend(pdfev.results)
 
     def __getattr__(self, k):
@@ -175,7 +175,7 @@ class PDFEV(_gvar.GVar):
         return (PDFEV, (pickle.dumps(self.results), self.analyzer))
 
 class PDFEVArray(numpy.ndarray):
-    """ Array of expectation values from |PDFIntegrator|.
+    r""" Array of expectation values from |PDFIntegrator|.
     
     Expectation values are returned by 
     :meth:`vegas.PDFIntegrator.__call__` and 
@@ -246,7 +246,7 @@ class PDFEVArray(numpy.ndarray):
         return self 
 
     def extend(self, pdfev):
-        """ Merge results from :class:`PDFEVArray` object ``pdfev`` after results currently in ``self``. """
+        r""" Merge results from :class:`PDFEVArray` object ``pdfev`` after results currently in ``self``. """
         self.results.extend(pdfev.results)
 
     def __getattr__(self, k):
@@ -271,7 +271,7 @@ class PDFEVArray(numpy.ndarray):
         return (PDFEVArray, (pickle.dumps(self.results), self.analyzer))
 
 class PDFEVDict(_gvar.BufferDict):
-    """ Dictionary of expectation values from |PDFIntegrator|.
+    r""" Dictionary of expectation values from |PDFIntegrator|.
     
     Expectation values are returned by 
     :meth:`vegas.PDFIntegrator.__call__` and 
@@ -345,7 +345,7 @@ class PDFEVDict(_gvar.BufferDict):
             self.analyzer = analyzer
 
     def extend(self, pdfev):
-        """ Merge results from :class:`PDFEVDict` object ``pdfev`` after results currently in ``self``. """
+        r""" Merge results from :class:`PDFEVDict` object ``pdfev`` after results currently in ``self``. """
         self.results.extend(pdfev.results)
 
     def _remove_gvars(self, gvlist):
@@ -370,7 +370,7 @@ class PDFEVDict(_gvar.BufferDict):
         return (PDFEVDict, (pickle.dumps(self.results), self.analyzer))
 
 class PDFIntegrator(Integrator):
-    """ :mod:`vegas` integrator for PDF expectation values.
+    r""" :mod:`vegas` integrator for PDF expectation values.
 
     ``PDFIntegrator(param, pdf)`` creates a |vegas| integrator that 
     evaluates expectation values of arbitrary functions ``f(p)`` with 
@@ -533,7 +533,7 @@ class PDFIntegrator(Integrator):
         self.set(**kargs)
 
     def set(self, ka={}, **kargs):
-        """ Reset default parameters in integrator.
+        r""" Reset default parameters in integrator.
 
         Usage is analogous to the constructor
         for :class:`PDFIntegrator`: for example, ::
@@ -573,7 +573,7 @@ class PDFIntegrator(Integrator):
         return old_defaults
 
     def _make_map(self, limit):
-        """ Make vegas grid that is adapted to the pdf. """
+        r""" Make vegas grid that is adapted to the pdf. """
         ny = 2000
         y = _gvar.RNG.random((ny,1))
         limit = numpy.arctan(limit)
@@ -591,7 +591,7 @@ class PDFIntegrator(Integrator):
 
     @staticmethod
     def _f_lbatch(theta, f, param_pdf, pdf, scale, adapt_to_pdf):
-        """ Integrand for PDFIntegrator.
+        r""" Integrand for PDFIntegrator.
         
         N.B. Static method is more efficient because less to carry around
         (eg, when nproc>1).
@@ -629,7 +629,7 @@ class PDFIntegrator(Integrator):
         return ans
 
     def __call__(self, f=None, save=None, saveall=None, **kargs):
-        """ Estimate expectation value of function ``f(p)``.
+        r""" Estimate expectation value of function ``f(p)``.
 
         Uses module :mod:`vegas` to estimate the integral of
         ``f(p)`` multiplied by the probability density function
@@ -726,7 +726,7 @@ class PDFIntegrator(Integrator):
         return ans
 
     def stats(self, f=None, moments=False, histograms=False, **kargs):
-        """ Statistical analysis of function ``f(p)``.
+        r""" Statistical analysis of function ``f(p)``.
 
         Uses the :mod:`vegas` integrator to evaluate the expectation
         values and (co)variances of ``f(p)`` with 
@@ -944,7 +944,7 @@ class PDFIntegrator(Integrator):
 
     @staticmethod
     def _stats_analyzer(results, fpsample, moments, histograms):
-        """ Create final stats results from Integrator results """
+        r""" Create final stats results from Integrator results """
         # convert from Integrator to PDFIntegrator results
         tmp = _gvar.BufferDict()
         for k in results:
@@ -1046,7 +1046,7 @@ class PDFIntegrator(Integrator):
         return p
 
     def sample(self, nbatch, mode='rbatch'):
-        """ Generate random samples from the integrator's PDF.
+        r""" Generate random samples from the integrator's PDF.
 
         Typical usage is::
 
@@ -1187,7 +1187,7 @@ class PDFIntegrator(Integrator):
         return wgts, samples
 
 class PDFAnalyzer(object):
-    """ |vegas| analyzer for implementing ``save``, ``saveall`` keywords for :class:`PDFIntegrator` """
+    r""" |vegas| analyzer for implementing ``save``, ``saveall`` keywords for :class:`PDFIntegrator` """
     def __init__(self, pdfinteg, analyzer, save=None, saveall=None):
         self.pdfinteg = pdfinteg 
         self.analyzer = analyzer 
@@ -1217,7 +1217,7 @@ class PDFAnalyzer(object):
             
 
 def ravg(reslist, weighted=None, rescale=None):
-    """ Create running average from list of :mod:`vegas` results.
+    r""" Create running average from list of :mod:`vegas` results.
 
     This function is used to change how the weighted average of 
     |vegas| results is calculated. For example, the following code 

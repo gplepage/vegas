@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Tutorial &#8212; vegas 6.2 documentation</title>
+    <title>Tutorial &#8212; vegas 6.2.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
-    <script src="_static/documentation_options.js?v=ef7fcc1c"></script>
+    <script src="_static/documentation_options.js?v=55479182"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>  
@@ -1172,23 +1172,33 @@ the following code runs in about 58 min (on a 2024 laptop):</p>
 </div>
 <p>reduces the run time to 20 sec, which is more than 170 times faster.</p>
 <p>The decorator instructs <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to present integration points to
-the integrand in batches of 50,000 points
+the integrand in batches of approximately 50,000 points
 (<a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> parameter <code class="docutils literal notranslate"><span class="pre">min_neval_batch</span></code>)
 rather than offering them one at a time.
 Here, for example, function <code class="docutils literal notranslate"><span class="pre">ridge(x)</span></code> with the decorator
 takes as its argument  an array of integration
 points — <code class="docutils literal notranslate"><span class="pre">x[d,</span> <span class="pre">i]</span></code> where <code class="docutils literal notranslate"><span class="pre">d=0...</span></code> labels the direction and
 <code class="docutils literal notranslate"><span class="pre">i=0...</span></code> the integration point — and returns an array of integrand
-values <code class="docutils literal notranslate"><span class="pre">ans[i]</span> <span class="pre">*</span> <span class="pre">norm</span></code> corresponding  to those points. Typically one
-must modify the integrand code to deal with the extra index <code class="docutils literal notranslate"><span class="pre">i</span></code>,
-but that is not necessary in <code class="docutils literal notranslate"><span class="pre">ridge</span></code> because the extra index is handled
-implicitly: <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> represents an array <code class="docutils literal notranslate"><span class="pre">x[d,</span> <span class="pre">:]</span></code> of values when
-using the decorator.
-The batch integrand is faster because the arrays are <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code>
-arrays, and therefore arithmetic operators act on the entire arrays using
-highly optimized (compiled) <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> code.
-The integrand is evaluated for all integration points in a batch at
-the same time.</p>
+values <code class="docutils literal notranslate"><span class="pre">ans[i]</span> <span class="pre">*</span> <span class="pre">norm</span></code> corresponding  to those points. As a result
+the code uses <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> vectorization to evaluate the integrand
+for all 50,000 integration points in the batch at the same time, which is
+much faster than handling the points separately.
+The loop in the integrand could have been rewritten</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">x0</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+    <span class="n">dx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+        <span class="n">dx2</span><span class="p">[:]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">ans</span><span class="p">[:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">100.</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">[:])</span>
+</pre></div>
+</div>
+<p>to make the batch index explicit (<code class="docutils literal notranslate"><span class="pre">:</span></code>); here <code class="docutils literal notranslate"><span class="pre">x[d]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">dx2</span></code>, and <code class="docutils literal notranslate"><span class="pre">ans</span></code> are all <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> arrays with
+50,000 values, one for each integration point. Typically
+one must modify the integrand
+code to deal with the extra index <code class="docutils literal notranslate"><span class="pre">i</span></code>
+when adding a batch decorator, but that wasn’t
+necessary in <code class="docutils literal notranslate"><span class="pre">ridge</span></code> because trailing indices can be
+left implicit in <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> arrays.</p>
 <p>The advantage gained from using <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s batch mode
 (with <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> vectorization)
 is particularly
@@ -1319,7 +1329,7 @@ would be:</p>
 compiled into efficient machine code the first time it is called, and
 the machine code is used in place of the Python function for that
 and all subsequent calls. <code class="xref py py-mod docutils literal notranslate"><span class="pre">numba</span></code> is particularly effective when
-used with low-level code such as this, where standard numerical
+compiling low-level code such as this, where standard numerical
 datatypes (integers, floats) are manipulated directly (rather than
 relying on <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> array operations). This code is somewhat
 faster than the batch integrands above that use <code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code> array
@@ -2274,7 +2284,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>

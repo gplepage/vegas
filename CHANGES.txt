@@ -1,3 +1,13 @@
+Version 6.2.1 ?????
+======================
+- Integrator.random_batch() no longer exposes internal work buffers to users (it 
+  now makes copies).
+
+- Inconsistent behavior between adapt=False with minimize_mem=True 
+  or with minimize_mem=False is now fixed.
+
+- Cleaned up Cython.
+
 Version 6.2 2024-12-07
 ======================
 Modified so Integrator works with integrands that return 32-bit floats 

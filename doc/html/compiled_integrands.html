@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Compiled Integrands for Speed; GPUs &#8212; vegas 6.2 documentation</title>
+    <title>Compiled Integrands for Speed; GPUs &#8212; vegas 6.2.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
-    <script src="_static/documentation_options.js?v=ef7fcc1c"></script>
+    <script src="_static/documentation_options.js?v=55479182"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Compiled Integrands for Speed; GPUs</a></li> 
       </ul>
     </div>  
@@ -217,8 +217,9 @@ integrand (from the previous sections) on a GPU:</p>
     <span class="k">return</span> <span class="n">_mridge</span><span class="p">(</span><span class="n">mx</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>These integrands run 20 times faster than  the original (vectorized) batch
-integrand (1 sec versus 20 sec using the built-in GPU on a 2024 laptop).
+<p>These integrands run 20 times faster than  the
+<a class="reference internal" href="tutorial.html#faster-integrands"><span class="std std-ref">original (vectorized) batch integrand</span></a>
+(1 sec versus 20 sec using the built-in GPU on a 2024 laptop).
 The speedup is substantial because this integrand is quite
 costly to evaluate; the original batch integrand is just as fast as the GPU
 versions when <code class="docutils literal notranslate"><span class="pre">N=1</span></code> (instead of <code class="docutils literal notranslate"><span class="pre">N=1000</span></code>).</p>
@@ -691,7 +692,7 @@ speed as the batch versions of the C code, above.</p>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Compiled Integrands for Speed; GPUs</a></li> 
       </ul>
     </div>

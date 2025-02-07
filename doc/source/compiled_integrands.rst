@@ -182,8 +182,9 @@ Code for the :mod:`mlx` module is almost identical::
     def ridge(x):
         return _mridge(mx.array(x))    
 
-These integrands run 20 times faster than  the original (vectorized) batch 
-integrand (1 sec versus 20 sec using the built-in GPU on a 2024 laptop). 
+These integrands run 20 times faster than  the  
+:ref:`original (vectorized) batch integrand<faster_integrands>`
+(1 sec versus 20 sec using the built-in GPU on a 2024 laptop). 
 The speedup is substantial because this integrand is quite 
 costly to evaluate; the original batch integrand is just as fast as the GPU
 versions when ``N=1`` (instead of ``N=1000``).

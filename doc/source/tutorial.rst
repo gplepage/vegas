@@ -1029,23 +1029,33 @@ Adding a decorator to the integrand function ``ridge(x)`` ::
 reduces the run time to 20 sec, which is more than 170 times faster.
 
 The decorator instructs |vegas| to present integration points to 
-the integrand in batches of 50,000 points 
+the integrand in batches of approximately 50,000 points 
 (|vegas| parameter ``min_neval_batch``)
 rather than offering them one at a time.
 Here, for example, function ``ridge(x)`` with the decorator
 takes as its argument  an array of integration
 points --- ``x[d, i]`` where ``d=0...`` labels the direction and 
 ``i=0...`` the integration point --- and returns an array of integrand 
-values ``ans[i] * norm`` corresponding  to those points. Typically one 
-must modify the integrand code to deal with the extra index ``i``, 
-but that is not necessary in ``ridge`` because the extra index is handled 
-implicitly: ``x[d]`` represents an array ``x[d, :]`` of values when 
-using the decorator. 
-The batch integrand is faster because the arrays are :mod:`numpy` 
-arrays, and therefore arithmetic operators act on the entire arrays using
-highly optimized (compiled) :mod:`numpy` code. 
-The integrand is evaluated for all integration points in a batch at 
-the same time. 
+values ``ans[i] * norm`` corresponding  to those points. As a result 
+the code uses :mod:`numpy` vectorization to evaluate the integrand 
+for all 50,000 integration points in the batch at the same time, which is 
+much faster than handling the points separately. 
+The loop in the integrand could have been rewritten ::
+
+        for x0 in np.linspace(0.25, 0.75, N):
+            dx2 = (x[0, :] - x0) ** 2
+            for d in range(1, dim):
+                dx2[:] += (x[d, :] - x0) ** 2
+            ans[:] += np.exp(-100. * dx2[:]) 
+
+to make the batch index explicit (``:``); here ``x[d]``, 
+``dx2``, and ``ans`` are all :mod:`numpy` arrays with 
+50,000 values, one for each integration point. Typically 
+one must modify the integrand 
+code to deal with the extra index ``i``
+when adding a batch decorator, but that wasn't 
+necessary in ``ridge`` because trailing indices can be 
+left implicit in :mod:`numpy` arrays.
 
 The advantage gained from using |vegas|'s batch mode 
 (with :mod:`numpy` vectorization)
@@ -1181,7 +1191,7 @@ Here the decorator ``@numba.njit`` causes the ``ridge`` function to be
 compiled into efficient machine code the first time it is called, and 
 the machine code is used in place of the Python function for that 
 and all subsequent calls. :mod:`numba` is particularly effective when 
-used with low-level code such as this, where standard numerical 
+compiling low-level code such as this, where standard numerical 
 datatypes (integers, floats) are manipulated directly (rather than 
 relying on :mod:`numpy` array operations). This code is somewhat 
 faster than the batch integrands above that use :mod:`numpy` array 
