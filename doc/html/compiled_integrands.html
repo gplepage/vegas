@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Compiled Integrands for Speed; GPUs &#8212; vegas 6.2.1 documentation</title>
+    <title>Compiled Integrands for Speed; GPUs &#8212; vegas 6.3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
-    <script src="_static/documentation_options.js?v=55479182"></script>
+    <script src="_static/documentation_options.js?v=4b074805"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Compiled Integrands for Speed; GPUs</a></li> 
       </ul>
     </div>  
@@ -183,7 +183,8 @@ the <code class="xref py py-mod docutils literal notranslate"><span class="pre">
 The following integrand <code class="docutils literal notranslate"><span class="pre">ridge(x)</span></code> uses the <code class="xref py py-mod docutils literal notranslate"><span class="pre">jax</span></code> module to compile
 and run the <code class="docutils literal notranslate"><span class="pre">ridge</span></code>
 integrand (from the previous sections) on a GPU:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">jax</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">jax</span>
 <span class="n">jnp</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">numpy</span>
 
 <span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
@@ -198,10 +199,17 @@ integrand (from the previous sections) on a GPU:</p>
 <span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
 <span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">_jridge</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">gpu_pad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">   Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Code for the <code class="xref py py-mod docutils literal notranslate"><span class="pre">mlx</span></code> module is almost identical:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mlx.core</span> <span class="k">as</span> <span class="nn">mx</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+<span class="kn">import</span> <span class="nn">mlx.core</span> <span class="k">as</span> <span class="nn">mx</span>
 
 <span class="nd">@mx</span><span class="o">.</span><span class="n">compile</span>
 <span class="k">def</span> <span class="nf">_mridge</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -215,14 +223,36 @@ integrand (from the previous sections) on a GPU:</p>
 <span class="nd">@vegas</span><span class="o">.</span><span class="n">rbatchintegrand</span>
 <span class="k">def</span> <span class="nf">ridge</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">_mridge</span><span class="p">(</span><span class="n">mx</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">gpu_pad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">ridge</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mf">2e5</span><span class="p">,</span> <span class="n">adapt</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;result = </span><span class="si">%s</span><span class="s1">   Q = </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>These integrands run 20 times faster than  the
+<p>These integrands run more than 20 times faster than  the
 <a class="reference internal" href="tutorial.html#faster-integrands"><span class="std std-ref">original (vectorized) batch integrand</span></a>
-(1 sec versus 20 sec using the built-in GPU on a 2024 laptop).
+(less than 1 sec versus 20 sec using the built-in GPU on a 2024 laptop).
 The speedup is substantial because this integrand is quite
 costly to evaluate; the original batch integrand is just as fast as the GPU
 versions when <code class="docutils literal notranslate"><span class="pre">N=1</span></code> (instead of <code class="docutils literal notranslate"><span class="pre">N=1000</span></code>).</p>
+<p>Note that <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a> parameter <code class="docutils literal notranslate"><span class="pre">gpu_pad</span></code> is set equal
+to <code class="docutils literal notranslate"><span class="pre">True</span></code> in the GPU examples. This instructs <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to pad the batches
+of integrator points sent to the integrand so that each batch is the same
+size, which typically improves GPU performance. The number of integration
+points in each batch is the smaller of <code class="docutils literal notranslate"><span class="pre">neval</span></code>, and the sum of
+the  <a class="reference internal" href="vegas.html#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>
+parameters <code class="docutils literal notranslate"><span class="pre">min_neval_batch</span></code> and <code class="docutils literal notranslate"><span class="pre">max_neval_hcube</span></code>.</p>
+<p>The number of integration points added in the pad is smaller than
+<code class="docutils literal notranslate"><span class="pre">max_neval_hcube</span></code> (unless <code class="docutils literal notranslate"><span class="pre">neval</span></code> sets the batch size). The integrand
+is evaluated for these points, but the results are discarded. The additional
+cost from evaluating the integrand for the discarded points is generally
+much smaller than the
+benefit coming from a constant batch size. The fraction of integrand
+evaluations discarded in this way is smaller than <code class="docutils literal notranslate"><span class="pre">max_neval_hcube</span></code> divided
+by <code class="docutils literal notranslate"><span class="pre">min_neval_batch</span></code>, and therefore can be reduced by increasing the latter
+parameter (or decreasing the former paramter).</p>
 </section>
 <section id="c-and-fortran">
 <h2>C and Fortran<a class="headerlink" href="#c-and-fortran" title="Link to this heading">¶</a></h2>
@@ -692,7 +722,7 @@ speed as the batch versions of the C code, above.</p>
         <li class="right" >
           <a href="tutorial.html" title="Tutorial"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Compiled Integrands for Speed; GPUs</a></li> 
       </ul>
     </div>

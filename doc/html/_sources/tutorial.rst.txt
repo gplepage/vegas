@@ -1961,33 +1961,35 @@ The final result is the sum of the results from all the hypercubes.
 
 To mimic a full |vegas| integral estimate using the iterators above, we need
 to know which points belong to which hypercubes. The following code
-shows how this is done::
+shows how this is done, now averaging over ``nitn`` iterations (equivalent 
+to what |vegas| does when ``adapt=False``)::
 
     import gvar as gv 
 
     integral = 0.0
     variance = 0.0
-    for x, wgt, hcube in integ.random_batch(yield_hcube=True):
-        wgt_fx = wgt * batch_f(x)
-        # iterate over hypercubes: compute variance for each,
-        #                          and accumulate for final result
-        for i in range(hcube[0], hcube[-1] + 1):
-            idx = (hcube == i)          # select array items for h-cube i
-            nwf = np.sum(idx)           # number of points in h-cube i
-            wf = wgt_fx[idx]
-            sum_wf = np.sum(wf)         # sum of wgt * f(x) for h-cube i
-            sum_wf2 = np.sum(wf ** 2)   # sum of (wgt * f(x)) ** 2
-            integral += sum_wf
-            variance += (sum_wf2 * nwf - sum_wf ** 2) / (nwf - 1.)
-    # answer = integral;   standard deviation = variance ** 0.5
-    result = gv.gvar(integral, variance ** 0.5)
+    nitn = 10                                       # number of iterations
+    for it in range(1, nitn + 1):
+        for x, wgt, hcube in integ.random_batch(yield_hcube=True):
+            wgt_fx = wgt * batch_f(x)
+            # iterate over hypercubes: compute variance for each,
+            #                          and accumulate for final result
+            for i in range(hcube[0], hcube[-1] + 1):
+                idx = (hcube == i)                  # select array items for h-cube i
+                nwf = np.sum(idx)                   # number of points in h-cube i
+                wf = wgt_fx[idx]
+                sum_wf = np.sum(wf, axis=0)         # sum of wgt * f(x) for h-cube i
+                sum_wf2 = np.sum(wf ** 2, axis=0)   # sum of (wgt * f(x)) ** 2
+                integral += sum_wf
+                variance += (sum_wf2 * nwf - sum_wf ** 2) / (nwf - 1.)
+    # answer = integral/nitn;   standard deviation = (variance/nitn**2) ** 0.5
+    result = gv.gvar(integral / nitn, (variance / nitn**2) ** 0.5)
 
 Here ``hcube[i]`` identifies the hypercube containing ``x[i, d]``. This example is 
 easily modified to provide information about the |vegas| Jacobian to the integrand, if needed 
 (see the section :ref:`vegas_Jacobian`)::
 
-    integral = 0.0
-    variance = 0.0
+    ...
     for x, y, wgt, hcube in integ.random_batch(yield_hcube=True, yield_y=True):
         wgt_fx = wgt * batch_f(x, jac=integ.map.jac1d(y))
         ...
@@ -1995,8 +1997,7 @@ easily modified to provide information about the |vegas| Jacobian to the integra
 The example is also easily modified for integrands ``batch_f(xd)`` where ``xd`` 
 is a dictionary::
 
-    integral = 0.0
-    variance = 0.0
+    ...
     for x, wgt, hcube in integ.random_batch(yield_hcube=True):
         xd = gv.BufferDict(integ.xdict, lbatch_buf=x)
         wgt_fx = wgt * batch_f(xd)

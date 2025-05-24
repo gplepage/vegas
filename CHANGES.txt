@@ -1,3 +1,9 @@
+Version 6.3 2025-05-24
+========================
+Adds option gpu_pad to Integrator. Setting gpu_pad=True can make 
+GPU-based integrands run much faster. Thanks to Dmitriy Kim for 
+suggesting this quick fix.
+
 Version 6.2.1 2025-02-07
 ========================
 - Integrator.random_batch() no longer exposes internal work buffers to users (it 

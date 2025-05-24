@@ -1022,16 +1022,28 @@ cdef class Integrator(object):
             is ``analyzer=None``.
         min_neval_batch (positive int): The minimum number of integration 
             points to be passed together to the integrand when using
-            |vegas| in batch mode. The default value is 50,000. Larger 
+            |vegas| in batch mode. The default value is 100,000. Larger 
             values may be lead to faster evaluations, but at the cost of
-            more memory for internal work arrays. The last batch is 
-            usually smaller than this limit, as it is limited by ``neval``.
+            more memory for internal work arrays. Batch sizes are all smaller
+            than the lesser of ``min_neval_batch + max_neval_hcube`` and 
+            ``neval``. The last batch is usually smaller than this limit, 
+            as it is limited by ``neval``.
         max_neval_hcube (positive int): Maximum number of integrand
             evaluations per hypercube in the stratification. The default
             value is 50,000. Larger values might allow for more adaptation
             (when ``beta>0``), but also allow for more over-shoot when 
             adapting to sharp peaks. Larger values also can result in 
             large internal work arrasy.
+        gpu_pad (bool): If ``True``, |vegas| batches are padded so that
+            they are all the same size. The extra integrand evaluations 
+            for integration points in the pad are discarded; increase 
+            ``min_neval_batch`` or reduce ``max_neval_hcube`` to 
+            decrease the number of evaluations that are discarded. 
+            Padding is usually minimal when ``min_neval_batch`` is 
+            equal to or larger than ``neval``. Padding can make 
+            GPU-based integrands work much faster, but it makes 
+            other types of integrand run more slowly. 
+            Default is ``False``.
         minimize_mem (bool): When ``True``, |vegas| minimizes
             internal workspace by moving some of its data to 
             a disk file. This increases execution time (slightly)
@@ -1100,8 +1112,9 @@ cdef class Integrator(object):
         map=None,               # integration region, AdaptiveMap, or Integrator
         neval=1000,             # number of evaluations per iteration
         maxinc_axis=1000,       # number of adaptive-map increments per axis
-        min_neval_batch=50000,  # min. number of evaluations per batch
+        min_neval_batch=100000, # min. number of evaluations per batch
         max_neval_hcube=50000,  # max number of evaluations per h-cube
+        gpu_pad=False,          # pad batches for use by GPUs
         neval_frac=0.75,        # fraction of evaluations used for adaptive stratified sampling
         max_mem=1e9,            # memory cutoff (# of floats)
         nitn=10,                # number of iterations
@@ -1407,10 +1420,20 @@ cdef class Integrator(object):
             self.sum_sigf = nsigf 
         self.neval_hcube = numpy.empty(self.min_neval_batch // 2 + 1, dtype=numpy.intp) 
         self.neval_hcube[:] = avg_neval_hcube
-        self.y = numpy.empty((self.min_neval_batch, self.dim), float)
-        self.x = numpy.empty((self.min_neval_batch, self.dim), float)
-        self.jac = numpy.empty(self.min_neval_batch, float)
-        self.fdv2 = numpy.empty(self.min_neval_batch, float)
+        # allocate work space
+        # self.y = numpy.empty((self.min_neval_batch, self.dim), float)
+        # self.x = numpy.empty((self.min_neval_batch, self.dim), float)
+        # self.jac = numpy.empty(self.min_neval_batch, float)
+        # self.fdv2 = numpy.empty(self.min_neval_batch, float)
+        workspace = self.min_neval_batch + self.max_neval_hcube
+        if workspace > self.neval:
+            workspace = self.neval + 1
+        if (3*self.dim + 3) * workspace + (0 if self.minimize_mem else self.nhcube) > self.max_mem:
+            raise MemoryError('work arrays larger than max_mem; reduce min_neval_batch or max_neval_hcube (or increase max_mem)')
+        self.y = numpy.empty((workspace, self.dim), float)
+        self.x = numpy.empty((workspace, self.dim), float)
+        self.jac = numpy.empty(workspace, float)
+        self.fdv2 = numpy.empty(workspace, float)
         return old_val
 
     def settings(Integrator self not None, ngrid=0):
@@ -1676,11 +1699,12 @@ cdef class Integrator(object):
             ############################## have enough points => build yields
             self.last_neval += neval_batch
             nhcube_batch = hcube - hcube_base + 1
-            if (3*self.dim + 3) * neval_batch * 2 > self.max_mem:
-                raise MemoryError('work arrays larger than max_mem; reduce min_neval_batch or max_neval_hcube (or increase max_mem)')
+            # if (3*self.dim + 3) * neval_batch * 2 > self.max_mem:
+            #     raise MemoryError('work arrays larger than max_mem; reduce min_neval_batch or max_neval_hcube (or increase max_mem)')
 
             # 1) resize work arrays if needed (to double what is needed)
             if neval_batch > self.y.shape[0]:
+                print("XXX - shouldn't get here ever")
                 self.y = numpy.empty((2 * neval_batch, self.dim), float)
                 self.x = numpy.empty((2 * neval_batch, self.dim), float)
                 self.jac = numpy.empty(2 * neval_batch, float)
@@ -2000,9 +2024,10 @@ cdef class Integrator(object):
         cdef bint adaptive_strat
         cdef double sum_sigf, sigf2
         cdef bint firsteval = True
-
+        cdef bint gpu_pad
         if kargs:
             self.set(kargs)
+        gpu_pad = self.gpu_pad and (self.beta != 0) and (self.adapt == True)
         if self.nproc > 1:
             old_defaults = self.set(mpi=False, min_neval_batch=self.nproc * self.min_neval_batch)
         elif self.mpi:
@@ -2053,7 +2078,11 @@ cdef class Integrator(object):
                 len_hcube = len(hcube)
 
                 # evaluate integrand at all points in x
-                xa = numpy.asarray(x)
+                if gpu_pad:
+                    xa = numpy.asarray(self.x)
+                    xa[len(x):] = xa[len(x) - 1]
+                else:
+                    xa = numpy.asarray(x)
                 if self.nproc > 1:
                     nx = x.shape[0] // self.nproc + 1
                     if self.uses_jac:
@@ -2076,6 +2105,8 @@ cdef class Integrator(object):
                         fcn.eval(xa, jac=self.map.jac1d(y) if self.uses_jac else None),
                         dtype=float
                         )
+                if gpu_pad:
+                    fx = fx[:len(x)]
                 # sanity check
                 if numpy.any(numpy.isnan(fx)):
                     raise ValueError('integrand evaluates to nan')
@@ -3193,7 +3224,7 @@ cdef class _BatchIntegrand_from_NonBatch(_BatchIntegrand_from_Base):
             for i in range(x.shape[0]):
                 if self.std_arg:
                     fx = numpy.asarray(
-                        self.fcn(x[i]) if jac is None else self.fcn(x[i], jac=jac[i])
+                        self.fcn(numpy.asarray(x[i])) if jac is None else self.fcn(numpy.asarray(x[i]), jac=jac[i])
                         ).reshape((-1,))
                 else:
                     fx = numpy.asarray(
@@ -3220,7 +3251,7 @@ cdef class _BatchIntegrand_from_NonBatchDict(_BatchIntegrand_from_Base):
         f = _f
         for i in range(x.shape[0]):
             if self.std_arg:
-                fx = self.fcn(x[i]) if jac is None else self.fcn(x[i], jac=jac[i])
+                fx = self.fcn(numpy.asarray(x[i])) if jac is None else self.fcn(numpy.asarray(x[i]), jac=jac[i])
             else:
                 fx = self.non_std_arg_fcn(x[i], None if jac is None else jac[i])
             if not isinstance(fx, gvar.BufferDict):

@@ -149,6 +149,7 @@ The following integrand ``ridge(x)`` uses the :mod:`jax` module to compile
 and run the ``ridge`` 
 integrand (from the previous sections) on a GPU::
 
+    import vegas 
     import jax 
     jnp = jax.numpy         
 
@@ -165,8 +166,15 @@ integrand (from the previous sections) on a GPU::
     def ridge(x):
         return _jridge(jnp.array(x))
 
+    integ = vegas.Integrator(4 * [[0, 1]], gpu_pad=True)
+
+    integ(ridge, nitn=10, neval=2e5)
+    result = integ(ridge, nitn=10, neval=2e5, adapt=False)
+    print('result = %s   Q = %.2f' % (result, result.Q))
+
 Code for the :mod:`mlx` module is almost identical::
 
+    import vegas
     import mlx.core as mx 
 
     @mx.compile
@@ -182,12 +190,36 @@ Code for the :mod:`mlx` module is almost identical::
     def ridge(x):
         return _mridge(mx.array(x))    
 
-These integrands run 20 times faster than  the  
+    integ = vegas.Integrator(4 * [[0, 1]], gpu_pad=True)
+
+    integ(ridge, nitn=10, neval=2e5)
+    result = integ(ridge, nitn=10, neval=2e5, adapt=False)
+    print('result = %s   Q = %.2f' % (result, result.Q))
+
+These integrands run more than 20 times faster than  the  
 :ref:`original (vectorized) batch integrand<faster_integrands>`
-(1 sec versus 20 sec using the built-in GPU on a 2024 laptop). 
+(less than 1 sec versus 20 sec using the built-in GPU on a 2024 laptop). 
 The speedup is substantial because this integrand is quite 
 costly to evaluate; the original batch integrand is just as fast as the GPU
 versions when ``N=1`` (instead of ``N=1000``).
+
+Note that :class:`vegas.Integrator` parameter ``gpu_pad`` is set equal 
+to ``True`` in the GPU examples. This instructs |vegas| to pad the batches 
+of integrator points sent to the integrand so that each batch is the same 
+size, which typically improves GPU performance. The number of integration 
+points in each batch is the smaller of ``neval``, and the sum of 
+the  :class:`vegas.Integrator` 
+parameters ``min_neval_batch`` and ``max_neval_hcube``. 
+
+The number of integration points added in the pad is smaller than 
+``max_neval_hcube`` (unless ``neval`` sets the batch size). The integrand 
+is evaluated for these points, but the results are discarded. The additional 
+cost from evaluating the integrand for the discarded points is generally 
+much smaller than the 
+benefit coming from a constant batch size. The fraction of integrand 
+evaluations discarded in this way is smaller than ``max_neval_hcube`` divided 
+by ``min_neval_batch``, and therefore can be reduced by increasing the latter 
+parameter (or decreasing the former paramter).
 
 
 

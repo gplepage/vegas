@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Tutorial &#8212; vegas 6.2.1 documentation</title>
+    <title>Tutorial &#8212; vegas 6.3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
-    <script src="_static/documentation_options.js?v=55479182"></script>
+    <script src="_static/documentation_options.js?v=4b074805"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>  
@@ -2144,32 +2144,34 @@ hypercubes, and doing a Monte Carlo integral in each hypercube separately
 The final result is the sum of the results from all the hypercubes.</p>
 <p>To mimic a full <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integral estimate using the iterators above, we need
 to know which points belong to which hypercubes. The following code
-shows how this is done:</p>
+shows how this is done, now averaging over <code class="docutils literal notranslate"><span class="pre">nitn</span></code> iterations (equivalent
+to what <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> does when <code class="docutils literal notranslate"><span class="pre">adapt=False</span></code>):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gvar</span> <span class="k">as</span> <span class="nn">gv</span>
 
 <span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
 <span class="n">variance</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_batch</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="n">wgt_fx</span> <span class="o">=</span> <span class="n">wgt</span> <span class="o">*</span> <span class="n">batch_f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="c1"># iterate over hypercubes: compute variance for each,</span>
-    <span class="c1">#                          and accumulate for final result</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">hcube</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">hcube</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">hcube</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span>          <span class="c1"># select array items for h-cube i</span>
-        <span class="n">nwf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>           <span class="c1"># number of points in h-cube i</span>
-        <span class="n">wf</span> <span class="o">=</span> <span class="n">wgt_fx</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-        <span class="n">sum_wf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">wf</span><span class="p">)</span>         <span class="c1"># sum of wgt * f(x) for h-cube i</span>
-        <span class="n">sum_wf2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">wf</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>   <span class="c1"># sum of (wgt * f(x)) ** 2</span>
-        <span class="n">integral</span> <span class="o">+=</span> <span class="n">sum_wf</span>
-        <span class="n">variance</span> <span class="o">+=</span> <span class="p">(</span><span class="n">sum_wf2</span> <span class="o">*</span> <span class="n">nwf</span> <span class="o">-</span> <span class="n">sum_wf</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">nwf</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span>
-<span class="c1"># answer = integral;   standard deviation = variance ** 0.5</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="n">integral</span><span class="p">,</span> <span class="n">variance</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">nitn</span> <span class="o">=</span> <span class="mi">10</span>                                       <span class="c1"># number of iterations</span>
+<span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nitn</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_batch</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">wgt_fx</span> <span class="o">=</span> <span class="n">wgt</span> <span class="o">*</span> <span class="n">batch_f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="c1"># iterate over hypercubes: compute variance for each,</span>
+        <span class="c1">#                          and accumulate for final result</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">hcube</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">hcube</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">hcube</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span>                  <span class="c1"># select array items for h-cube i</span>
+            <span class="n">nwf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>                   <span class="c1"># number of points in h-cube i</span>
+            <span class="n">wf</span> <span class="o">=</span> <span class="n">wgt_fx</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">sum_wf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>         <span class="c1"># sum of wgt * f(x) for h-cube i</span>
+            <span class="n">sum_wf2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">wf</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>   <span class="c1"># sum of (wgt * f(x)) ** 2</span>
+            <span class="n">integral</span> <span class="o">+=</span> <span class="n">sum_wf</span>
+            <span class="n">variance</span> <span class="o">+=</span> <span class="p">(</span><span class="n">sum_wf2</span> <span class="o">*</span> <span class="n">nwf</span> <span class="o">-</span> <span class="n">sum_wf</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">nwf</span> <span class="o">-</span> <span class="mf">1.</span><span class="p">)</span>
+<span class="c1"># answer = integral/nitn;   standard deviation = (variance/nitn**2) ** 0.5</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">gvar</span><span class="p">(</span><span class="n">integral</span> <span class="o">/</span> <span class="n">nitn</span><span class="p">,</span> <span class="p">(</span><span class="n">variance</span> <span class="o">/</span> <span class="n">nitn</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Here <code class="docutils literal notranslate"><span class="pre">hcube[i]</span></code> identifies the hypercube containing <code class="docutils literal notranslate"><span class="pre">x[i,</span> <span class="pre">d]</span></code>. This example is
 easily modified to provide information about the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Jacobian to the integrand, if needed
 (see the section <a class="reference internal" href="#vegas-jacobian"><span class="std std-ref">vegas Jacobian</span></a>):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="n">variance</span> <span class="o">=</span> <span class="mf">0.0</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
 <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_batch</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">yield_y</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="n">wgt_fx</span> <span class="o">=</span> <span class="n">wgt</span> <span class="o">*</span> <span class="n">batch_f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">integ</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">jac1d</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
     <span class="o">...</span>
@@ -2177,8 +2179,7 @@ easily modified to provide information about the <a class="reference internal" h
 </div>
 <p>The example is also easily modified for integrands <code class="docutils literal notranslate"><span class="pre">batch_f(xd)</span></code> where <code class="docutils literal notranslate"><span class="pre">xd</span></code>
 is a dictionary:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">integral</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="n">variance</span> <span class="o">=</span> <span class="mf">0.0</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
 <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">wgt</span><span class="p">,</span> <span class="n">hcube</span> <span class="ow">in</span> <span class="n">integ</span><span class="o">.</span><span class="n">random_batch</span><span class="p">(</span><span class="n">yield_hcube</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="n">xd</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">BufferDict</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">xdict</span><span class="p">,</span> <span class="n">lbatch_buf</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
     <span class="n">wgt_fx</span> <span class="o">=</span> <span class="n">wgt</span> <span class="o">*</span> <span class="n">batch_f</span><span class="p">(</span><span class="n">xd</span><span class="p">)</span>
@@ -2284,7 +2285,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>

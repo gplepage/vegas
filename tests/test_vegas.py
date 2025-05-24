@@ -708,7 +708,7 @@ class TestIntegrator(unittest.TestCase):
             maxinc_axis=100,    # number of adaptive-map increments per axis
             min_neval_batch=10,    # number of h-cubes per batch
             max_neval_hcube=1e1, # max number of evaluations per h-cube
-            max_mem=100,        # memory limit
+            max_mem=229,        # memory limit
             nitn=100,           # number of iterations
             alpha=0.35,
             beta=0.25,
@@ -1350,7 +1350,7 @@ class TestIntegrator(unittest.TestCase):
         def f(x): return np.prod(x)
         with self.assertRaises(MemoryError):
             I = Integrator(3 * [(0,1)], max_mem=10)
-        I = Integrator(3 * [(0,1)], max_mem=10, minimize_mem=True)
+        I = Integrator(3 * [(0,1)], max_mem=12012, minimize_mem=True)
         with self.assertRaises(MemoryError):
             I(f, neval=1e4)
 

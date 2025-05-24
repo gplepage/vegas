@@ -150,11 +150,11 @@ def make_plot(x, y, prior, c):
     import matplotlib.pyplot as plt
     # plot data
     plt.errorbar(x, gv.mean(y), gv.sdev(y), fmt='o', c='b')
+    xline = np.linspace(x[0], x[-1], 100)
 
     if lsqfit is not None:
         # plot lsqfit fit
         fit = lsqfit.nonlinear_fit(data=(x,y), fcn=fitfcn, prior=prior)
-        xline = np.linspace(x[0], x[-1], 100)
         yline = fitfcn(xline, fit.pmean)
         plt.plot(xline, gv.mean(yline), 'k:')
         plt.xlabel('x')

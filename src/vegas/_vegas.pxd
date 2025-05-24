@@ -37,6 +37,7 @@ cdef class Integrator:
     cdef public Py_ssize_t min_neval_batch
     cdef public Py_ssize_t maxinc_axis
     cdef public Py_ssize_t max_neval_hcube
+    cdef public bint gpu_pad
     cdef public double neval_frac
     cdef public double max_mem
     cdef public Py_ssize_t nitn

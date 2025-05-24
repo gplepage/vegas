@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>vegas Module &#8212; vegas 6.2.1 documentation</title>
+    <title>vegas Module &#8212; vegas 6.3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
-    <script src="_static/documentation_options.js?v=55479182"></script>
+    <script src="_static/documentation_options.js?v=4b074805"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -34,7 +34,7 @@
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -272,16 +272,28 @@ is <code class="docutils literal notranslate"><span class="pre">analyzer=None</s
 </p></li>
 <li><p><strong>min_neval_batch</strong> (<em>positive int</em>) – The minimum number of integration
 points to be passed together to the integrand when using
-<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> in batch mode. The default value is 50,000. Larger
+<a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> in batch mode. The default value is 100,000. Larger
 values may be lead to faster evaluations, but at the cost of
-more memory for internal work arrays. The last batch is
-usually smaller than this limit, as it is limited by <code class="docutils literal notranslate"><span class="pre">neval</span></code>.</p></li>
+more memory for internal work arrays. Batch sizes are all smaller
+than the lesser of <code class="docutils literal notranslate"><span class="pre">min_neval_batch</span> <span class="pre">+</span> <span class="pre">max_neval_hcube</span></code> and
+<code class="docutils literal notranslate"><span class="pre">neval</span></code>. The last batch is usually smaller than this limit,
+as it is limited by <code class="docutils literal notranslate"><span class="pre">neval</span></code>.</p></li>
 <li><p><strong>max_neval_hcube</strong> (<em>positive int</em>) – Maximum number of integrand
 evaluations per hypercube in the stratification. The default
 value is 50,000. Larger values might allow for more adaptation
 (when <code class="docutils literal notranslate"><span class="pre">beta&gt;0</span></code>), but also allow for more over-shoot when
 adapting to sharp peaks. Larger values also can result in
 large internal work arrasy.</p></li>
+<li><p><strong>gpu_pad</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> batches are padded so that
+they are all the same size. The extra integrand evaluations
+for integration points in the pad are discarded; increase
+<code class="docutils literal notranslate"><span class="pre">min_neval_batch</span></code> or reduce <code class="docutils literal notranslate"><span class="pre">max_neval_hcube</span></code> to
+decrease the number of evaluations that are discarded.
+Padding is usually minimal when <code class="docutils literal notranslate"><span class="pre">min_neval_batch</span></code> is
+equal to or larger than <code class="docutils literal notranslate"><span class="pre">neval</span></code>. Padding can make
+GPU-based integrands work much faster, but it makes
+other types of integrand run more slowly.
+Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p><strong>minimize_mem</strong> (<em>bool</em>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> minimizes
 internal workspace by moving some of its data to
 a disk file. This increases execution time (slightly)
@@ -2249,7 +2261,7 @@ specified (or is <code class="docutils literal notranslate"><span class="pre">No
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>
