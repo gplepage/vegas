@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>How vegas Works &#8212; vegas 6.3 documentation</title>
+    <title>How vegas Works &#8212; vegas 6.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
-    <script src="_static/documentation_options.js?v=4b074805"></script>
+    <script src="_static/documentation_options.js?v=808ed8c8"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="compiled_integrands.html" title="Compiled Integrands for Speed; GPUs"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">How <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Works</a></li> 
       </ul>
     </div>  
@@ -271,7 +271,7 @@ the new version of <a class="reference internal" href="vegas.html#module-vegas" 
 based upon another standard Monte Carlo technique called “stratified
 sampling.” <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> divides the <img class="math" src="_images/math/5101b23d84df9f1b1909aa85562c13859f2381ce.svg" alt="D"/>-dimensional
 <img class="math" src="_images/math/34eaf7fd9e361d7d2fba3b44fa786f7ea4061ba7.svg" alt="y"/>-space volume into <img class="math" src="_images/math/13ab1dbd219b25aa56fbe6da00a6a29d7ca123a8.svg" alt="(M_\mathrm{st}+1)^{D_0} M_\mathrm{st}^{D-D_0}"/> hypercubes using
-a uniform <img class="math" src="_images/math/34eaf7fd9e361d7d2fba3b44fa786f7ea4061ba7.svg" alt="y"/>-space grid with <img class="math" src="_images/math/73d8c1ea5fd68b2fb5ced2dcbe4d7fa7560543c8.svg" alt="M_\mathrm{st}"/> or <img class="math" src="_images/math/4c86252f32d131a8f44f26758116800882fcdd96.svg" alt="M_\mathrm{st}+1"/> stratifications on each
+a uniform <img class="math" src="_images/math/34eaf7fd9e361d7d2fba3b44fa786f7ea4061ba7.svg" alt="y"/>-space grid with <img class="math" src="_images/math/73d8c1ea5fd68b2fb5ced2dcbe4d7fa7560543c8.svg" alt="M_\mathrm{st}"/> or <img class="math" src="_images/math/4c86252f32d131a8f44f26758116800882fcdd96.svg" alt="M_\mathrm{st}+1"/> strata on each
 axis. It estimates
 the integral by doing a separate Monte Carlo integration in each of
 the hypercubes, and adding the results together to provide an estimate
@@ -302,12 +302,41 @@ the contributions from the real peaks and
 reduces statistical errors,
 provided <code class="docutils literal notranslate"><span class="pre">neval</span></code> is large enough to permit a large number  (more
 than 2 or 3) <img class="math" src="_images/math/73d8c1ea5fd68b2fb5ced2dcbe4d7fa7560543c8.svg" alt="M_\mathrm{st}"/> of
-stratifications on each axis. With <code class="docutils literal notranslate"><span class="pre">neval=4e4</span></code>,
+strata on each axis. With <code class="docutils literal notranslate"><span class="pre">neval=4e4</span></code>,
 statistical errors for the two-Gaussian
 integral are reduced by more than a factor of 3 relative to what older
 versions of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> give. This is a relatively easy integral;
 the difference can be much larger for more difficult (and realistic)
 integrals.</p>
+</section>
+<section id="adaptive-re-stratification">
+<span id="adaptive-restratification"></span><h2>Adaptive Re-Stratification<a class="headerlink" href="#adaptive-re-stratification" title="Link to this heading">¶</a></h2>
+<p>As discussed in the previous section, <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> by default distributes
+strata more or less evenly across different dimensions, with <img class="math" src="_images/math/73d8c1ea5fd68b2fb5ced2dcbe4d7fa7560543c8.svg" alt="M_\mathrm{st}"/>
+or <img class="math" src="_images/math/4c86252f32d131a8f44f26758116800882fcdd96.svg" alt="M_\mathrm{st}+1"/> strata
+along each direction. Some integrals, however, are much more challenging
+is certain directions than in others. In such cases one might want
+to concentrate strata in the difficult directions. Often, however,
+it is hard to decide which are the difficult directions.</p>
+<p><a class="reference internal" href="vegas.html#vegas.restratify" title="vegas.restratify"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.restratify()</span></code></a> quantifies the difficulty in direction
+<img class="math" src="_images/math/76b3e7e49a237eba20ecc53b88ab647d7333530d.svg" alt="d"/> first by rewriting the multi-dimensional integral as
+a one-dimensional integral over <img class="math" src="_images/math/ae77cf80147e987f626a58d29ed9a5200301b46c.svg" alt="y^{(d)}"/> in that direction:</p>
+<div class="math">
+<p><img src="_images/math/61c74e70218e722f3bfd13e34b2071f04b8e1373.svg" alt="I   &amp;= \int\cdots\int d^Dx \,f(x) \\
+    &amp;= \int_0^1dy^{(0)}\cdots\int_0^1 dy^{(D-1)} \,J(y)\, f(x(y)) \\
+    &amp;\equiv \int_0^1 dy^{(d)}\, \frac{dI}{dy^{(d)}} \\"/></p>
+</div><p>The transformation to <img class="math" src="_images/math/34eaf7fd9e361d7d2fba3b44fa786f7ea4061ba7.svg" alt="y"/> space (the <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map) flattens
+the integrand (<img class="math" src="_images/math/0bb371676ac8fbe2fe0e4dab7b750c610b282f90.svg" alt="J(y)\,f(x(y))"/>),
+but <img class="math" src="_images/math/d8a77a704663b1431430df097bc65226145e7853.svg" alt="dI/dy^{(d)}"/> will be flatter in some directions than in
+others. <a class="reference internal" href="vegas.html#vegas.restratify" title="vegas.restratify"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.restratify()</span></code></a> takes the variance</p>
+<div class="math">
+<p><img src="_images/math/19f8a4f3fc241b214730d92a33d0c2998af8e1b5.svg" alt="W^{(d)} \equiv \int_0^1 dy^{(d)}\,\Bigg(\frac{dI}{dy^{(d)}}\Bigg)^2 - I^2"/></p>
+</div><p>as a measure of the flatness, and allocates strata in different directions
+in proportion to the <img class="math" src="_images/math/32f5fb40b02e82f23d69e5b29db690c63ad59439.svg" alt="W^{(d)}"/>.</p>
+<p>This criterion for re-stratification is adapted from one used in a code
+from the 1970s called <code class="docutils literal notranslate"><span class="pre">riwiad()</span></code>, a predecessor of <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>. A better
+stratification is <em>not</em> guaranteed, but it is easy to find examples
+where it reduces errors by an order of magnitude or more.</p>
 </section>
 </section>
 
@@ -325,6 +354,7 @@ integrals.</p>
 <li><a class="reference internal" href="#importance-sampling">Importance Sampling</a></li>
 <li><a class="reference internal" href="#the-vegas-map">The <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Map</a></li>
 <li><a class="reference internal" href="#adaptive-stratified-sampling">Adaptive Stratified Sampling</a></li>
+<li><a class="reference internal" href="#adaptive-re-stratification">Adaptive Re-Stratification</a></li>
 </ul>
 </li>
 </ul>
@@ -376,7 +406,7 @@ integrals.</p>
         <li class="right" >
           <a href="compiled_integrands.html" title="Compiled Integrands for Speed; GPUs"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">How <code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Works</a></li> 
       </ul>
     </div>

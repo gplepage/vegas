@@ -195,9 +195,9 @@ of the prior's PDF, but replaces that PDF with the modified PDF when
 evaluating expectation values.
 
 We first call ``expval`` with no function, to allow the integrator to adapt
-to the modified PDF. We specify the number of stratifications for 
+to the modified PDF. We specify the number of strata for 
 each direction in parameter space, concentrating 
-stratifications in the 
+strata in the 
 ``c[0]`` and ``c[1]`` directions (because we expect more structure there);
 ``expval`` uses about 3000 integrand evaluations per iteration with 
 this stratification.

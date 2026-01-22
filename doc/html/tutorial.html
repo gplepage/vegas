@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Tutorial &#8212; vegas 6.3 documentation</title>
+    <title>Tutorial &#8212; vegas 6.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
-    <script src="_static/documentation_options.js?v=4b074805"></script>
+    <script src="_static/documentation_options.js?v=808ed8c8"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>  
@@ -91,6 +91,8 @@ It uses two adaptive strategies: importance sampling, as in the original
 implementation, and adaptive stratified sampling, which is new. The
 new algorithm is described in G. P. Lepage, <a class="reference external" href="https://arxiv.org/abs/2009.05112">arXiv_2009.05112</a>
 (J. Comput. Phys. 439 (2021) 110386).</p>
+<p>There is also a third adaptive strategy, adaptive re-stratification, that can
+be useful in very high dimensions. See <a class="reference internal" href="vegas.html#vegas.restratify" title="vegas.restratify"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.restratify()</span></code></a>.</p>
 <p>This module is written in Cython, so it is almost as fast as compiled Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.</p>
@@ -1843,23 +1845,23 @@ the integrand and using the <a class="reference internal" href="vegas.html#modul
 <p>Having mapped the integration variables <code class="docutils literal notranslate"><span class="pre">x[d]</span></code> to new variables <code class="docutils literal notranslate"><span class="pre">y[d]</span></code>,
 <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> evaluates the integral in <code class="docutils literal notranslate"><span class="pre">y</span></code>-space using stratified Monte
 Carlo sampling (see <a class="reference internal" href="background.html#adaptive-stratified-sampling"><span class="std std-ref">Adaptive Stratified Sampling</span></a>). This is
-done by dividing each axis <code class="docutils literal notranslate"><span class="pre">d</span></code> into <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> equal stratifications,
+done by dividing each axis <code class="docutils literal notranslate"><span class="pre">d</span></code> into <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> equal strata,
 which divide the <code class="docutils literal notranslate"><span class="pre">D</span></code>-dimensional integration volume into
 <code class="docutils literal notranslate"><span class="pre">prod(nstrat)</span></code> sub-volumes or (rectangular) hypercubes. <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> does a
 separate integral
 in each hypercube, adjusting the number of integrand evaluations
 used in each one to minimize errors. By default, the number of
-stratifications is set automatically based on the number <code class="docutils literal notranslate"><span class="pre">neval</span></code>
-of integrand evaluations per iteration: <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> is set
+strata in each direction is set automatically based on the number
+<code class="docutils literal notranslate"><span class="pre">neval</span></code> of integrand evaluations per iteration: <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> is set
 equal to <img class="math" src="_images/math/4c86252f32d131a8f44f26758116800882fcdd96.svg" alt="M_\mathrm{st}+1"/> for the first <img class="math" src="_images/math/7321a4e74c1565fae8df6410c912914eb8e26628.svg" alt="D_0"/> directions
 and <img class="math" src="_images/math/73d8c1ea5fd68b2fb5ced2dcbe4d7fa7560543c8.svg" alt="M_\mathrm{st}"/> for
 the remaining directions, where <img class="math" src="_images/math/73d8c1ea5fd68b2fb5ced2dcbe4d7fa7560543c8.svg" alt="M_\mathrm{st}"/>
 and <img class="math" src="_images/math/7321a4e74c1565fae8df6410c912914eb8e26628.svg" alt="D_0"/> are chosen
-to maximize the number stratifications consistent with <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
+to maximize the number strata consistent with <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
 It is also possible, however, to specify the number of
-stratifications <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> for each direction separately.</p>
-<p>Requiring (approximately) the same number of stratifications in each direction
-greatly limits the number of stratifications in very high
+strata <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> for each direction separately.</p>
+<p>Requiring (approximately) the same number of strata in each direction
+greatly limits the number of strata per direction in very high
 dimensions, since the product of the <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> must be
 less than <code class="docutils literal notranslate"><span class="pre">neval/2</span></code> (so there are at least two integrand
 samples in each hypercube). This restricts <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a>’s ability to
@@ -1883,19 +1885,14 @@ for <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span
 first five directions, but are on top of each other in the remaining directions.
 This makes the integrals over the first five directions much more challenging
 than the remaining integrals.</p>
-<p>To integrate this function, we specify <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> rather than <code class="docutils literal notranslate"><span class="pre">neval</span></code>.
-We set <code class="docutils literal notranslate"><span class="pre">nstrat[d]=10</span></code> for the first five directions, and <code class="docutils literal notranslate"><span class="pre">nstrat[d]=1</span></code>
-for all the rest. This fixes the number of function evaluations to be
-approximately eight times the number of hypercubes created by
-the stratifications (i.e., eight times 100,000), which provides enough
-integrand samples for adaptive stratified sampling while also
-guaranteeing at least two samples per hypercube.
-The following code</p>
+<p>The following code compares an integral that uses the default stratification
+from <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> with one that concentrates all of the strata in the first
+five directions:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="n">dim</span> <span class="o">=</span> <span class="mi">20</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+<span class="n">rlist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
     <span class="mi">5</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.23</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.45</span><span class="p">],</span>
     <span class="mi">5</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.39</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.45</span><span class="p">],</span>
     <span class="mi">5</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.74</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="mf">0.45</span><span class="p">],</span>
@@ -1904,49 +1901,86 @@ The following code</p>
 <span class="nd">@vegas</span><span class="o">.</span><span class="n">batchintegrand</span>
 <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">ans</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">ri</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
-        <span class="n">dx2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">ri</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rlist</span><span class="p">:</span>
+        <span class="n">dx2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">r</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">ans</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span> <span class="o">*</span> <span class="n">dx2</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ans</span> <span class="o">*</span> <span class="mf">356047712484621.56</span>
 
-<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="n">nitn</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">neval</span> <span class="o">=</span> <span class="mf">2e6</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="n">neval</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>        <span class="c1"># training</span>
+
+<span class="c1"># default stratification</span>
+<span class="n">result1</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="n">nitn</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;DEFAUlT:   nstrat = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">nstrat</span><span class="p">)</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">nstrat</span><span class="p">)</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result1</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+
+<span class="c1"># stratification concentrated in first 5 directions</span>
 <span class="n">nstrat</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">nstrat</span><span class="o">=</span><span class="n">nstrat</span><span class="p">)</span>            <span class="c1"># warmup</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nstrat</span><span class="o">=</span><span class="n">nstrat</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;nstrat =&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">nstrat</span><span class="p">))</span>
+<span class="n">result2</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="n">neval</span><span class="p">,</span> <span class="n">nstrat</span><span class="o">=</span><span class="n">nstrat</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;MODFIED:   nstrat = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">nstrat</span><span class="p">)</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">nstrat</span><span class="p">)</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result2</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p>gives excellent results:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<p>This code generates the following output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DEFAULT</span><span class="p">:</span>   <span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]</span> <span class="p">(</span><span class="mi">131072</span><span class="p">)</span>
+<span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">0.920</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>       <span class="mf">0.920</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">0.993</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>       <span class="mf">0.974</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>           <span class="mf">1.60</span>     <span class="mf">0.21</span>
-  <span class="mi">3</span>   <span class="mf">1.014</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>       <span class="mf">0.990</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>           <span class="mf">1.30</span>     <span class="mf">0.27</span>
-  <span class="mi">4</span>   <span class="mf">1.099</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>       <span class="mf">0.999</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>           <span class="mf">1.73</span>     <span class="mf">0.16</span>
-  <span class="mi">5</span>   <span class="mf">1.0028</span><span class="p">(</span><span class="mi">78</span><span class="p">)</span>      <span class="mf">1.0023</span><span class="p">(</span><span class="mi">72</span><span class="p">)</span>          <span class="mf">1.31</span>     <span class="mf">0.26</span>
+  <span class="mi">1</span>   <span class="mf">0.999</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">0.999</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>           <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">1.023</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>       <span class="mf">1.0107</span><span class="p">(</span><span class="mi">79</span><span class="p">)</span>          <span class="mf">2.40</span>     <span class="mf">0.12</span>
+  <span class="mi">3</span>   <span class="mf">0.9922</span><span class="p">(</span><span class="mi">93</span><span class="p">)</span>      <span class="mf">1.0029</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>          <span class="mf">2.37</span>     <span class="mf">0.09</span>
+  <span class="mi">4</span>   <span class="mf">1.0054</span><span class="p">(</span><span class="mi">92</span><span class="p">)</span>      <span class="mf">1.0037</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>          <span class="mf">1.60</span>     <span class="mf">0.19</span>
+  <span class="mi">5</span>   <span class="mf">1.0054</span><span class="p">(</span><span class="mi">88</span><span class="p">)</span>      <span class="mf">1.0041</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>          <span class="mf">1.20</span>     <span class="mf">0.31</span>
 
-<span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span><span class="p">]</span>
-</pre></div>
-</div>
-<p><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> struggles to converge, however,
-when in its default mode with the same number of
-integrand evaluations (about 800,000 per iteration):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="n">MODIFIED</span><span class="p">:</span>   <span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span><span class="p">]</span> <span class="p">(</span><span class="mi">100000</span><span class="p">)</span>
+<span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
 <span class="o">-------------------------------------------------------</span>
-  <span class="mi">1</span>   <span class="mf">2.1</span><span class="p">(</span><span class="mf">1.4</span><span class="p">)</span>        <span class="mf">2.1</span><span class="p">(</span><span class="mf">1.4</span><span class="p">)</span>            <span class="mf">0.00</span>     <span class="mf">1.00</span>
-  <span class="mi">2</span>   <span class="mf">0.637</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>       <span class="mf">0.638</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>           <span class="mf">1.14</span>     <span class="mf">0.29</span>
-  <span class="mi">3</span>   <span class="mf">0.755</span><span class="p">(</span><span class="mi">53</span><span class="p">)</span>       <span class="mf">0.684</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>           <span class="mf">2.06</span>     <span class="mf">0.13</span>
-  <span class="mi">4</span>   <span class="mf">0.750</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>       <span class="mf">0.704</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>           <span class="mf">1.78</span>     <span class="mf">0.15</span>
-  <span class="mi">5</span>   <span class="mf">0.89</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>        <span class="mf">0.716</span><span class="p">(</span><span class="mi">27</span><span class="p">)</span>           <span class="mf">2.07</span>     <span class="mf">0.08</span>
+  <span class="mi">1</span>   <span class="mf">1.0045</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>      <span class="mf">1.0045</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>          <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">0.99968</span><span class="p">(</span><span class="mi">87</span><span class="p">)</span>     <span class="mf">1.00016</span><span class="p">(</span><span class="mi">83</span><span class="p">)</span>         <span class="mf">3.02</span>     <span class="mf">0.08</span>
+  <span class="mi">3</span>   <span class="mf">0.9994</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>      <span class="mf">0.99986</span><span class="p">(</span><span class="mi">65</span><span class="p">)</span>         <span class="mf">1.68</span>     <span class="mf">0.19</span>
+  <span class="mi">4</span>   <span class="mf">0.99940</span><span class="p">(</span><span class="mi">67</span><span class="p">)</span>     <span class="mf">0.99964</span><span class="p">(</span><span class="mi">47</span><span class="p">)</span>         <span class="mf">1.20</span>     <span class="mf">0.31</span>
+  <span class="mi">5</span>   <span class="mf">0.99957</span><span class="p">(</span><span class="mi">56</span><span class="p">)</span>     <span class="mf">0.99961</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>         <span class="mf">0.90</span>     <span class="mf">0.46</span>
 
-<span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]</span>
 </pre></div>
 </div>
+<p>The default stratification has 2 strata in almost every direction, while the
+modified stratification has 10 strata in each of the first 5 directions, but
+only 1 in all other directions. The latter is 10–15 times more accurate.</p>
+<p>In more realistic examples, we may not know which are the most challenging directions;
+then function <a class="reference internal" href="vegas.html#vegas.restratify" title="vegas.restratify"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.restratify()</span></code></a> might be useful. This function tries
+to determine which directions are more challenging than others, and uses this
+information to create an new integrator with a stratification that emphasizes
+the more difficult directions. Replacing the
+last block of code in the example above with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># automatic re-stratification</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">restratify</span><span class="p">(</span><span class="n">integ</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+<span class="n">result2</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;MODIFIED:   nstrat = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">nstrat</span><span class="p">)</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">integ</span><span class="o">.</span><span class="n">nstrat</span><span class="p">)</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result2</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>gives in the following result:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MODIFIED</span><span class="p">:</span>   <span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">12</span>  <span class="mi">9</span> <span class="mi">13</span>  <span class="mi">9</span> <span class="mi">10</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span><span class="p">]</span> <span class="p">(</span><span class="mi">126360</span><span class="p">)</span>
+<span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">0.99823</span><span class="p">(</span><span class="mi">93</span><span class="p">)</span>     <span class="mf">0.99823</span><span class="p">(</span><span class="mi">93</span><span class="p">)</span>         <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">1.00007</span><span class="p">(</span><span class="mi">85</span><span class="p">)</span>     <span class="mf">0.99923</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>         <span class="mf">2.14</span>     <span class="mf">0.14</span>
+  <span class="mi">3</span>   <span class="mf">0.99903</span><span class="p">(</span><span class="mi">62</span><span class="p">)</span>     <span class="mf">0.99913</span><span class="p">(</span><span class="mi">44</span><span class="p">)</span>         <span class="mf">1.10</span>     <span class="mf">0.33</span>
+  <span class="mi">4</span>   <span class="mf">0.99939</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>     <span class="mf">0.99922</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>         <span class="mf">0.77</span>     <span class="mf">0.51</span>
+  <span class="mi">5</span>   <span class="mf">0.99876</span><span class="p">(</span><span class="mi">61</span><span class="p">)</span>     <span class="mf">0.99910</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span>         <span class="mf">0.68</span>     <span class="mf">0.60</span>
+
+</pre></div>
+</div>
+<p>The modified code replaces integrator <cite>integ</cite> by a new integrator with an improved
+stratification, which turns out to be quite similar to the improved stratification
+we used above. Again results are more than ten times as accurate as with
+the default stratification.</p>
 </section>
 <section id="vegas-jacobian">
 <span id="id4"></span><h2><a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Jacobian<a class="headerlink" href="#vegas-jacobian" title="Link to this heading">¶</a></h2>
-<p>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Jacobian is useful when integrating multiple integrands simultaneously when some of the integrands depend only on a subset of the integration variables.</p>
+<p>The <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> Jacobian is useful when integrating multiple integrands simultaneously
+when some of the integrands depend only on a subset of the integration variables.</p>
 <p>Consider, for example, the integral</p>
 <div class="math">
 <p><img src="_images/math/3890847c19e053620c346df97a4f497f57370dd7.svg" alt="\int^{\pi/2}_0 dx_0 \, \frac{1}{(x_0-\delta)^2 + 0.01}."/></p>
@@ -2029,7 +2063,7 @@ For example,</p>
 \int^{\pi/2}_0 \frac{dx_0}{dx_0/dy_0}
 \int^{\pi/2}_0 dx_1
 \, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}."/></p>
-</div><p>This turns the <img class="math" src="_images/math/b0beda9b652b1ca46a8b6c5c22446ded776ef23c.svg" alt="x_0"/> integral into an integral over <img class="math" src="_images/math/d0072f79f0054e5602204317caf20f893d513d8d.svg" alt="0\le y_0 \le 1`"/>
+</div><p>This turns the <img class="math" src="_images/math/b0beda9b652b1ca46a8b6c5c22446ded776ef23c.svg" alt="x_0"/> integral into an integral over <img class="math" src="_images/math/4314c0d2bea0c6708adeefd9c6c1bb8bb0d54886.svg" alt="0\le y_0 \le 1"/>
 with an integrand equal to   1. The Monte Carlo integral over <img class="math" src="_images/math/93b37f0a1c695b1525d5dfef58ebe2c75d4fb1bb.svg" alt="y_0"/>
 in <a class="reference internal" href="vegas.html#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> is then exact; it is unaffected by the map for that direction.
 This is easily implemented for both one-dimensional integrals by setting
@@ -2285,7 +2319,7 @@ deviations, and properly correlated with other
         <li class="right" >
           <a href="index.html" title="vegas Documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tutorial</a></li> 
       </ul>
     </div>

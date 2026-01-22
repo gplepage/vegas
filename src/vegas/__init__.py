@@ -1309,3 +1309,283 @@ def ravg(reslist, weighted=None, rescale=None):
     else:
         return RAvgArray(itn_results=reslist, weighted=weighted, rescale=rescale)
 
+# restratification
+class _restratify:
+    def __init__(self, 
+            f, nitn, ndy, below_avg_nstrat, verbose, gamma, **vargs
+            ):
+        self.set(vargs)
+        self.f = self._make_std_integrand(f)
+        self.ndy = ndy 
+        self.yst = numpy.linspace(0, 1, self.ndy + 1)
+        self.old_nstrat = numpy.array(self.nstrat)
+
+        # evaluate I, dI
+        save = self.set(correlate_integrals=False, nitn=nitn, alpha=0, adapt=True)
+        result = self(self._make_std_integrand(self._I_dI_integrand))
+        self.set(save)
+        self.I = result['I']
+        self.dI = result['dI']
+        self.Q = result.Q
+        if verbose:
+            print('\n==================== restratify')
+            print('BEFORE:')
+            print(result.summary()[:-1])
+            print('nstrat =', numpy.array2string(self.old_nstrat, max_line_width=60, prefix=9 * ' '))
+            print('nhcube =', numpy.prod(self.old_nstrat), '\n')
+
+        # calculate weight[mu]
+        dim = len(self.old_nstrat)
+        self.weight = numpy.zeros(dim, object)
+        dIavg = result['I'] / self.ndy
+        for mu in range(dim):
+            self.weight[mu] = numpy.sum((result['dI'][mu] - dIavg)** 2) * self.ndy 
+        if verbose:
+            ncol = 1 if self.dim < 15 else 3
+            print('WEIGHTS:')
+            print(_gvar.tabulate(dict(weight=self.weight), ncol=ncol))
+
+        # calculate new stratification, starting with smallest nstrat[mu]s
+        w_avg = numpy.average(self.weight)
+        w_gm = numpy.prod(self.weight) ** (1/dim)
+        nstrat_gm = numpy.prod(self.old_nstrat) ** (1/dim)
+        nstrat = self.old_nstrat * _gvar.mean((self.weight / w_gm) * nstrat_gm / self.old_nstrat) ** gamma
+        nleft = dim
+        musort = numpy.array(numpy.argsort(nstrat))
+        new_nstrat = numpy.array(self.nstrat)      # copies size and type from self.nstrat
+        for mu in musort:
+            new_nstrat[mu] = nstrat[mu] if nstrat[mu] > 1 else 1
+            if below_avg_nstrat and self.weight[mu] < w_avg:
+                new_nstrat[mu] = below_avg_nstrat
+            nleft -= 1
+            if nleft > 0:
+                nstrat[musort[-nleft:]] *= (nstrat[mu] / new_nstrat[mu]) ** (1 / nleft)
+                nstrat[mu] = new_nstrat[mu]
+        self.set(nstrat=new_nstrat, neval=self.neval)
+        # activate adaptive stratified sampling 
+        save = self.set(nitn=nitn, adapt=True)
+        training = self(f)
+        if isinstance(self, PDFIntegrator):
+            # remove (redundant) f(p)*pdf from results
+            tmp = RAvgDict(dict(pdf=training.itn_results[0]['pdf']))
+            for r in training.itn_results:
+                tmp.add(dict(pdf=r['pdf']))
+            training = tmp
+        self.set(save)
+        if verbose:
+            print('\nAFTER:')
+            print(training.summary()[:-1])
+            print('nstrat =', numpy.array2string(numpy.asarray(self.nstrat), max_line_width=60, prefix=9 * ' '))
+            print('nhcube =', numpy.prod(self.nstrat))
+            print(20 * '=')
+
+        # if show_plot == True:
+        #     x = (self.yst[:-1] + self.yst[1:]) / 2
+        #     for mu in range(dim):
+        #         plt.plot(x, _gvar.mean(result['dI'][mu]), label=f'mu={mu}')
+        #     plt.legend(bbox_to_anchor=(1.0, 1), loc="upper left")
+        #     plt.show()
+
+    @lbatchintegrand
+    def _I_dI_integrand(self, xx, jac=None):
+        if self.xsample.shape is None:
+            xx = xx.lbatch_buf
+        else:
+            xx = xx.reshape(xx.shape[0], -1)
+        x = numpy.empty(xx.shape, float)
+        x.flat[:] = xx.flat[:]
+        nbatch, dim = numpy.shape(x)
+
+        # calculate y
+        y = numpy.zeros(x.shape, float)
+        jac = numpy.zeros(nbatch, float)
+        self.map.invmap(x, y, jac)
+        y = y.T
+
+        # calculate I, dI
+        I = self.f.eval(x, jac=jac if self.uses_jac else None)[:, 0]
+        # dI -- rbatch (to facilitate the BufferDict below)
+        dI = numpy.zeros((dim, self.ndy, nbatch), float)
+        for mu in range(dim):
+            for i in range(self.ndy):
+                idx = (self.yst[i] <= y[mu])  &  (y[mu] <= self.yst[i+1])
+                dI[mu, i, idx] += I[idx] 
+
+        # create final dictionary
+        ans = _gvar.BufferDict()
+        ans['I'] = I 
+        ans['dI'] = dI
+        return ans._r2lbatch()[0]
+
+class restratifyIntegrator(Integrator, _restratify):
+    def __init__(self, 
+        integ, f, nitn=1, ndy=5, below_avg_nstrat=None, verbose=False, 
+        gamma=1., **vargs
+        ):
+        super().__init__(integ)
+        super(Integrator, self).__init__(
+            f=f, nitn=nitn, ndy=ndy, below_avg_nstrat=below_avg_nstrat,
+            verbose=verbose, gamma=gamma,**vargs
+            )
+
+    @lbatchintegrand
+    def _ones(self, x):
+        return numpy.ones(len(x[:,0]), float)
+
+class restratifyPDFIntegrator(PDFIntegrator, _restratify):
+    def __init__(self, 
+        integ, nitn=1, ndy=5, below_avg_nstrat=None, verbose=False, 
+        gamma=1., **vargs
+        ):
+        super().__init__(integ)
+        super(Integrator, self).__init__(
+            self._ones, nitn=nitn, ndy=ndy, below_avg_nstrat=below_avg_nstrat,
+            verbose=verbose, gamma=gamma, **vargs
+            )
+
+    @lbatchintegrand
+    def _ones(self, xx):
+        if xx.shape is None:
+            xx = xx.lbatch_buf
+        else:
+            xx = xx.reshape(xx.shape[0], -1)
+        x = numpy.empty(xx.shape, float)
+        x.flat[:] = xx.flat[:]
+        return numpy.ones(len(x[:, 0]), float)
+    
+def restratify(
+        integ, f=None, nitn=1, ndy=5, below_avg_nstrat=None, verbose=False, 
+        gamma=1., **vargs
+        ):
+    """ Return |vegas| integrator with y-space stratification optimized for integrand f.
+
+    |vegas| uses a |vegas| map to transform the original integral of ``f(x)`` in 
+    x-space into an integral in y-space whose integrand has been flattened 
+    by the Jacobian of the transformation for x to y. |vegas| uses 
+    stratified Monte Carlo sampling to evaluate the integral in y-space.
+    By default, |vegas| distributes strata evenly across all directions.
+    ``restratify(integ, f)`` uses the integrator to calculate a weight, 
+    equal to the variance of the function ``dI/dy[d]``, for each 
+    direction ``d`` where ``I`` is the total integral of ``f(x)``. It
+    then creates a new integrator whose strata are concentrated in 
+    directions where the weights are largest. This can reduce Monte Carlo 
+    uncertainties significantly, particularly for high dimension 
+    integrals. 
+
+    Typical usage is ::
+
+        import vegas 
+
+        def f(x):
+            # integrand
+            ...
+        
+        integ = vegas.Integrator(20 * [[0,1]])
+        integ(f, neval=400_000, nitn=10)                            #1 training
+        integ = vegas.restratify(integ, f, nitn=3, verbose=True)    #2 new stratification
+        result = integ(f, nitn=10)                                  #3 evaluate integral
+        ...
+        
+    where ``f(x)`` is the integrand for 20-dimensional integral. The first 
+    ``nitn=10`` iterations are discarded, as |vegas| adapts to the 
+    integrand (#1). The integrator is then replaced by a copy whose 
+    y-space strata have been moved between axes to optimize integration 
+    of ``f(x)`` (#2). The final integral is then calculated (#3).
+    
+    Here :func:`vegas.restratify` uses the original integrator ``integ``,
+    with ``nitn=3`` iterations, to calculate the stratification weights 
+    for each directon.  The number of strata used by the new integrator 
+    in each direction is (approximately) proportional to the weight for 
+    that direction. Setting ``verbose=True`` causes 
+    :func:`vegas.restratify` to print out a summary of its analysis,
+    which in this case looks like ::
+
+        ==================== restratify
+        BEFORE:
+        itn   integral        wgt average     chi2/dof        Q
+        -------------------------------------------------------
+          1   0.9973(49)      0.9973(49)          0.00     1.00
+          2   1.0011(49)      0.9992(34)          0.86     0.84
+          3   0.9963(49)      0.9983(28)          0.89     0.88
+        nstrat = [2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1]
+        nhcube = 32768 
+
+        WEIGHTS:
+        key/index            value    key/index            value    key/index            value
+        ----------------------------  ----------------------------  ----------------------------
+         weight 0      0.0160 (12)            7    0.000139 (70)           14     8.7(5.5)e-05
+                1      0.0145 (11)            8     7.9(5.2)e-05           15     8.4(5.5)e-05
+                2     0.02342 (97)            9     5.1(4.2)e-05           16    0.000159 (75)
+                3     2.4(2.9)e-05           10     6.2(4.6)e-05           17     4.2(3.9)e-05
+                4    0.000144 (71)           11     4.5(3.9)e-05           18     5.8(4.6)e-05
+                5    0.000102 (60)           12     9.5(5.7)e-05           19     6.3(4.7)e-05
+                6     8.3(5.5)e-05           13    0.000145 (70)
+
+        AFTER:
+        itn   integral        wgt average     chi2/dof        Q
+        -------------------------------------------------------
+        1   0.99579(87)     0.99579(87)         0.00     1.00
+        2   0.99494(36)     0.99507(33)         0.81     0.37
+        3   0.99535(38)     0.99519(25)         0.56     0.57
+        nstrat = [29 26 43  1  1  1  1  1  1  1  1  1  1  1  1  1
+                1  1  1  1]
+        nhcube = 32422
+        ====================
+
+    This shows that strata are spread more or less evenly 
+    initially, with at most 2 in any given direction. The weights for 
+    the first three directions are much larger than for the remaining 
+    directions, and so all of the strata for the new integrator are 
+    concentrated in those directions. The total number of hypercubes created by 
+    the new stratification (32,422) is approximately the same 
+    as for the original stratification (32,768). The 'AFTER' integrals
+    of ``f(x)``, with the new statification, are a bit more than 
+    ten times as accurate that the 'BEFORE' integrals. 
+
+    Args:
+        integ: |vegas| integrator of type :class:`vegas.Integrator` 
+            or :class:`vegas.PDFIntegrator` whose stratification 
+            is to be changed. The integrator should already be 
+            adapted to the integrand ``f(x)``.
+        f (callable or None): The new stratification is designed to 
+            optimize integrals of integrand ``f(x)``. The integrand 
+            is the PDF itself when ``integ`` is a ``PDFIntegrator``;
+            parameter ``f`` is ignored in this case.
+        nitn (int): Number of |vegas| iterations used when calculating 
+            the weights that determine the new startification. Default
+            is ``nitn=1``, which is often sufficient.
+        ndy (int): The weights equal the variance in the y-space 
+            function ``dI/dy[d]``, where ``I`` is the 
+            total integral of ``f(x)``. This function is approximated 
+            by a step function with ``ndy`` steps (between ``y[d]=0``
+            and ``y[d]=1``). Devault is ``ndy=5``.
+        below_avg_nstrat (int): If not ``None``, ``below_avg_nstrat`` is 
+            the number of strata assigned to directions whose weights 
+            are below the average. Ignored if set to ``None`` (default).
+        verbose (bool): Prints out a summary of the analysis if ``True``;
+            ignored otherwise (default).
+        gamma (float): Damping factor for restratification. Setting 
+            ``0 <= gamma < 1`` modederates the changes in the 
+            stratification. Default is ``gamma=1``
+        vargs (dict): Additional settings for the integrator.
+
+    Integrators returned by :func:`vegas.restratify` have the following 
+    attributes, in addition to the standard integrator attributes.
+
+    Attributes: 
+
+        integ.I: Integral of ``f(x)``.
+        integ.dI: ``integ.dI[d][i]`` is the contribution to ``I`` coming from 
+            ``i/ndy <= y[d] <= (i+1)/ndy``.
+        integ.weight: ``integ.weight[d]`` is the stratification weight for 
+            direction ``d``.
+    """
+    if isinstance(integ, PDFIntegrator):
+        return restratifyPDFIntegrator(
+            integ, nitn=nitn, ndy=ndy, below_avg_nstrat=below_avg_nstrat, verbose=verbose, 
+            gamma=gamma, **vargs
+            )
+    else:
+        return restratifyIntegrator(
+            integ, f=f, nitn=nitn, ndy=ndy, below_avg_nstrat=below_avg_nstrat, verbose=verbose, 
+            gamma=gamma, **vargs)

@@ -63,6 +63,9 @@ new algorithm is described in G. P. Lepage, arXiv_2009.05112_
 
 .. _arXiv_2009.05112: https://arxiv.org/abs/2009.05112
 
+There is also a third adaptive strategy, adaptive re-stratification, that can 
+be useful in very high dimensions. See :func:`vegas.restratify`.
+
 This module is written in Cython, so it is almost as fast as compiled Fortran or
 C, particularly when the integrand is also coded in Cython (or some other
 compiled language), as discussed below.
@@ -1670,24 +1673,24 @@ the integrand and using the |vegas| integrator's map: ``integ.map``.
 Having mapped the integration variables ``x[d]`` to new variables ``y[d]``,
 |vegas| evaluates the integral in ``y``-space using stratified Monte 
 Carlo sampling (see :ref:`adaptive-stratified-sampling`). This is 
-done by dividing each axis ``d`` into ``nstrat[d]`` equal stratifications, 
+done by dividing each axis ``d`` into ``nstrat[d]`` equal strata, 
 which divide the ``D``-dimensional integration volume into 
 ``prod(nstrat)`` sub-volumes or (rectangular) hypercubes. |vegas| does a 
 separate integral 
 in each hypercube, adjusting the number of integrand evaluations 
 used in each one to minimize errors. By default, the number of
-stratifications is set automatically based on the number ``neval`` 
-of integrand evaluations per iteration: ``nstrat[d]`` is set 
+strata in each direction is set automatically based on the number 
+``neval`` of integrand evaluations per iteration: ``nstrat[d]`` is set 
 equal to :math:`M_\mathrm{st}+1` for the first :math:`D_0` directions 
 and :math:`M_\mathrm{st}` for 
 the remaining directions, where :math:`M_\mathrm{st}` 
 and :math:`D_0` are chosen 
-to maximize the number stratifications consistent with ``neval``.
+to maximize the number strata consistent with ``neval``.
 It is also possible, however, to specify the number of 
-stratifications ``nstrat[d]`` for each direction separately. 
+strata ``nstrat[d]`` for each direction separately. 
 
-Requiring (approximately) the same number of stratifications in each direction 
-greatly limits the number of stratifications in very high 
+Requiring (approximately) the same number of strata in each direction 
+greatly limits the number of strata per direction in very high 
 dimensions, since the product of the ``nstrat[d]`` must be 
 less than ``neval/2`` (so there are at least two integrand 
 samples in each hypercube). This restricts |vegas|'s ability to 
@@ -1719,20 +1722,15 @@ first five directions, but are on top of each other in the remaining directions.
 This makes the integrals over the first five directions much more challenging
 than the remaining integrals.
 
-To integrate this function, we specify ``nstrat[d]`` rather than ``neval``. 
-We set ``nstrat[d]=10`` for the first five directions, and ``nstrat[d]=1`` 
-for all the rest. This fixes the number of function evaluations to be 
-approximately eight times the number of hypercubes created by 
-the stratifications (i.e., eight times 100,000), which provides enough
-integrand samples for adaptive stratified sampling while also 
-guaranteeing at least two samples per hypercube.
-The following code ::
+The following code compares an integral that uses the default stratification 
+from |vegas| with one that concentrates all of the strata in the first 
+five directions::
 
     import vegas 
     import numpy as np 
 
     dim = 20
-    r = np.array([
+    rlist = np.array([
         5 * [0.23] + (dim - 5) * [0.45],
         5 * [0.39] + (dim - 5) * [0.45],
         5 * [0.74] + (dim - 5) * [0.45],
@@ -1741,33 +1739,64 @@ The following code ::
     @vegas.batchintegrand
     def f(x):
         ans = 0
-        for ri in r:
-            dx2 = np.sum((x - ri[None, :]) ** 2, axis=1)
+        for r in rlist:
+            dx2 = np.sum((x - r[None, :]) ** 2, axis=1)
             ans += np.exp(-100 * dx2)
         return ans * 356047712484621.56
 
-    integ = vegas.Integrator(dim * [[0, 1]], alpha=0.25)
-    nstrat = 5 * [10] + (dim - 5) * [1]
-    integ(f, nitn=15, nstrat=nstrat)            # warmup
-    r = integ(f, nitn=5, nstrat=nstrat)
-    print(r.summary())
-    print('nstrat =', np.array(integ.nstrat))
+    nitn = 5
+    neval = 2e6
+    integ = vegas.Integrator(dim * [[0, 1]])
+    integ(f, neval=neval, nitn=20)        # training
 
-gives excellent results:
+    # default stratification
+    result1 = integ(f, nitn=nitn)
+    print(f'DEFAUlT:   nstrat = {np.array(integ.nstrat)} ({np.prod(integ.nstrat)})')
+    print(result1.summary())
+
+    # stratification concentrated in first 5 directions
+    nstrat = 5 * [10] + (dim - 5) * [1]
+    result2 = integ(f, neval=neval, nstrat=nstrat)
+    print(f'MODFIED:   nstrat = {np.array(integ.nstrat)} ({np.prod(integ.nstrat)})')
+    print(result2.summary())
+
+This code generates the following output:
 
 .. literalinclude:: eg6a.out
 
-|vegas| struggles to converge, however,
-when in its default mode with the same number of 
-integrand evaluations (about 800,000 per iteration):
+The default stratification has 2 strata in almost every direction, while the 
+modified stratification has 10 strata in each of the first 5 directions, but 
+only 1 in all other directions. The latter is 10--15 times more accurate.
 
-.. literalinclude:: eg6b.out 
+
+In more realistic examples, we may not know which are the most challenging directions;
+then function :func:`vegas.restratify` might be useful. This function tries 
+to determine which directions are more challenging than others, and uses this 
+information to create an new integrator with a stratification that emphasizes
+the more difficult directions. Replacing the 
+last block of code in the example above with ::
+
+    # automatic re-stratification
+    integ = vegas.restratify(integ, f)
+    result2 = integ(f)
+    print(f'MODIFIED:   nstrat = {np.array(integ.nstrat)} ({np.prod(integ.nstrat)})')
+    print(result2.summary())
+
+gives in the following result:
+
+.. literalinclude:: eg6b.out
+
+The modified code replaces integrator `integ` by a new integrator with an improved 
+stratification, which turns out to be quite similar to the improved stratification 
+we used above. Again results are more than ten times as accurate as with 
+the default stratification.
 
 .. _vegas_Jacobian:
 
 |vegas| Jacobian
 -------------------
-The |vegas| Jacobian is useful when integrating multiple integrands simultaneously when some of the integrands depend only on a subset of the integration variables.
+The |vegas| Jacobian is useful when integrating multiple integrands simultaneously 
+when some of the integrands depend only on a subset of the integration variables.
 
 Consider, for example, the integral
 
@@ -1854,7 +1883,7 @@ For example,
     \int^{\pi/2}_0 dx_1 
     \, \mathrm{e}^{-100 \,\mathrm{sin}(x_1)}.
 
-This turns the :math:`x_0` integral into an integral over :math:`0\le y_0 \le 1`` 
+This turns the :math:`x_0` integral into an integral over :math:`0\le y_0 \le 1`
 with an integrand equal to |~| 1. The Monte Carlo integral over :math:`y_0` 
 in |vegas| is then exact; it is unaffected by the map for that direction. 
 This is easily implemented for both one-dimensional integrals by setting 

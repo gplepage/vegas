@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>vegas Module &#8212; vegas 6.3 documentation</title>
+    <title>vegas Module &#8212; vegas 6.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
-    <script src="_static/documentation_options.js?v=4b074805"></script>
+    <script src="_static/documentation_options.js?v=808ed8c8"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -34,7 +34,7 @@
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>  
@@ -183,11 +183,11 @@ fall much faster.  The default value is 1000;
 real problems often require 10–10,000 times more evaluations
 than this.</p></li>
 <li><p><strong>nstrat</strong> (<em>int array</em>) – <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> specifies the number of
-stratifications to use in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. By default this
+strata to use in direction <code class="docutils literal notranslate"><span class="pre">d</span></code>. By default this
 parameter is set automatically, based on parameter <code class="docutils literal notranslate"><span class="pre">neval</span></code>,
 with <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> approximately the same for every <code class="docutils literal notranslate"><span class="pre">d</span></code>.
 Specifying <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> explicitly makes it possible to
-concentrate stratifications in directions  where they are most
+concentrate strata in directions  where they are most
 needed. If <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> is set but <code class="docutils literal notranslate"><span class="pre">neval</span></code> is not,
 <code class="docutils literal notranslate"><span class="pre">neval</span></code> is set equal to <code class="docutils literal notranslate"><span class="pre">2*prod(nstrat)/(1-neval_frac)</span></code>.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – Damping parameter controlling the remapping
@@ -252,6 +252,10 @@ The number of MPI processors is specified outside Python
 (via, for example, <code class="docutils literal notranslate"><span class="pre">mpirun</span> <span class="pre">-np</span> <span class="pre">8</span> <span class="pre">python</span> <span class="pre">script.py</span></code> on
 the command line).</p>
 </p></li>
+<li><p><strong>correlate_integrals</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> calculates
+correlations between the different integrals when doing multiple
+integrals simultaneously. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> sets the correlations
+to zero.</p></li>
 <li><p><strong>analyzer</strong> – <p>An object with methods</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">analyzer.begin(itn,</span> <span class="pre">integrator)</span></code></p>
@@ -341,13 +345,13 @@ is largest. This is the default mode.</p>
 <p><code class="docutils literal notranslate"><span class="pre">adapt_to_errors=True</span></code> causes <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> to remap
 variables to emphasize regions where the Monte Carlo
 error is largest. This might be superior when
-the number of the number of stratifications (<code class="docutils literal notranslate"><span class="pre">self.nstrat</span></code>)
+the number of the number of strata (<code class="docutils literal notranslate"><span class="pre">self.nstrat</span></code>)
 in the y grid is large (&gt; 100). It is typically
 useful only in one or two dimensions.</p>
 </p></li>
 <li><p><strong>uniform_nstrat</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, requires that the
 <code class="docutils literal notranslate"><span class="pre">nstrat[d]</span></code> be equal for all <code class="docutils literal notranslate"><span class="pre">d</span></code>. If <code class="docutils literal notranslate"><span class="pre">False</span></code> (default),
-the algorithm maximizes the number of stratifications while
+the algorithm maximizes the number of strata while
 requiring <code class="docutils literal notranslate"><span class="pre">|nstrat[d1]</span> <span class="pre">-</span> <span class="pre">nstrat[d2]|</span> <span class="pre">&lt;=</span> <span class="pre">1</span></code>. This parameter
 is ignored if <code class="docutils literal notranslate"><span class="pre">nstrat</span></code> is specified explicitly.</p></li>
 <li><p><strong>mpi</strong> – Setting <code class="docutils literal notranslate"><span class="pre">mpi=False</span></code> (default) disables <code class="docutils literal notranslate"><span class="pre">mpi</span></code> support in
@@ -1484,6 +1488,145 @@ shape plus an extra sample index which is either on the right
 </section>
 <section id="other-objects-and-functions">
 <h2>Other Objects and Functions<a class="headerlink" href="#other-objects-and-functions" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="vegas.restratify">
+<span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">restratify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">integ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nitn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">below_avg_nstrat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">vargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.restratify" title="Link to this definition">¶</a></dt>
+<dd><p>Return <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator with y-space stratification optimized for integrand f.</p>
+<p><a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> uses a <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> map to transform the original integral of <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> in
+x-space into an integral in y-space whose integrand has been flattened
+by the Jacobian of the transformation for x to y. <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> uses
+stratified Monte Carlo sampling to evaluate the integral in y-space.
+By default, <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> distributes strata evenly across all directions.
+<code class="docutils literal notranslate"><span class="pre">restratify(integ,</span> <span class="pre">f)</span></code> uses the integrator to calculate a weight,
+equal to the variance of the function <code class="docutils literal notranslate"><span class="pre">dI/dy[d]</span></code>, for each
+direction <code class="docutils literal notranslate"><span class="pre">d</span></code> where <code class="docutils literal notranslate"><span class="pre">I</span></code> is the total integral of <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>. It
+then creates a new integrator whose strata are concentrated in
+directions where the weights are largest. This can reduce Monte Carlo
+uncertainties significantly, particularly for high dimension
+integrals.</p>
+<p>Typical usage is</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vegas</span>
+
+<span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c1"># integrand</span>
+    <span class="o">...</span>
+
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">Integrator</span><span class="p">(</span><span class="mi">20</span> <span class="o">*</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+<span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">neval</span><span class="o">=</span><span class="mi">400_000</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>                            <span class="c1">#1 training</span>
+<span class="n">integ</span> <span class="o">=</span> <span class="n">vegas</span><span class="o">.</span><span class="n">restratify</span><span class="p">(</span><span class="n">integ</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>    <span class="c1">#2 new stratification</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">integ</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nitn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>                                  <span class="c1">#3 evaluate integral</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> is the integrand for 20-dimensional integral. The first
+<code class="docutils literal notranslate"><span class="pre">nitn=10</span></code> iterations are discarded, as <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> adapts to the
+integrand (#1). The integrator is then replaced by a copy whose
+y-space strata have been moved between axes to optimize integration
+of <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> (#2). The final integral is then calculated (#3).</p>
+<p>Here <a class="reference internal" href="#vegas.restratify" title="vegas.restratify"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.restratify()</span></code></a> uses the original integrator <code class="docutils literal notranslate"><span class="pre">integ</span></code>,
+with <code class="docutils literal notranslate"><span class="pre">nitn=3</span></code> iterations, to calculate the stratification weights
+for each directon.  The number of strata used by the new integrator
+in each direction is (approximately) proportional to the weight for
+that direction. Setting <code class="docutils literal notranslate"><span class="pre">verbose=True</span></code> causes
+<a class="reference internal" href="#vegas.restratify" title="vegas.restratify"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.restratify()</span></code></a> to print out a summary of its analysis,
+which in this case looks like</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">====================</span> <span class="n">restratify</span>
+<span class="n">BEFORE</span><span class="p">:</span>
+<span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+  <span class="mi">1</span>   <span class="mf">0.9973</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>      <span class="mf">0.9973</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>          <span class="mf">0.00</span>     <span class="mf">1.00</span>
+  <span class="mi">2</span>   <span class="mf">1.0011</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>      <span class="mf">0.9992</span><span class="p">(</span><span class="mi">34</span><span class="p">)</span>          <span class="mf">0.86</span>     <span class="mf">0.84</span>
+  <span class="mi">3</span>   <span class="mf">0.9963</span><span class="p">(</span><span class="mi">49</span><span class="p">)</span>      <span class="mf">0.9983</span><span class="p">(</span><span class="mi">28</span><span class="p">)</span>          <span class="mf">0.89</span>     <span class="mf">0.88</span>
+<span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">nhcube</span> <span class="o">=</span> <span class="mi">32768</span>
+
+<span class="n">WEIGHTS</span><span class="p">:</span>
+<span class="n">key</span><span class="o">/</span><span class="n">index</span>            <span class="n">value</span>    <span class="n">key</span><span class="o">/</span><span class="n">index</span>            <span class="n">value</span>    <span class="n">key</span><span class="o">/</span><span class="n">index</span>            <span class="n">value</span>
+<span class="o">----------------------------</span>  <span class="o">----------------------------</span>  <span class="o">----------------------------</span>
+ <span class="n">weight</span> <span class="mi">0</span>      <span class="mf">0.0160</span> <span class="p">(</span><span class="mi">12</span><span class="p">)</span>            <span class="mi">7</span>    <span class="mf">0.000139</span> <span class="p">(</span><span class="mi">70</span><span class="p">)</span>           <span class="mi">14</span>     <span class="mf">8.7</span><span class="p">(</span><span class="mf">5.5</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>
+        <span class="mi">1</span>      <span class="mf">0.0145</span> <span class="p">(</span><span class="mi">11</span><span class="p">)</span>            <span class="mi">8</span>     <span class="mf">7.9</span><span class="p">(</span><span class="mf">5.2</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>           <span class="mi">15</span>     <span class="mf">8.4</span><span class="p">(</span><span class="mf">5.5</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>
+        <span class="mi">2</span>     <span class="mf">0.02342</span> <span class="p">(</span><span class="mi">97</span><span class="p">)</span>            <span class="mi">9</span>     <span class="mf">5.1</span><span class="p">(</span><span class="mf">4.2</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>           <span class="mi">16</span>    <span class="mf">0.000159</span> <span class="p">(</span><span class="mi">75</span><span class="p">)</span>
+        <span class="mi">3</span>     <span class="mf">2.4</span><span class="p">(</span><span class="mf">2.9</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>           <span class="mi">10</span>     <span class="mf">6.2</span><span class="p">(</span><span class="mf">4.6</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>           <span class="mi">17</span>     <span class="mf">4.2</span><span class="p">(</span><span class="mf">3.9</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>
+        <span class="mi">4</span>    <span class="mf">0.000144</span> <span class="p">(</span><span class="mi">71</span><span class="p">)</span>           <span class="mi">11</span>     <span class="mf">4.5</span><span class="p">(</span><span class="mf">3.9</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>           <span class="mi">18</span>     <span class="mf">5.8</span><span class="p">(</span><span class="mf">4.6</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>
+        <span class="mi">5</span>    <span class="mf">0.000102</span> <span class="p">(</span><span class="mi">60</span><span class="p">)</span>           <span class="mi">12</span>     <span class="mf">9.5</span><span class="p">(</span><span class="mf">5.7</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>           <span class="mi">19</span>     <span class="mf">6.3</span><span class="p">(</span><span class="mf">4.7</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>
+        <span class="mi">6</span>     <span class="mf">8.3</span><span class="p">(</span><span class="mf">5.5</span><span class="p">)</span><span class="n">e</span><span class="o">-</span><span class="mi">05</span>           <span class="mi">13</span>    <span class="mf">0.000145</span> <span class="p">(</span><span class="mi">70</span><span class="p">)</span>
+
+<span class="n">AFTER</span><span class="p">:</span>
+<span class="n">itn</span>   <span class="n">integral</span>        <span class="n">wgt</span> <span class="n">average</span>     <span class="n">chi2</span><span class="o">/</span><span class="n">dof</span>        <span class="n">Q</span>
+<span class="o">-------------------------------------------------------</span>
+<span class="mi">1</span>   <span class="mf">0.99579</span><span class="p">(</span><span class="mi">87</span><span class="p">)</span>     <span class="mf">0.99579</span><span class="p">(</span><span class="mi">87</span><span class="p">)</span>         <span class="mf">0.00</span>     <span class="mf">1.00</span>
+<span class="mi">2</span>   <span class="mf">0.99494</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>     <span class="mf">0.99507</span><span class="p">(</span><span class="mi">33</span><span class="p">)</span>         <span class="mf">0.81</span>     <span class="mf">0.37</span>
+<span class="mi">3</span>   <span class="mf">0.99535</span><span class="p">(</span><span class="mi">38</span><span class="p">)</span>     <span class="mf">0.99519</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>         <span class="mf">0.56</span>     <span class="mf">0.57</span>
+<span class="n">nstrat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">29</span> <span class="mi">26</span> <span class="mi">43</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>
+        <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="mi">1</span><span class="p">]</span>
+<span class="n">nhcube</span> <span class="o">=</span> <span class="mi">32422</span>
+<span class="o">====================</span>
+</pre></div>
+</div>
+<p>This shows that strata are spread more or less evenly
+initially, with at most 2 in any given direction. The weights for
+the first three directions are much larger than for the remaining
+directions, and so all of the strata for the new integrator are
+concentrated in those directions. The total number of hypercubes created by
+the new stratification (32,422) is approximately the same
+as for the original stratification (32,768). The ‘AFTER’ integrals
+of <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>, with the new statification, are a bit more than
+ten times as accurate that the ‘BEFORE’ integrals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>integ</strong> – <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> integrator of type <a class="reference internal" href="#vegas.Integrator" title="vegas.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.Integrator</span></code></a>
+or <a class="reference internal" href="#vegas.PDFIntegrator" title="vegas.PDFIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">vegas.PDFIntegrator</span></code></a> whose stratification
+is to be changed. The integrator should already be
+adapted to the integrand <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>.</p></li>
+<li><p><strong>f</strong> (<em>callable</em><em> or </em><em>None</em>) – The new stratification is designed to
+optimize integrals of integrand <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>. The integrand
+is the PDF itself when <code class="docutils literal notranslate"><span class="pre">integ</span></code> is a <code class="docutils literal notranslate"><span class="pre">PDFIntegrator</span></code>;
+parameter <code class="docutils literal notranslate"><span class="pre">f</span></code> is ignored in this case.</p></li>
+<li><p><strong>nitn</strong> (<em>int</em>) – Number of <a class="reference internal" href="#module-vegas" title="vegas: Adaptive multidimensional Monte Carlo integration"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code></a> iterations used when calculating
+the weights that determine the new startification. Default
+is <code class="docutils literal notranslate"><span class="pre">nitn=1</span></code>, which is often sufficient.</p></li>
+<li><p><strong>ndy</strong> (<em>int</em>) – The weights equal the variance in the y-space
+function <code class="docutils literal notranslate"><span class="pre">dI/dy[d]</span></code>, where <code class="docutils literal notranslate"><span class="pre">I</span></code> is the
+total integral of <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>. This function is approximated
+by a step function with <code class="docutils literal notranslate"><span class="pre">ndy</span></code> steps (between <code class="docutils literal notranslate"><span class="pre">y[d]=0</span></code>
+and <code class="docutils literal notranslate"><span class="pre">y[d]=1</span></code>). Devault is <code class="docutils literal notranslate"><span class="pre">ndy=5</span></code>.</p></li>
+<li><p><strong>below_avg_nstrat</strong> (<em>int</em>) – If not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">below_avg_nstrat</span></code> is
+the number of strata assigned to directions whose weights
+are below the average. Ignored if set to <code class="docutils literal notranslate"><span class="pre">None</span></code> (default).</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – Prints out a summary of the analysis if <code class="docutils literal notranslate"><span class="pre">True</span></code>;
+ignored otherwise (default).</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) – Damping factor for restratification. Setting
+<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">gamma</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> modederates the changes in the
+stratification. Default is <code class="docutils literal notranslate"><span class="pre">gamma=1</span></code></p></li>
+<li><p><strong>vargs</strong> (<em>dict</em>) – Additional settings for the integrator.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Integrators returned by <a class="reference internal" href="#vegas.restratify" title="vegas.restratify"><code class="xref py py-func docutils literal notranslate"><span class="pre">vegas.restratify()</span></code></a> have the following
+attributes, in addition to the standard integrator attributes.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="vegas.integ.I">
+<span class="sig-prename descclassname"><span class="pre">integ.</span></span><span class="sig-name descname"><span class="pre">I</span></span><a class="headerlink" href="#vegas.integ.I" title="Link to this definition">¶</a></dt>
+<dd><p>Integral of <code class="docutils literal notranslate"><span class="pre">f(x)</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="vegas.integ.dI">
+<span class="sig-prename descclassname"><span class="pre">integ.</span></span><span class="sig-name descname"><span class="pre">dI</span></span><a class="headerlink" href="#vegas.integ.dI" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">integ.dI[d][i]</span></code> is the contribution to <code class="docutils literal notranslate"><span class="pre">I</span></code> coming from
+<code class="docutils literal notranslate"><span class="pre">i/ndy</span> <span class="pre">&lt;=</span> <span class="pre">y[d]</span> <span class="pre">&lt;=</span> <span class="pre">(i+1)/ndy</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="vegas.integ.weight">
+<span class="sig-prename descclassname"><span class="pre">integ.</span></span><span class="sig-name descname"><span class="pre">weight</span></span><a class="headerlink" href="#vegas.integ.weight" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">integ.weight[d]</span></code> is the stratification weight for
+direction <code class="docutils literal notranslate"><span class="pre">d</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="vegas.RAvg">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">vegas.</span></span><span class="sig-name descname"><span class="pre">RAvg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itn_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_neval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_rescale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#vegas.RAvg" title="Link to this definition">¶</a></dt>
@@ -2149,6 +2292,10 @@ specified (or is <code class="docutils literal notranslate"><span class="pre">No
 </ul>
 </li>
 <li><a class="reference internal" href="#other-objects-and-functions">Other Objects and Functions</a><ul>
+<li><a class="reference internal" href="#vegas.restratify"><code class="docutils literal notranslate"><span class="pre">restratify()</span></code></a></li>
+<li><a class="reference internal" href="#vegas.integ.I"><code class="docutils literal notranslate"><span class="pre">integ.I</span></code></a></li>
+<li><a class="reference internal" href="#vegas.integ.dI"><code class="docutils literal notranslate"><span class="pre">integ.dI</span></code></a></li>
+<li><a class="reference internal" href="#vegas.integ.weight"><code class="docutils literal notranslate"><span class="pre">integ.weight</span></code></a></li>
 <li><a class="reference internal" href="#vegas.RAvg"><code class="docutils literal notranslate"><span class="pre">RAvg</span></code></a><ul>
 <li><a class="reference internal" href="#vegas.RAvg.mean"><code class="docutils literal notranslate"><span class="pre">RAvg.mean</span></code></a></li>
 <li><a class="reference internal" href="#vegas.RAvg.sdev"><code class="docutils literal notranslate"><span class="pre">RAvg.sdev</span></code></a></li>
@@ -2261,7 +2408,7 @@ specified (or is <code class="docutils literal notranslate"><span class="pre">No
         <li class="right" >
           <a href="outliers.html" title="Case Study: Bayesian Curve Fitting"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">vegas 6.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">vegas</span></code> Module</a></li> 
       </ul>
     </div>

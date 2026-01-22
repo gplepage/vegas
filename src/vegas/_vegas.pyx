@@ -933,11 +933,11 @@ cdef class Integrator(object):
             real problems often require 10--10,000 times more evaluations
             than this. 
         nstrat (int array): ``nstrat[d]`` specifies the number of
-            stratifications to use in direction ``d``. By default this 
+            strata to use in direction ``d``. By default this 
             parameter is set automatically, based on parameter ``neval``,
             with ``nstrat[d]`` approximately the same for every ``d``. 
             Specifying ``nstrat`` explicitly makes it possible to 
-            concentrate stratifications in directions  where they are most 
+            concentrate strata in directions  where they are most 
             needed. If ``nstrat`` is set but ``neval`` is not, 
             ``neval`` is set equal to ``2*prod(nstrat)/(1-neval_frac)``. 
         alpha (float): Damping parameter controlling the remapping
@@ -1002,6 +1002,10 @@ cdef class Integrator(object):
             The number of MPI processors is specified outside Python 
             (via, for example, ``mpirun -np 8 python script.py`` on 
             the command line).
+        correlate_integrals (bool): If ``True`` (default), |vegas| calculates 
+            correlations between the different integrals when doing multiple 
+            integrals simultaneously. If ``False``, |vegas| sets the correlations 
+            to zero.
         analyzer: An object with methods
 
                 ``analyzer.begin(itn, integrator)``
@@ -1093,12 +1097,12 @@ cdef class Integrator(object):
             ``adapt_to_errors=True`` causes |vegas| to remap
             variables to emphasize regions where the Monte Carlo
             error is largest. This might be superior when
-            the number of the number of stratifications (``self.nstrat``)
+            the number of the number of strata (``self.nstrat``)
             in the |y| grid is large (> 100). It is typically
             useful only in one or two dimensions.
         uniform_nstrat (bool): If ``True``, requires that the
             ``nstrat[d]`` be equal for all ``d``. If ``False`` (default), 
-            the algorithm maximizes the number of stratifications while 
+            the algorithm maximizes the number of strata while 
             requiring ``|nstrat[d1] - nstrat[d2]| <= 1``. This parameter
             is ignored if ``nstrat`` is specified explicitly.
         mpi (bool): Setting ``mpi=False`` (default) disables ``mpi`` support in
@@ -1121,6 +1125,7 @@ cdef class Integrator(object):
         alpha=0.5,              # damping parameter for importance sampling
         beta=0.75,              # damping parameter for stratified sampliing
         adapt=True,             # flag to turn adaptation on or off
+        correlate_integrals=True,# calculate correlations between different integrals for multi-dimensional integrands
         minimize_mem=False,     # minimize work memory (when neval very large)?
         adapt_to_errors=False,  # alternative approach to stratified sampling (low dim)?
         uniform_nstrat=False,   # require same nstrat[d] for all directions d? 
@@ -1142,7 +1147,7 @@ cdef class Integrator(object):
         self.pool = None
         self.sigf_h5 = None
         if isinstance(map, Integrator):
-            self._set_map(map.map)
+            self._set_map(map)
             args = {}
             for k in Integrator.defaults:
                 if k != 'map':
@@ -1151,6 +1156,10 @@ cdef class Integrator(object):
             self.sigf = numpy.array(map.sigf)
             self.sum_sigf = numpy.sum(self.sigf)
             self.nstrat = numpy.array(map.nstrat)
+            if 'nstrat' not in kargs:
+                kargs['nstrat'] = map.nstrat
+                if 'neval' not in kargs:
+                    kargs['neval'] = map.neval
         else:
             self.sigf = numpy.array([], float) # reset sigf (dummy)
             self.sum_sigf = HUGE
@@ -1336,7 +1345,7 @@ cdef class Integrator(object):
                 raise ValueError('neval too small: {} < {}'.format(self.neval, 2. * nhcube / (1. - neval_frac)))
         elif 'neval' in old_val or 'neval_frac' in old_val:                               ##### or 'max_nhcube' in old_val:
             # determine stratification from neval,neval_frac if either was specified
-            ns = int(abs((1 - neval_frac) * self.neval / 2.) ** (1. / self.dim)) # stratifications / axis
+            ns = int(abs((1 - neval_frac) * self.neval / 2.) ** (1. / self.dim)) # strata / axis
             if ns < 1:
                 ns = 1
             d = int(
@@ -1461,11 +1470,12 @@ cdef class Integrator(object):
                 % (neval, self.nitn)
                 )
         ans = ans + (
-            "    number of: strata/axis = %s\n" % str(numpy.array(self.nstrat))
+            "    number of: strata/axis = %s\n" % 
+            numpy.array2string(numpy.asarray(self.nstrat), max_line_width=80, prefix=29 * ' ')
             )
         ans = ans + (
-            "               increments/axis = %s\n" 
-            % str(numpy.asarray(self.map.ninc))
+            "               increments/axis = %s\n" %
+            numpy.array2string(numpy.asarray(self.map.ninc), max_line_width=80, prefix=33 * ' ')
             )
         ans = ans + (
             "               h-cubes = %.6g  processors = %d\n"
@@ -1506,7 +1516,10 @@ cdef class Integrator(object):
         entries = []
         axis = 0
         # self.limits = self.limits.buf.reshape(-1,2)
-        limits = self.map.region()
+        # format limits (5 digits)
+        limits = list(self.map.region())
+        for i in range(len(limits)):
+            limits[i] = '({:.5}, {:.5})'.format(*limits[i])
         if self.xsample.shape is None:
             for k in self.xsample:
                 if self.xsample[k].shape == ():
@@ -2018,8 +2031,8 @@ cdef class Integrator(object):
         cdef double[::1] sum_wf
         cdef double[::1] sum_dwf
         cdef double[:, ::1] sum_dwf2
-        cdef double[::1] mean = numpy.empty(1, float)
-        cdef double[:, ::1] var = numpy.empty((1, 1), float)
+        cdef double[::1] mean # = numpy.empty(1, float)
+        cdef double[:, ::1] var # = numpy.empty((1, 1), float)
         cdef Py_ssize_t itn, i, j, jtmp, s, t, neval, fcn_size, len_hcube
         cdef bint adaptive_strat
         cdef double sum_sigf, sigf2
@@ -2029,7 +2042,10 @@ cdef class Integrator(object):
             self.set(kargs)
         gpu_pad = self.gpu_pad and (self.beta != 0) and (self.adapt == True)
         if self.nproc > 1:
-            old_defaults = self.set(mpi=False, min_neval_batch=self.nproc * self.min_neval_batch)
+            if self.nproc * self.min_neval_batch <= self.neval:
+                old_defaults = self.set(mpi=False, min_neval_batch=self.nproc * self.min_neval_batch)
+            else:
+                old_defaults = self.set(mpi=False, min_neval_batch=self.neval // self.nproc)
         elif self.mpi:
             pass
 
@@ -2054,11 +2070,17 @@ cdef class Integrator(object):
         dwf = numpy.empty(fcn_size, float)
         sum_wf = numpy.empty(fcn_size, float)
         sum_dwf = numpy.empty(fcn_size, float)
-        sum_dwf2 = numpy.empty((fcn_size, fcn_size), float)
-        mean = numpy.empty(fcn_size, float)
-        var = numpy.empty((fcn_size, fcn_size), float)
-        mean[:] = 0.0
-        var[:, :] = 0.0
+        if self.correlate_integrals:
+            sum_dwf2 = numpy.empty((fcn_size, fcn_size), float)
+        else:
+            sum_dwf2 = numpy.empty((fcn_size, 1), float)
+        mean = numpy.zeros(fcn_size, float)
+        if self.correlate_integrals:
+            var = numpy.zeros((fcn_size, fcn_size), float)
+        else:
+            var = numpy.zeros((fcn_size,1), float)
+        # mean[:] = 0.0
+        # var[:, :] = 0.0
         result = VegasResult(fcn, weighted=self.adapt)
 
         for itn in range(self.nitn):
@@ -2134,21 +2156,31 @@ cdef class Integrator(object):
                             dwf[s] = wgt[j] * fx[j, s] - sum_wf[s] / neval
                             if abs(dwf[s]) < EPSILON * abs(sum_wf[s] / neval):
                                 dwf[s] = EPSILON * abs(sum_wf[s] / neval)
-                                sum_dwf2[s, s] += dwf[s] ** 2
+                                if self.correlate_integrals:
+                                    sum_dwf2[s, s] += dwf[s] ** 2
+                                else:
+                                    sum_dwf2[s, 0] += dwf[s] ** 2
                                 dwf[s] = 0.             # kills off-diagonal covariances
                             else:
-                                sum_dwf2[s, s] += dwf[s] ** 2
+                                if self.correlate_integrals:
+                                    sum_dwf2[s, s] += dwf[s] ** 2
+                                else:
+                                    sum_dwf2[s, 0] += dwf[s] ** 2
                             sum_dwf[s] += dwf[s]        # doesn't contribute if round-off
-                            for t in range(s):
-                                sum_dwf2[s, t] += dwf[s] * dwf[t]
+                            if self.correlate_integrals:
+                                for t in range(s):
+                                    sum_dwf2[s, t] += dwf[s] * dwf[t]
                         fdv2[j] = (wgt[j] * fx[j, 0] * neval) ** 2 
                         j += 1
                     for s in range(fcn_size):
                         # include Neely corrections (makes very little difference)
                         mean[s] += sum_wf[s] + sum_dwf[s]
-                        for t in range(s + 1):
-                            var[s, t] += (neval * sum_dwf2[s, t] - sum_dwf[s] * sum_dwf[t]) / (neval - 1.) 
-                    sigf2 = abs((neval * sum_dwf2[0, 0] - sum_dwf[0] * sum_dwf[0])  / (neval - 1.))
+                        if self.correlate_integrals:
+                            for t in range(s + 1):
+                                var[s, t] += (neval * sum_dwf2[s, t] - sum_dwf[s] * sum_dwf[t]) / (neval - 1.)
+                        else: 
+                            var[s, 0] += (neval * sum_dwf2[s, 0] - sum_dwf[s] * sum_dwf[s]) / (neval - 1.) 
+                    sigf2 = numpy.fabs((neval * sum_dwf2[0, 0] - sum_dwf[0] * sum_dwf[0])  / (neval - 1.))
                     if adaptive_strat:
                         sigf[i - hcube[0]] = sigf2 ** (self.beta / 2.)
                         sum_sigf += sigf[i - hcube[0]]
@@ -2164,12 +2196,15 @@ cdef class Integrator(object):
                 if (not self.adapt_to_errors) and self.adapt and self.alpha > 0:
                     self.map.add_training_data(y, fdv2, y.shape[0])
 
-            for s in range(var.shape[0]):
-                for t in range(s):
-                    var[t, s] = var[s, t]
-
-            # accumulate result from this iteration
-            result.update(mean, var, self.last_neval)
+            if self.correlate_integrals:
+                for s in range(var.shape[0]):
+                    for t in range(s):
+                        var[t, s] = var[s, t]
+                # accumulate result from this iteration
+                result.update(mean, var, self.last_neval)
+            else:
+                # accumulate result from this iteration
+                result.update(mean, var[:, 0], self.last_neval)
 
             if self.beta > 0 and not self.adapt_to_errors and self.adapt:
                 if sum_sigf > 0:
@@ -2429,6 +2464,8 @@ class RAvgDict(gvar.BufferDict):
     otherwise straight, unweighted averages are used.
     """
     def __init__(self, dictionary=None, weighted=True, itn_results=None, sum_neval=0, rescale=True):
+        if isinstance(itn_results, bytes):
+            itn_results = gvar.loads(itn_results)
         if dictionary is None and (itn_results is None or len(itn_results) < 1):
             raise ValueError('must specificy dictionary or itn_results')
         super(RAvgDict, self).__init__(dictionary if dictionary is not None else itn_results[0])
@@ -2437,8 +2474,6 @@ class RAvgDict(gvar.BufferDict):
         self.itn_results = []
         self.weighted = weighted
         if itn_results is not None:
-            if isinstance(itn_results, bytes):
-                itn_results = gvar.loads(itn_results)
             for r in itn_results:
                 self.add(r)
         self.sum_neval = sum_neval
@@ -2452,7 +2487,7 @@ class RAvgDict(gvar.BufferDict):
     def __reduce_ex__(self, protocol):
         return (
             RAvgDict, 
-            (super(RAvgDict, self), self.weighted, gvar.dumps(self.itn_results, protocol=protocol), self.sum_neval, self.rescale),
+            (None, self.weighted, gvar.dumps(self.itn_results, protocol=protocol), self.sum_neval, self.rescale),
             )
 
     def _remove_gvars(self, gvlist):
@@ -3101,10 +3136,13 @@ cdef class VegasIntegrand:
                 return mean.reshape(self.shape)
         else:
             # from Integrator.call
+            if var.shape == mean.shape:
+                var = numpy.asarray(var) ** 0.5
+
             if self.shape is None:
                 return gvar.BufferDict(self.bdict, buf=gvar.gvar(mean, var).reshape(-1))
             elif self.shape == ():
-                return gvar.gvar(mean[0], var[0,0] ** 0.5)
+                return gvar.gvar(mean[0], var[0,0] ** 0.5 if var.shape != mean.shape else var[0])
             else:
                 return gvar.gvar(mean, var).reshape(self.shape)
 

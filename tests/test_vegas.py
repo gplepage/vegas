@@ -1344,6 +1344,59 @@ class TestIntegrator(unittest.TestCase):
             return dict(a=1. / np.prod(jac, axis=-1))
         test(f, 'dict')
 
+    def test_correlate(self):
+        " correlate_integrals "
+        def f(x): return [np.prod(x), np.prod(x)**2]
+        itg = Integrator(2 * [[0, 1]], correlate_integrals=True)
+        a,b = itg(f)
+        self.assertGreater(gv.corr(a, b), 0.0)
+        itg = Integrator(2 * [[0, 1]], correlate_integrals=False)
+        aa,bb = itg(f)
+        self.assertEqual(gv.corr(aa, bb), 0.0)
+
+    def test_restratify_integrator(self):
+        " restratify(integ) "
+        gv.ranseed(123)
+        norm = np.sqrt((100 / np.pi) ** 3) / 3   
+        x0list = np.array([[0.23, 0.23, 0.45],[0.39, 0.39, 0.45],[0.74, 0.74, 0.45]])
+        @lbatchintegrand
+        def f(x):
+            ans = 0
+            for x0 in x0list:
+                dx2 = np.sum((x[:, :] - x0[None, :]) ** 2, axis=1)
+                ans += np.exp(-100 * dx2)
+            return ans * norm
+        integ = Integrator(3 * [[0, 1]], alpha=0.5)
+        neval = 4e3
+        nitn = 2
+        integ(f, nitn=15, neval=neval)        # training
+        r = integ(f, alpha=0, adapt=True, nitn=nitn)
+        integ2 = restratify(integ, f)
+        r2 = integ2(f, alpha=0, adapt=True, nitn=nitn)
+        dr = r2 - r
+        self.assertGreater(5 * dr.sdev, dr.mean)
+        self.assertGreater(integ2.nstrat[0], 5 * integ2.nstrat[-1])
+        self.assertGreater(integ2.nstrat[1], 5 * integ2.nstrat[-1])
+        self.assertEqual(integ.neval, integ2.neval)
+
+    def test_restratify_pdfintegrator(self):
+        " restratify(pdfinteg) "
+        gv.ranseed(1)
+        g = gv.BufferDict()
+        g['a'] = gv.gvar([2., 1.], [[1., 0.999], [0.999, 1.]])
+        g['fb(b)'] = gv.BufferDict.uniform('fb', 0.0, 2.0)
+        g_ev = PDFIntegrator(g)
+        t = g_ev(neval=1000, nitn=2)
+        g_ev2 = restratify(g_ev, verbose=False)
+        t2 = g_ev2()
+        dt = t2['pdf'] - t['pdf']
+        self.assertGreater(dt.sdev * 5, dt.mean)
+        self.assertGreater(g_ev2.nstrat[0], 2 * g_ev2.nstrat[1])
+        self.assertGreater(g_ev2.nstrat[0], 10 * g_ev2.nstrat[-1])
+        self.assertGreater(g_ev2.nstrat[1], 5 * g_ev2.nstrat[-1])
+        self.assertEqual(g_ev.neval, g_ev2.neval)
+
+
     @unittest.skipIf(h5py is None,"missing h5py => minimize_mem=True not available")
     def test_mem(self):
         " max_mem "

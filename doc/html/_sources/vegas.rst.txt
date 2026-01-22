@@ -239,6 +239,9 @@ specialized integrator:
 
 Other Objects and Functions
 ----------------------------
+.. autofunction:: vegas.restratify(integ, f=None, nitn=1, ndy=5, below_avg_nstrat=None, verbose=False, gamma=1., **vargs)
+
+
 .. autoclass:: vegas.RAvg
 
   Attributes and methods:

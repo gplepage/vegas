@@ -303,7 +303,7 @@ the new version of |vegas| introduces a second adaptive strategy,
 based upon another standard Monte Carlo technique called "stratified
 sampling." |vegas| divides the |d|-dimensional
 |y|-space volume into |Msd| hypercubes using
-a uniform |y|-space grid with |Ms| or |Msplus| stratifications on each
+a uniform |y|-space grid with |Ms| or |Msplus| strata on each
 axis. It estimates
 the integral by doing a separate Monte Carlo integration in each of
 the hypercubes, and adding the results together to provide an estimate
@@ -336,13 +336,48 @@ the contributions from the real peaks and
 reduces statistical errors,
 provided ``neval`` is large enough to permit a large number  (more
 than 2 or 3) |Ms| of
-stratifications on each axis. With ``neval=4e4``,
+strata on each axis. With ``neval=4e4``,
 statistical errors for the two-Gaussian
 integral are reduced by more than a factor of 3 relative to what older
 versions of |vegas| give. This is a relatively easy integral;
 the difference can be much larger for more difficult (and realistic)
 integrals.
 
+.. _adaptive-restratification:
 
+Adaptive Re-Stratification
+-------------------------------
+As discussed in the previous section, |vegas| by default distributes
+strata more or less evenly across different dimensions, with |Ms| 
+or |Msplus| strata 
+along each direction. Some integrals, however, are much more challenging 
+is certain directions than in others. In such cases one might want 
+to concentrate strata in the difficult directions. Often, however, 
+it is hard to decide which are the difficult directions. 
 
+:func:`vegas.restratify` quantifies the difficulty in direction 
+:math:`d` first by rewriting the multi-dimensional integral as 
+a one-dimensional integral over :math:`y^{(d)}` in that direction:
 
+.. math::
+
+    I   &= \int\cdots\int d^Dx \,f(x) \\
+        &= \int_0^1dy^{(0)}\cdots\int_0^1 dy^{(D-1)} \,J(y)\, f(x(y)) \\
+        &\equiv \int_0^1 dy^{(d)}\, \frac{dI}{dy^{(d)}} \\
+
+The transformation to :math:`y` space (the |vegas| map) flattens 
+the integrand (:math:`J(y)\,f(x(y))`),
+but :math:`dI/dy^{(d)}` will be flatter in some directions than in 
+others. :func:`vegas.restratify` takes the variance
+
+.. math::
+
+        W^{(d)} \equiv \int_0^1 dy^{(d)}\,\Bigg(\frac{dI}{dy^{(d)}}\Bigg)^2 - I^2
+
+as a measure of the flatness, and allocates strata in different directions 
+in proportion to the :math:`W^{(d)}`.
+
+This criterion for re-stratification is adapted from one used in a code 
+from the 1970s called ``riwiad()``, a predecessor of |vegas|. A better 
+stratification is *not* guaranteed, but it is easy to find examples 
+where it reduces errors by an order of magnitude or more.

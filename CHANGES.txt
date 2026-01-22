@@ -1,3 +1,26 @@
+Version 6.4 2026-01-22
+=======================
+- New function vegas.restratify(integ, f) creates a copy 
+  of integrator integ but with a new y-space stratification 
+  that is adapted to integrand f(x). This is especially 
+  useful for high-dimension intergrals where the integral
+  is particularly challenging in a small number of 
+  directions.
+
+- Adds option correlate_integrals to Integrator. If True (default), 
+  vegas evaluates correlations between different components of 
+  integral with multi-dimensional integrand. If False, 
+  correlations are set to zero.
+
+- Fixes minor bug in Integrator(integ) where integ is 
+  an integrator.
+
+- Fixes vegas.RAvgDict pickle problem that appears first 
+  in Python 3.14.
+
+- Miscellaneous small performance tweaks. 
+
+
 Version 6.3 2025-05-24
 ========================
 Adds option gpu_pad to Integrator. Setting gpu_pad=True can make 

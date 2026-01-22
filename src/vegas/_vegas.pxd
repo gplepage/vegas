@@ -49,6 +49,7 @@ cdef class Integrator:
     cdef public bint adapt_to_errors
     cdef public double beta
     cdef public bint adapt
+    cdef public bint correlate_integrals
     cdef public object analyzer
     cdef public object ran_array_generator
     cdef public bint sync_ran
