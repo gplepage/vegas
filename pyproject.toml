@@ -15,7 +15,7 @@ authors = [
 ]
 description = "Tools for adaptive multidimensional Monte Carlo integration."
 readme = "README.rst"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
