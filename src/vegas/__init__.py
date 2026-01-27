@@ -65,7 +65,6 @@ from ._vegas import reporter, VegasIntegrand, batchintegrand
 from ._vegas import rbatchintegrand, RBatchIntegrand
 from ._vegas import lbatchintegrand, LBatchIntegrand
 from ._vegas import MPIintegrand
-from ._version import __version__
 
 # legacy names:
 from ._vegas import vecintegrand, VecIntegrand

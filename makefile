@@ -23,13 +23,11 @@ CYTHONFILES := src/vegas/_vegas.c
 install-user : 
 	rm -rf build src/*.egg-info
 	rm -rf $(CYTHONFILES)
-	python make_version.py src/vegas/_version.py
 	$(PIP) install . --user --no-cache-dir
 
 install install-sys : 
 	rm -rf build src/*.egg-info
 	rm -rf $(CYTHONFILES)
-	python make_version.py src/vegas/_version.py
 	$(PIP) install . --no-cache-dir
 
 uninstall :			# mostly works (may leave some empty directories)
