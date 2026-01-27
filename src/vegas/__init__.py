@@ -45,7 +45,7 @@ See the extensive Tutorial in the first section of the |vegas| documentation.
 """
 
 # Created by G. Peter Lepage (Cornell University) in 12/2013.
-# Copyright (c) 2013-24 G. Peter Lepage.
+# Copyright (c) 2013-26 G. Peter Lepage.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
