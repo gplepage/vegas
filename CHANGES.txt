@@ -1,4 +1,4 @@
-Version 6.4 2026-01-22
+Version 6.4 2026-01-27
 =======================
 - New function vegas.restratify(integ, f) creates a copy 
   of integrator integ but with a new y-space stratification 
@@ -18,7 +18,8 @@ Version 6.4 2026-01-22
 - Fixes vegas.RAvgDict pickle problem that appears first 
   in Python 3.14.
 
-- Miscellaneous small performance tweaks. 
+- Merges setup.cfg into pyproject.toml. Miscellaneous small 
+  performance tweaks. 
 
 
 Version 6.3 2025-05-24

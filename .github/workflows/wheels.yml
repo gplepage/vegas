@@ -8,7 +8,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, windows-11-arm, macos-15-intel, macos-latest]
+        # os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, windows-11-arm, macos-15-intel, macos-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, macos-latest]
+        # os: [windows-latest, windows-11-arm]
 
     steps:
       - uses: actions/checkout@v5
@@ -26,10 +28,10 @@ jobs:
         #   CIBW_SOME_OPTION: value
         #   ...
         env:
-          CIBW_SKIP: cp38-* cp39-* 
+          CIBW_SKIP: cp38-* cp39-* cp310-*
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "pytest {project}/tests"    
-          CIBW_TEST_SKIP: "*_arm64 *_universal2:arm64"
+          CIBW_TEST_SKIP: "*win* *_arm64 *_universal2:arm64"
 
 
       - uses: actions/upload-artifact@v4

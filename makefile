@@ -55,8 +55,7 @@ doc-zip doc.zip:
 doc-all: doc-html # doc-pdf
 
 sdist:	# source distribution
-	$(PYTHON) setup.py sdist
-	# $(PYTHON) -m build --sdist
+	$(PYTHON) -m build --sdist
 
 .PHONY: tests
 

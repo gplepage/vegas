@@ -1,8 +1,50 @@
 [build-system]
-requires = [ # "setuptools", "numpy>=1.16", "cython>=0.17"
-    "setuptools>=39.2.0", 
+requires = [
+    "setuptools>=80.10.1", 
+    "wheel",
     "numpy>=2.0",
-    "Cython>=3.0",
+    "Cython>=3.0"
     ]
-build-backend = "setuptools.build_meta"
+build-backend = 'setuptools.build_meta'
 
+[project]
+name = "vegas"
+dynamic = ["version"]
+authors = [
+  { name="G. Peter Lepage", email="g.p.lepage@cornell.edu" },
+]
+description = "Tools for adaptive multidimensional Monte Carlo integration."
+readme = "README.rst"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "GPL-3.0+"
+license-files = ["LICENSE.txt"]
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.11",
+    "gvar>=13.1.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/gplepage/vegas"
+Issues = "https://github.com/gplepage/vegas/issues"
+
+## continue using setup.py until ext-modules is stable
+#
+#[tool.setuptools]
+#ext-modules = [
+#   {name="vegas._vegas", sources=["src/vegas/_vegas.pyx"]},
+#   # You can also specify other options like include_dirs, language, etc.
+#]
+
+[tool.setuptools.dynamic]
+version = {attr = "vegas.__version__"} 
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+vegas = ["*.pxd"]
